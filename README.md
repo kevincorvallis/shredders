@@ -97,6 +97,12 @@ For AI summaries, set your Anthropic API key:
 ANTHROPIC_API_KEY=your_key_here
 ```
 
+Optional (Washington road & pass conditions via WSDOT Traveler Info API):
+
+```bash
+WSDOT_ACCESS_CODE=your_access_code_here
+```
+
 ## Project Structure
 
 ```

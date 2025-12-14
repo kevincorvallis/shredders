@@ -195,6 +195,24 @@ export const chatTools = {
     },
   }),
 
+  get_road_conditions: tool({
+    description: 'Get road and mountain pass conditions for getting to a mountain (closures, restrictions, advisories). Use this when the user asks about driving, road conditions, pass closures, chain requirements, or traffic considerations.',
+    inputSchema: z.object({
+      mountain: z.string().describe('The mountain name'),
+    }),
+    execute: async ({ mountain }) => {
+      const mountainId = parseMountainId(mountain);
+      const response = await fetch(`${BASE_URL}/api/mountains/${mountainId}/roads`);
+      const data = await response.json();
+      return {
+        type: 'roads' as const,
+        mountain: getMountainName(mountainId),
+        mountainId,
+        data,
+      };
+    },
+  }),
+
   compare_mountains: tool({
     description: 'Compare conditions between two mountains. Use this when the user wants to compare mountains or decide between them.',
     inputSchema: z.object({
@@ -267,5 +285,6 @@ export type ToolResult =
   | { type: 'powder_score'; mountain: string; mountainId: string; data: unknown }
   | { type: 'chart'; mountain: string; mountainId: string; chartType: string; days: number; data: unknown[] }
   | { type: 'webcam'; mountain: string; mountainId: string; name: string; url: string; refreshUrl: string; allWebcams?: { id: string; name: string }[]; error?: string }
+  | { type: 'roads'; mountain: string; mountainId: string; data: unknown }
   | { type: 'comparison'; mountains: unknown[] }
   | { type: 'mountain_list'; mountains: unknown[] };

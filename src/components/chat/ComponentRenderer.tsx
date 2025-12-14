@@ -7,6 +7,7 @@ import {
   ComparisonWidget,
   WebcamWidget,
   ChartWidget,
+  RoadsWidget,
 } from '@/components/widgets';
 
 interface ToolInvocation {
@@ -116,6 +117,15 @@ export function ComponentRenderer({ toolInvocations }: ComponentRendererProps) {
                   mountains={result.mountains as Parameters<typeof ComparisonWidget>[0]['mountains']}
                 />
               </div>
+            );
+
+          case 'roads':
+            return (
+              <RoadsWidget
+                key={index}
+                mountain={result.mountain || 'Mt. Baker'}
+                data={result.data as Parameters<typeof RoadsWidget>[0]['data']}
+              />
             );
 
           default:

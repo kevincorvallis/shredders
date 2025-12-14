@@ -38,6 +38,23 @@ interface ForecastDay {
   icon: string;
 }
 
+interface RoadsResponse {
+  supported: boolean;
+  configured: boolean;
+  provider: string | null;
+  passes: Array<{
+    id: number;
+    name: string;
+    dateUpdated?: string | null;
+    roadCondition?: string | null;
+    weatherCondition?: string | null;
+    temperatureF?: number | null;
+    travelAdvisoryActive?: boolean | null;
+    restrictions: Array<{ direction?: string | null; text?: string | null }>;
+  }>;
+  message?: string;
+}
+
 export default function MountainPage({
   params,
 }: {
@@ -49,6 +66,7 @@ export default function MountainPage({
   const [conditions, setConditions] = useState<Conditions | null>(null);
   const [powderScore, setPowderScore] = useState<PowderScore | null>(null);
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
+  const [roads, setRoads] = useState<RoadsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,6 +80,16 @@ export default function MountainPage({
           fetch(`/api/mountains/${mountainId}/powder-score`),
           fetch(`/api/mountains/${mountainId}/forecast`),
         ]);
+
+        // Road data is optional; don't block the rest of the page
+        fetch(`/api/mountains/${mountainId}/roads`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (data) setRoads(data);
+          })
+          .catch(() => {
+            // ignore
+          });
 
         if (conditionsRes.ok) {
           const data = await conditionsRes.json();
@@ -266,6 +294,69 @@ export default function MountainPage({
                   <p className="mt-4 text-sm text-amber-400/80">
                     Note: Limited SNOTEL data for this mountain. Some values may be estimated.
                   </p>
+                )}
+              </div>
+            )}
+
+            {/* Road & Pass Conditions */}
+            {roads && (
+              <div className="bg-slate-800 rounded-xl p-6">
+                <h2 className="text-lg font-semibold text-white mb-2">Road &amp; Pass Conditions</h2>
+                <p className="text-sm text-gray-400 mb-4">
+                  Closures and restrictions can change fast. Always verify before you drive.
+                </p>
+
+                {!roads.supported ? (
+                  <div className="text-gray-300">{roads.message ?? 'Road data not supported for this mountain.'}</div>
+                ) : !roads.configured ? (
+                  <div className="text-gray-300">{roads.message ?? 'Road data not configured.'}</div>
+                ) : roads.passes.length === 0 ? (
+                  <div className="text-gray-300">No relevant pass data found.</div>
+                ) : (
+                  <div className="space-y-3">
+                    {roads.passes.slice(0, 2).map((p) => (
+                      <div key={p.id} className="bg-slate-700/50 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-white font-medium">{p.name}</div>
+                          <div className="text-xs text-gray-400">{roads.provider ?? ''}</div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <div className="text-xs text-gray-400">Road</div>
+                            <div className="text-sm text-white">{p.roadCondition ?? 'Unknown'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-400">Weather</div>
+                            <div className="text-sm text-white">{p.weatherCondition ?? 'Unknown'}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-400">Pass Temp</div>
+                            <div className="text-sm text-white">
+                              {(p.temperatureF ?? null) !== null ? `${p.temperatureF}°F` : '—'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {p.restrictions?.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-white/10">
+                            <div className="text-xs text-gray-400 mb-1">Restrictions</div>
+                            <div className="text-sm text-gray-200 space-y-1">
+                              {p.restrictions.slice(0, 3).map((r, idx) => (
+                                <div key={idx}>
+                                  <span className="text-gray-400">{r.direction ? `${r.direction}: ` : ''}</span>
+                                  <span>{r.text}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {p.travelAdvisoryActive && (
+                          <div className="mt-3 text-xs text-amber-300">Travel advisory active</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
