@@ -1,0 +1,42 @@
+import { NextResponse } from 'next/server';
+import { getMountain } from '@/data/mountains';
+import { getForecast, type NOAAGridConfig } from '@/lib/apis/noaa';
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ mountainId: string }> }
+) {
+  const { mountainId } = await params;
+  const mountain = getMountain(mountainId);
+
+  if (!mountain) {
+    return NextResponse.json(
+      { error: `Mountain '${mountainId}' not found` },
+      { status: 404 }
+    );
+  }
+
+  try {
+    const noaaConfig: NOAAGridConfig = mountain.noaa;
+    const forecast = await getForecast(noaaConfig);
+
+    return NextResponse.json({
+      mountain: {
+        id: mountain.id,
+        name: mountain.name,
+        shortName: mountain.shortName,
+      },
+      forecast,
+      source: {
+        provider: 'NOAA',
+        gridOffice: mountain.noaa.gridOffice,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching forecast:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch forecast' },
+      { status: 500 }
+    );
+  }
+}

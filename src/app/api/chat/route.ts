@@ -19,14 +19,21 @@ When responding:
 4. If comparing mountains, use the comparison tool
 5. Be concise but informative
 
-Currently supported mountains:
-- Mt. Baker (primary, full data)
-- Stevens Pass (limited data)
-- Crystal Mountain (limited data)
+Supported mountains (Washington):
+- Mt. Baker - Best snowfall in the region, full SNOTEL data
+- Stevens Pass - Central Cascades, full SNOTEL data
+- Crystal Mountain - Near Mt. Rainier, full SNOTEL data
+- Summit at Snoqualmie - Closest to Seattle, full SNOTEL data
+- White Pass - Southern Washington, full SNOTEL data
 
-For mountains without full data, explain that we're working on adding more resorts.
+Supported mountains (Oregon):
+- Mt. Hood Meadows - Largest Oregon resort, full SNOTEL data
+- Timberline Lodge - Year-round skiing, shares SNOTEL with Meadows
+- Mt. Bachelor - Central Oregon, full SNOTEL data
 
-When users ask general questions like "how's it looking?" or "should I go skiing?", default to Mt. Baker and fetch conditions + powder score.`;
+When users ask general questions like "how's it looking?" or "should I go skiing?", ask which mountain they're interested in or suggest checking the list_mountains tool. If they mention a specific region (like "Oregon" or "near Seattle"), recommend appropriate mountains.
+
+You can compare any two mountains using real data from both.`;
 
 export async function POST(req: Request) {
   const { messages } = await req.json();

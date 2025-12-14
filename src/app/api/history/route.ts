@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getHistoricalData } from '@/lib/apis/snotel';
+import { getHistoricalData, DEFAULT_SNOTEL_STATION } from '@/lib/apis/snotel';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const days = Math.min(90, Math.max(7, parseInt(searchParams.get('days') || '30', 10)));
 
   try {
-    const history = await getHistoricalData(days);
+    const history = await getHistoricalData(DEFAULT_SNOTEL_STATION, days);
 
     if (history.length === 0) {
       throw new Error('No historical data available');

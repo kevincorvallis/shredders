@@ -42,7 +42,35 @@ actor APIClient {
         return URLSession(configuration: config)
     }()
 
-    // MARK: - Endpoints
+    // MARK: - Mountains List
+
+    func fetchMountains() async throws -> MountainsResponse {
+        try await fetch(endpoint: "/mountains")
+    }
+
+    func fetchMountainDetail(mountainId: String) async throws -> MountainDetail {
+        try await fetch(endpoint: "/mountains/\(mountainId)")
+    }
+
+    // MARK: - Per-Mountain Endpoints
+
+    func fetchConditions(for mountainId: String) async throws -> MountainConditions {
+        try await fetch(endpoint: "/mountains/\(mountainId)/conditions")
+    }
+
+    func fetchForecast(for mountainId: String) async throws -> MountainForecastResponse {
+        try await fetch(endpoint: "/mountains/\(mountainId)/forecast")
+    }
+
+    func fetchPowderScore(for mountainId: String) async throws -> MountainPowderScore {
+        try await fetch(endpoint: "/mountains/\(mountainId)/powder-score")
+    }
+
+    func fetchHistory(for mountainId: String, days: Int = 30) async throws -> MountainHistoryResponse {
+        try await fetch(endpoint: "/mountains/\(mountainId)/history?days=\(days)")
+    }
+
+    // MARK: - Legacy Endpoints (default to Baker for backwards compatibility)
 
     func fetchConditions() async throws -> Conditions {
         try await fetch(endpoint: "/conditions")

@@ -8,6 +8,11 @@ struct ContentView: View {
                     Label("Dashboard", systemImage: "snowflake")
                 }
 
+            MountainMapView()
+                .tabItem {
+                    Label("Mountains", systemImage: "map")
+                }
+
             NavigationStack {
                 ForecastView()
             }
