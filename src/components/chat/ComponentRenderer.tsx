@@ -8,6 +8,8 @@ import {
   WebcamWidget,
   ChartWidget,
   RoadsWidget,
+  TripAdviceWidget,
+  PowderDayPlannerWidget,
 } from '@/components/widgets';
 
 interface ToolInvocation {
@@ -125,6 +127,24 @@ export function ComponentRenderer({ toolInvocations }: ComponentRendererProps) {
                 key={index}
                 mountain={result.mountain || 'Mt. Baker'}
                 data={result.data as Parameters<typeof RoadsWidget>[0]['data']}
+              />
+            );
+
+          case 'trip_advice':
+            return (
+              <TripAdviceWidget
+                key={index}
+                mountain={result.mountain || 'Mt. Baker'}
+                data={result.data as Parameters<typeof TripAdviceWidget>[0]['data']}
+              />
+            );
+
+          case 'powder_day_plan':
+            return (
+              <PowderDayPlannerWidget
+                key={index}
+                mountain={result.mountain || 'Mt. Baker'}
+                data={result.data as Parameters<typeof PowderDayPlannerWidget>[0]['data']}
               />
             );
 

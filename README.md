@@ -26,6 +26,9 @@ AI-powered mountain conditions tracker for powder chasers. Real-time snow data, 
 | `/api/powder-score` | Calculated powder score with factors |
 | `/api/history?days=30` | Historical snow depth data |
 | `/api/summary` | AI-generated conditions summary |
+| `/api/mountains/[mountainId]/roads` | Road & pass conditions (WA via WSDOT, optional) |
+| `/api/mountains/[mountainId]/trip-advice` | Heuristic crowd/traffic/road risk + suggested timing |
+| `/api/mountains/[mountainId]/powder-day` | 3-day powder day planner (forecast + travel context) |
 
 ## Data Sources
 

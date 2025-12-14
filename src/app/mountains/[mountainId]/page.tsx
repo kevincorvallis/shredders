@@ -55,6 +55,39 @@ interface RoadsResponse {
   message?: string;
 }
 
+interface TripAdviceResponse {
+  generated: string;
+  headline: string;
+  crowd: 'low' | 'medium' | 'high';
+  trafficRisk: 'low' | 'medium' | 'high';
+  roadRisk: 'low' | 'medium' | 'high';
+  notes: string[];
+  suggestedDepartures: Array<{ from: string; suggestion: string }>;
+}
+
+interface PowderDayPlanResponse {
+  generated: string;
+  days: Array<{
+    date: string;
+    dayOfWeek: string;
+    predictedPowderScore: number;
+    confidence: number;
+    verdict: 'send' | 'maybe' | 'wait';
+    bestWindow: string;
+    crowdRisk: 'low' | 'medium' | 'high';
+    travelNotes: string[];
+    forecastSnapshot: {
+      snowfall: number;
+      high: number;
+      low: number;
+      windSpeed: number;
+      precipProbability: number;
+      precipType: 'snow' | 'rain' | 'mixed' | 'none';
+      conditions: string;
+    };
+  }>;
+}
+
 export default function MountainPage({
   params,
 }: {
@@ -67,6 +100,8 @@ export default function MountainPage({
   const [powderScore, setPowderScore] = useState<PowderScore | null>(null);
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
   const [roads, setRoads] = useState<RoadsResponse | null>(null);
+  const [tripAdvice, setTripAdvice] = useState<TripAdviceResponse | null>(null);
+  const [powderDayPlan, setPowderDayPlan] = useState<PowderDayPlanResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,6 +121,24 @@ export default function MountainPage({
           .then((r) => (r.ok ? r.json() : null))
           .then((data) => {
             if (data) setRoads(data);
+          })
+          .catch(() => {
+            // ignore
+          });
+
+        fetch(`/api/mountains/${mountainId}/trip-advice`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (data) setTripAdvice(data);
+          })
+          .catch(() => {
+            // ignore
+          });
+
+        fetch(`/api/mountains/${mountainId}/powder-day`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (data) setPowderDayPlan(data);
           })
           .catch(() => {
             // ignore
@@ -358,6 +411,96 @@ export default function MountainPage({
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Trip & Traffic */}
+            {tripAdvice && (
+              <div className="bg-slate-800 rounded-xl p-6">
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">Trip &amp; Traffic</h2>
+                    <p className="text-sm text-gray-400">Heuristic guidance based on weather + powder demand.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-xs px-2 py-1 rounded border border-slate-600 text-gray-200 bg-slate-700/40">
+                      Traffic: {tripAdvice.trafficRisk}
+                    </span>
+                    <span className="text-xs px-2 py-1 rounded border border-slate-600 text-gray-200 bg-slate-700/40">
+                      Roads: {tripAdvice.roadRisk}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-gray-200 text-sm font-medium mb-3">{tripAdvice.headline}</div>
+
+                {tripAdvice.suggestedDepartures?.length > 0 && (
+                  <div className="bg-slate-700/50 rounded-lg p-4 mb-3">
+                    <div className="text-xs text-gray-400 mb-2">Suggested timing</div>
+                    <div className="space-y-1 text-sm text-gray-200">
+                      {tripAdvice.suggestedDepartures.slice(0, 2).map((s, idx) => (
+                        <div key={idx}>
+                          <span className="text-gray-400">{s.from}: </span>
+                          <span>{s.suggestion}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {tripAdvice.notes?.length > 0 && (
+                  <div className="text-sm text-gray-300 space-y-1">
+                    {tripAdvice.notes.slice(0, 3).map((n, idx) => (
+                      <div key={idx}>• {n}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Powder Day Planner */}
+            {powderDayPlan && powderDayPlan.days?.length > 0 && (
+              <div className="bg-slate-800 rounded-xl p-6">
+                <h2 className="text-lg font-semibold text-white mb-2">Powder Day Planner</h2>
+                <p className="text-sm text-gray-400 mb-4">
+                  Prediction-style view combining forecast + travel considerations.
+                </p>
+
+                <div className="grid md:grid-cols-3 gap-3">
+                  {powderDayPlan.days.slice(0, 3).map((d, idx) => (
+                    <div key={idx} className="bg-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <div className="text-white font-medium">
+                            {idx === 0 ? 'Today' : d.dayOfWeek}
+                          </div>
+                          <div className="text-xs text-gray-400">{d.forecastSnapshot.conditions}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-white">{d.predictedPowderScore}/10</div>
+                          <div className="text-xs text-gray-400">Conf {d.confidence}%</div>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-gray-300 mb-2">
+                        {d.forecastSnapshot.snowfall}&quot; snow • {d.forecastSnapshot.high}°/{d.forecastSnapshot.low}° • {d.forecastSnapshot.windSpeed} mph
+                      </div>
+
+                      <div className="text-sm text-gray-200">
+                        <span className="text-gray-400">Window: </span>
+                        <span>{d.bestWindow}</span>
+                      </div>
+
+                      {d.travelNotes?.length > 0 && (
+                        <div className="mt-2 text-xs text-gray-400 space-y-1">
+                          {d.travelNotes.slice(0, 2).map((n, i) => (
+                            <div key={i}>• {n}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

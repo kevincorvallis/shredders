@@ -213,6 +213,42 @@ export const chatTools = {
     },
   }),
 
+  get_trip_advice: tool({
+    description: 'Get trip planning advice: crowd likelihood, traffic risk, and road risk based on forecast/powder score + (when available) pass conditions. Use this when the user asks when to leave, whether it will be crowded, or is deciding to make the drive.',
+    inputSchema: z.object({
+      mountain: z.string().describe('The mountain name'),
+    }),
+    execute: async ({ mountain }) => {
+      const mountainId = parseMountainId(mountain);
+      const response = await fetch(`${BASE_URL}/api/mountains/${mountainId}/trip-advice`);
+      const data = await response.json();
+      return {
+        type: 'trip_advice' as const,
+        mountain: getMountainName(mountainId),
+        mountainId,
+        data,
+      };
+    },
+  }),
+
+  get_powder_day_plan: tool({
+    description: 'Get a 3-day powder day prediction/planner that combines forecast with travel considerations. Use this when the user asks which day to go, best window, or wants a forward-looking plan.',
+    inputSchema: z.object({
+      mountain: z.string().describe('The mountain name'),
+    }),
+    execute: async ({ mountain }) => {
+      const mountainId = parseMountainId(mountain);
+      const response = await fetch(`${BASE_URL}/api/mountains/${mountainId}/powder-day`);
+      const data = await response.json();
+      return {
+        type: 'powder_day_plan' as const,
+        mountain: getMountainName(mountainId),
+        mountainId,
+        data,
+      };
+    },
+  }),
+
   compare_mountains: tool({
     description: 'Compare conditions between two mountains. Use this when the user wants to compare mountains or decide between them.',
     inputSchema: z.object({
@@ -286,5 +322,7 @@ export type ToolResult =
   | { type: 'chart'; mountain: string; mountainId: string; chartType: string; days: number; data: unknown[] }
   | { type: 'webcam'; mountain: string; mountainId: string; name: string; url: string; refreshUrl: string; allWebcams?: { id: string; name: string }[]; error?: string }
   | { type: 'roads'; mountain: string; mountainId: string; data: unknown }
+  | { type: 'trip_advice'; mountain: string; mountainId: string; data: unknown }
+  | { type: 'powder_day_plan'; mountain: string; mountainId: string; data: unknown }
   | { type: 'comparison'; mountains: unknown[] }
   | { type: 'mountain_list'; mountains: unknown[] };

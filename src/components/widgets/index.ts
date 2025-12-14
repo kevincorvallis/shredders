@@ -5,3 +5,5 @@ export { ComparisonWidget } from './ComparisonWidget';
 export { WebcamWidget } from './WebcamWidget';
 export { ChartWidget } from './ChartWidget';
 export { RoadsWidget } from './RoadsWidget';
+export { TripAdviceWidget } from './TripAdviceWidget';
+export { PowderDayPlannerWidget } from './PowderDayPlannerWidget';
