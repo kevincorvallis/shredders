@@ -1,0 +1,570 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 63;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1086BCB50612C478052AB672 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E8F75C7ACA67E68B1B910FC /* ContentView.swift */; };
+		131D15CCE9ED96127B818663 /* ConditionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 768B6C1486E26F956EF315F1 /* ConditionsCard.swift */; };
+		1D62606A05B88A57F2A10CE0 /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
+		1E767F11EB82CC4C6D411224 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */; };
+		1F21632AB47AD6048D008BFC /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
+		2057E9B038D9321A3BF1FFA0 /* PowderScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */; };
+		21746B3B39924D04C6E0E780 /* HistoryChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A84FF1992899A3147557A19E /* HistoryChartView.swift */; };
+		2D3E603A8AE77090B45FA99A /* PowderTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE287ADBB463D75154EBFA7 /* PowderTrackerApp.swift */; };
+		2F21742B0CA9620510CD2AE9 /* PowderTrackerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B614E89436D820C4FB326E8D /* PowderTrackerWidget.swift */; };
+		33BA99DCA163558C6EDE70F3 /* Conditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E66CAE21D58028E82BB124F /* Conditions.swift */; };
+		37EF014A6B4954D34E76A7E6 /* SnowDepthChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09D79F661133B42636813CB /* SnowDepthChart.swift */; };
+		4AAF035757211E427D9A5FC2 /* ForecastViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04359DE47F38AAA25B08299F /* ForecastViewModel.swift */; };
+		5A18DD1C82877CFE114B2852 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22899CFF2589BF56026F6C79 /* APIClient.swift */; };
+		5FD9AB9B92C5E1B6FB6545AA /* ForecastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5DBA53149931BA130994B0 /* ForecastView.swift */; };
+		65BFA2B73C0440625D91BC67 /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87288DA9E099263C2EB77783 /* MediumWidgetView.swift */; };
+		747A0430F0DF6068DDB869F5 /* PowderTrackerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BAECBC5CD31B116B74BE837A /* PowderTrackerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		74AB4EBB52A2A9892F1FFABB /* Conditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E66CAE21D58028E82BB124F /* Conditions.swift */; };
+		7997660E073FEABE38915456 /* Forecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F42690B312118CCC3712822 /* Forecast.swift */; };
+		8305ECBFE88219DA53E5A7D4 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D1DA7C683B7849128287E /* DashboardView.swift */; };
+		892D18B89013307A8C5FE8B3 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */; };
+		94F1249534AFF241CDAFACC4 /* Forecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F42690B312118CCC3712822 /* Forecast.swift */; };
+		A5394B2614799063241081C6 /* PowderTrackerWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF3E2D8E24956BF69F0A62E /* PowderTrackerWidgetBundle.swift */; };
+		AB9D52519316557167B1E855 /* SmallWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B3500B03D42612F4D52CAC /* SmallWidgetView.swift */; };
+		C74DA7539E5D7B9C4C45B8B3 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C89D64282F6DE19B90A062 /* Date+Extensions.swift */; };
+		E0CA30E94F41AB09EEFDE036 /* PowderScoreGauge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */; };
+		EAF4C924CB45FC9FACEAB8D7 /* PowderScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */; };
+		ECD77A0B9D5E10086C8546F0 /* ForecastDayRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FFC0B07DF4B62A8B956C6DE4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B3BC86C24F435C29203D279C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0C6BAF70D4851347CCECE096;
+			remoteInfo = PowderTrackerWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F30ECD9E4FB99336E182A17A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				747A0430F0DF6068DDB869F5 /* PowderTrackerWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryData.swift; sourceTree = "<group>"; };
+		04359DE47F38AAA25B08299F /* ForecastViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastViewModel.swift; sourceTree = "<group>"; };
+		0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderScore.swift; sourceTree = "<group>"; };
+		0E66CAE21D58028E82BB124F /* Conditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conditions.swift; sourceTree = "<group>"; };
+		0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
+		22899CFF2589BF56026F6C79 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		2EF3E2D8E24956BF69F0A62E /* PowderTrackerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerWidgetBundle.swift; sourceTree = "<group>"; };
+		3AE287ADBB463D75154EBFA7 /* PowderTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerApp.swift; sourceTree = "<group>"; };
+		3D0B5B03BA2A647054B565D7 /* PowderTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PowderTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		46B3500B03D42612F4D52CAC /* SmallWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallWidgetView.swift; sourceTree = "<group>"; };
+		4D5DBA53149931BA130994B0 /* ForecastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastView.swift; sourceTree = "<group>"; };
+		4F42690B312118CCC3712822 /* Forecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Forecast.swift; sourceTree = "<group>"; };
+		5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderScoreGauge.swift; sourceTree = "<group>"; };
+		768B6C1486E26F956EF315F1 /* ConditionsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionsCard.swift; sourceTree = "<group>"; };
+		87288DA9E099263C2EB77783 /* MediumWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediumWidgetView.swift; sourceTree = "<group>"; };
+		9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastDayRow.swift; sourceTree = "<group>"; };
+		9E8F75C7ACA67E68B1B910FC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A84FF1992899A3147557A19E /* HistoryChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryChartView.swift; sourceTree = "<group>"; };
+		B614E89436D820C4FB326E8D /* PowderTrackerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerWidget.swift; sourceTree = "<group>"; };
+		BAECBC5CD31B116B74BE837A /* PowderTrackerWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PowderTrackerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		D09D79F661133B42636813CB /* SnowDepthChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowDepthChart.swift; sourceTree = "<group>"; };
+		D7C89D64282F6DE19B90A062 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
+		F65D1DA7C683B7849128287E /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		37058D94BA2E3C9FD115176F /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				D7C89D64282F6DE19B90A062 /* Date+Extensions.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		4A65A98FA6EF4688E03B10E3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3D0B5B03BA2A647054B565D7 /* PowderTracker.app */,
+				BAECBC5CD31B116B74BE837A /* PowderTrackerWidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6CC3EF860B1CF2D6747ADB90 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				87288DA9E099263C2EB77783 /* MediumWidgetView.swift */,
+				46B3500B03D42612F4D52CAC /* SmallWidgetView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		71616C95900467E5F4B4EAED /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */,
+				04359DE47F38AAA25B08299F /* ForecastViewModel.swift */,
+				0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		80E6C6A255B1EC04EE1B0F17 /* PowderTracker */ = {
+			isa = PBXGroup;
+			children = (
+				3AE287ADBB463D75154EBFA7 /* PowderTrackerApp.swift */,
+				37058D94BA2E3C9FD115176F /* Extensions */,
+				DA2F471601079E33498D575B /* Models */,
+				848CD3FF1F0ED180B6A41DBD /* Services */,
+				71616C95900467E5F4B4EAED /* ViewModels */,
+				FB275362EEA83C2D1C4035C1 /* Views */,
+			);
+			path = PowderTracker;
+			sourceTree = "<group>";
+		};
+		848CD3FF1F0ED180B6A41DBD /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				22899CFF2589BF56026F6C79 /* APIClient.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		8BD3B5F4C4E4CA339DC70EB5 = {
+			isa = PBXGroup;
+			children = (
+				80E6C6A255B1EC04EE1B0F17 /* PowderTracker */,
+				AD84568A050F508FB9284B6C /* PowderTrackerWidget */,
+				4A65A98FA6EF4688E03B10E3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AB287A8A884E4E3BD60F605C /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				768B6C1486E26F956EF315F1 /* ConditionsCard.swift */,
+				9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */,
+				5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */,
+				D09D79F661133B42636813CB /* SnowDepthChart.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		AD84568A050F508FB9284B6C /* PowderTrackerWidget */ = {
+			isa = PBXGroup;
+			children = (
+				B614E89436D820C4FB326E8D /* PowderTrackerWidget.swift */,
+				2EF3E2D8E24956BF69F0A62E /* PowderTrackerWidgetBundle.swift */,
+				6CC3EF860B1CF2D6747ADB90 /* Views */,
+			);
+			path = PowderTrackerWidget;
+			sourceTree = "<group>";
+		};
+		DA2F471601079E33498D575B /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				0E66CAE21D58028E82BB124F /* Conditions.swift */,
+				4F42690B312118CCC3712822 /* Forecast.swift */,
+				01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */,
+				0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FB275362EEA83C2D1C4035C1 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				9E8F75C7ACA67E68B1B910FC /* ContentView.swift */,
+				F65D1DA7C683B7849128287E /* DashboardView.swift */,
+				4D5DBA53149931BA130994B0 /* ForecastView.swift */,
+				A84FF1992899A3147557A19E /* HistoryChartView.swift */,
+				AB287A8A884E4E3BD60F605C /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		02607EFEC5D2DF4971EC1BC4 /* PowderTracker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2F4F512D3A781AA342D59C2D /* Build configuration list for PBXNativeTarget "PowderTracker" */;
+			buildPhases = (
+				04EB4BD4012CD087028F95DB /* Sources */,
+				F30ECD9E4FB99336E182A17A /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DA7FAD8781BC483204C510BE /* PBXTargetDependency */,
+			);
+			name = PowderTracker;
+			packageProductDependencies = (
+			);
+			productName = PowderTracker;
+			productReference = 3D0B5B03BA2A647054B565D7 /* PowderTracker.app */;
+			productType = "com.apple.product-type.application";
+		};
+		0C6BAF70D4851347CCECE096 /* PowderTrackerWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1EC56E862A8BF90C58CD2F08 /* Build configuration list for PBXNativeTarget "PowderTrackerWidgetExtension" */;
+			buildPhases = (
+				1B935F4BCD0BFE2CD5F747DE /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PowderTrackerWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = PowderTrackerWidgetExtension;
+			productReference = BAECBC5CD31B116B74BE837A /* PowderTrackerWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B3BC86C24F435C29203D279C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					02607EFEC5D2DF4971EC1BC4 = {
+						DevelopmentTeam = "";
+					};
+					0C6BAF70D4851347CCECE096 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 29D1F4F9E878D542BF5C22AC /* Build configuration list for PBXProject "PowderTracker" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 8BD3B5F4C4E4CA339DC70EB5;
+			minimizedProjectReferenceProxies = 1;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				02607EFEC5D2DF4971EC1BC4 /* PowderTracker */,
+				0C6BAF70D4851347CCECE096 /* PowderTrackerWidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		04EB4BD4012CD087028F95DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5A18DD1C82877CFE114B2852 /* APIClient.swift in Sources */,
+				33BA99DCA163558C6EDE70F3 /* Conditions.swift in Sources */,
+				131D15CCE9ED96127B818663 /* ConditionsCard.swift in Sources */,
+				1086BCB50612C478052AB672 /* ContentView.swift in Sources */,
+				8305ECBFE88219DA53E5A7D4 /* DashboardView.swift in Sources */,
+				1E767F11EB82CC4C6D411224 /* DashboardViewModel.swift in Sources */,
+				C74DA7539E5D7B9C4C45B8B3 /* Date+Extensions.swift in Sources */,
+				94F1249534AFF241CDAFACC4 /* Forecast.swift in Sources */,
+				ECD77A0B9D5E10086C8546F0 /* ForecastDayRow.swift in Sources */,
+				5FD9AB9B92C5E1B6FB6545AA /* ForecastView.swift in Sources */,
+				4AAF035757211E427D9A5FC2 /* ForecastViewModel.swift in Sources */,
+				21746B3B39924D04C6E0E780 /* HistoryChartView.swift in Sources */,
+				1D62606A05B88A57F2A10CE0 /* HistoryData.swift in Sources */,
+				892D18B89013307A8C5FE8B3 /* HistoryViewModel.swift in Sources */,
+				2057E9B038D9321A3BF1FFA0 /* PowderScore.swift in Sources */,
+				E0CA30E94F41AB09EEFDE036 /* PowderScoreGauge.swift in Sources */,
+				2D3E603A8AE77090B45FA99A /* PowderTrackerApp.swift in Sources */,
+				37EF014A6B4954D34E76A7E6 /* SnowDepthChart.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1B935F4BCD0BFE2CD5F747DE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				74AB4EBB52A2A9892F1FFABB /* Conditions.swift in Sources */,
+				7997660E073FEABE38915456 /* Forecast.swift in Sources */,
+				1F21632AB47AD6048D008BFC /* HistoryData.swift in Sources */,
+				65BFA2B73C0440625D91BC67 /* MediumWidgetView.swift in Sources */,
+				EAF4C924CB45FC9FACEAB8D7 /* PowderScore.swift in Sources */,
+				2F21742B0CA9620510CD2AE9 /* PowderTrackerWidget.swift in Sources */,
+				A5394B2614799063241081C6 /* PowderTrackerWidgetBundle.swift in Sources */,
+				AB9D52519316557167B1E855 /* SmallWidgetView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DA7FAD8781BC483204C510BE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0C6BAF70D4851347CCECE096 /* PowderTrackerWidgetExtension */;
+			targetProxy = FFC0B07DF4B62A8B956C6DE4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4FDCB60C5E796E7749F5BD8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = PowderTrackerWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shredders.powdertracker.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7E976872E53EFA2F603DBC33 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION_MODE = GeneratedFile;
+				INFOPLIST_KEY_CFBundleDisplayName = PowderTracker;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shredders.powdertracker;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		87DC488C510E9FFAF30A4F41 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		8FBDAB9D9BB188089995CFA3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		BC5C5A61C9FD2EEFB24B1496 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = PowderTrackerWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shredders.powdertracker.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E8024BAF71E31C820B2EA9C5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATION_MODE = GeneratedFile;
+				INFOPLIST_KEY_CFBundleDisplayName = PowderTracker;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shredders.powdertracker;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1EC56E862A8BF90C58CD2F08 /* Build configuration list for PBXNativeTarget "PowderTrackerWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FDCB60C5E796E7749F5BD8F /* Debug */,
+				BC5C5A61C9FD2EEFB24B1496 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		29D1F4F9E878D542BF5C22AC /* Build configuration list for PBXProject "PowderTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8FBDAB9D9BB188089995CFA3 /* Debug */,
+				87DC488C510E9FFAF30A4F41 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2F4F512D3A781AA342D59C2D /* Build configuration list for PBXNativeTarget "PowderTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E8024BAF71E31C820B2EA9C5 /* Debug */,
+				7E976872E53EFA2F603DBC33 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B3BC86C24F435C29203D279C /* Project object */;
+}

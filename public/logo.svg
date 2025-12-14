@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="mountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="snowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0f2fe;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0c4a6e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0369a1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="95" fill="url(#skyGrad)"/>
+
+  <!-- Stars -->
+  <circle cx="45" cy="35" r="2" fill="white" opacity="0.8"/>
+  <circle cx="155" cy="45" r="1.5" fill="white" opacity="0.7"/>
+  <circle cx="130" cy="30" r="1" fill="white" opacity="0.6"/>
+  <circle cx="70" cy="50" r="1.5" fill="white" opacity="0.5"/>
+
+  <!-- Back Mountain -->
+  <path d="M20 160 L70 85 L95 110 L120 70 L170 160 Z" fill="#1e3a5f" opacity="0.6"/>
+
+  <!-- Main Mountain (Mt. Baker style) -->
+  <path d="M10 160 L55 95 L75 115 L100 60 L125 115 L145 95 L190 160 Z" fill="url(#mountainGrad)"/>
+
+  <!-- Snow Cap -->
+  <path d="M70 105 L85 85 L100 60 L115 85 L130 105 L120 100 L110 108 L100 95 L90 108 L80 100 Z" fill="url(#snowGrad)"/>
+
+  <!-- Snow patches on mountain -->
+  <path d="M55 130 Q65 120 75 130 Q70 125 55 130" fill="white" opacity="0.7"/>
+  <path d="M125 130 Q135 120 145 130 Q140 125 125 130" fill="white" opacity="0.7"/>
+
+  <!-- Snowflakes -->
+  <g fill="white" opacity="0.9">
+    <!-- Snowflake 1 -->
+    <g transform="translate(35, 75)">
+      <line x1="0" y1="-6" x2="0" y2="6" stroke="white" stroke-width="1.5"/>
+      <line x1="-5.2" y1="-3" x2="5.2" y2="3" stroke="white" stroke-width="1.5"/>
+      <line x1="-5.2" y1="3" x2="5.2" y2="-3" stroke="white" stroke-width="1.5"/>
+      <circle cx="0" cy="0" r="2" fill="white"/>
+    </g>
+    <!-- Snowflake 2 -->
+    <g transform="translate(165, 85) scale(0.8)">
+      <line x1="0" y1="-6" x2="0" y2="6" stroke="white" stroke-width="1.5"/>
+      <line x1="-5.2" y1="-3" x2="5.2" y2="3" stroke="white" stroke-width="1.5"/>
+      <line x1="-5.2" y1="3" x2="5.2" y2="-3" stroke="white" stroke-width="1.5"/>
+      <circle cx="0" cy="0" r="2" fill="white"/>
+    </g>
+    <!-- Snowflake 3 -->
+    <g transform="translate(50, 145) scale(0.6)">
+      <line x1="0" y1="-6" x2="0" y2="6" stroke="white" stroke-width="1.5"/>
+      <line x1="-5.2" y1="-3" x2="5.2" y2="3" stroke="white" stroke-width="1.5"/>
+      <line x1="-5.2" y1="3" x2="5.2" y2="-3" stroke="white" stroke-width="1.5"/>
+      <circle cx="0" cy="0" r="2" fill="white"/>
+    </g>
+  </g>
+
+  <!-- Powder Score indicator ring -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="white" stroke-width="3" opacity="0.2"/>
+  <path d="M100 10 A90 90 0 0 1 190 100" fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Text: PT (PowderTracker) -->
+  <text x="100" y="185" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle" opacity="0.9">SHREDDERS</text>
+</svg>

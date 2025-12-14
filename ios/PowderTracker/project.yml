@@ -1,0 +1,72 @@
+name: PowderTracker
+options:
+  bundleIdPrefix: com.shredders
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  PowderTracker:
+    type: application
+    platform: iOS
+    sources:
+      - PowderTracker
+    settings:
+      base:
+        INFOPLIST_GENERATION_MODE: GeneratedFile
+        PRODUCT_BUNDLE_IDENTIFIER: com.shredders.powdertracker
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+        INFOPLIST_KEY_CFBundleDisplayName: "PowderTracker"
+    dependencies:
+      - target: PowderTrackerWidgetExtension
+        embed: true
+
+  PowderTrackerWidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: PowderTrackerWidget
+        excludes:
+          - "**/.DS_Store"
+          - "**/Info.plist"
+      - path: PowderTracker/Models
+        name: Models
+    info:
+      path: PowderTrackerWidget/Info.plist
+      properties:
+        CFBundleDisplayName: "PowderTracker Widget"
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shredders.powdertracker.widget
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SKIP_INSTALL: YES
+
+schemes:
+  PowderTracker:
+    build:
+      targets:
+        PowderTracker: all
+        PowderTrackerWidgetExtension: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    archive:
+      config: Release
