@@ -4,22 +4,24 @@ import SwiftUI
 @MainActor
 @Observable
 class DashboardViewModel {
-    var conditions: Conditions?
-    var powderScore: PowderScore?
+    var conditions: MountainConditions?
+    var powderScore: MountainPowderScore?
     var forecast: [ForecastDay] = []
     var isLoading = false
     var error: String?
 
     private let apiClient = APIClient.shared
+    private(set) var currentMountainId: String = "baker"
 
-    func loadData() async {
+    func loadData(for mountainId: String) async {
+        currentMountainId = mountainId
         isLoading = true
         error = nil
 
         do {
-            async let conditionsTask = apiClient.fetchConditions()
-            async let powderScoreTask = apiClient.fetchPowderScore()
-            async let forecastTask = apiClient.fetchForecast()
+            async let conditionsTask = apiClient.fetchConditions(for: mountainId)
+            async let powderScoreTask = apiClient.fetchPowderScore(for: mountainId)
+            async let forecastTask = apiClient.fetchForecast(for: mountainId)
 
             let (conditions, powderScore, forecastResponse) = try await (conditionsTask, powderScoreTask, forecastTask)
 
@@ -35,6 +37,6 @@ class DashboardViewModel {
     }
 
     func refresh() async {
-        await loadData()
+        await loadData(for: currentMountainId)
     }
 }

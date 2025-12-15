@@ -3,9 +3,8 @@ import SwiftUI
 struct DashboardView: View {
     @State private var viewModel = DashboardViewModel()
     @StateObject private var tripPlanningViewModel = TripPlanningViewModel()
-
-    // Default to Baker for the legacy dashboard
-    private let defaultMountainId = "baker"
+    @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
+    @State private var showingMountainPicker = false
 
     var body: some View {
         NavigationStack {
@@ -19,7 +18,7 @@ struct DashboardView: View {
                             Task { await viewModel.refresh() }
                         }
                     } else {
-                        // Header
+                        // Header with mountain picker
                         headerSection
 
                         // Powder Score
@@ -29,7 +28,7 @@ struct DashboardView: View {
 
                         // Conditions
                         if let conditions = viewModel.conditions {
-                            ConditionsCard(conditions: conditions)
+                            MountainConditionsCard(conditions: conditions)
                         }
 
                         // Road & Pass Conditions (WA mountains only)
@@ -51,13 +50,25 @@ struct DashboardView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("PowderTracker")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingMountainPicker = true
+                    } label: {
+                        Image(systemName: "mountain.2.fill")
+                    }
+                }
+            }
             .refreshable {
                 await viewModel.refresh()
-                await tripPlanningViewModel.refresh(for: defaultMountainId)
+                await tripPlanningViewModel.refresh(for: selectedMountainId)
             }
-            .task {
-                await viewModel.loadData()
-                await tripPlanningViewModel.fetchAll(for: defaultMountainId)
+            .task(id: selectedMountainId) {
+                await viewModel.loadData(for: selectedMountainId)
+                await tripPlanningViewModel.fetchAll(for: selectedMountainId)
+            }
+            .sheet(isPresented: $showingMountainPicker) {
+                MountainPickerView(selectedMountainId: $selectedMountainId)
             }
         }
     }
@@ -65,27 +76,48 @@ struct DashboardView: View {
     private var headerSection: some View {
         VStack(spacing: 4) {
             if let conditions = viewModel.conditions {
-                Text(conditions.mountain.name)
+                Button {
+                    showingMountainPicker = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(conditions.mountain.name)
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+
+                        Image(systemName: "chevron.down.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.blue)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if let elevation = viewModel.conditions?.mountain {
+                    // Use the API's elevation data if available
+                }
+            } else {
+                Text("Select Mountain")
                     .font(.title)
                     .fontWeight(.bold)
-
-                Text("\(conditions.mountain.elevation.base.formatted())' - \(conditions.mountain.elevation.summit.formatted())'")
-                    .font(.subheadline)
                     .foregroundColor(.secondary)
             }
         }
         .padding(.vertical)
     }
 
-    private func powderScoreSection(_ score: PowderScore) -> some View {
+    private func powderScoreSection(_ score: MountainPowderScore) -> some View {
         VStack(spacing: 16) {
             HStack {
                 Spacer()
-                PowderScoreGauge(score: score.score, maxScore: score.maxScore, label: score.label)
+                PowderScoreGauge(
+                    score: Int(score.score.rounded()),
+                    maxScore: 10,
+                    label: scoreLabel(for: score.score)
+                )
                 Spacer()
             }
 
-            Text(score.recommendation)
+            Text(score.verdict)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -96,7 +128,7 @@ struct DashboardView: View {
                 ForEach(score.factors) { factor in
                     HStack {
                         Circle()
-                            .fill(factor.isPositive ? Color.green : Color.red)
+                            .fill(factor.contribution > factor.weight * 5 ? Color.green : Color.red)
                             .frame(width: 8, height: 8)
 
                         Text(factor.name)
@@ -104,10 +136,10 @@ struct DashboardView: View {
 
                         Spacer()
 
-                        Text(factor.value)
+                        Text(factor.description)
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundColor(factor.isPositive ? .green : .red)
+                            .foregroundColor(factor.contribution > factor.weight * 5 ? .green : .red)
                     }
                 }
             }
@@ -119,6 +151,13 @@ struct DashboardView: View {
         .background(Color(.systemBackground))
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+    }
+
+    private func scoreLabel(for score: Double) -> String {
+        if score >= 8 { return "Epic" }
+        if score >= 6 { return "Great" }
+        if score >= 4 { return "Good" }
+        return "Fair"
     }
 
     private var forecastPreviewSection: some View {

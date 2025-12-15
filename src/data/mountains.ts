@@ -10,7 +10,7 @@ export interface MountainConfig {
     base: number;
     summit: number;
   };
-  region: 'washington' | 'oregon';
+  region: 'washington' | 'oregon' | 'idaho';
   snotel?: {
     stationId: string;
     stationName: string;
@@ -234,6 +234,170 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#f97316',
     website: 'https://www.mtbachelor.com',
   },
+
+  // Washington - Eastern
+  missionridge: {
+    id: 'missionridge',
+    name: 'Mission Ridge',
+    shortName: 'Mission Ridge',
+    location: { lat: 47.293, lng: -120.398 },
+    elevation: { base: 4570, summit: 6820 },
+    region: 'washington',
+    snotel: {
+      stationId: '349:WA:SNTL',
+      stationName: 'Blewett Pass',
+    },
+    noaa: { gridOffice: 'OTX', gridX: 53, gridY: 107 },
+    webcams: [
+      {
+        id: 'base',
+        name: 'Base Area',
+        url: 'https://www.missionridge.com/webcam.jpg',
+      },
+    ],
+    color: '#dc2626',
+    website: 'https://www.missionridge.com',
+  },
+
+  fortynine: {
+    id: 'fortynine',
+    name: '49 Degrees North',
+    shortName: '49°N',
+    location: { lat: 48.795, lng: -117.565 },
+    elevation: { base: 3923, summit: 5774 },
+    region: 'washington',
+    snotel: {
+      stationId: '699:WA:SNTL',
+      stationName: 'Pope Ridge',
+    },
+    noaa: { gridOffice: 'OTX', gridX: 118, gridY: 135 },
+    webcams: [
+      {
+        id: 'base',
+        name: 'Base Lodge',
+        url: 'https://www.ski49n.com/webcam.jpg',
+      },
+    ],
+    color: '#7c3aed',
+    website: 'https://www.ski49n.com',
+  },
+
+  // Idaho
+  schweitzer: {
+    id: 'schweitzer',
+    name: 'Schweitzer Mountain',
+    shortName: 'Schweitzer',
+    location: { lat: 48.368, lng: -116.622 },
+    elevation: { base: 4000, summit: 6400 },
+    region: 'idaho',
+    snotel: {
+      stationId: '738:ID:SNTL',
+      stationName: 'Schweitzer Basin',
+    },
+    noaa: { gridOffice: 'OTX', gridX: 131, gridY: 123 },
+    webcams: [
+      {
+        id: 'summit',
+        name: 'Summit',
+        url: 'https://www.schweitzer.com/webcam.jpg',
+      },
+    ],
+    color: '#0ea5e9',
+    website: 'https://www.schweitzer.com',
+  },
+
+  lookout: {
+    id: 'lookout',
+    name: 'Lookout Pass',
+    shortName: 'Lookout',
+    location: { lat: 47.454, lng: -115.713 },
+    elevation: { base: 4150, summit: 5650 },
+    region: 'idaho',
+    snotel: {
+      stationId: '579:ID:SNTL',
+      stationName: 'Lookout',
+    },
+    noaa: { gridOffice: 'MSO', gridX: 159, gridY: 82 },
+    webcams: [
+      {
+        id: 'base',
+        name: 'Base Area',
+        url: 'https://www.skilookout.com/webcam.jpg',
+      },
+    ],
+    color: '#059669',
+    website: 'https://www.skilookout.com',
+  },
+
+  // Oregon - Southern
+  ashland: {
+    id: 'ashland',
+    name: 'Mt. Ashland',
+    shortName: 'Ashland',
+    location: { lat: 42.086, lng: -122.715 },
+    elevation: { base: 6350, summit: 7533 },
+    region: 'oregon',
+    snotel: {
+      stationId: '341:OR:SNTL',
+      stationName: 'Big Red Mountain',
+    },
+    noaa: { gridOffice: 'MFR', gridX: 89, gridY: 62 },
+    webcams: [
+      {
+        id: 'lodge',
+        name: 'Lodge',
+        url: 'https://www.mtashland.com/webcam.jpg',
+      },
+    ],
+    color: '#ea580c',
+    website: 'https://www.mtashland.com',
+  },
+
+  willamette: {
+    id: 'willamette',
+    name: 'Willamette Pass',
+    shortName: 'Willamette',
+    location: { lat: 43.596, lng: -122.039 },
+    elevation: { base: 5128, summit: 6683 },
+    region: 'oregon',
+    snotel: {
+      stationId: '388:OR:SNTL',
+      stationName: 'Cascade Summit',
+    },
+    noaa: { gridOffice: 'PQR', gridX: 112, gridY: 69 },
+    webcams: [
+      {
+        id: 'base',
+        name: 'Base Area',
+        url: 'https://www.willamettepass.com/webcam.jpg',
+      },
+    ],
+    color: '#84cc16',
+    website: 'https://www.willamettepass.com',
+  },
+
+  hoodoo: {
+    id: 'hoodoo',
+    name: 'Hoodoo Ski Area',
+    shortName: 'Hoodoo',
+    location: { lat: 44.408, lng: -121.870 },
+    elevation: { base: 4668, summit: 5703 },
+    region: 'oregon',
+    snotel: {
+      stationId: '801:OR:SNTL',
+      stationName: 'Summit Lake',
+    },
+    noaa: { gridOffice: 'PDT', gridX: 107, gridY: 65 },
+    webcams: [
+      {
+        id: 'base',
+        name: 'Base Lodge',
+        url: 'https://www.skihoodoo.com/webcam.jpg',
+      },
+    ],
+    color: '#f472b6',
+    website: 'https://www.skihoodoo.com',
+  },
 };
 
 export function getMountain(id: string): MountainConfig | undefined {
@@ -244,7 +408,7 @@ export function getAllMountains(): MountainConfig[] {
   return Object.values(mountains);
 }
 
-export function getMountainsByRegion(region: 'washington' | 'oregon'): MountainConfig[] {
+export function getMountainsByRegion(region: 'washington' | 'oregon' | 'idaho'): MountainConfig[] {
   return getAllMountains().filter((m) => m.region === region);
 }
 

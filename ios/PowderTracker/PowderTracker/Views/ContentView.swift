@@ -13,18 +13,21 @@ struct ContentView: View {
                     Label("Mountains", systemImage: "map")
                 }
 
+            ChatView()
+                .tabItem {
+                    Label("Chat", systemImage: "bubble.left.and.bubble.right")
+                }
+
+            PatrolView()
+                .tabItem {
+                    Label("Patrol", systemImage: "shield")
+                }
+
             NavigationStack {
                 ForecastView()
             }
             .tabItem {
                 Label("Forecast", systemImage: "calendar")
-            }
-
-            NavigationStack {
-                HistoryChartView()
-            }
-            .tabItem {
-                Label("History", systemImage: "chart.line.uptrend.xyaxis")
             }
         }
     }

@@ -4,6 +4,7 @@ import MapKit
 struct MountainMapView: View {
     @StateObject private var viewModel = MountainSelectionViewModel()
     @StateObject private var locationManager = LocationManager.shared
+    @AppStorage("selectedMountainId") private var persistedMountainId = "baker"
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 46.5, longitude: -121.5),
@@ -50,15 +51,20 @@ struct MountainMapView: View {
                         if !viewModel.washingtonMountains.isEmpty {
                             Section {
                                 ForEach(viewModel.washingtonMountains) { mountain in
-                                    MountainRow(
-                                        mountain: mountain,
-                                        score: viewModel.getScore(for: mountain),
-                                        distance: viewModel.getDistance(to: mountain),
-                                        isSelected: selectedMountainId == mountain.id
-                                    )
-                                    .onTapGesture {
-                                        selectMountain(mountain)
+                                    NavigationLink {
+                                        MountainDetailView(mountainId: mountain.id, mountainName: mountain.name)
+                                    } label: {
+                                        MountainRow(
+                                            mountain: mountain,
+                                            score: viewModel.getScore(for: mountain),
+                                            distance: viewModel.getDistance(to: mountain),
+                                            isSelected: selectedMountainId == mountain.id
+                                        )
                                     }
+                                    .buttonStyle(.plain)
+                                    .simultaneousGesture(TapGesture().onEnded {
+                                        selectMountain(mountain)
+                                    })
                                 }
                             } header: {
                                 SectionHeader(title: "Washington")
@@ -68,18 +74,46 @@ struct MountainMapView: View {
                         if !viewModel.oregonMountains.isEmpty {
                             Section {
                                 ForEach(viewModel.oregonMountains) { mountain in
-                                    MountainRow(
-                                        mountain: mountain,
-                                        score: viewModel.getScore(for: mountain),
-                                        distance: viewModel.getDistance(to: mountain),
-                                        isSelected: selectedMountainId == mountain.id
-                                    )
-                                    .onTapGesture {
-                                        selectMountain(mountain)
+                                    NavigationLink {
+                                        MountainDetailView(mountainId: mountain.id, mountainName: mountain.name)
+                                    } label: {
+                                        MountainRow(
+                                            mountain: mountain,
+                                            score: viewModel.getScore(for: mountain),
+                                            distance: viewModel.getDistance(to: mountain),
+                                            isSelected: selectedMountainId == mountain.id
+                                        )
                                     }
+                                    .buttonStyle(.plain)
+                                    .simultaneousGesture(TapGesture().onEnded {
+                                        selectMountain(mountain)
+                                    })
                                 }
                             } header: {
                                 SectionHeader(title: "Oregon")
+                            }
+                        }
+
+                        if !viewModel.idahoMountains.isEmpty {
+                            Section {
+                                ForEach(viewModel.idahoMountains) { mountain in
+                                    NavigationLink {
+                                        MountainDetailView(mountainId: mountain.id, mountainName: mountain.name)
+                                    } label: {
+                                        MountainRow(
+                                            mountain: mountain,
+                                            score: viewModel.getScore(for: mountain),
+                                            distance: viewModel.getDistance(to: mountain),
+                                            isSelected: selectedMountainId == mountain.id
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .simultaneousGesture(TapGesture().onEnded {
+                                        selectMountain(mountain)
+                                    })
+                                }
+                            } header: {
+                                SectionHeader(title: "Idaho")
                             }
                         }
                     }
@@ -103,6 +137,7 @@ struct MountainMapView: View {
 
     private func selectMountain(_ mountain: Mountain) {
         selectedMountainId = mountain.id
+        persistedMountainId = mountain.id
         withAnimation {
             cameraPosition = .region(
                 MKCoordinateRegion(

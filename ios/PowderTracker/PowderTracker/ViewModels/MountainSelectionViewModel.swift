@@ -104,4 +104,8 @@ class MountainSelectionViewModel: ObservableObject {
     var oregonMountains: [Mountain] {
         mountains.filter { $0.region == "oregon" }
     }
+
+    var idahoMountains: [Mountain] {
+        mountains.filter { $0.region == "idaho" }
+    }
 }

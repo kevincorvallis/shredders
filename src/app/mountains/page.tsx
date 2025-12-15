@@ -133,7 +133,7 @@ export default function MountainsPage() {
           )}
           <div className="space-y-3">
             {isLoading ? (
-              <MountainCardSkeleton count={8} />
+              <MountainCardSkeleton count={15} />
             ) : (
               mountains.map((mountain) => (
                 <MountainCard
