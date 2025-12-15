@@ -22,6 +22,7 @@ export function MountainSelector({
 
   const washingtonMountains = mountains.filter((m) => m.region === 'washington');
   const oregonMountains = mountains.filter((m) => m.region === 'oregon');
+  const idahoMountains = mountains.filter((m) => m.region === 'idaho');
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -93,6 +94,23 @@ export function MountainSelector({
                   onSelect={handleSelect}
                 />
               ))}
+              {idahoMountains.length > 0 && (
+                <>
+                  <div className="px-3 py-2 bg-slate-700/50">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Idaho
+                    </span>
+                  </div>
+                  {idahoMountains.map((mountain) => (
+                    <MountainOption
+                      key={mountain.id}
+                      mountain={mountain}
+                      isSelected={mountain.id === selectedId}
+                      onSelect={handleSelect}
+                    />
+                  ))}
+                </>
+              )}
             </>
           ) : (
             mountains.map((mountain) => (

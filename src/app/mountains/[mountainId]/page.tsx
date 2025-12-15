@@ -2,9 +2,11 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { getMountain } from '@/data/mountains';
 import { Shield, Home, History, Camera } from 'lucide-react';
+import { MountainSelector } from '@/components/MountainSelector';
+import { useMountain } from '@/context/MountainContext';
 
 interface Conditions {
   snowDepth: number | null;
@@ -101,6 +103,18 @@ export default function MountainPage({
 }) {
   const { mountainId } = use(params);
   const mountain = getMountain(mountainId);
+  const router = useRouter();
+  const { setSelectedMountain } = useMountain();
+
+  // Sync URL param with global context
+  useEffect(() => {
+    setSelectedMountain(mountainId);
+  }, [mountainId, setSelectedMountain]);
+
+  const handleMountainChange = (newMountainId: string) => {
+    setSelectedMountain(newMountainId);
+    router.push(`/mountains/${newMountainId}`);
+  };
 
   const [conditions, setConditions] = useState<Conditions | null>(null);
   const [powderScore, setPowderScore] = useState<PowderScore | null>(null);
@@ -223,13 +237,11 @@ export default function MountainPage({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <div className="flex items-center gap-2">
-              <span
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: mountain.color }}
-              />
-              <h1 className="text-xl font-bold text-white">{mountain.name}</h1>
-            </div>
+            {/* Mountain Selector */}
+            <MountainSelector
+              selectedId={mountainId}
+              onChange={handleMountainChange}
+            />
             <a
               href={mountain.website}
               target="_blank"
