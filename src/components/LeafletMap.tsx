@@ -93,9 +93,12 @@ export default function LeafletMap({
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const userMarkerRef = useRef<L.Marker | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef(true);
 
   // Initialize map
   useEffect(() => {
+    isMountedRef.current = true;
+
     if (!containerRef.current || mapRef.current) return;
 
     // Center on Pacific Northwest
@@ -140,19 +143,42 @@ export default function LeafletMap({
     mapRef.current = map;
 
     return () => {
-      map.remove();
+      isMountedRef.current = false;
+
+      // Clear all markers first
+      markersRef.current.forEach((marker) => {
+        marker.off();
+        marker.remove();
+      });
+      markersRef.current.clear();
+
+      if (userMarkerRef.current) {
+        userMarkerRef.current.off();
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
+
+      // Stop all map animations and events before removing
+      if (map) {
+        map.stop();
+        map.off();
+        map.remove();
+      }
       mapRef.current = null;
     };
   }, []);
 
   // Update markers when mountains change
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !isMountedRef.current) return;
 
     const map = mapRef.current;
 
     // Clear existing markers
-    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current.forEach((marker) => {
+      marker.off();
+      marker.remove();
+    });
     markersRef.current.clear();
 
     // Add mountain markers
@@ -215,7 +241,7 @@ export default function LeafletMap({
 
   // Update selected marker style
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !isMountedRef.current) return;
 
     markersRef.current.forEach((marker, id) => {
       const mountain = mountains.find((m) => m.id === id);
@@ -231,7 +257,7 @@ export default function LeafletMap({
 
   // Add/update user location marker
   useEffect(() => {
-    if (!mapRef.current || !userLocation) return;
+    if (!mapRef.current || !userLocation || !isMountedRef.current) return;
 
     if (userMarkerRef.current) {
       userMarkerRef.current.setLatLng([userLocation.lat, userLocation.lng]);
