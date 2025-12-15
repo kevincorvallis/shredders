@@ -12,6 +12,7 @@ export function SiteHeader() {
   const navLinks = [
     { href: '/mountains', label: 'Mountains' },
     { href: '/chat', label: 'Chat' },
+    { href: '/agent', label: 'Agent' },
   ];
 
   return (

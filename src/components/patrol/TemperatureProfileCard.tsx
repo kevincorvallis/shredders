@@ -61,12 +61,12 @@ export function TemperatureProfileCard({
         <div className="space-y-4">
           {/* Temperature chart */}
           <div className="relative h-40">
-            {/* Freezing line */}
+            {/* Freezing line - positioned in the chart area (right side, after 72px label) */}
             <div
               className="absolute top-0 bottom-0 w-px bg-blue-500/50"
-              style={{ left: `${freezingX}%` }}
+              style={{ left: `calc(72px + (100% - 72px) * ${freezingX / 100})` }}
             >
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 text-[10px] text-blue-400 whitespace-nowrap">
+              <div className="absolute -top-1 left-0 -translate-x-1/2 text-[10px] text-blue-400 whitespace-nowrap">
                 32°F
               </div>
             </div>
@@ -79,17 +79,17 @@ export function TemperatureProfileCard({
               return (
                 <div
                   key={level.label}
-                  className="absolute flex items-center"
+                  className="absolute left-0 right-0 flex items-center"
                   style={{ top: `${y}%`, transform: 'translateY(-50%)' }}
                 >
                   {/* Elevation label */}
-                  <div className="w-16 text-right pr-2">
+                  <div className="w-[72px] flex-shrink-0 text-right pr-3">
                     <div className="text-xs font-medium text-slate-300">{level.label}</div>
                     <div className="text-[10px] text-slate-500">{level.elevation.toLocaleString()}ft</div>
                   </div>
 
                   {/* Temperature bar */}
-                  <div className="flex-1 h-6 relative">
+                  <div className="flex-1 h-6 relative min-w-0">
                     <div
                       className={`absolute left-0 h-full rounded-r ${
                         level.temp < 25 ? 'bg-cyan-500/30' :
@@ -104,11 +104,11 @@ export function TemperatureProfileCard({
                       style={{ left: `${x}%` }}
                     >
                       <div
-                        className={`w-3 h-3 rounded-full border-2 ${
+                        className={`w-3 h-3 rounded-full border-2 flex-shrink-0 ${
                           level.temp < 32 ? 'bg-blue-500 border-blue-300' : 'bg-amber-500 border-amber-300'
                         }`}
                       />
-                      <span className="ml-2 text-sm font-medium text-slate-200">
+                      <span className="ml-2 text-sm font-medium text-slate-200 whitespace-nowrap">
                         {level.temp}°F
                       </span>
                     </div>

@@ -14,7 +14,7 @@ import {
 
 interface ToolInvocation {
   toolName: string;
-  state: 'partial-call' | 'call' | 'result';
+  state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error';
   result?: {
     type: string;
     mountain?: string;
@@ -34,13 +34,13 @@ interface ComponentRendererProps {
 
 export function ComponentRenderer({ toolInvocations }: ComponentRendererProps) {
   const completedInvocations = toolInvocations.filter(
-    (invocation) => invocation.state === 'result' && invocation.result
+    (invocation) => invocation.state === 'output-available' && invocation.result
   );
 
   if (completedInvocations.length === 0) {
     // Show loading state for pending tool calls
     const pendingCalls = toolInvocations.filter(
-      (invocation) => invocation.state === 'call' || invocation.state === 'partial-call'
+      (invocation) => invocation.state === 'input-available' || invocation.state === 'input-streaming'
     );
 
     if (pendingCalls.length > 0) {

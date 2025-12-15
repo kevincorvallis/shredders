@@ -22,7 +22,7 @@ function getToolInvocations(message: UIMessage) {
     .filter(isToolUIPart)
     .map((part) => ({
       toolName: part.type.replace('tool-', ''),
-      state: part.state as 'partial-call' | 'call' | 'result',
+      state: part.state as 'input-streaming' | 'input-available' | 'output-available' | 'output-error',
       toolCallId: part.toolCallId,
       result: 'output' in part ? (part.output as { type: string; [key: string]: unknown }) : undefined,
     }));
