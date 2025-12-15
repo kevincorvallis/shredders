@@ -252,6 +252,20 @@ export default function MountainPage({
               <Shield className="w-4 h-4" />
               Patrol
             </Link>
+            <Link
+              href={`/mountains/${mountainId}/history`}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:text-white hover:bg-slate-800/50"
+            >
+              <History className="w-4 h-4" />
+              History
+            </Link>
+            <Link
+              href={`/mountains/${mountainId}/webcams`}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:text-white hover:bg-slate-800/50"
+            >
+              <Camera className="w-4 h-4" />
+              Webcams
+            </Link>
           </nav>
         </div>
       </header>

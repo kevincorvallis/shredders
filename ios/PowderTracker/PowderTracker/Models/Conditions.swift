@@ -1,6 +1,6 @@
 import Foundation
 
-struct Mountain: Codable {
+struct MountainBasic: Codable {
     let id: String
     let name: String
     let elevation: Elevation
@@ -26,7 +26,7 @@ struct Conditions: Codable, Identifiable {
     var id: String { timestamp }
 
     let timestamp: String
-    let mountain: Mountain
+    let mountain: MountainBasic
     let temperature: Temperature
     let snowDepth: Int
     let snowfall24h: Int
@@ -55,7 +55,7 @@ struct Conditions: Codable, Identifiable {
 extension Conditions {
     static let mock = Conditions(
         timestamp: ISO8601DateFormatter().string(from: Date()),
-        mountain: Mountain(id: "mt-baker", name: "Mt. Baker", elevation: .init(base: 3500, summit: 5089)),
+        mountain: MountainBasic(id: "mt-baker", name: "Mt. Baker", elevation: .init(base: 3500, summit: 5089)),
         temperature: Temperature(base: 28, summit: 18),
         snowDepth: 142,
         snowfall24h: 8,

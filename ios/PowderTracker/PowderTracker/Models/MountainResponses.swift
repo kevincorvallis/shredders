@@ -92,7 +92,7 @@ struct MountainPowderScore: Codable, Identifiable {
 // MARK: - Mountain History Response
 struct MountainHistoryResponse: Codable {
     let mountain: MountainInfo
-    let history: [HistoryPoint]
+    let history: [HistoryDataPoint]
     let days: Int
     let source: HistorySource
 

@@ -10,6 +10,16 @@
 		1086BCB50612C478052AB672 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E8F75C7ACA67E68B1B910FC /* ContentView.swift */; };
 		131D15CCE9ED96127B818663 /* ConditionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 768B6C1486E26F956EF315F1 /* ConditionsCard.swift */; };
 		1D62606A05B88A57F2A10CE0 /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
+		MOUNT001A /* Mountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT001B /* Mountain.swift */; };
+		MOUNT002A /* MountainResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT002B /* MountainResponses.swift */; };
+		MOUNT003A /* MountainMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT003B /* MountainMapView.swift */; };
+		MOUNT004A /* MountainSelectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT004B /* MountainSelectionViewModel.swift */; };
+		MOUNT005A /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT005B /* LocationManager.swift */; };
+		TRIP001A /* TripPlanning.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP001B /* TripPlanning.swift */; };
+		TRIP002A /* TripPlanningViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP002B /* TripPlanningViewModel.swift */; };
+		TRIP003A /* RoadsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP003B /* RoadsCard.swift */; };
+		TRIP004A /* TripAdviceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP004B /* TripAdviceCard.swift */; };
+		TRIP005A /* PowderDayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP005B /* PowderDayCard.swift */; };
 		1E767F11EB82CC4C6D411224 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */; };
 		1F21632AB47AD6048D008BFC /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
 		2057E9B038D9321A3BF1FFA0 /* PowderScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */; };
@@ -67,6 +77,16 @@
 		0E66CAE21D58028E82BB124F /* Conditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conditions.swift; sourceTree = "<group>"; };
 		0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		22899CFF2589BF56026F6C79 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		MOUNT001B /* Mountain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mountain.swift; sourceTree = "<group>"; };
+		MOUNT002B /* MountainResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainResponses.swift; sourceTree = "<group>"; };
+		MOUNT003B /* MountainMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainMapView.swift; sourceTree = "<group>"; };
+		MOUNT004B /* MountainSelectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainSelectionViewModel.swift; sourceTree = "<group>"; };
+		MOUNT005B /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		TRIP001B /* TripPlanning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlanning.swift; sourceTree = "<group>"; };
+		TRIP002B /* TripPlanningViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlanningViewModel.swift; sourceTree = "<group>"; };
+		TRIP003B /* RoadsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadsCard.swift; sourceTree = "<group>"; };
+		TRIP004B /* TripAdviceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripAdviceCard.swift; sourceTree = "<group>"; };
+		TRIP005B /* PowderDayCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderDayCard.swift; sourceTree = "<group>"; };
 		2EF3E2D8E24956BF69F0A62E /* PowderTrackerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerWidgetBundle.swift; sourceTree = "<group>"; };
 		3AE287ADBB463D75154EBFA7 /* PowderTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerApp.swift; sourceTree = "<group>"; };
 		3D0B5B03BA2A647054B565D7 /* PowderTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PowderTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -120,6 +140,8 @@
 				C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */,
 				04359DE47F38AAA25B08299F /* ForecastViewModel.swift */,
 				0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */,
+				MOUNT004B /* MountainSelectionViewModel.swift */,
+				TRIP002B /* TripPlanningViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -141,6 +163,7 @@
 			isa = PBXGroup;
 			children = (
 				22899CFF2589BF56026F6C79 /* APIClient.swift */,
+				MOUNT005B /* LocationManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -159,8 +182,11 @@
 			children = (
 				768B6C1486E26F956EF315F1 /* ConditionsCard.swift */,
 				9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */,
+				TRIP005B /* PowderDayCard.swift */,
 				5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */,
+				TRIP003B /* RoadsCard.swift */,
 				D09D79F661133B42636813CB /* SnowDepthChart.swift */,
+				TRIP004B /* TripAdviceCard.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -181,7 +207,10 @@
 				0E66CAE21D58028E82BB124F /* Conditions.swift */,
 				4F42690B312118CCC3712822 /* Forecast.swift */,
 				01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */,
+				MOUNT001B /* Mountain.swift */,
+				MOUNT002B /* MountainResponses.swift */,
 				0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */,
+				TRIP001B /* TripPlanning.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -193,6 +222,7 @@
 				F65D1DA7C683B7849128287E /* DashboardView.swift */,
 				4D5DBA53149931BA130994B0 /* ForecastView.swift */,
 				A84FF1992899A3147557A19E /* HistoryChartView.swift */,
+				MOUNT003B /* MountainMapView.swift */,
 				AB287A8A884E4E3BD60F605C /* Components */,
 			);
 			path = Views;
@@ -292,10 +322,20 @@
 				21746B3B39924D04C6E0E780 /* HistoryChartView.swift in Sources */,
 				1D62606A05B88A57F2A10CE0 /* HistoryData.swift in Sources */,
 				892D18B89013307A8C5FE8B3 /* HistoryViewModel.swift in Sources */,
+				MOUNT005A /* LocationManager.swift in Sources */,
+				MOUNT001A /* Mountain.swift in Sources */,
+				MOUNT003A /* MountainMapView.swift in Sources */,
+				MOUNT002A /* MountainResponses.swift in Sources */,
+				MOUNT004A /* MountainSelectionViewModel.swift in Sources */,
 				2057E9B038D9321A3BF1FFA0 /* PowderScore.swift in Sources */,
 				E0CA30E94F41AB09EEFDE036 /* PowderScoreGauge.swift in Sources */,
 				2D3E603A8AE77090B45FA99A /* PowderTrackerApp.swift in Sources */,
 				37EF014A6B4954D34E76A7E6 /* SnowDepthChart.swift in Sources */,
+				TRIP001A /* TripPlanning.swift in Sources */,
+				TRIP002A /* TripPlanningViewModel.swift in Sources */,
+				TRIP003A /* RoadsCard.swift in Sources */,
+				TRIP004A /* TripAdviceCard.swift in Sources */,
+				TRIP005A /* PowderDayCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

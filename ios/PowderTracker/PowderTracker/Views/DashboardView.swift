@@ -2,6 +2,10 @@ import SwiftUI
 
 struct DashboardView: View {
     @State private var viewModel = DashboardViewModel()
+    @StateObject private var tripPlanningViewModel = TripPlanningViewModel()
+
+    // Default to Baker for the legacy dashboard
+    private let defaultMountainId = "baker"
 
     var body: some View {
         NavigationStack {
@@ -28,6 +32,15 @@ struct DashboardView: View {
                             ConditionsCard(conditions: conditions)
                         }
 
+                        // Road & Pass Conditions (WA mountains only)
+                        RoadsCard(roads: tripPlanningViewModel.roads)
+
+                        // Trip & Traffic Advice
+                        TripAdviceCard(tripAdvice: tripPlanningViewModel.tripAdvice)
+
+                        // Powder Day Planner (3-day)
+                        PowderDayCard(powderDayPlan: tripPlanningViewModel.powderDayPlan)
+
                         // 3-Day Forecast Preview
                         if !viewModel.forecast.isEmpty {
                             forecastPreviewSection
@@ -40,9 +53,11 @@ struct DashboardView: View {
             .navigationTitle("PowderTracker")
             .refreshable {
                 await viewModel.refresh()
+                await tripPlanningViewModel.refresh(for: defaultMountainId)
             }
             .task {
                 await viewModel.loadData()
+                await tripPlanningViewModel.fetchAll(for: defaultMountainId)
             }
         }
     }

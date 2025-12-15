@@ -70,6 +70,18 @@ actor APIClient {
         try await fetch(endpoint: "/mountains/\(mountainId)/history?days=\(days)")
     }
 
+    func fetchRoads(for mountainId: String) async throws -> RoadsResponse {
+        try await fetch(endpoint: "/mountains/\(mountainId)/roads")
+    }
+
+    func fetchTripAdvice(for mountainId: String) async throws -> TripAdviceResponse {
+        try await fetch(endpoint: "/mountains/\(mountainId)/trip-advice")
+    }
+
+    func fetchPowderDayPlan(for mountainId: String) async throws -> PowderDayPlanResponse {
+        try await fetch(endpoint: "/mountains/\(mountainId)/powder-day")
+    }
+
     // MARK: - Legacy Endpoints (default to Baker for backwards compatibility)
 
     func fetchConditions() async throws -> Conditions {

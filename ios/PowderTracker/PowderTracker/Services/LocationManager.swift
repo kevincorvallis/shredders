@@ -79,10 +79,11 @@ extension LocationManager: CLLocationManagerDelegate {
     }
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
         Task { @MainActor in
-            authorizationStatus = manager.authorizationStatus
+            authorizationStatus = status
 
-            switch manager.authorizationStatus {
+            switch status {
             case .authorizedWhenInUse, .authorizedAlways:
                 locationManager.requestLocation()
             case .denied, .restricted:
