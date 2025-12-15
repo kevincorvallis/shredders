@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getMountain } from '@/data/mountains';
 import { getCurrentConditions } from '@/lib/apis/snotel';
 import { getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
+import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';
 
 export async function GET(
   request: Request,
@@ -37,6 +38,26 @@ export async function GET(
       console.error(`NOAA error for ${mountain.name}:`, error);
     }
 
+    // Fetch freezing level from Open-Meteo
+    let freezingLevel: number | null = null;
+    let rainRisk: { score: number; description: string } | null = null;
+    try {
+      freezingLevel = await getCurrentFreezingLevelFeet(
+        mountain.location.lat,
+        mountain.location.lng
+      );
+      rainRisk = calculateRainRiskScore(
+        freezingLevel,
+        mountain.elevation.base,
+        mountain.elevation.summit
+      );
+    } catch (error) {
+      console.error(`Open-Meteo error for ${mountain.name}:`, error);
+      // Fallback to simple temperature-based estimate
+      const temp = weatherData?.temperature ?? snotelData?.temperature ?? 32;
+      freezingLevel = Math.round(4000 + (temp - 32) * 285);
+    }
+
     // Combine data
     const conditions = {
       mountain: {
@@ -58,6 +79,15 @@ export async function GET(
           }
         : null,
       lastUpdated: snotelData?.lastUpdated ?? new Date().toISOString(),
+      // New: Freezing level from Open-Meteo
+      freezingLevel,
+      rainRisk: rainRisk
+        ? {
+            score: rainRisk.score,
+            description: rainRisk.description,
+          }
+        : null,
+      elevation: mountain.elevation,
       dataSources: {
         snotel: mountain.snotel
           ? {
@@ -68,6 +98,9 @@ export async function GET(
         noaa: {
           available: !!weatherData,
           gridOffice: mountain.noaa.gridOffice,
+        },
+        openMeteo: {
+          available: freezingLevel !== null,
         },
       },
     };

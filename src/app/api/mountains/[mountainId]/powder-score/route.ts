@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getMountain } from '@/data/mountains';
 import { getCurrentConditions } from '@/lib/apis/snotel';
 import { getForecast, getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
+import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';
 
 interface ScoreFactor {
   name: string;
@@ -9,6 +10,7 @@ interface ScoreFactor {
   weight: number;
   contribution: number;
   description: string;
+  isPositive?: boolean;
 }
 
 function calculatePowderScore(
@@ -16,18 +18,28 @@ function calculatePowderScore(
   snowfall48h: number,
   temperature: number,
   windSpeed: number,
-  upcomingSnow: number
+  upcomingSnow: number,
+  rainRisk?: { score: number; description: string } | null
 ): { score: number; factors: ScoreFactor[] } {
   const factors: ScoreFactor[] = [];
+
+  // Weights adjusted to include rain risk factor
+  // With rain risk: Fresh 30%, Recent 15%, Temp 10%, Wind 10%, Upcoming 15%, Snow Line 20%
+  // Without rain risk (fallback): Fresh 35%, Recent 20%, Temp 15%, Wind 15%, Upcoming 15%
+  const hasRainRisk = rainRisk !== null && rainRisk !== undefined;
+  const weights = hasRainRisk
+    ? { fresh: 0.30, recent: 0.15, temp: 0.10, wind: 0.10, upcoming: 0.15, snowLine: 0.20 }
+    : { fresh: 0.35, recent: 0.20, temp: 0.15, wind: 0.15, upcoming: 0.15, snowLine: 0 };
 
   // Fresh snow factor (0-10) - most important
   const freshSnowScore = Math.min(10, snowfall24h / 2);
   factors.push({
     name: 'Fresh Snow (24h)',
     value: snowfall24h,
-    weight: 0.35,
-    contribution: freshSnowScore * 0.35,
+    weight: weights.fresh,
+    contribution: freshSnowScore * weights.fresh,
     description: `${snowfall24h}" in last 24 hours`,
+    isPositive: snowfall24h >= 4,
   });
 
   // Recent snow factor (0-10)
@@ -35,9 +47,10 @@ function calculatePowderScore(
   factors.push({
     name: 'Recent Snow (48h)',
     value: snowfall48h,
-    weight: 0.2,
-    contribution: recentSnowScore * 0.2,
+    weight: weights.recent,
+    contribution: recentSnowScore * weights.recent,
     description: `${snowfall48h}" in last 48 hours`,
+    isPositive: snowfall48h >= 6,
   });
 
   // Temperature factor (0-10) - ideal is 28-32F
@@ -52,9 +65,10 @@ function calculatePowderScore(
   factors.push({
     name: 'Temperature',
     value: temperature,
-    weight: 0.15,
-    contribution: tempScore * 0.15,
+    weight: weights.temp,
+    contribution: tempScore * weights.temp,
     description: `${temperature}°F - ${temperature <= 32 ? 'good for snow preservation' : 'warm, watch for wet conditions'}`,
+    isPositive: temperature <= 32 && temperature >= 20,
   });
 
   // Wind factor (0-10) - lower is better for powder
@@ -62,9 +76,10 @@ function calculatePowderScore(
   factors.push({
     name: 'Wind',
     value: windSpeed,
-    weight: 0.15,
-    contribution: windScore * 0.15,
+    weight: weights.wind,
+    contribution: windScore * weights.wind,
     description: `${windSpeed} mph - ${windSpeed < 15 ? 'light winds' : windSpeed < 30 ? 'moderate winds' : 'strong winds'}`,
+    isPositive: windSpeed < 20,
   });
 
   // Forecast factor (0-10) - upcoming snow
@@ -72,10 +87,23 @@ function calculatePowderScore(
   factors.push({
     name: 'Upcoming Snow',
     value: upcomingSnow,
-    weight: 0.15,
-    contribution: forecastScore * 0.15,
+    weight: weights.upcoming,
+    contribution: forecastScore * weights.upcoming,
     description: `${upcomingSnow}" expected in next 48 hours`,
+    isPositive: upcomingSnow >= 4,
   });
+
+  // Snow Line factor (0-10) - from Open-Meteo freezing level
+  if (hasRainRisk && rainRisk) {
+    factors.push({
+      name: 'Snow Line',
+      value: rainRisk.score,
+      weight: weights.snowLine,
+      contribution: rainRisk.score * weights.snowLine,
+      description: rainRisk.description,
+      isPositive: rainRisk.score >= 7,
+    });
+  }
 
   // Calculate final score
   const totalScore = factors.reduce((sum, f) => sum + f.contribution, 0);
@@ -122,6 +150,23 @@ export async function GET(
       console.error(`NOAA error for ${mountain.name}:`, error);
     }
 
+    // Get freezing level from Open-Meteo
+    let freezingLevel: number | null = null;
+    let rainRisk: { score: number; description: string } | null = null;
+    try {
+      freezingLevel = await getCurrentFreezingLevelFeet(
+        mountain.location.lat,
+        mountain.location.lng
+      );
+      rainRisk = calculateRainRiskScore(
+        freezingLevel,
+        mountain.elevation.base,
+        mountain.elevation.summit
+      );
+    } catch (error) {
+      console.error(`Open-Meteo error for ${mountain.name}:`, error);
+    }
+
     // Calculate upcoming snow from forecast
     const upcomingSnow = forecast
       ? forecast
@@ -140,7 +185,8 @@ export async function GET(
       snowfall48h,
       temperature,
       windSpeed,
-      upcomingSnow
+      upcomingSnow,
+      rainRisk
     );
 
     // Generate verdict
@@ -171,9 +217,20 @@ export async function GET(
         windSpeed,
         upcomingSnow,
       },
+      // New: Freezing level from Open-Meteo
+      freezingLevel,
+      rainRisk: rainRisk
+        ? {
+            score: rainRisk.score,
+            description: rainRisk.description,
+            level: rainRisk.score >= 7 ? 'low' : rainRisk.score >= 4 ? 'moderate' : 'high',
+          }
+        : null,
+      elevation: mountain.elevation,
       dataAvailable: {
         snotel: !!snotelData,
         noaa: !!weatherData,
+        openMeteo: !!freezingLevel,
       },
     });
   } catch (error) {

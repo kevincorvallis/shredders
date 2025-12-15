@@ -13,6 +13,12 @@ interface Conditions {
   temperature: number | null;
   conditions: string;
   wind: { speed: number; direction: string } | null;
+  freezingLevel: number | null;
+  rainRisk: {
+    score: number;
+    description: string;
+  } | null;
+  elevation?: { base: number; summit: number };
 }
 
 interface PowderScore {
@@ -357,6 +363,67 @@ export default function MountainPage({
                     </div>
                   </div>
                 </div>
+
+                {/* Freezing Level / Snow Line */}
+                {conditions.freezingLevel !== null && (
+                  <div className="mt-4 bg-slate-700/30 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="text-2xl">🏔️</div>
+                        <div>
+                          <div className="text-sm font-medium text-white">
+                            Snow Line: {conditions.freezingLevel.toLocaleString()}&apos;
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {conditions.rainRisk?.description ?? 'Freezing level elevation'}
+                          </div>
+                        </div>
+                      </div>
+                      {conditions.rainRisk && (
+                        <div
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            conditions.rainRisk.score >= 7
+                              ? 'bg-green-500/20 text-green-400'
+                              : conditions.rainRisk.score >= 4
+                                ? 'bg-yellow-500/20 text-yellow-400'
+                                : 'bg-red-500/20 text-red-400'
+                          }`}
+                        >
+                          {conditions.rainRisk.score >= 7
+                            ? 'All Snow'
+                            : conditions.rainRisk.score >= 4
+                              ? 'Mixed'
+                              : 'Rain Risk'}
+                        </div>
+                      )}
+                    </div>
+                    {conditions.elevation && conditions.freezingLevel !== null && (
+                      <div className="mt-3 h-2 bg-slate-600 rounded-full overflow-hidden relative">
+                        {/* Base to Summit gradient */}
+                        <div
+                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-sky-400"
+                          style={{
+                            width: `${Math.max(0, Math.min(100, ((conditions.freezingLevel - conditions.elevation.base) / (conditions.elevation.summit - conditions.elevation.base)) * 100))}%`,
+                          }}
+                        />
+                        {/* Freezing level marker */}
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-white rounded-full shadow"
+                          style={{
+                            left: `${Math.max(0, Math.min(100, ((conditions.freezingLevel - conditions.elevation.base) / (conditions.elevation.summit - conditions.elevation.base)) * 100))}%`,
+                          }}
+                        />
+                      </div>
+                    )}
+                    {conditions.elevation && (
+                      <div className="mt-1 flex justify-between text-xs text-gray-500">
+                        <span>Base {conditions.elevation.base.toLocaleString()}&apos;</span>
+                        <span>Summit {conditions.elevation.summit.toLocaleString()}&apos;</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {!mountain.snotel && (
                   <p className="mt-4 text-sm text-amber-400/80">
                     Note: Limited SNOTEL data for this mountain. Some values may be estimated.
