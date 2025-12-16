@@ -294,8 +294,8 @@ export async function getExtendedCurrentWeather(
   const skyCover = findCurrentValue(gridData.properties.skyCover?.values);
   const precipProbability = findCurrentValue(gridData.properties.probabilityOfPrecipitation?.values);
 
-  // Convert wind gust from m/s to mph if present
-  const windGustMph = windGust !== null ? Math.round(windGust * 2.237) : null;
+  // Convert wind gust from km/h to mph if present (NOAA gridded data uses km/h)
+  const windGustMph = windGust !== null ? Math.round(windGust * 0.621371) : null;
 
   // Convert visibility from meters to miles
   const visibilityMiles = visibility !== null ? Math.round(visibility / 1609.34 * 10) / 10 : null;
@@ -355,8 +355,8 @@ export async function getRecentWindData(
 
     windData.push({
       time: start,
-      speed: Math.round(speedPoint.value * 2.237), // Convert m/s to mph
-      gust: gust !== null ? Math.round(gust * 2.237) : null,
+      speed: Math.round(speedPoint.value * 0.621371), // Convert km/h to mph
+      gust: gust !== null ? Math.round(gust * 0.621371) : null,
       direction,
     });
   }
