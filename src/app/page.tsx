@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MountainMap } from '@/components/MountainMapLoader';
+import { Intro } from '@/components/Intro';
 import { getAllMountains, getMountainsByRegion, type MountainConfig } from '@/data/mountains';
 import { getPowderScoreStyle } from '@/lib/design-tokens';
 import {
@@ -509,6 +510,7 @@ export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
 
   const allMountains = getAllMountains();
 
@@ -650,27 +652,32 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <Skeleton className="h-12 w-64 mb-8" />
-          <Skeleton className="h-64 w-full mb-6 rounded-2xl" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-80 rounded-xl" />
-            ))}
+      <>
+        {showIntro && <Intro onComplete={() => setShowIntro(false)} />}
+        <div className="min-h-screen bg-slate-950 text-slate-100">
+          <div className="max-w-7xl mx-auto px-4 py-8">
+            <Skeleton className="h-12 w-64 mb-8" />
+            <Skeleton className="h-64 w-full mb-6 rounded-2xl" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-xl" />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-80 rounded-xl" />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <>
+      {showIntro && <Intro onComplete={() => setShowIntro(false)} />}
+      <div className="min-h-screen bg-slate-950 text-slate-100">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-lg border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -866,5 +873,6 @@ export default function Dashboard() {
         </footer>
       </main>
     </div>
+    </>
   );
 }
