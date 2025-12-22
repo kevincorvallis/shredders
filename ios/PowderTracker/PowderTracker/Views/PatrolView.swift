@@ -1,10 +1,16 @@
 import SwiftUI
 
 struct PatrolView: View {
+    var mountainId: String? = nil  // Optional parameter from parent
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
     @State private var safetyData: SafetyResponse?
     @State private var isLoading = true
     @State private var error: String?
+
+    // Use passed mountainId if available, otherwise fall back to AppStorage
+    private var effectiveMountainId: String {
+        mountainId ?? selectedMountainId
+    }
 
     var body: some View {
         NavigationStack {
@@ -43,7 +49,7 @@ struct PatrolView: View {
             .refreshable {
                 await loadData()
             }
-            .task(id: selectedMountainId) {
+            .task(id: effectiveMountainId) {
                 await loadData()
             }
         }
@@ -54,11 +60,15 @@ struct PatrolView: View {
         error = nil
 
         do {
-            let url = URL(string: "https://shredders-bay.vercel.app/api/mountains/\(selectedMountainId)/safety")!
+            guard let url = URL(string: "\(AppConfig.apiBaseURL)/mountains/\(effectiveMountainId)/safety") else {
+                self.error = "Unable to load safety data. Please try again."
+                isLoading = false
+                return
+            }
             let (data, _) = try await URLSession.shared.data(from: url)
             safetyData = try JSONDecoder().decode(SafetyResponse.self, from: data)
         } catch {
-            self.error = error.localizedDescription
+            self.error = "Unable to load safety data. Please check your connection."
         }
 
         isLoading = false

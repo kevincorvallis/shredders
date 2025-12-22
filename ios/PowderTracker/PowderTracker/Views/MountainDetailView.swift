@@ -143,13 +143,13 @@ struct MountainDetailView: View {
 
             HStack(spacing: 12) {
                 NavigationLink {
-                    WebcamsView()
+                    WebcamsView(mountainId: mountainId)
                 } label: {
                     QuickActionButton(icon: "video", title: "Webcams")
                 }
 
                 NavigationLink {
-                    PatrolView()
+                    PatrolView(mountainId: mountainId)
                 } label: {
                     QuickActionButton(icon: "shield", title: "Patrol")
                 }

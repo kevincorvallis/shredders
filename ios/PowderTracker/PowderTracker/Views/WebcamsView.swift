@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WebcamsView: View {
+    var mountainId: String? = nil  // Optional parameter from parent
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
     @State private var webcams: [WebcamData] = []
     @State private var mountainName: String = ""
@@ -8,6 +9,11 @@ struct WebcamsView: View {
     @State private var error: String?
     @State private var selectedWebcam: WebcamData?
     @State private var refreshID = UUID()
+
+    // Use passed mountainId if available, otherwise fall back to AppStorage
+    private var effectiveMountainId: String {
+        mountainId ?? selectedMountainId
+    }
 
     var body: some View {
         NavigationStack {
@@ -57,7 +63,7 @@ struct WebcamsView: View {
             .refreshable {
                 refreshID = UUID()
             }
-            .task(id: selectedMountainId) {
+            .task(id: effectiveMountainId) {
                 await loadWebcams()
             }
             .fullScreenCover(item: $selectedWebcam) { webcam in
@@ -73,7 +79,11 @@ struct WebcamsView: View {
         error = nil
 
         do {
-            let url = URL(string: "https://shredders-bay.vercel.app/api/mountains/\(selectedMountainId)")!
+            guard let url = URL(string: "\(AppConfig.apiBaseURL)/mountains/\(effectiveMountainId)") else {
+                self.error = "Unable to load webcams. Please try again."
+                isLoading = false
+                return
+            }
             let (data, _) = try await URLSession.shared.data(from: url)
             let response = try JSONDecoder().decode(MountainDetail.self, from: data)
 
@@ -82,7 +92,7 @@ struct WebcamsView: View {
                 WebcamData(id: webcam.id, name: webcam.name, url: webcam.url)
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = "Unable to load webcams. Please check your connection."
         }
 
         isLoading = false

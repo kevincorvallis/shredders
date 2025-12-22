@@ -4,6 +4,7 @@ struct DashboardView: View {
     @State private var viewModel = DashboardViewModel()
     @StateObject private var tripPlanningViewModel = TripPlanningViewModel()
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
+    @State private var displayMountainId: String = "baker" // Immediate state for UI
     @State private var showingMountainPicker = false
 
     var body: some View {
@@ -40,6 +41,9 @@ struct DashboardView: View {
                         // Powder Day Planner (3-day)
                         PowderDayCard(powderDayPlan: tripPlanningViewModel.powderDayPlan)
 
+                        // Weather.gov Integration (Alerts & Links)
+                        WeatherGovLinksView(mountainId: displayMountainId)
+
                         // 3-Day Forecast Preview
                         if !viewModel.forecast.isEmpty {
                             forecastPreviewSection
@@ -61,11 +65,19 @@ struct DashboardView: View {
             }
             .refreshable {
                 await viewModel.refresh()
-                await tripPlanningViewModel.refresh(for: selectedMountainId)
+                await tripPlanningViewModel.refresh(for: displayMountainId)
             }
-            .task(id: selectedMountainId) {
-                await viewModel.loadData(for: selectedMountainId)
-                await tripPlanningViewModel.fetchAll(for: selectedMountainId)
+            .task(id: displayMountainId) {
+                await viewModel.loadData(for: displayMountainId)
+                await tripPlanningViewModel.fetchAll(for: displayMountainId)
+            }
+            .onAppear {
+                // Sync display state on appear
+                displayMountainId = selectedMountainId
+            }
+            .onChange(of: selectedMountainId) { oldValue, newValue in
+                // Update immediately when AppStorage changes
+                displayMountainId = newValue
             }
             .sheet(isPresented: $showingMountainPicker) {
                 MountainPickerView(selectedMountainId: $selectedMountainId)

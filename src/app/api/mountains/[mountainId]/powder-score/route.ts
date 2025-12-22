@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getMountain } from '@/data/mountains';
 import { getCurrentConditions } from '@/lib/apis/snotel';
-import { getForecast, getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
+import {
+  getForecast,
+  getCurrentWeather,
+  getExtendedCurrentWeather,
+  getHourlyForecast,
+  type NOAAGridConfig
+} from '@/lib/apis/noaa';
 import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';
 
 interface ScoreFactor {
@@ -19,17 +25,27 @@ function calculatePowderScore(
   temperature: number,
   windSpeed: number,
   upcomingSnow: number,
-  rainRisk?: { score: number; description: string } | null
+  rainRisk?: { score: number; description: string } | null,
+  weatherGovData?: {
+    windGust: number | null;
+    humidity: number | null;
+    visibility: number | null;
+    skyCover: number | null;
+    precipProbability: number | null;
+  }
 ): { score: number; factors: ScoreFactor[] } {
   const factors: ScoreFactor[] = [];
 
-  // Weights adjusted to include rain risk factor
-  // With rain risk: Fresh 30%, Recent 15%, Temp 10%, Wind 10%, Upcoming 15%, Snow Line 20%
-  // Without rain risk (fallback): Fresh 35%, Recent 20%, Temp 15%, Wind 15%, Upcoming 15%
+  // Enhanced weights with weather.gov data
+  // Fresh 25%, Recent 12%, Temp 10%, Wind 8%, Upcoming 15%, Snow Line 18%, Visibility 7%, Conditions 5%
   const hasRainRisk = rainRisk !== null && rainRisk !== undefined;
-  const weights = hasRainRisk
-    ? { fresh: 0.30, recent: 0.15, temp: 0.10, wind: 0.10, upcoming: 0.15, snowLine: 0.20 }
-    : { fresh: 0.35, recent: 0.20, temp: 0.15, wind: 0.15, upcoming: 0.15, snowLine: 0 };
+  const hasWeatherGov = weatherGovData !== null && weatherGovData !== undefined;
+
+  const weights = hasRainRisk && hasWeatherGov
+    ? { fresh: 0.25, recent: 0.12, temp: 0.10, wind: 0.08, upcoming: 0.15, snowLine: 0.18, visibility: 0.07, conditions: 0.05 }
+    : hasRainRisk
+    ? { fresh: 0.30, recent: 0.15, temp: 0.10, wind: 0.10, upcoming: 0.15, snowLine: 0.20, visibility: 0, conditions: 0 }
+    : { fresh: 0.35, recent: 0.20, temp: 0.15, wind: 0.15, upcoming: 0.15, snowLine: 0, visibility: 0, conditions: 0 };
 
   // Fresh snow factor (0-10) - most important
   const freshSnowScore = Math.min(10, snowfall24h / 2);
@@ -71,15 +87,22 @@ function calculatePowderScore(
     isPositive: temperature <= 32 && temperature >= 20,
   });
 
-  // Wind factor (0-10) - lower is better for powder
-  const windScore = Math.max(0, 10 - windSpeed / 5);
+  // Wind factor (0-10) - lower is better for powder, consider gusts
+  const effectiveWind = weatherGovData?.windGust
+    ? Math.max(windSpeed, weatherGovData.windGust * 0.8) // Gusts matter more
+    : windSpeed;
+  const windScore = Math.max(0, 10 - effectiveWind / 5);
+  const windDesc = weatherGovData?.windGust
+    ? `${windSpeed} mph (gusts ${weatherGovData.windGust}) - ${effectiveWind < 15 ? 'light' : effectiveWind < 30 ? 'moderate' : 'strong'} winds`
+    : `${windSpeed} mph - ${windSpeed < 15 ? 'light winds' : windSpeed < 30 ? 'moderate winds' : 'strong winds'}`;
+
   factors.push({
     name: 'Wind',
-    value: windSpeed,
+    value: Math.round(effectiveWind),
     weight: weights.wind,
     contribution: windScore * weights.wind,
-    description: `${windSpeed} mph - ${windSpeed < 15 ? 'light winds' : windSpeed < 30 ? 'moderate winds' : 'strong winds'}`,
-    isPositive: windSpeed < 20,
+    description: windDesc,
+    isPositive: effectiveWind < 20,
   });
 
   // Forecast factor (0-10) - upcoming snow
@@ -102,6 +125,74 @@ function calculatePowderScore(
       contribution: rainRisk.score * weights.snowLine,
       description: rainRisk.description,
       isPositive: rainRisk.score >= 7,
+    });
+  }
+
+  // Visibility factor (0-10) - from weather.gov gridded data
+  if (hasWeatherGov && weatherGovData && weatherGovData.visibility !== null && weights.visibility > 0) {
+    const visibilityMiles = weatherGovData.visibility;
+    let visibilityScore = 10;
+    let visibilityDesc = '';
+
+    if (visibilityMiles >= 5) {
+      visibilityScore = 10;
+      visibilityDesc = `Excellent (${visibilityMiles.toFixed(1)} mi)`;
+    } else if (visibilityMiles >= 2) {
+      visibilityScore = 7;
+      visibilityDesc = `Good (${visibilityMiles.toFixed(1)} mi)`;
+    } else if (visibilityMiles >= 0.5) {
+      visibilityScore = 4;
+      visibilityDesc = `Limited (${visibilityMiles.toFixed(1)} mi) - fog/snow`;
+    } else {
+      visibilityScore = 2;
+      visibilityDesc = `Poor (${visibilityMiles.toFixed(1)} mi) - whiteout risk`;
+    }
+
+    factors.push({
+      name: 'Visibility',
+      value: Math.round(visibilityMiles * 10) / 10,
+      weight: weights.visibility,
+      contribution: visibilityScore * weights.visibility,
+      description: visibilityDesc,
+      isPositive: visibilityMiles >= 2,
+    });
+  }
+
+  // Weather Conditions factor (0-10) - from weather.gov
+  if (hasWeatherGov && weatherGovData && weights.conditions > 0) {
+    const { skyCover, humidity, precipProbability } = weatherGovData;
+    let conditionsScore = 7; // Default neutral
+    let conditionsDesc = 'Conditions monitoring';
+
+    // Perfect powder conditions: clear/partly cloudy, low humidity, low precip probability
+    if (skyCover !== null && humidity !== null && precipProbability !== null) {
+      // Sky cover: less is better unless we want snow
+      const skyScore = upcomingSnow > 2 ? Math.min(10, skyCover / 10) : Math.max(0, 10 - skyCover / 10);
+
+      // Humidity: moderate is best (too low = ice, too high = wet)
+      const humidityScore = humidity >= 60 && humidity <= 80 ? 10 : Math.max(0, 10 - Math.abs(70 - humidity) / 10);
+
+      // Precip probability: align with upcoming snow forecast
+      const precipScore = upcomingSnow > 2 ? Math.min(10, precipProbability / 10) : Math.max(0, 10 - precipProbability / 10);
+
+      conditionsScore = (skyScore + humidityScore + precipScore) / 3;
+
+      if (upcomingSnow > 4) {
+        conditionsDesc = `Active weather - ${precipProbability}% precip chance`;
+      } else if (skyCover < 50 && precipProbability < 30) {
+        conditionsDesc = `Bluebird - ${skyCover}% clouds, ${precipProbability}% precip`;
+      } else {
+        conditionsDesc = `Mixed - ${skyCover}% clouds, ${humidity}% humidity`;
+      }
+    }
+
+    factors.push({
+      name: 'Conditions',
+      value: Math.round(conditionsScore * 10) / 10,
+      weight: weights.conditions,
+      contribution: conditionsScore * weights.conditions,
+      description: conditionsDesc,
+      isPositive: conditionsScore >= 6,
     });
   }
 
@@ -137,14 +228,19 @@ export async function GET(
       }
     }
 
-    // Get NOAA data
+    // Get NOAA data (enhanced with gridded data)
     const noaaConfig: NOAAGridConfig = mountain.noaa;
     let weatherData = null;
+    let extendedWeatherData = null;
     let forecast = null;
+    let hourlyForecast = null;
+
     try {
-      [weatherData, forecast] = await Promise.all([
+      [weatherData, extendedWeatherData, forecast, hourlyForecast] = await Promise.all([
         getCurrentWeather(noaaConfig),
+        getExtendedCurrentWeather(noaaConfig),
         getForecast(noaaConfig),
+        getHourlyForecast(noaaConfig, 24),
       ]);
     } catch (error) {
       console.error(`NOAA error for ${mountain.name}:`, error);
@@ -167,26 +263,49 @@ export async function GET(
       console.error(`Open-Meteo error for ${mountain.name}:`, error);
     }
 
-    // Calculate upcoming snow from forecast
+    // Calculate upcoming snow from forecast (enhanced with hourly data)
     const upcomingSnow = forecast
       ? forecast
           .slice(0, 2)
           .reduce((sum: number, day) => sum + (day.snowfall || 0), 0)
       : 0;
 
+    // Get detailed upcoming snow from hourly forecast
+    let upcomingSnow24h = 0;
+    if (hourlyForecast && hourlyForecast.length > 0) {
+      // Estimate snowfall from hourly precip probability and temperature
+      upcomingSnow24h = hourlyForecast
+        .slice(0, 24)
+        .filter(h => h.temperature <= 35 && (h.precipProbability ?? 0) > 30)
+        .length * 0.5; // Rough estimate: 0.5" per hour with snow conditions
+    }
+
+    // Use the higher of the two estimates
+    const bestUpcomingSnow = Math.max(upcomingSnow, upcomingSnow24h);
+
+    // Prepare weather.gov data for powder score
+    const weatherGovData = extendedWeatherData ? {
+      windGust: extendedWeatherData.windGust,
+      humidity: extendedWeatherData.humidity,
+      visibility: extendedWeatherData.visibility,
+      skyCover: extendedWeatherData.skyCover,
+      precipProbability: extendedWeatherData.precipProbability,
+    } : undefined;
+
     // Calculate powder score
     const snowfall24h = snotelData?.snowfall24h ?? 0;
     const snowfall48h = snotelData?.snowfall48h ?? 0;
-    const temperature = weatherData?.temperature ?? snotelData?.temperature ?? 32;
-    const windSpeed = weatherData?.windSpeed ?? 0;
+    const temperature = extendedWeatherData?.temperature ?? weatherData?.temperature ?? snotelData?.temperature ?? 32;
+    const windSpeed = extendedWeatherData?.windSpeed ?? weatherData?.windSpeed ?? 0;
 
     const { score, factors } = calculatePowderScore(
       snowfall24h,
       snowfall48h,
       temperature,
       windSpeed,
-      upcomingSnow,
-      rainRisk
+      bestUpcomingSnow,
+      rainRisk,
+      weatherGovData
     );
 
     // Generate verdict
@@ -215,9 +334,16 @@ export async function GET(
         snowfall48h,
         temperature,
         windSpeed,
-        upcomingSnow,
+        upcomingSnow: bestUpcomingSnow,
+        // Enhanced weather.gov data
+        windGust: extendedWeatherData?.windGust ?? null,
+        humidity: extendedWeatherData?.humidity ?? null,
+        visibility: extendedWeatherData?.visibility ?? null,
+        visibilityCategory: extendedWeatherData?.visibilityCategory ?? null,
+        skyCover: extendedWeatherData?.skyCover ?? null,
+        precipProbability: extendedWeatherData?.precipProbability ?? null,
       },
-      // New: Freezing level from Open-Meteo
+      // Freezing level from Open-Meteo
       freezingLevel,
       rainRisk: rainRisk
         ? {
@@ -230,6 +356,7 @@ export async function GET(
       dataAvailable: {
         snotel: !!snotelData,
         noaa: !!weatherData,
+        noaaExtended: !!extendedWeatherData,
         openMeteo: !!freezingLevel,
       },
     });

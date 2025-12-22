@@ -1,6 +1,8 @@
 import WidgetKit
 import SwiftUI
 
+private let apiBaseURL = "https://shredders-bay.vercel.app/api"
+
 struct PowderEntry: TimelineEntry {
     let date: Date
     let snowDepth: Int
@@ -60,14 +62,14 @@ struct Provider: TimelineProvider {
                 )
 
                 // Refresh every 30 minutes
-                let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
+                let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date().addingTimeInterval(1800)
                 let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
                 completion(timeline)
 
             } catch {
                 // Use placeholder on error
                 let entry = placeholder(in: context)
-                let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: Date())!
+                let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: Date()) ?? Date().addingTimeInterval(300)
                 let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
                 completion(timeline)
             }
@@ -77,19 +79,25 @@ struct Provider: TimelineProvider {
     // MARK: - API Calls
 
     private func fetchConditions() async throws -> Conditions {
-        let url = URL(string: "https://shredders-bay.vercel.app/api/conditions")!
+        guard let url = URL(string: "\(apiBaseURL)/conditions") else {
+            throw URLError(.badURL)
+        }
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(Conditions.self, from: data)
     }
 
     private func fetchPowderScore() async throws -> PowderScore {
-        let url = URL(string: "https://shredders-bay.vercel.app/api/powder-score")!
+        guard let url = URL(string: "\(apiBaseURL)/powder-score") else {
+            throw URLError(.badURL)
+        }
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(PowderScore.self, from: data)
     }
 
     private func fetchForecast() async throws -> ForecastResponse {
-        let url = URL(string: "https://shredders-bay.vercel.app/api/forecast")!
+        guard let url = URL(string: "\(apiBaseURL)/forecast") else {
+            throw URLError(.badURL)
+        }
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(ForecastResponse.self, from: data)
     }

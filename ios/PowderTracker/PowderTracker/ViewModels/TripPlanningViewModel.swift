@@ -31,7 +31,6 @@ class TripPlanningViewModel: ObservableObject {
         do {
             return try await apiClient.fetchRoads(for: mountainId)
         } catch {
-            print("Failed to fetch roads: \(error.localizedDescription)")
             return nil
         }
     }
@@ -40,7 +39,6 @@ class TripPlanningViewModel: ObservableObject {
         do {
             return try await apiClient.fetchTripAdvice(for: mountainId)
         } catch {
-            print("Failed to fetch trip advice: \(error.localizedDescription)")
             return nil
         }
     }
@@ -49,7 +47,6 @@ class TripPlanningViewModel: ObservableObject {
         do {
             return try await apiClient.fetchPowderDayPlan(for: mountainId)
         } catch {
-            print("Failed to fetch powder day plan: \(error.localizedDescription)")
             return nil
         }
     }

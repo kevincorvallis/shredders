@@ -15,14 +15,22 @@ export function MountainSelector({
   showRegion = true,
 }: MountainSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentSelectedId, setCurrentSelectedId] = useState(selectedId);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const mountains = getAllMountains();
-  const selected = mountains.find((m) => m.id === selectedId);
+  const selected = mountains.find((m) => m.id === currentSelectedId);
 
   const washingtonMountains = mountains.filter((m) => m.region === 'washington');
   const oregonMountains = mountains.filter((m) => m.region === 'oregon');
   const idahoMountains = mountains.filter((m) => m.region === 'idaho');
+
+  // Sync with external prop changes
+  useEffect(() => {
+    if (selectedId !== currentSelectedId) {
+      setCurrentSelectedId(selectedId);
+    }
+  }, [selectedId, currentSelectedId]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -77,7 +85,7 @@ export function MountainSelector({
                 <MountainOption
                   key={mountain.id}
                   mountain={mountain}
-                  isSelected={mountain.id === selectedId}
+                  isSelected={mountain.id === currentSelectedId}
                   onSelect={handleSelect}
                 />
               ))}
@@ -90,7 +98,7 @@ export function MountainSelector({
                 <MountainOption
                   key={mountain.id}
                   mountain={mountain}
-                  isSelected={mountain.id === selectedId}
+                  isSelected={mountain.id === currentSelectedId}
                   onSelect={handleSelect}
                 />
               ))}
@@ -105,7 +113,7 @@ export function MountainSelector({
                     <MountainOption
                       key={mountain.id}
                       mountain={mountain}
-                      isSelected={mountain.id === selectedId}
+                      isSelected={mountain.id === currentSelectedId}
                       onSelect={handleSelect}
                     />
                   ))}
@@ -117,7 +125,7 @@ export function MountainSelector({
               <MountainOption
                 key={mountain.id}
                 mountain={mountain}
-                isSelected={mountain.id === selectedId}
+                isSelected={mountain.id === currentSelectedId}
                 onSelect={handleSelect}
               />
             ))

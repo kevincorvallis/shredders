@@ -363,3 +363,167 @@ export async function getRecentWindData(
 
   return windData.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 }
+
+// Weather Alerts
+export interface WeatherAlert {
+  id: string;
+  event: string; // e.g., "Winter Storm Warning"
+  headline: string;
+  severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
+  urgency: 'Immediate' | 'Expected' | 'Future' | 'Past' | 'Unknown';
+  certainty: 'Observed' | 'Likely' | 'Possible' | 'Unlikely' | 'Unknown';
+  onset: string | null;
+  expires: string | null;
+  description: string;
+  instruction: string | null;
+  areaDesc: string;
+}
+
+export async function getWeatherAlerts(lat: number, lng: number): Promise<WeatherAlert[]> {
+  try {
+    const url = `https://api.weather.gov/alerts/active?point=${lat},${lng}`;
+    const response = await fetchWithRetry(url);
+    const data = await response.json();
+
+    if (!data.features || data.features.length === 0) {
+      return [];
+    }
+
+    return data.features.map((feature: any) => ({
+      id: feature.id,
+      event: feature.properties.event,
+      headline: feature.properties.headline,
+      severity: feature.properties.severity,
+      urgency: feature.properties.urgency,
+      certainty: feature.properties.certainty,
+      onset: feature.properties.onset,
+      expires: feature.properties.expires,
+      description: feature.properties.description,
+      instruction: feature.properties.instruction,
+      areaDesc: feature.properties.areaDesc,
+    }));
+  } catch (error) {
+    console.error('Error fetching weather alerts:', error);
+    return [];
+  }
+}
+
+// Hourly Forecast (next 48-156 hours)
+export interface HourlyForecastPeriod {
+  time: string;
+  temperature: number;
+  temperatureUnit: string;
+  dewpoint: number | null;
+  windSpeed: number;
+  windDirection: string;
+  windDirectionDegrees: number | null;
+  icon: string;
+  shortForecast: string;
+  precipProbability: number | null;
+  relativeHumidity: number | null;
+}
+
+export async function getHourlyForecast(
+  config: NOAAGridConfig = DEFAULT_NOAA_CONFIG,
+  hours: number = 48
+): Promise<HourlyForecastPeriod[]> {
+  const hourlyUrl = `https://api.weather.gov/gridpoints/${config.gridOffice}/${config.gridX},${config.gridY}/forecast/hourly`;
+  const response = await fetchWithRetry(hourlyUrl);
+  const data: NOAAForecastResponse = await response.json();
+
+  return data.properties.periods.slice(0, hours).map(period => {
+    const windMatch = period.windSpeed.match(/(\d+)/g);
+    const windSpeed = windMatch ? parseInt(windMatch[0]) : 0;
+
+    return {
+      time: period.startTime,
+      temperature: period.temperature,
+      temperatureUnit: period.temperatureUnit,
+      dewpoint: null, // Not in standard hourly forecast
+      windSpeed,
+      windDirection: period.windDirection,
+      windDirectionDegrees: null,
+      icon: period.icon,
+      shortForecast: period.shortForecast,
+      precipProbability: period.probabilityOfPrecipitation?.value ?? null,
+      relativeHumidity: null,
+    };
+  });
+}
+
+// Forecast Discussion (detailed text forecast from meteorologists)
+export interface ForecastDiscussion {
+  issuedTime: string;
+  productCode: string;
+  issuingOffice: string;
+  text: string;
+}
+
+export async function getForecastDiscussion(
+  config: NOAAGridConfig = DEFAULT_NOAA_CONFIG
+): Promise<ForecastDiscussion | null> {
+  try {
+    // Get the zone for the grid point
+    const zoneUrl = `https://api.weather.gov/gridpoints/${config.gridOffice}/${config.gridX},${config.gridY}`;
+    const zoneResponse = await fetchWithRetry(zoneUrl);
+    const zoneData = await zoneResponse.json();
+
+    const forecastZone = zoneData.properties.forecastZone;
+    if (!forecastZone) return null;
+
+    // Extract zone ID from URL (e.g., https://api.weather.gov/zones/forecast/WAZ567 -> WAZ567)
+    const zoneId = forecastZone.split('/').pop();
+
+    // Get latest discussion for this zone
+    const discussionUrl = `https://api.weather.gov/products/types/AFD/locations/${config.gridOffice}`;
+    const discussionResponse = await fetchWithRetry(discussionUrl);
+    const discussionData = await discussionResponse.json();
+
+    if (!discussionData['@graph'] || discussionData['@graph'].length === 0) {
+      return null;
+    }
+
+    // Get the most recent product
+    const latestProduct = discussionData['@graph'][0];
+    const productUrl = latestProduct['@id'];
+
+    const productResponse = await fetchWithRetry(productUrl);
+    const productData = await productResponse.json();
+
+    return {
+      issuedTime: productData.issuanceTime,
+      productCode: productData.productCode,
+      issuingOffice: config.gridOffice,
+      text: productData.productText,
+    };
+  } catch (error) {
+    console.error('Error fetching forecast discussion:', error);
+    return null;
+  }
+}
+
+// Generate weather.gov URLs for deep linking
+export function getWeatherGovUrls(lat: number, lng: number, config: NOAAGridConfig) {
+  const latRounded = lat.toFixed(4);
+  const lngRounded = lng.toFixed(4);
+
+  return {
+    // Main forecast page
+    forecast: `https://forecast.weather.gov/MapClick.php?lat=${latRounded}&lon=${lngRounded}`,
+
+    // Hourly graph
+    hourly: `https://forecast.weather.gov/MapClick.php?lat=${latRounded}&lon=${lngRounded}&unit=0&lg=english&FcstType=graphical`,
+
+    // Detailed forecast
+    detailed: `https://forecast.weather.gov/MapClick.php?lat=${latRounded}&lon=${lngRounded}&unit=0&lg=english&FcstType=text`,
+
+    // Alerts
+    alerts: `https://alerts.weather.gov/search?lat=${latRounded}&lon=${lngRounded}`,
+
+    // Grid data
+    grid: `https://api.weather.gov/gridpoints/${config.gridOffice}/${config.gridX},${config.gridY}`,
+
+    // Forecast discussion
+    discussion: `https://forecast.weather.gov/product.php?site=${config.gridOffice}&issuedby=${config.gridOffice}&product=AFD`,
+  };
+}

@@ -3,55 +3,64 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0F6FD20D0854EC952BEC3D7D /* Mountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A37340F3AB0D4B44C537773 /* Mountain.swift */; };
 		1086BCB50612C478052AB672 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E8F75C7ACA67E68B1B910FC /* ContentView.swift */; };
+		11207E055A0CD480A55F1A84 /* MountainPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE94660DDA20DBD2211E2245 /* MountainPickerView.swift */; };
 		131D15CCE9ED96127B818663 /* ConditionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 768B6C1486E26F956EF315F1 /* ConditionsCard.swift */; };
+		1CF1C8C4055394EDE6B5C447 /* MountainConditionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DA187DF47BCE728766FC51E /* MountainConditionsCard.swift */; };
 		1D62606A05B88A57F2A10CE0 /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
-		MOUNT001A /* Mountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT001B /* Mountain.swift */; };
-		MOUNT002A /* MountainResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT002B /* MountainResponses.swift */; };
-		MOUNT003A /* MountainMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT003B /* MountainMapView.swift */; };
-		MOUNT004A /* MountainSelectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT004B /* MountainSelectionViewModel.swift */; };
-		MOUNT005A /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = MOUNT005B /* LocationManager.swift */; };
-		TRIP001A /* TripPlanning.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP001B /* TripPlanning.swift */; };
-		TRIP002A /* TripPlanningViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP002B /* TripPlanningViewModel.swift */; };
-		TRIP003A /* RoadsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP003B /* RoadsCard.swift */; };
-		TRIP004A /* TripAdviceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP004B /* TripAdviceCard.swift */; };
-		TRIP005A /* PowderDayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = TRIP005B /* PowderDayCard.swift */; };
-		PICKER01A /* MountainPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PICKER01B /* MountainPickerView.swift */; };
-		CHAT001A /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CHAT001B /* ChatMessage.swift */; };
-		CHAT002A /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CHAT002B /* ChatViewModel.swift */; };
-		CHAT003A /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CHAT003B /* ChatView.swift */; };
-		PATROL01A /* PatrolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PATROL01B /* PatrolView.swift */; };
-		WEBCAM01A /* WebcamsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WEBCAM01B /* WebcamsView.swift */; };
-		MTCOND01A /* MountainConditionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = MTCOND01B /* MountainConditionsCard.swift */; };
-		MTDTL01A /* MountainDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MTDTL01B /* MountainDetailView.swift */; };
 		1E767F11EB82CC4C6D411224 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */; };
 		1F21632AB47AD6048D008BFC /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
+		1FD2CE875525676072151673 /* TripAdviceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE79DEBD298C70C92CA299A /* TripAdviceCard.swift */; };
 		2057E9B038D9321A3BF1FFA0 /* PowderScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */; };
 		21746B3B39924D04C6E0E780 /* HistoryChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A84FF1992899A3147557A19E /* HistoryChartView.swift */; };
 		2D3E603A8AE77090B45FA99A /* PowderTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE287ADBB463D75154EBFA7 /* PowderTrackerApp.swift */; };
 		2F21742B0CA9620510CD2AE9 /* PowderTrackerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B614E89436D820C4FB326E8D /* PowderTrackerWidget.swift */; };
 		33BA99DCA163558C6EDE70F3 /* Conditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E66CAE21D58028E82BB124F /* Conditions.swift */; };
 		37EF014A6B4954D34E76A7E6 /* SnowDepthChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09D79F661133B42636813CB /* SnowDepthChart.swift */; };
+		38C023FA3888956EAB9C3C4C /* Mountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A37340F3AB0D4B44C537773 /* Mountain.swift */; };
 		4AAF035757211E427D9A5FC2 /* ForecastViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04359DE47F38AAA25B08299F /* ForecastViewModel.swift */; };
+		4CDA61EB709ED6AA3C47B1D5 /* MountainResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6843B6F4EA6B85F3B4DC8597 /* MountainResponses.swift */; };
+		505CD80D63BD3E51F005F216 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 262A21D5236C2FA91D4D15BE /* ChatViewModel.swift */; };
+		56E5A63E48CFA29A8F0F3670 /* TripPlanningViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E558ABF80EA303FC196A18C0 /* TripPlanningViewModel.swift */; };
+		5764C10468EEE53010D0C4CB /* MountainSelectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 655660B700EA5371AA209F0D /* MountainSelectionViewModel.swift */; };
 		5A18DD1C82877CFE114B2852 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22899CFF2589BF56026F6C79 /* APIClient.swift */; };
+		5B1424277E5B707597968402 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47098E4516447E841833E217 /* AppConfig.swift */; };
 		5FD9AB9B92C5E1B6FB6545AA /* ForecastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5DBA53149931BA130994B0 /* ForecastView.swift */; };
+		622F1F80FE8805FD2FEB42CA /* PatrolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF69C67679CEF2F265DC270 /* PatrolView.swift */; };
 		65BFA2B73C0440625D91BC67 /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87288DA9E099263C2EB77783 /* MediumWidgetView.swift */; };
+		7046F3F48B7C6D81189F255A /* MountainDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDD75C8EDC52D9BE6ECEFE3E /* MountainDetailView.swift */; };
+		73CEF6913664BD454D4FD10A /* PowderDayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89DC97097CADC4B75F0B84FF /* PowderDayCard.swift */; };
 		747A0430F0DF6068DDB869F5 /* PowderTrackerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BAECBC5CD31B116B74BE837A /* PowderTrackerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		74AB4EBB52A2A9892F1FFABB /* Conditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E66CAE21D58028E82BB124F /* Conditions.swift */; };
 		7997660E073FEABE38915456 /* Forecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F42690B312118CCC3712822 /* Forecast.swift */; };
+		80F1EE4247A82EBA590171E9 /* IntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8C4216F43D979C61B31EFB /* IntroView.swift */; };
 		8305ECBFE88219DA53E5A7D4 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D1DA7C683B7849128287E /* DashboardView.swift */; };
+		86F73E9BDBB436A02427D362 /* TripPlanning.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB690059FB550B67B1D97817 /* TripPlanning.swift */; };
 		892D18B89013307A8C5FE8B3 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */; };
+		8BD80579E20D7C1258F2A021 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2C3344474FC96D3D980D15E9 /* PrivacyInfo.xcprivacy */; };
+		8BF7EAFC78F6B5523D2C9B68 /* RoadsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 621F222D5C8E9B5E1A24EAB5 /* RoadsCard.swift */; };
 		94F1249534AFF241CDAFACC4 /* Forecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F42690B312118CCC3712822 /* Forecast.swift */; };
+		9C48BE4AAE32761562BF9B4C /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C528BC7B8C59EABA2DBA9F58 /* ChatView.swift */; };
+		9DA38CDB1FC6AA455692A722 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FC72C486A24966EC54ABAE /* ChatMessage.swift */; };
+		A4AB7832C4CDFD5C0822FFFD /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FC72C486A24966EC54ABAE /* ChatMessage.swift */; };
 		A5394B2614799063241081C6 /* PowderTrackerWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF3E2D8E24956BF69F0A62E /* PowderTrackerWidgetBundle.swift */; };
 		AB9D52519316557167B1E855 /* SmallWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46B3500B03D42612F4D52CAC /* SmallWidgetView.swift */; };
+		B40821D03E1127C38548D58A /* WebcamsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD53D080257007E2F41F249 /* WebcamsView.swift */; };
+		B4353018C125CE5ABED6E90C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 09AE88B468058638EB3B92EA /* Assets.xcassets */; };
+		C44D5CCFFADE094858452487 /* MountainMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1553DC46450DCEDE1C88CCB /* MountainMapView.swift */; };
 		C74DA7539E5D7B9C4C45B8B3 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C89D64282F6DE19B90A062 /* Date+Extensions.swift */; };
+		CA30E630ED0E974A9D724ACF /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2157D2D009AB7E7771B8E03B /* LocationManager.swift */; };
+		CF58C94B833F15B2364444DF /* TripPlanning.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB690059FB550B67B1D97817 /* TripPlanning.swift */; };
 		E0CA30E94F41AB09EEFDE036 /* PowderScoreGauge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */; };
+		E16D3DB2D2DC4ADBE533C0C8 /* WeatherGovLinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C86B43A0DD3865E47BCD1D /* WeatherGovLinksView.swift */; };
 		EAF4C924CB45FC9FACEAB8D7 /* PowderScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */; };
 		ECD77A0B9D5E10086C8546F0 /* ForecastDayRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */; };
+		FB8529DA1086D9DFD6996EAA /* MountainResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6843B6F4EA6B85F3B4DC8597 /* MountainResponses.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,47 +89,53 @@
 
 /* Begin PBXFileReference section */
 		01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryData.swift; sourceTree = "<group>"; };
+		01FC72C486A24966EC54ABAE /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		04359DE47F38AAA25B08299F /* ForecastViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastViewModel.swift; sourceTree = "<group>"; };
+		09AE88B468058638EB3B92EA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderScore.swift; sourceTree = "<group>"; };
 		0E66CAE21D58028E82BB124F /* Conditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conditions.swift; sourceTree = "<group>"; };
 		0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
+		1AEFF19B138318E73462A0B0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2157D2D009AB7E7771B8E03B /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		22899CFF2589BF56026F6C79 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
-		MOUNT001B /* Mountain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mountain.swift; sourceTree = "<group>"; };
-		MOUNT002B /* MountainResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainResponses.swift; sourceTree = "<group>"; };
-		MOUNT003B /* MountainMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainMapView.swift; sourceTree = "<group>"; };
-		MOUNT004B /* MountainSelectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainSelectionViewModel.swift; sourceTree = "<group>"; };
-		MOUNT005B /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
-		TRIP001B /* TripPlanning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlanning.swift; sourceTree = "<group>"; };
-		TRIP002B /* TripPlanningViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlanningViewModel.swift; sourceTree = "<group>"; };
-		TRIP003B /* RoadsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadsCard.swift; sourceTree = "<group>"; };
-		TRIP004B /* TripAdviceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripAdviceCard.swift; sourceTree = "<group>"; };
-		TRIP005B /* PowderDayCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderDayCard.swift; sourceTree = "<group>"; };
-		PICKER01B /* MountainPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainPickerView.swift; sourceTree = "<group>"; };
-		CHAT001B /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
-		CHAT002B /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
-		CHAT003B /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
-		PATROL01B /* PatrolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatrolView.swift; sourceTree = "<group>"; };
-		WEBCAM01B /* WebcamsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebcamsView.swift; sourceTree = "<group>"; };
-		MTCOND01B /* MountainConditionsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainConditionsCard.swift; sourceTree = "<group>"; };
-		MTDTL01B /* MountainDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainDetailView.swift; sourceTree = "<group>"; };
+		262A21D5236C2FA91D4D15BE /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		2C3344474FC96D3D980D15E9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2EF3E2D8E24956BF69F0A62E /* PowderTrackerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerWidgetBundle.swift; sourceTree = "<group>"; };
 		3AE287ADBB463D75154EBFA7 /* PowderTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerApp.swift; sourceTree = "<group>"; };
-		3D0B5B03BA2A647054B565D7 /* PowderTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PowderTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D0B5B03BA2A647054B565D7 /* PowderTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PowderTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		41C86B43A0DD3865E47BCD1D /* WeatherGovLinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherGovLinksView.swift; sourceTree = "<group>"; };
 		46B3500B03D42612F4D52CAC /* SmallWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallWidgetView.swift; sourceTree = "<group>"; };
+		47098E4516447E841833E217 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		4AE79DEBD298C70C92CA299A /* TripAdviceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripAdviceCard.swift; sourceTree = "<group>"; };
 		4D5DBA53149931BA130994B0 /* ForecastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastView.swift; sourceTree = "<group>"; };
 		4F42690B312118CCC3712822 /* Forecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Forecast.swift; sourceTree = "<group>"; };
 		5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderScoreGauge.swift; sourceTree = "<group>"; };
+		621F222D5C8E9B5E1A24EAB5 /* RoadsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadsCard.swift; sourceTree = "<group>"; };
+		655660B700EA5371AA209F0D /* MountainSelectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainSelectionViewModel.swift; sourceTree = "<group>"; };
+		6843B6F4EA6B85F3B4DC8597 /* MountainResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainResponses.swift; sourceTree = "<group>"; };
 		768B6C1486E26F956EF315F1 /* ConditionsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionsCard.swift; sourceTree = "<group>"; };
+		7DA187DF47BCE728766FC51E /* MountainConditionsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainConditionsCard.swift; sourceTree = "<group>"; };
 		87288DA9E099263C2EB77783 /* MediumWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediumWidgetView.swift; sourceTree = "<group>"; };
+		89DC97097CADC4B75F0B84FF /* PowderDayCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderDayCard.swift; sourceTree = "<group>"; };
+		8A37340F3AB0D4B44C537773 /* Mountain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mountain.swift; sourceTree = "<group>"; };
+		8C8C4216F43D979C61B31EFB /* IntroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroView.swift; sourceTree = "<group>"; };
 		9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastDayRow.swift; sourceTree = "<group>"; };
 		9E8F75C7ACA67E68B1B910FC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A84FF1992899A3147557A19E /* HistoryChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryChartView.swift; sourceTree = "<group>"; };
+		AAD53D080257007E2F41F249 /* WebcamsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebcamsView.swift; sourceTree = "<group>"; };
+		B1553DC46450DCEDE1C88CCB /* MountainMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainMapView.swift; sourceTree = "<group>"; };
 		B614E89436D820C4FB326E8D /* PowderTrackerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerWidget.swift; sourceTree = "<group>"; };
-		BAECBC5CD31B116B74BE837A /* PowderTrackerWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PowderTrackerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BAECBC5CD31B116B74BE837A /* PowderTrackerWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PowderTrackerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BBF69C67679CEF2F265DC270 /* PatrolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatrolView.swift; sourceTree = "<group>"; };
+		BDD75C8EDC52D9BE6ECEFE3E /* MountainDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainDetailView.swift; sourceTree = "<group>"; };
+		BE94660DDA20DBD2211E2245 /* MountainPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainPickerView.swift; sourceTree = "<group>"; };
 		C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		C528BC7B8C59EABA2DBA9F58 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		D09D79F661133B42636813CB /* SnowDepthChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowDepthChart.swift; sourceTree = "<group>"; };
 		D7C89D64282F6DE19B90A062 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
+		E558ABF80EA303FC196A18C0 /* TripPlanningViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlanningViewModel.swift; sourceTree = "<group>"; };
 		F65D1DA7C683B7849128287E /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		FB690059FB550B67B1D97817 /* TripPlanning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlanning.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -153,12 +168,12 @@
 		71616C95900467E5F4B4EAED /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				CHAT002B /* ChatViewModel.swift */,
+				262A21D5236C2FA91D4D15BE /* ChatViewModel.swift */,
 				C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */,
 				04359DE47F38AAA25B08299F /* ForecastViewModel.swift */,
 				0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */,
-				MOUNT004B /* MountainSelectionViewModel.swift */,
-				TRIP002B /* TripPlanningViewModel.swift */,
+				655660B700EA5371AA209F0D /* MountainSelectionViewModel.swift */,
+				E558ABF80EA303FC196A18C0 /* TripPlanningViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -166,7 +181,11 @@
 		80E6C6A255B1EC04EE1B0F17 /* PowderTracker */ = {
 			isa = PBXGroup;
 			children = (
+				09AE88B468058638EB3B92EA /* Assets.xcassets */,
+				1AEFF19B138318E73462A0B0 /* Info.plist */,
 				3AE287ADBB463D75154EBFA7 /* PowderTrackerApp.swift */,
+				2C3344474FC96D3D980D15E9 /* PrivacyInfo.xcprivacy */,
+				D0BBB68E42C8F7E284F90DF6 /* Config */,
 				37058D94BA2E3C9FD115176F /* Extensions */,
 				DA2F471601079E33498D575B /* Models */,
 				848CD3FF1F0ED180B6A41DBD /* Services */,
@@ -180,7 +199,7 @@
 			isa = PBXGroup;
 			children = (
 				22899CFF2589BF56026F6C79 /* APIClient.swift */,
-				MOUNT005B /* LocationManager.swift */,
+				2157D2D009AB7E7771B8E03B /* LocationManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -199,12 +218,12 @@
 			children = (
 				768B6C1486E26F956EF315F1 /* ConditionsCard.swift */,
 				9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */,
-				MTCOND01B /* MountainConditionsCard.swift */,
-				TRIP005B /* PowderDayCard.swift */,
+				7DA187DF47BCE728766FC51E /* MountainConditionsCard.swift */,
+				89DC97097CADC4B75F0B84FF /* PowderDayCard.swift */,
 				5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */,
-				TRIP003B /* RoadsCard.swift */,
+				621F222D5C8E9B5E1A24EAB5 /* RoadsCard.swift */,
 				D09D79F661133B42636813CB /* SnowDepthChart.swift */,
-				TRIP004B /* TripAdviceCard.swift */,
+				4AE79DEBD298C70C92CA299A /* TripAdviceCard.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -219,34 +238,45 @@
 			path = PowderTrackerWidget;
 			sourceTree = "<group>";
 		};
+		D0BBB68E42C8F7E284F90DF6 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				47098E4516447E841833E217 /* AppConfig.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		DA2F471601079E33498D575B /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				CHAT001B /* ChatMessage.swift */,
+				01FC72C486A24966EC54ABAE /* ChatMessage.swift */,
 				0E66CAE21D58028E82BB124F /* Conditions.swift */,
 				4F42690B312118CCC3712822 /* Forecast.swift */,
 				01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */,
-				MOUNT001B /* Mountain.swift */,
-				MOUNT002B /* MountainResponses.swift */,
+				8A37340F3AB0D4B44C537773 /* Mountain.swift */,
+				6843B6F4EA6B85F3B4DC8597 /* MountainResponses.swift */,
 				0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */,
-				TRIP001B /* TripPlanning.swift */,
+				FB690059FB550B67B1D97817 /* TripPlanning.swift */,
 			);
+			name = Models;
 			path = Models;
 			sourceTree = "<group>";
 		};
 		FB275362EEA83C2D1C4035C1 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				CHAT003B /* ChatView.swift */,
+				C528BC7B8C59EABA2DBA9F58 /* ChatView.swift */,
 				9E8F75C7ACA67E68B1B910FC /* ContentView.swift */,
 				F65D1DA7C683B7849128287E /* DashboardView.swift */,
 				4D5DBA53149931BA130994B0 /* ForecastView.swift */,
 				A84FF1992899A3147557A19E /* HistoryChartView.swift */,
-				MTDTL01B /* MountainDetailView.swift */,
-				MOUNT003B /* MountainMapView.swift */,
-				PICKER01B /* MountainPickerView.swift */,
-				PATROL01B /* PatrolView.swift */,
-				WEBCAM01B /* WebcamsView.swift */,
+				8C8C4216F43D979C61B31EFB /* IntroView.swift */,
+				BDD75C8EDC52D9BE6ECEFE3E /* MountainDetailView.swift */,
+				B1553DC46450DCEDE1C88CCB /* MountainMapView.swift */,
+				BE94660DDA20DBD2211E2245 /* MountainPickerView.swift */,
+				BBF69C67679CEF2F265DC270 /* PatrolView.swift */,
+				41C86B43A0DD3865E47BCD1D /* WeatherGovLinksView.swift */,
+				AAD53D080257007E2F41F249 /* WebcamsView.swift */,
 				AB287A8A884E4E3BD60F605C /* Components */,
 			);
 			path = Views;
@@ -260,6 +290,7 @@
 			buildConfigurationList = 2F4F512D3A781AA342D59C2D /* Build configuration list for PBXNativeTarget "PowderTracker" */;
 			buildPhases = (
 				04EB4BD4012CD087028F95DB /* Sources */,
+				7051F06D12125A45B90A8DA6 /* Resources */,
 				F30ECD9E4FB99336E182A17A /* Embed Foundation Extensions */,
 			);
 			buildRules = (
@@ -298,7 +329,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					02607EFEC5D2DF4971EC1BC4 = {
 						DevelopmentTeam = "";
@@ -318,6 +349,7 @@
 			);
 			mainGroup = 8BD3B5F4C4E4CA339DC70EB5;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -327,12 +359,28 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		7051F06D12125A45B90A8DA6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4353018C125CE5ABED6E90C /* Assets.xcassets in Resources */,
+				8BD80579E20D7C1258F2A021 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		04EB4BD4012CD087028F95DB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				5A18DD1C82877CFE114B2852 /* APIClient.swift in Sources */,
+				5B1424277E5B707597968402 /* AppConfig.swift in Sources */,
+				9DA38CDB1FC6AA455692A722 /* ChatMessage.swift in Sources */,
+				9C48BE4AAE32761562BF9B4C /* ChatView.swift in Sources */,
+				505CD80D63BD3E51F005F216 /* ChatViewModel.swift in Sources */,
 				33BA99DCA163558C6EDE70F3 /* Conditions.swift in Sources */,
 				131D15CCE9ED96127B818663 /* ConditionsCard.swift in Sources */,
 				1086BCB50612C478052AB672 /* ContentView.swift in Sources */,
@@ -346,28 +394,27 @@
 				21746B3B39924D04C6E0E780 /* HistoryChartView.swift in Sources */,
 				1D62606A05B88A57F2A10CE0 /* HistoryData.swift in Sources */,
 				892D18B89013307A8C5FE8B3 /* HistoryViewModel.swift in Sources */,
-				MOUNT005A /* LocationManager.swift in Sources */,
-				MOUNT001A /* Mountain.swift in Sources */,
-				MOUNT003A /* MountainMapView.swift in Sources */,
-				MOUNT002A /* MountainResponses.swift in Sources */,
-				MOUNT004A /* MountainSelectionViewModel.swift in Sources */,
-				PICKER01A /* MountainPickerView.swift in Sources */,
-				CHAT001A /* ChatMessage.swift in Sources */,
-				CHAT002A /* ChatViewModel.swift in Sources */,
-				CHAT003A /* ChatView.swift in Sources */,
-				PATROL01A /* PatrolView.swift in Sources */,
-				WEBCAM01A /* WebcamsView.swift in Sources */,
-				MTCOND01A /* MountainConditionsCard.swift in Sources */,
-				MTDTL01A /* MountainDetailView.swift in Sources */,
+				80F1EE4247A82EBA590171E9 /* IntroView.swift in Sources */,
+				CA30E630ED0E974A9D724ACF /* LocationManager.swift in Sources */,
+				0F6FD20D0854EC952BEC3D7D /* Mountain.swift in Sources */,
+				1CF1C8C4055394EDE6B5C447 /* MountainConditionsCard.swift in Sources */,
+				7046F3F48B7C6D81189F255A /* MountainDetailView.swift in Sources */,
+				C44D5CCFFADE094858452487 /* MountainMapView.swift in Sources */,
+				11207E055A0CD480A55F1A84 /* MountainPickerView.swift in Sources */,
+				FB8529DA1086D9DFD6996EAA /* MountainResponses.swift in Sources */,
+				5764C10468EEE53010D0C4CB /* MountainSelectionViewModel.swift in Sources */,
+				622F1F80FE8805FD2FEB42CA /* PatrolView.swift in Sources */,
+				73CEF6913664BD454D4FD10A /* PowderDayCard.swift in Sources */,
 				2057E9B038D9321A3BF1FFA0 /* PowderScore.swift in Sources */,
 				E0CA30E94F41AB09EEFDE036 /* PowderScoreGauge.swift in Sources */,
 				2D3E603A8AE77090B45FA99A /* PowderTrackerApp.swift in Sources */,
+				8BF7EAFC78F6B5523D2C9B68 /* RoadsCard.swift in Sources */,
 				37EF014A6B4954D34E76A7E6 /* SnowDepthChart.swift in Sources */,
-				TRIP001A /* TripPlanning.swift in Sources */,
-				TRIP002A /* TripPlanningViewModel.swift in Sources */,
-				TRIP003A /* RoadsCard.swift in Sources */,
-				TRIP004A /* TripAdviceCard.swift in Sources */,
-				TRIP005A /* PowderDayCard.swift in Sources */,
+				1FD2CE875525676072151673 /* TripAdviceCard.swift in Sources */,
+				86F73E9BDBB436A02427D362 /* TripPlanning.swift in Sources */,
+				56E5A63E48CFA29A8F0F3670 /* TripPlanningViewModel.swift in Sources */,
+				E16D3DB2D2DC4ADBE533C0C8 /* WeatherGovLinksView.swift in Sources */,
+				B40821D03E1127C38548D58A /* WebcamsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -375,14 +422,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A4AB7832C4CDFD5C0822FFFD /* ChatMessage.swift in Sources */,
 				74AB4EBB52A2A9892F1FFABB /* Conditions.swift in Sources */,
 				7997660E073FEABE38915456 /* Forecast.swift in Sources */,
 				1F21632AB47AD6048D008BFC /* HistoryData.swift in Sources */,
 				65BFA2B73C0440625D91BC67 /* MediumWidgetView.swift in Sources */,
+				38C023FA3888956EAB9C3C4C /* Mountain.swift in Sources */,
+				4CDA61EB709ED6AA3C47B1D5 /* MountainResponses.swift in Sources */,
 				EAF4C924CB45FC9FACEAB8D7 /* PowderScore.swift in Sources */,
 				2F21742B0CA9620510CD2AE9 /* PowderTrackerWidget.swift in Sources */,
 				A5394B2614799063241081C6 /* PowderTrackerWidgetBundle.swift in Sources */,
 				AB9D52519316557167B1E855 /* SmallWidgetView.swift in Sources */,
+				CF58C94B833F15B2364444DF /* TripPlanning.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -422,6 +473,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PowderTracker/Info.plist;
 				INFOPLIST_GENERATION_MODE = GeneratedFile;
 				INFOPLIST_KEY_CFBundleDisplayName = PowderTracker;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -477,7 +529,6 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -491,7 +542,6 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
@@ -536,7 +586,6 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -557,7 +606,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
@@ -589,6 +637,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PowderTracker/Info.plist;
 				INFOPLIST_GENERATION_MODE = GeneratedFile;
 				INFOPLIST_KEY_CFBundleDisplayName = PowderTracker;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

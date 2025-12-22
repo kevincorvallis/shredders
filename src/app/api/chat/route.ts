@@ -1,4 +1,4 @@
-import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { chatTools } from '@/lib/chat/tools';
 
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: openai('gpt-4o'),
     system: systemPrompt,
     messages,
     tools: chatTools,

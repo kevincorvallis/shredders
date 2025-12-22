@@ -44,7 +44,6 @@ class MountainSelectionViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("Failed to load mountains: \(error)")
         }
 
         isLoading = false

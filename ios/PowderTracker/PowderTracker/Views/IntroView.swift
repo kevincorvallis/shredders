@@ -270,6 +270,7 @@ struct IntroView: View {
             generateSnowflakes()
         }
         .onReceive(timer) { _ in
+            guard showIntro else { return }
             updateSnowflakes()
             updateStars()
         }
@@ -279,30 +280,36 @@ struct IntroView: View {
         // Staggered animations
         withAnimation { showLogo = true }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [self] in
+            guard showIntro else { return }
             withAnimation { showMountain = true }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [self] in
+            guard showIntro else { return }
             withAnimation { showSnowCap = true }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [self] in
+            guard showIntro else { return }
             withAnimation { showRing = true }
             withAnimation(.easeInOut(duration: 1.2)) {
                 ringProgress = 0.25
             }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [self] in
+            guard showIntro else { return }
             withAnimation { showTitle = true }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [self] in
+            guard showIntro else { return }
             withAnimation { showSubtitle = true }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [self] in
+            guard showIntro else { return }
             withAnimation { showLoadingDots = true }
         }
 
@@ -312,7 +319,8 @@ struct IntroView: View {
         }
 
         // Auto dismiss after 3.5 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) { [self] in
+            guard showIntro else { return }
             withAnimation(.easeOut(duration: 0.5)) {
                 showIntro = false
             }

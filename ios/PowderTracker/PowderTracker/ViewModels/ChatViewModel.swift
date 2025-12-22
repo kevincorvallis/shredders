@@ -9,7 +9,7 @@ class ChatViewModel {
     var isLoading: Bool = false
     var error: String?
 
-    private let baseURL = "https://shredders-bay.vercel.app/api"
+    private let baseURL = AppConfig.apiBaseURL
 
     func sendMessage() async {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)

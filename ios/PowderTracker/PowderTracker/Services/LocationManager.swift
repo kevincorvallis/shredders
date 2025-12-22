@@ -74,7 +74,6 @@ extension LocationManager: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in
             self.error = error
-            print("Location error: \(error.localizedDescription)")
         }
     }
 
@@ -87,7 +86,7 @@ extension LocationManager: CLLocationManagerDelegate {
             case .authorizedWhenInUse, .authorizedAlways:
                 locationManager.requestLocation()
             case .denied, .restricted:
-                print("Location access denied")
+                break
             case .notDetermined:
                 break
             @unknown default:

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, useLayoutEffect, use } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { getMountain } from '@/data/mountains';
@@ -73,6 +73,26 @@ interface TripAdviceResponse {
   suggestedDepartures: Array<{ from: string; suggestion: string }>;
 }
 
+interface WeatherAlert {
+  id: string;
+  event: string;
+  headline: string;
+  severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
+  urgency: 'Immediate' | 'Expected' | 'Future' | 'Past' | 'Unknown';
+  description: string;
+  instruction: string | null;
+  onset: string | null;
+  expires: string | null;
+}
+
+interface WeatherGovLinks {
+  forecast: string;
+  hourly: string;
+  detailed: string;
+  alerts: string;
+  discussion: string;
+}
+
 interface PowderDayPlanResponse {
   generated: string;
   days: Array<{
@@ -106,10 +126,19 @@ export default function MountainPage({
   const router = useRouter();
   const { setSelectedMountain } = useMountain();
 
-  // Sync URL param with global context
-  useEffect(() => {
+  // Sync URL param with global context IMMEDIATELY (before paint)
+  // This prevents the race condition where old data briefly shows
+  useLayoutEffect(() => {
     setSelectedMountain(mountainId);
   }, [mountainId, setSelectedMountain]);
+
+  // Error recovery: redirect invalid mountain IDs to default
+  useEffect(() => {
+    if (!mountain) {
+      console.warn(`Invalid mountain ID: ${mountainId}, redirecting to baker`);
+      router.replace('/mountains/baker');
+    }
+  }, [mountain, mountainId, router]);
 
   const handleMountainChange = (newMountainId: string) => {
     setSelectedMountain(newMountainId);
@@ -122,6 +151,8 @@ export default function MountainPage({
   const [roads, setRoads] = useState<RoadsResponse | null>(null);
   const [tripAdvice, setTripAdvice] = useState<TripAdviceResponse | null>(null);
   const [powderDayPlan, setPowderDayPlan] = useState<PowderDayPlanResponse | null>(null);
+  const [alerts, setAlerts] = useState<WeatherAlert[]>([]);
+  const [weatherGovLinks, setWeatherGovLinks] = useState<WeatherGovLinks | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -159,6 +190,24 @@ export default function MountainPage({
           .then((r) => (r.ok ? r.json() : null))
           .then((data) => {
             if (data) setPowderDayPlan(data);
+          })
+          .catch(() => {
+            // ignore
+          });
+
+        fetch(`/api/mountains/${mountainId}/alerts`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (data && data.alerts) setAlerts(data.alerts);
+          })
+          .catch(() => {
+            // ignore
+          });
+
+        fetch(`/api/mountains/${mountainId}/weather-gov-links`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (data && data.weatherGov) setWeatherGovLinks(data.weatherGov);
           })
           .catch(() => {
             // ignore
@@ -223,8 +272,23 @@ export default function MountainPage({
     }
   };
 
+  // Dynamic background based on powder score
+  const getBackgroundClass = () => {
+    if (!powderScore) return 'bg-slate-900';
+
+    if (powderScore.score >= 8) {
+      return 'bg-gradient-to-br from-blue-900 via-slate-900 to-slate-900';
+    } else if (powderScore.score >= 6) {
+      return 'bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900';
+    } else if (powderScore.score >= 4) {
+      return 'bg-gradient-to-br from-gray-800 via-slate-900 to-slate-900';
+    } else {
+      return 'bg-gradient-to-br from-slate-800 via-slate-900 to-slate-900';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className={`min-h-screen ${getBackgroundClass()}`}>
       {/* Header */}
       <header className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -309,6 +373,50 @@ export default function MountainPage({
           </div>
         ) : (
           <>
+            {/* Weather Alerts */}
+            {alerts.length > 0 && (
+              <div className="space-y-3">
+                {alerts.map((alert) => {
+                  const severityColors = {
+                    Extreme: 'bg-red-500/20 border-red-500 text-red-200',
+                    Severe: 'bg-orange-500/20 border-orange-500 text-orange-200',
+                    Moderate: 'bg-yellow-500/20 border-yellow-500 text-yellow-200',
+                    Minor: 'bg-blue-500/20 border-blue-500 text-blue-200',
+                    Unknown: 'bg-gray-500/20 border-gray-500 text-gray-200',
+                  };
+
+                  const colorClass = severityColors[alert.severity] || severityColors.Unknown;
+
+                  return (
+                    <div key={alert.id} className={`rounded-xl p-4 border-2 ${colorClass}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="text-2xl">⚠️</div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg mb-1">{alert.event}</h3>
+                          <p className="font-medium mb-2">{alert.headline}</p>
+                          <p className="text-sm opacity-90 mb-2 whitespace-pre-wrap">
+                            {alert.description.substring(0, 300)}
+                            {alert.description.length > 300 && '...'}
+                          </p>
+                          {alert.instruction && (
+                            <p className="text-sm font-medium mt-2 p-2 bg-black/20 rounded">
+                              {alert.instruction.substring(0, 200)}
+                              {alert.instruction.length > 200 && '...'}
+                            </p>
+                          )}
+                          {alert.expires && (
+                            <p className="text-xs mt-2 opacity-75">
+                              Expires: {new Date(alert.expires).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Powder Score */}
             {powderScore && (
               <div className="bg-slate-800 rounded-xl p-6">
@@ -328,6 +436,20 @@ export default function MountainPage({
                   </div>
                 </div>
                 <p className="text-gray-300 mb-4">{powderScore.verdict}</p>
+
+                {/* Trip Planning CTA */}
+                <a
+                  href={`https://maps.google.com/maps?daddr=${mountain.location.lat},${mountain.location.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full mb-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold text-center transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                  Plan Trip to {mountain.shortName}
+                </a>
+
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {powderScore.factors.map((factor, i) => (
                     <div key={i} className="bg-slate-700/50 rounded-lg p-3">
@@ -600,7 +722,35 @@ export default function MountainPage({
             {/* 7-Day Forecast */}
             {forecast.length > 0 && (
               <div className="bg-slate-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white mb-4">7-Day Forecast</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-white">7-Day Forecast</h2>
+                  {weatherGovLinks && (
+                    <div className="flex gap-2">
+                      <a
+                        href={weatherGovLinks.hourly}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center gap-1"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Hourly
+                      </a>
+                      <a
+                        href={weatherGovLinks.forecast}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center gap-1"
+                      >
+                        Weather.gov
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  )}
+                </div>
                 <div className="grid grid-cols-7 gap-2">
                   {forecast.map((day, i) => (
                     <div
@@ -619,6 +769,24 @@ export default function MountainPage({
                       )}
                     </div>
                   ))}
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between text-xs text-gray-400">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <span>Powered by NOAA Weather.gov</span>
+                  </div>
+                  {weatherGovLinks && (
+                    <a
+                      href={weatherGovLinks.discussion}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-gray-300 transition-colors underline"
+                    >
+                      Forecast Discussion
+                    </a>
+                  )}
                 </div>
               </div>
             )}

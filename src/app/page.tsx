@@ -510,9 +510,23 @@ export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(false);
 
   const allMountains = getAllMountains();
+
+  // Check if user has seen intro before
+  useEffect(() => {
+    const hasSeenIntro = localStorage.getItem('hasSeenIntro');
+    if (!hasSeenIntro) {
+      setShowIntro(true);
+    }
+  }, []);
+
+  // Handle intro completion
+  const handleIntroComplete = () => {
+    localStorage.setItem('hasSeenIntro', 'true');
+    setShowIntro(false);
+  };
 
   // Fetch all mountain data
   const fetchAllData = async (showRefresh = false) => {
@@ -653,7 +667,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <>
-        {showIntro && <Intro onComplete={() => setShowIntro(false)} />}
+        {showIntro && <Intro onComplete={handleIntroComplete} />}
         <div className="min-h-screen bg-slate-950 text-slate-100">
           <div className="max-w-7xl mx-auto px-4 py-8">
             <Skeleton className="h-12 w-64 mb-8" />
@@ -676,7 +690,7 @@ export default function Dashboard() {
 
   return (
     <>
-      {showIntro && <Intro onComplete={() => setShowIntro(false)} />}
+      {showIntro && <Intro onComplete={handleIntroComplete} />}
       <div className="min-h-screen bg-slate-950 text-slate-100">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-lg border-b border-slate-800">

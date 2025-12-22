@@ -7,6 +7,76 @@ struct MountainInfo: Codable {
     let shortName: String
 }
 
+// MARK: - Weather Alert
+struct WeatherAlert: Codable, Identifiable {
+    let id: String
+    let event: String
+    let headline: String
+    let severity: String
+    let urgency: String
+    let certainty: String
+    let onset: String?
+    let expires: String?
+    let description: String
+    let instruction: String?
+    let areaDesc: String
+}
+
+struct WeatherAlertsResponse: Codable {
+    let mountain: MountainInfo
+    let alerts: [WeatherAlert]
+    let count: Int
+    let source: String
+}
+
+// MARK: - Weather.gov Links
+struct WeatherGovLinks: Codable {
+    let forecast: String
+    let hourly: String
+    let detailed: String
+    let alerts: String
+    let discussion: String
+}
+
+struct WeatherGovLinksResponse: Codable {
+    let mountain: MountainInfo
+    let weatherGov: WeatherGovLinks
+    let location: Location
+
+    struct Location: Codable {
+        let lat: Double
+        let lng: Double
+    }
+}
+
+// MARK: - Hourly Forecast
+struct HourlyForecastPeriod: Codable, Identifiable {
+    var id: String { time }
+
+    let time: String
+    let temperature: Int
+    let temperatureUnit: String
+    let dewpoint: Double?
+    let windSpeed: Int
+    let windDirection: String
+    let windDirectionDegrees: Int?
+    let icon: String
+    let shortForecast: String
+    let precipProbability: Int?
+    let relativeHumidity: Int?
+}
+
+struct HourlyForecastResponse: Codable {
+    let mountain: MountainInfo
+    let hourly: [HourlyForecastPeriod]
+    let source: ForecastSource
+
+    struct ForecastSource: Codable {
+        let provider: String
+        let gridOffice: String
+    }
+}
+
 // MARK: - Mountain Conditions Response
 struct MountainConditions: Codable {
     let mountain: MountainInfo

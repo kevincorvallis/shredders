@@ -23,12 +23,7 @@ enum APIError: Error, LocalizedError {
 actor APIClient {
     static let shared = APIClient()
 
-    #if DEBUG
-    private let baseURL = "https://shredders-bay.vercel.app/api"
-    // For local development, use: "http://localhost:3000/api"
-    #else
-    private let baseURL = "https://shredders-bay.vercel.app/api"
-    #endif
+    private let baseURL = AppConfig.apiBaseURL
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
@@ -80,6 +75,18 @@ actor APIClient {
 
     func fetchPowderDayPlan(for mountainId: String) async throws -> PowderDayPlanResponse {
         try await fetch(endpoint: "/mountains/\(mountainId)/powder-day")
+    }
+
+    func fetchAlerts(for mountainId: String) async throws -> WeatherAlertsResponse {
+        try await fetch(endpoint: "/mountains/\(mountainId)/alerts")
+    }
+
+    func fetchWeatherGovLinks(for mountainId: String) async throws -> WeatherGovLinksResponse {
+        try await fetch(endpoint: "/mountains/\(mountainId)/weather-gov-links")
+    }
+
+    func fetchHourlyForecast(for mountainId: String, hours: Int = 48) async throws -> HourlyForecastResponse {
+        try await fetch(endpoint: "/mountains/\(mountainId)/hourly?hours=\(hours)")
     }
 
     // MARK: - Legacy Endpoints (default to Baker for backwards compatibility)
