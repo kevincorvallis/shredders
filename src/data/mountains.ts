@@ -104,12 +104,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'SEW', gridX: 142, gridY: 90 },
     webcams: [
-      {
-        id: 'summit',
-        name: 'Summit House',
-        url: 'https://www.crystalmountainresort.com/webcam/summit.jpg',
-        refreshUrl: 'https://www.crystalmountainresort.com/the-mountain/webcams',
-      },
+      // Crystal uses dynamic Roundshot 360 webcams which don't have static image URLs
+      // Users can view webcams at: https://www.crystalmountainresort.com/the-mountain/webcams
     ],
     color: '#8b5cf6',
     website: 'https://www.crystalmountainresort.com',

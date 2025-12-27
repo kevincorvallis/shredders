@@ -73,7 +73,7 @@ export function MountainSelector({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-[100] overflow-hidden">
           {showRegion ? (
             <>
               <div className="px-3 py-2 bg-slate-700/50">
