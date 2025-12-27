@@ -220,12 +220,7 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'PDT', gridX: 118, gridY: 43 },
     webcams: [
-      {
-        id: 'summit',
-        name: 'Summit',
-        url: 'https://www.mtbachelor.com/webcam/summit.jpg',
-        refreshUrl: 'https://www.mtbachelor.com/conditions/webcams',
-      },
+      // Mt. Bachelor webcam URL changed - check https://www.mtbachelor.com/conditions/webcams
     ],
     color: '#f97316',
     website: 'https://www.mtbachelor.com',
