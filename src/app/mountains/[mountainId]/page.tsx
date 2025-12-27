@@ -504,7 +504,7 @@ export default function MountainPage({
                   <div className="text-gray-300">No relevant pass data found.</div>
                 ) : (
                   <div className="space-y-3">
-                    {roads.passes.slice(0, 2).map((p) => (
+                    {roads.passes.slice(0, 2).map((p: any) => (
                       <div key={p.id} className="bg-slate-700/50 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="text-white font-medium">{p.name}</div>
@@ -531,7 +531,7 @@ export default function MountainPage({
                           <div className="mt-3 pt-3 border-t border-white/10">
                             <div className="text-xs text-gray-400 mb-1">Restrictions</div>
                             <div className="text-sm text-gray-200 space-y-1">
-                              {p.restrictions.slice(0, 3).map((r, idx) => (
+                              {p.restrictions.slice(0, 3).map((r: any, idx: number) => (
                                 <div key={idx}>
                                   <span className="text-gray-400">{r.direction ? `${r.direction}: ` : ''}</span>
                                   <span>{r.text}</span>
@@ -575,7 +575,7 @@ export default function MountainPage({
                   <div className="bg-slate-700/50 rounded-lg p-4 mb-3">
                     <div className="text-xs text-gray-400 mb-2">Suggested timing</div>
                     <div className="space-y-1 text-sm text-gray-200">
-                      {tripAdvice.suggestedDepartures.slice(0, 2).map((s, idx) => (
+                      {tripAdvice.suggestedDepartures.slice(0, 2).map((s: any, idx: number) => (
                         <div key={idx}>
                           <span className="text-gray-400">{s.from}: </span>
                           <span>{s.suggestion}</span>
@@ -587,7 +587,7 @@ export default function MountainPage({
 
                 {tripAdvice.notes?.length > 0 && (
                   <div className="text-sm text-gray-300 space-y-1">
-                    {tripAdvice.notes.slice(0, 3).map((n, idx) => (
+                    {tripAdvice.notes.slice(0, 3).map((n: any, idx: number) => (
                       <div key={idx}>• {n}</div>
                     ))}
                   </div>
@@ -604,7 +604,7 @@ export default function MountainPage({
                 </p>
 
                 <div className="grid md:grid-cols-3 gap-3">
-                  {powderDayPlan.days.slice(0, 3).map((d, idx) => (
+                  {powderDayPlan.days.slice(0, 3).map((d: any, idx: number) => (
                     <div key={idx} className="bg-slate-700/50 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div>
@@ -630,7 +630,7 @@ export default function MountainPage({
 
                       {d.travelNotes?.length > 0 && (
                         <div className="mt-2 text-xs text-gray-400 space-y-1">
-                          {d.travelNotes.slice(0, 2).map((n, i) => (
+                          {d.travelNotes.slice(0, 2).map((n: any, i: number) => (
                             <div key={i}>• {n}</div>
                           ))}
                         </div>
