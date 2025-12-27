@@ -125,7 +125,10 @@ export default function PatrolDashboardPage() {
         fetch(`/api/mountains/${mountainId}/powder-score`),
       ]);
 
-      if (!safetyRes.ok) throw new Error('Failed to fetch safety data');
+      // Check all responses before parsing JSON
+      if (!safetyRes.ok) {
+        throw new Error(`Failed to fetch safety data: ${safetyRes.status} ${safetyRes.statusText}`);
+      }
 
       const [safety, mountain, score] = await Promise.all([
         safetyRes.json(),
@@ -138,6 +141,7 @@ export default function PatrolDashboardPage() {
       setPowderScore(score?.score ?? null);
       setError(null);
     } catch (err) {
+      console.error('Patrol page fetch error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setLoading(false);
