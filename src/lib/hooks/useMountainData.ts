@@ -23,7 +23,18 @@ interface MountainData {
   cachedAt: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    const error: any = new Error('Failed to fetch mountain data');
+    error.status = res.status;
+    error.statusText = res.statusText;
+    throw error;
+  }
+
+  return res.json();
+};
 
 export function useMountainData(mountainId: string) {
   const { data, error, isLoading, mutate } = useSWR<MountainData>(

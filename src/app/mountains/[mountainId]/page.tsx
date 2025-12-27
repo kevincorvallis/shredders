@@ -7,6 +7,7 @@ import { getMountain } from '@/data/mountains';
 import { Shield, Home, History, Camera } from 'lucide-react';
 import { MountainSelector } from '@/components/MountainSelector';
 import { useMountain } from '@/context/MountainContext';
+import { useMountainData } from '@/lib/hooks/useMountainData';
 
 interface Conditions {
   snowDepth: number | null;
@@ -145,98 +146,19 @@ export default function MountainPage({
     router.push(`/mountains/${newMountainId}`);
   };
 
-  const [conditions, setConditions] = useState<Conditions | null>(null);
-  const [powderScore, setPowderScore] = useState<PowderScore | null>(null);
-  const [forecast, setForecast] = useState<ForecastDay[]>([]);
-  const [roads, setRoads] = useState<RoadsResponse | null>(null);
-  const [tripAdvice, setTripAdvice] = useState<TripAdviceResponse | null>(null);
-  const [powderDayPlan, setPowderDayPlan] = useState<PowderDayPlanResponse | null>(null);
-  const [alerts, setAlerts] = useState<WeatherAlert[]>([]);
-  const [weatherGovLinks, setWeatherGovLinks] = useState<WeatherGovLinks | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use the batched data hook for better performance and caching
+  const { data: mountainData, error: dataError, isLoading } = useMountainData(mountainId);
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!mountain) return;
-
-      try {
-        const [conditionsRes, scoreRes, forecastRes] = await Promise.all([
-          fetch(`/api/mountains/${mountainId}/conditions`),
-          fetch(`/api/mountains/${mountainId}/powder-score`),
-          fetch(`/api/mountains/${mountainId}/forecast`),
-        ]);
-
-        // Road data is optional; don't block the rest of the page
-        fetch(`/api/mountains/${mountainId}/roads`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            if (data) setRoads(data);
-          })
-          .catch(() => {
-            // ignore
-          });
-
-        fetch(`/api/mountains/${mountainId}/trip-advice`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            if (data) setTripAdvice(data);
-          })
-          .catch(() => {
-            // ignore
-          });
-
-        fetch(`/api/mountains/${mountainId}/powder-day`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            if (data) setPowderDayPlan(data);
-          })
-          .catch(() => {
-            // ignore
-          });
-
-        fetch(`/api/mountains/${mountainId}/alerts`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            if (data && data.alerts) setAlerts(data.alerts);
-          })
-          .catch(() => {
-            // ignore
-          });
-
-        fetch(`/api/mountains/${mountainId}/weather-gov-links`)
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            if (data && data.weatherGov) setWeatherGovLinks(data.weatherGov);
-          })
-          .catch(() => {
-            // ignore
-          });
-
-        if (conditionsRes.ok) {
-          const data = await conditionsRes.json();
-          setConditions(data);
-        }
-
-        if (scoreRes.ok) {
-          const data = await scoreRes.json();
-          setPowderScore(data);
-        }
-
-        if (forecastRes.ok) {
-          const data = await forecastRes.json();
-          setForecast(data.forecast || []);
-        }
-      } catch (err) {
-        setError('Failed to load mountain data');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [mountainId, mountain]);
+  // Extract data from batched response
+  const conditions = mountainData?.conditions || null;
+  const powderScore = mountainData?.powderScore || null;
+  const forecast = mountainData?.forecast || [];
+  const roads = mountainData?.roads || null;
+  const tripAdvice = mountainData?.tripAdvice || null;
+  const powderDayPlan = mountainData?.powderDay || null;
+  const alerts = mountainData?.alerts || [];
+  const weatherGovLinks = mountainData?.weatherGovLinks || null;
+  const error = dataError ? 'Failed to load mountain data' : null;
 
   if (!mountain) {
     return (
