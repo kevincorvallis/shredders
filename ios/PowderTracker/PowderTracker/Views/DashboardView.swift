@@ -104,7 +104,7 @@ struct DashboardView: View {
                 }
                 .buttonStyle(.plain)
 
-                if let elevation = viewModel.conditions?.mountain {
+                if viewModel.conditions?.mountain != nil {
                     // Use the API's elevation data if available
                 }
             } else {

@@ -1,8 +1,10 @@
 import { ChatInterface } from '@/components/chat';
 
-export const metadata = {
-  title: 'Shredders AI - Chat',
-  description: 'AI-powered mountain conditions assistant',
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'AI Chat',
+  description: 'Ask questions about mountain conditions, powder scores, and trip planning for PNW ski resorts',
 };
 
 export default function ChatPage() {

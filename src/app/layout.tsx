@@ -15,8 +15,45 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Shredders - AI-Powered Mountain Conditions",
-  description: "Real-time mountain conditions and AI-powered powder day predictions for PNW ski resorts",
+  title: {
+    default: "Shredders - AI-Powered Mountain Conditions",
+    template: "%s | Shredders"
+  },
+  description: "Real-time mountain conditions and AI-powered powder day predictions for Pacific Northwest ski resorts. Track snow depth, powder scores, and weather forecasts.",
+  keywords: ["ski conditions", "snow report", "powder day", "PNW skiing", "mountain weather", "ski forecast", "Washington skiing", "Oregon skiing", "Idaho skiing"],
+  authors: [{ name: "Shredders" }],
+  creator: "Shredders",
+  publisher: "Shredders",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://shredders.vercel.app"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    title: "Shredders - AI-Powered Mountain Conditions",
+    description: "Real-time mountain conditions and AI-powered powder day predictions for Pacific Northwest ski resorts",
+    siteName: "Shredders",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Shredders - AI-Powered Mountain Conditions",
+    description: "Real-time mountain conditions and AI-powered powder day predictions for PNW ski resorts",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    // Add your verification codes here when ready
+    // google: "your-google-verification-code",
+    // yandex: "your-yandex-verification-code",
+  },
 };
 
 export default function RootLayout({

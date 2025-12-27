@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { type MountainConfig } from '@/data/mountains';
+import { prefetchMountainData } from '@/lib/hooks/useMountainData';
 
 interface MountainCardProps {
   mountain: MountainConfig;
@@ -75,7 +76,12 @@ export function MountainCard({
   }
 
   return (
-    <Link href={`/mountains/${mountain.id}`} className={className}>
+    <Link
+      href={`/mountains/${mountain.id}`}
+      className={className}
+      onMouseEnter={() => prefetchMountainData(mountain.id)}
+      onFocus={() => prefetchMountainData(mountain.id)}
+    >
       {content}
     </Link>
   );

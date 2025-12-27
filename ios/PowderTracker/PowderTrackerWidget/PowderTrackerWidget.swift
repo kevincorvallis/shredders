@@ -41,7 +41,10 @@ struct Provider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<PowderEntry>) -> Void) {
-        Task {
+        // Capture context before async boundary to avoid sending issues
+        let placeholderEntry = placeholder(in: context)
+
+        Task { @MainActor in
             do {
                 // Fetch real data from API
                 let conditions = try await fetchConditions()
@@ -67,10 +70,9 @@ struct Provider: TimelineProvider {
                 completion(timeline)
 
             } catch {
-                // Use placeholder on error
-                let entry = placeholder(in: context)
+                // Use placeholder on error (captured before async boundary)
                 let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: Date()) ?? Date().addingTimeInterval(300)
-                let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+                let timeline = Timeline(entries: [placeholderEntry], policy: .after(nextUpdate))
                 completion(timeline)
             }
         }

@@ -10,6 +10,7 @@ import { MountainMap } from '@/components/MountainMapLoader';
 import { Intro } from '@/components/Intro';
 import { getAllMountains, getMountainsByRegion, type MountainConfig } from '@/data/mountains';
 import { getPowderScoreStyle } from '@/lib/design-tokens';
+import { prefetchMountainData } from '@/lib/hooks/useMountainData';
 import {
   Mountain,
   Snowflake,
@@ -143,6 +144,8 @@ function MountainMiniCard({ mountain, onClick }: { mountain: MountainData; onCli
   return (
     <button
       onClick={onClick}
+      onMouseEnter={() => prefetchMountainData(mountain.id)}
+      onFocus={() => prefetchMountainData(mountain.id)}
       className="flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-all w-full text-left group"
     >
       <div

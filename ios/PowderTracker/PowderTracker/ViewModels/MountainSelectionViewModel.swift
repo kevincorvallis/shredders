@@ -71,10 +71,10 @@ class MountainSelectionViewModel: ObservableObject {
     }
 
     private func updateDistances() {
-        guard let location = locationManager.location else { return }
+        guard locationManager.location != nil else { return }
 
         mountains = mountains.map { mountain in
-            var updated = mountain
+            let updated = mountain
             // We can't mutate the struct directly since distance is computed
             // The Mountain struct stores distance from CLLocation calculation
             return updated
