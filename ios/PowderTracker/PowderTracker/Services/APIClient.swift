@@ -49,6 +49,11 @@ actor APIClient {
 
     // MARK: - Per-Mountain Endpoints
 
+    /// Fetch all mountain data in a single batched request for better performance
+    func fetchMountainData(for mountainId: String) async throws -> MountainBatchedResponse {
+        try await fetch(endpoint: "/mountains/\(mountainId)/all")
+    }
+
     func fetchConditions(for mountainId: String) async throws -> MountainConditions {
         try await fetch(endpoint: "/mountains/\(mountainId)/conditions")
     }

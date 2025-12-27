@@ -88,22 +88,36 @@ struct WeatherGovLinksView: View {
     private func loadLinks() async {
         do {
             let response = try await APIClient.shared.fetchWeatherGovLinks(for: mountainId)
+
+            // Check if task was cancelled before updating state
+            guard !Task.isCancelled else { return }
+
             await MainActor.run {
                 self.links = response.weatherGov
             }
         } catch {
-            print("Failed to load weather.gov links: \(error)")
+            // Only log non-cancellation errors
+            if !Task.isCancelled && (error as NSError).code != NSURLErrorCancelled {
+                print("Failed to load weather.gov links: \(error)")
+            }
         }
     }
 
     private func loadAlerts() async {
         do {
             let response = try await APIClient.shared.fetchAlerts(for: mountainId)
+
+            // Check if task was cancelled before updating state
+            guard !Task.isCancelled else { return }
+
             await MainActor.run {
                 self.alerts = response.alerts
             }
         } catch {
-            print("Failed to load alerts: \(error)")
+            // Only log non-cancellation errors
+            if !Task.isCancelled && (error as NSError).code != NSURLErrorCancelled {
+                print("Failed to load alerts: \(error)")
+            }
         }
     }
 }

@@ -173,6 +173,20 @@ struct MountainHistoryResponse: Codable {
     }
 }
 
+// MARK: - Batched Mountain Data Response
+struct MountainBatchedResponse: Codable {
+    let mountain: MountainDetail
+    let conditions: MountainConditions
+    let powderScore: MountainPowderScore
+    let forecast: [ForecastDay]
+    let roads: RoadsResponse?
+    let tripAdvice: TripAdviceResponse?
+    let powderDay: PowderDayPlanResponse?
+    let alerts: [WeatherAlert]
+    let weatherGovLinks: WeatherGovLinks?
+    let cachedAt: String
+}
+
 // MARK: - Mock Data
 extension MountainConditions {
     static let mock = MountainConditions(
