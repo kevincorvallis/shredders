@@ -307,7 +307,7 @@ export default function MountainPage({
                     Unknown: 'bg-gray-500/20 border-gray-500 text-gray-200',
                   };
 
-                  const colorClass = severityColors[alert.severity] || severityColors.Unknown;
+                  const colorClass = severityColors[alert.severity as keyof typeof severityColors] || severityColors.Unknown;
 
                   return (
                     <div key={alert.id} className={`rounded-xl p-4 border-2 ${colorClass}`}>
