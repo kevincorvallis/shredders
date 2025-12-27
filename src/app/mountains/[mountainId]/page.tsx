@@ -373,7 +373,7 @@ export default function MountainPage({
                 </a>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {powderScore.factors.map((factor, i) => (
+                  {powderScore.factors.map((factor: any, i: number) => (
                     <div key={i} className="bg-slate-700/50 rounded-lg p-3">
                       <div className="text-xs text-gray-400 mb-1">{factor.name}</div>
                       <div className="text-sm text-white">{factor.description}</div>
