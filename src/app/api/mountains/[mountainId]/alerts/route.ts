@@ -26,6 +26,7 @@ export async function GET(
       mountain: {
         id: mountain.id,
         name: mountain.name,
+        shortName: mountain.shortName,
       },
       alerts,
       count: alerts.length,
