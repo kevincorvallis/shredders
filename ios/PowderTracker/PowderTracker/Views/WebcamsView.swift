@@ -4,6 +4,7 @@ struct WebcamsView: View {
     var mountainId: String? = nil  // Optional parameter from parent
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
     @State private var webcams: [WebcamData] = []
+    @State private var roadWebcams: [RoadWebcamData] = []
     @State private var mountainName: String = ""
     @State private var isLoading = true
     @State private var error: String?
@@ -26,7 +27,7 @@ struct WebcamsView: View {
                         ErrorCard(message: error) {
                             Task { await loadWebcams() }
                         }
-                    } else if webcams.isEmpty {
+                    } else if webcams.isEmpty && roadWebcams.isEmpty {
                         VStack(spacing: 12) {
                             Image(systemName: "video.slash")
                                 .font(.largeTitle)
@@ -39,9 +40,49 @@ struct WebcamsView: View {
                         }
                         .frame(maxWidth: .infinity, minHeight: 300)
                     } else {
-                        ForEach(webcams) { webcam in
-                            WebcamCard(webcam: webcam, refreshID: refreshID) {
-                                selectedWebcam = webcam
+                        // Resort Webcams Section
+                        if !webcams.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "video")
+                                        .font(.headline)
+                                    Text("Resort Webcams")
+                                        .font(.headline)
+                                }
+                                .padding(.horizontal)
+                                .foregroundColor(.primary)
+
+                                ForEach(webcams) { webcam in
+                                    WebcamCard(webcam: webcam, refreshID: refreshID) {
+                                        selectedWebcam = webcam
+                                    }
+                                }
+                            }
+                        }
+
+                        // Road Webcams Section
+                        if !roadWebcams.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "road.lanes")
+                                        .font(.headline)
+                                    Text("Road & Highway Webcams")
+                                        .font(.headline)
+                                }
+                                .padding(.horizontal)
+                                .padding(.top, webcams.isEmpty ? 0 : 8)
+                                .foregroundColor(.primary)
+
+                                ForEach(roadWebcams) { roadWebcam in
+                                    RoadWebcamCard(webcam: roadWebcam, refreshID: refreshID) {
+                                        // Convert to WebcamData for full screen view
+                                        selectedWebcam = WebcamData(
+                                            id: roadWebcam.id,
+                                            name: roadWebcam.name,
+                                            url: roadWebcam.url
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -91,6 +132,16 @@ struct WebcamsView: View {
             webcams = response.webcams.map { webcam in
                 WebcamData(id: webcam.id, name: webcam.name, url: webcam.url)
             }
+            roadWebcams = response.roadWebcams?.map { roadWebcam in
+                RoadWebcamData(
+                    id: roadWebcam.id,
+                    name: roadWebcam.name,
+                    url: roadWebcam.url,
+                    highway: roadWebcam.highway,
+                    milepost: roadWebcam.milepost,
+                    agency: roadWebcam.agency
+                )
+            } ?? []
         } catch {
             self.error = "Unable to load webcams. Please check your connection."
         }
@@ -105,6 +156,15 @@ struct WebcamData: Identifiable {
     let url: String
 }
 
+struct RoadWebcamData: Identifiable {
+    let id: String
+    let name: String
+    let url: String
+    let highway: String
+    let milepost: String?
+    let agency: String
+}
+
 struct WebcamCard: View {
     let webcam: WebcamData
     let refreshID: UUID
@@ -115,6 +175,82 @@ struct WebcamCard: View {
             HStack {
                 Text(webcam.name)
                     .font(.headline)
+                Spacer()
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            AsyncImage(url: URL(string: webcam.url)) { phase in
+                switch phase {
+                case .empty:
+                    ZStack {
+                        Color(.secondarySystemBackground)
+                        ProgressView()
+                    }
+                    .aspectRatio(16/9, contentMode: .fit)
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .cornerRadius(8)
+                case .failure(_):
+                    ZStack {
+                        Color(.secondarySystemBackground)
+                        VStack(spacing: 8) {
+                            Image(systemName: "video.slash")
+                                .font(.title)
+                                .foregroundColor(.secondary)
+                            Text("Unable to load webcam")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .aspectRatio(16/9, contentMode: .fit)
+                @unknown default:
+                    EmptyView()
+                }
+            }
+            .id(refreshID)
+
+            Text("Tap to view fullscreen")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+        .onTapGesture(perform: onTap)
+    }
+}
+
+struct RoadWebcamCard: View {
+    let webcam: RoadWebcamData
+    let refreshID: UUID
+    let onTap: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(webcam.name)
+                        .font(.headline)
+                    HStack(spacing: 8) {
+                        Text(webcam.highway)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
+                        if let milepost = webcam.milepost {
+                            Text("• MP \(milepost)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Text("• \(webcam.agency)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
                 Spacer()
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
                     .font(.caption)

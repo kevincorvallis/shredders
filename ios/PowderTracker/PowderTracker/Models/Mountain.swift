@@ -64,6 +64,7 @@ struct MountainDetail: Codable {
     let snotel: SnotelInfo?
     let noaa: NOAAInfo
     let webcams: [Webcam]
+    let roadWebcams: [RoadWebcam]?
     let color: String
     let website: String
 
@@ -83,6 +84,15 @@ struct MountainDetail: Codable {
         let name: String
         let url: String
         let refreshUrl: String?
+    }
+
+    struct RoadWebcam: Codable, Identifiable {
+        let id: String
+        let name: String
+        let url: String
+        let highway: String
+        let milepost: String?
+        let agency: String
     }
 }
 
