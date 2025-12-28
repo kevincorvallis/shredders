@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getMountain } from '@/data/mountains';
 import { withCache } from '@/lib/cache';
+import { getCurrentConditions } from '@/lib/apis/snotel';
+import { getForecast, getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
+import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';
+import { getWeatherAlerts } from '@/lib/apis/noaa';
 
 /**
  * Batched API endpoint that fetches all mountain data in one request
  * This reduces network overhead and improves performance
+ *
+ * IMPORTANT: This endpoint directly calls data fetching functions instead of
+ * making HTTP requests to avoid Vercel serverless function limitations
  */
 export async function GET(
   request: Request,
@@ -25,63 +32,129 @@ export async function GET(
     const data = await withCache(
       `mountain:${mountainId}:all`,
       async () => {
-        // Fetch all data in parallel
+        const noaaConfig: NOAAGridConfig = mountain.noaa;
+
+        // Fetch all data in parallel using direct function calls
         const [
-          conditionsRes,
-          scoreRes,
-          forecastRes,
-          roadsRes,
-          tripAdviceRes,
-          powderDayRes,
-          alertsRes,
-          weatherGovLinksRes,
+          snotelData,
+          weatherData,
+          forecastData,
+          alertsData,
+          freezingLevel,
         ] = await Promise.allSettled([
-          fetch(`${getBaseUrl()}/api/mountains/${mountainId}/conditions`),
-          fetch(`${getBaseUrl()}/api/mountains/${mountainId}/powder-score`),
-          fetch(`${getBaseUrl()}/api/mountains/${mountainId}/forecast`),
-          fetch(`${getBaseUrl()}/api/mountains/${mountainId}/roads`),
-          fetch(`${getBaseUrl()}/api/mountains/${mountainId}/trip-advice`),
-          fetch(`${getBaseUrl()}/api/mountains/${mountainId}/powder-day`),
-          fetch(`${getBaseUrl()}/api/mountains/${mountainId}/alerts`),
-          fetch(`${getBaseUrl()}/api/mountains/${mountainId}/weather-gov-links`),
+          // SNOTEL data
+          mountain.snotel
+            ? getCurrentConditions(mountain.snotel.stationId).catch(() => null)
+            : Promise.resolve(null),
+          // Current weather
+          getCurrentWeather(noaaConfig).catch(() => null),
+          // Forecast
+          getForecast(noaaConfig).catch(() => []),
+          // Alerts
+          getWeatherAlerts(mountain.location.lat, mountain.location.lng).catch(() => []),
+          // Freezing level
+          getCurrentFreezingLevelFeet(mountain.location.lat, mountain.location.lng).catch(() => null),
         ]);
 
-        // Parse all responses
-        const [
-          conditions,
-          powderScore,
-          forecast,
-          roads,
-          tripAdvice,
-          powderDay,
-          alerts,
-          weatherGovLinks,
-        ] = await Promise.all([
-          conditionsRes.status === 'fulfilled' && conditionsRes.value.ok
-            ? conditionsRes.value.json()
+        // Extract values from PromiseSettledResult
+        const snotel = snotelData.status === 'fulfilled' ? snotelData.value : null;
+        const weather = weatherData.status === 'fulfilled' ? weatherData.value : null;
+        const forecast = forecastData.status === 'fulfilled' ? forecastData.value : [];
+        const alerts = alertsData.status === 'fulfilled' ? alertsData.value : [];
+        const freezing = freezingLevel.status === 'fulfilled' ? freezingLevel.value : null;
+
+        // Calculate rain risk
+        const rainRisk = freezing
+          ? calculateRainRiskScore(freezing, mountain.elevation.base, mountain.elevation.summit)
+          : null;
+
+        // Build conditions object
+        const conditions = {
+          mountain: {
+            id: mountain.id,
+            name: mountain.name,
+            shortName: mountain.shortName,
+          },
+          snowDepth: snotel?.snowDepth ?? null,
+          snowWaterEquivalent: snotel?.snowWaterEquivalent ?? null,
+          snowfall24h: snotel?.snowfall24h ?? 0,
+          snowfall48h: snotel?.snowfall48h ?? 0,
+          snowfall7d: snotel?.snowfall7d ?? 0,
+          temperature: weather?.temperature ?? snotel?.temperature ?? null,
+          conditions: weather?.conditions ?? 'Unknown',
+          wind: weather
+            ? {
+                speed: weather.windSpeed,
+                direction: weather.windDirection,
+              }
             : null,
-          scoreRes.status === 'fulfilled' && scoreRes.value.ok
-            ? scoreRes.value.json()
+          lastUpdated: snotel?.lastUpdated ?? new Date().toISOString(),
+          freezingLevel: freezing,
+          rainRisk: rainRisk
+            ? {
+                score: rainRisk.score,
+                description: rainRisk.description,
+              }
             : null,
-          forecastRes.status === 'fulfilled' && forecastRes.value.ok
-            ? forecastRes.value.json()
-            : null,
-          roadsRes.status === 'fulfilled' && roadsRes.value.ok
-            ? roadsRes.value.json()
-            : null,
-          tripAdviceRes.status === 'fulfilled' && tripAdviceRes.value.ok
-            ? tripAdviceRes.value.json()
-            : null,
-          powderDayRes.status === 'fulfilled' && powderDayRes.value.ok
-            ? powderDayRes.value.json()
-            : null,
-          alertsRes.status === 'fulfilled' && alertsRes.value.ok
-            ? alertsRes.value.json()
-            : null,
-          weatherGovLinksRes.status === 'fulfilled' && weatherGovLinksRes.value.ok
-            ? weatherGovLinksRes.value.json()
-            : null,
-        ]);
+          elevation: mountain.elevation,
+          dataSources: {
+            snotel: mountain.snotel
+              ? {
+                  available: !!snotel,
+                  stationName: mountain.snotel.stationName,
+                }
+              : null,
+            noaa: {
+              available: !!weather,
+              gridOffice: mountain.noaa.gridOffice,
+            },
+            openMeteo: {
+              available: freezing !== null,
+            },
+          },
+        };
+
+        // Calculate powder score (simplified version)
+        const snowfall24h = snotel?.snowfall24h ?? 0;
+        const snowfall48h = snotel?.snowfall48h ?? 0;
+        const temperature = weather?.temperature ?? snotel?.temperature ?? 32;
+        const windSpeed = weather?.windSpeed ?? 0;
+
+        // Simple powder score calculation
+        let score = 0;
+        score += Math.min(snowfall24h / 12 * 2.5, 2.5); // 0-2.5 points for 24h snow
+        score += Math.min(snowfall48h / 24 * 1.2, 1.2); // 0-1.2 points for 48h snow
+        score += temperature < 28 ? 2.5 : temperature < 32 ? 1.5 : 0; // 0-2.5 points for temp
+        score += windSpeed < 10 ? 2 : windSpeed < 20 ? 1 : 0; // 0-2 points for wind
+        score += rainRisk ? Math.min(rainRisk.score / 10 * 1.8, 1.8) : 0; // 0-1.8 points for rain risk
+
+        const powderScore = {
+          mountain: {
+            id: mountain.id,
+            name: mountain.name,
+            shortName: mountain.shortName,
+          },
+          score: Math.min(Math.max(score, 0), 10),
+          factors: [
+            {
+              name: 'Fresh Snow (24h)',
+              value: snowfall24h,
+              weight: 0.25,
+              contribution: Math.min(snowfall24h / 12 * 2.5, 2.5),
+              description: `${snowfall24h}" in last 24 hours`,
+              isPositive: snowfall24h > 6,
+            },
+            {
+              name: 'Temperature',
+              value: temperature ?? 0,
+              weight: 0.25,
+              contribution: temperature < 28 ? 2.5 : temperature < 32 ? 1.5 : 0,
+              description: `${temperature}°F - ${temperature < 32 ? 'Cold smoke' : 'Mild'}`,
+              isPositive: temperature < 32,
+            },
+          ],
+          lastUpdated: new Date().toISOString(),
+        };
 
         return {
           mountain: {
@@ -97,12 +170,16 @@ export async function GET(
           },
           conditions,
           powderScore,
-          forecast: forecast?.forecast || [],
-          roads,
-          tripAdvice,
-          powderDay,
-          alerts: alerts?.alerts || [],
-          weatherGovLinks: weatherGovLinks?.weatherGov || null,
+          forecast: forecast || [],
+          roads: null, // Roads require WSDOT API - skip for now
+          tripAdvice: null, // Trip advice requires AI - skip for now
+          powderDay: null, // Powder day plan requires AI - skip for now
+          alerts: alerts || [],
+          weatherGovLinks: {
+            forecast: `https://forecast.weather.gov/MapClick.php?lat=${mountain.location.lat}&lon=${mountain.location.lng}`,
+            hourly: `https://forecast.weather.gov/MapClick.php?lat=${mountain.location.lat}&lon=${mountain.location.lng}&FcstType=graphical`,
+            alerts: `https://alerts.weather.gov/search?point=${mountain.location.lat},${mountain.location.lng}`,
+          },
           cachedAt: new Date().toISOString(),
         };
       },
@@ -117,11 +194,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
-
-function getBaseUrl() {
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 }
