@@ -12,6 +12,15 @@ interface Webcam {
   refreshUrl?: string;
 }
 
+interface RoadWebcam {
+  id: string;
+  name: string;
+  url: string;
+  highway: string;
+  milepost?: string;
+  agency: 'WSDOT' | 'ODOT' | 'ITD';
+}
+
 export default function WebcamsPage({
   params,
 }: {
@@ -51,6 +60,7 @@ export default function WebcamsPage({
   }
 
   const webcams: Webcam[] = mountain.webcams || [];
+  const roadWebcams: RoadWebcam[] = mountain.roadWebcams || [];
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -123,7 +133,7 @@ export default function WebcamsPage({
           </button>
         </div>
 
-        {webcams.length === 0 ? (
+        {webcams.length === 0 && roadWebcams.length === 0 ? (
           <div className="bg-slate-800 rounded-xl p-8 text-center">
             <Camera className="w-12 h-12 text-gray-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">No Webcams Available</h3>
@@ -133,46 +143,99 @@ export default function WebcamsPage({
           </div>
         ) : (
           <div className="space-y-6">
-            {webcams.map((webcam) => (
-              <div key={webcam.id} className="bg-slate-800 rounded-xl overflow-hidden">
-                <div className="aspect-video bg-slate-700 relative">
-                  <img
-                    key={`${webcam.id}-${refreshKey}`}
-                    src={`${webcam.url}${webcam.url.includes('?') ? '&' : '?'}t=${refreshKey}`}
-                    alt={webcam.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent && !parent.querySelector('.error-message')) {
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'error-message absolute inset-0 flex items-center justify-center text-gray-500';
-                        errorDiv.innerHTML = '<span>Image unavailable</span>';
-                        parent.appendChild(errorDiv);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="p-4 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-white font-medium">{webcam.name}</h3>
-                    <p className="text-sm text-gray-400">Auto-refreshes every 2 minutes</p>
+            {/* Resort Webcams */}
+            {webcams.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-md font-semibold text-white flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  Resort Webcams
+                </h3>
+                {webcams.map((webcam) => (
+                  <div key={webcam.id} className="bg-slate-800 rounded-xl overflow-hidden">
+                    <div className="aspect-video bg-slate-700 relative">
+                      <img
+                        key={`${webcam.id}-${refreshKey}`}
+                        src={`${webcam.url}${webcam.url.includes('?') ? '&' : '?'}t=${refreshKey}`}
+                        alt={webcam.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.error-message')) {
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'error-message absolute inset-0 flex items-center justify-center text-gray-500';
+                            errorDiv.innerHTML = '<span>Image unavailable</span>';
+                            parent.appendChild(errorDiv);
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="p-4 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-white font-medium">{webcam.name}</h3>
+                        <p className="text-sm text-gray-400">Auto-refreshes every 2 minutes</p>
+                      </div>
+                      {webcam.refreshUrl && (
+                        <a
+                          href={webcam.refreshUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-sky-400 hover:text-sky-300 transition-colors"
+                        >
+                          <span>View on site</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
                   </div>
-                  {webcam.refreshUrl && (
-                    <a
-                      href={webcam.refreshUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sm text-sky-400 hover:text-sky-300 transition-colors"
-                    >
-                      <span>View on site</span>
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
+                ))}
               </div>
-            ))}
+            )}
+
+            {/* Road/Highway Webcams */}
+            {roadWebcams.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-md font-semibold text-white flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  Road & Highway Webcams
+                </h3>
+                {roadWebcams.map((webcam) => (
+                  <div key={webcam.id} className="bg-slate-800 rounded-xl overflow-hidden">
+                    <div className="aspect-video bg-slate-700 relative">
+                      <img
+                        key={`${webcam.id}-${refreshKey}`}
+                        src={`${webcam.url}${webcam.url.includes('?') ? '&' : '?'}t=${refreshKey}`}
+                        alt={webcam.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.error-message')) {
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'error-message absolute inset-0 flex items-center justify-center text-gray-500';
+                            errorDiv.innerHTML = '<span>Image unavailable</span>';
+                            parent.appendChild(errorDiv);
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="text-white font-medium">{webcam.name}</h3>
+                          <p className="text-sm text-gray-400">
+                            {webcam.highway} {webcam.milepost && `• MP ${webcam.milepost}`} • {webcam.agency}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500">Auto-refreshes every 2 minutes</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
