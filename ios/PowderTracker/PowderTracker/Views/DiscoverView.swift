@@ -2,9 +2,9 @@ import SwiftUI
 import MapKit
 
 struct DiscoverView: View {
-    @StateObject private var viewModel = MountainSelectionViewModel()
-    @StateObject private var dashboardViewModel = DashboardViewModel()
-    @StateObject private var tripPlanningViewModel = TripPlanningViewModel()
+    @State private var viewModel = MountainSelectionViewModel()
+    @State private var dashboardViewModel = DashboardViewModel()
+    @State private var tripPlanningViewModel = TripPlanningViewModel()
     @StateObject private var locationManager = LocationManager.shared
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
 
@@ -163,15 +163,17 @@ struct DiscoverView: View {
                     }
                 }
 
-                HStack(spacing: 12) {
-                    Label("\(conditions.mountain.elevation.summit.formatted())'", systemImage: "mountain.2")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    if let distance = viewModel.getDistance(to: conditions.mountain) {
-                        Label("\(Int(distance)) mi away", systemImage: "location")
+                if let mountain = viewModel.mountains.first(where: { $0.id == selectedMountainId }) {
+                    HStack(spacing: 12) {
+                        Label("\(mountain.elevation.summit.formatted())'", systemImage: "mountain.2")
                             .font(.caption)
                             .foregroundColor(.secondary)
+
+                        if let distance = viewModel.getDistance(to: mountain) {
+                            Label("\(Int(distance)) mi away", systemImage: "location")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
             }
