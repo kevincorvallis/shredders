@@ -3,14 +3,9 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            DashboardView()
+            DiscoverView()
                 .tabItem {
-                    Label("Dashboard", systemImage: "snowflake")
-                }
-
-            MountainMapView()
-                .tabItem {
-                    Label("Mountains", systemImage: "map")
+                    Label("Discover", systemImage: "mountain.2.circle.fill")
                 }
 
             ChatView()

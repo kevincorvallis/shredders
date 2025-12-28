@@ -9,7 +9,13 @@ struct SnowDepthChart: View {
             Text("Snow Depth (30 Days)")
                 .font(.headline)
 
-            Chart(history) { point in
+            if history.isEmpty {
+                Text("No data available")
+                    .foregroundColor(.secondary)
+                    .frame(height: 200)
+                    .frame(maxWidth: .infinity)
+            } else {
+                Chart(history) { point in
                 LineMark(
                     x: .value("Date", point.formattedDate ?? Date()),
                     y: .value("Depth", point.snowDepth)
@@ -22,25 +28,27 @@ struct SnowDepthChart: View {
                     y: .value("Depth", point.snowDepth)
                 )
                 .foregroundStyle(Color.blue.opacity(0.1).gradient)
-            }
-            .chartYAxis {
-                AxisMarks(position: .leading) { value in
-                    AxisGridLine()
-                    AxisValueLabel {
-                        if let depth = value.as(Int.self) {
-                            Text("\(depth)\"")
-                                .font(.caption2)
+                }
+                .chartYAxis {
+                    AxisMarks(position: .leading) { value in
+                        AxisGridLine()
+                        AxisValueLabel {
+                            if let depth = value.as(Int.self) {
+                                Text("\(depth)\"")
+                                    .font(.caption2)
+                            }
                         }
                     }
                 }
-            }
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .day, count: 7)) { value in
-                    AxisGridLine()
-                    AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 7)) { value in
+                        AxisGridLine()
+                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                    }
                 }
+                .frame(height: 200)
+                .frame(minWidth: 100) // Prevent 0x0 CAMetalLayer error
             }
-            .frame(height: 200)
         }
         .padding()
         .background(Color(.systemBackground))
