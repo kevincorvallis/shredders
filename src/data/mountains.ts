@@ -26,6 +26,14 @@ export interface MountainConfig {
     url: string;
     refreshUrl?: string;
   }[];
+  roadWebcams?: {
+    id: string;
+    name: string;
+    url: string;
+    highway: string;
+    milepost?: string;
+    agency: 'WSDOT' | 'ODOT' | 'ITD';
+  }[];
   color: string;
   website: string;
 }
@@ -44,23 +52,13 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'SEW', gridX: 157, gridY: 123 },
     webcams: [
+      // Mt. Baker's official webcams have moved to a dynamic system
+      // Visit https://www.mtbaker.us/snow-report/webcams for live webcams
       {
-        id: 'chair8',
-        name: 'Chair 8',
-        url: 'https://www.mtbaker.us/images/webcam/C8.jpg',
-        refreshUrl: 'https://www.mtbaker.us/snow-report/webcams',
-      },
-      {
-        id: 'base',
-        name: 'White Salmon Base',
-        url: 'https://www.mtbaker.us/images/webcam/WSday.jpg',
-        refreshUrl: 'https://www.mtbaker.us/snow-report/webcams',
-      },
-      {
-        id: 'pan',
-        name: 'Pan Dome',
-        url: 'https://www.mtbaker.us/images/webcam/pan.jpg',
-        refreshUrl: 'https://www.mtbaker.us/snow-report/webcams',
+        id: 'nwcaa',
+        name: 'Mt. Baker View (NWCAA)',
+        url: 'https://video-monitoring.com/parks/mtbaker/static/s1latest.jpg',
+        refreshUrl: 'https://video-monitoring.com/parks/mtbaker/',
       },
     ],
     color: '#3b82f6',
@@ -124,12 +122,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'SEW', gridX: 152, gridY: 97 },
     webcams: [
-      {
-        id: 'central',
-        name: 'Central Base',
-        url: 'https://www.summitatsnoqualmie.com/webcam/central.jpg',
-        refreshUrl: 'https://www.summitatsnoqualmie.com/conditions-weather/webcams',
-      },
+      // Snoqualmie webcams have moved to a dynamic system
+      // Visit https://www.summitatsnoqualmie.com/webcams for live cameras
     ],
     color: '#f59e0b',
     website: 'https://www.summitatsnoqualmie.com',
@@ -148,12 +142,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'PDT', gridX: 131, gridY: 80 },
     webcams: [
-      {
-        id: 'base',
-        name: 'Base Lodge',
-        url: 'https://skiwhitepass.com/webcam/base.jpg',
-        refreshUrl: 'https://skiwhitepass.com/conditions',
-      },
+      // White Pass webcams have moved to a dynamic system
+      // Visit https://skiwhitepass.com/mountain-cams for live cameras
     ],
     color: '#ec4899',
     website: 'https://skiwhitepass.com',
@@ -172,12 +162,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'PQR', gridX: 138, gridY: 105 },
     webcams: [
-      {
-        id: 'vista',
-        name: 'Vista Express',
-        url: 'https://www.skihood.com/webcam/vista.jpg',
-        refreshUrl: 'https://www.skihood.com/conditions/webcams',
-      },
+      // Mt. Hood Meadows webcams have moved to a dynamic system
+      // Visit https://www.skihood.com/mountain-report/mountain-cams for live cameras
     ],
     color: '#06b6d4',
     website: 'https://www.skihood.com',
@@ -196,12 +182,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'PQR', gridX: 136, gridY: 103 },
     webcams: [
-      {
-        id: 'lodge',
-        name: 'Timberline Lodge',
-        url: 'https://www.timberlinelodge.com/webcam/lodge.jpg',
-        refreshUrl: 'https://www.timberlinelodge.com/conditions',
-      },
+      // Timberline webcams have moved to a dynamic system
+      // Visit https://timberlinelodge.com/webcams for live cameras
     ],
     color: '#14b8a6',
     website: 'https://www.timberlinelodge.com',
@@ -220,7 +202,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'PDT', gridX: 118, gridY: 43 },
     webcams: [
-      // Mt. Bachelor webcam URL changed - check https://www.mtbachelor.com/conditions/webcams
+      // Mt. Bachelor uses 13 dynamic live feed webcams
+      // Visit https://www.mtbachelor.com/the-mountain/webcams for live cameras
     ],
     color: '#f97316',
     website: 'https://www.mtbachelor.com',
@@ -240,11 +223,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'OTX', gridX: 53, gridY: 107 },
     webcams: [
-      {
-        id: 'base',
-        name: 'Base Area',
-        url: 'https://www.missionridge.com/webcam.jpg',
-      },
+      // Mission Ridge webcams have moved to a dynamic system
+      // Visit https://www.missionridge.com/mountain-report for live cameras
     ],
     color: '#dc2626',
     website: 'https://www.missionridge.com',
@@ -263,11 +243,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'OTX', gridX: 118, gridY: 135 },
     webcams: [
-      {
-        id: 'base',
-        name: 'Base Lodge',
-        url: 'https://www.ski49n.com/webcam.jpg',
-      },
+      // 49 Degrees North webcams have moved to a dynamic system
+      // Visit https://www.ski49n.com/index.php/mountain-info/webcams for live cameras
     ],
     color: '#7c3aed',
     website: 'https://www.ski49n.com',
@@ -287,11 +264,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'OTX', gridX: 131, gridY: 123 },
     webcams: [
-      {
-        id: 'summit',
-        name: 'Summit',
-        url: 'https://www.schweitzer.com/webcam.jpg',
-      },
+      // Schweitzer webcams have moved to a dynamic system
+      // Visit https://www.schweitzer.com/mountain-info/webcam for live cameras
     ],
     color: '#0ea5e9',
     website: 'https://www.schweitzer.com',
@@ -310,11 +284,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'MSO', gridX: 159, gridY: 82 },
     webcams: [
-      {
-        id: 'base',
-        name: 'Base Area',
-        url: 'https://www.skilookout.com/webcam.jpg',
-      },
+      // Lookout Pass webcams have moved to a dynamic system
+      // Visit https://www.skilookout.com for current conditions
     ],
     color: '#059669',
     website: 'https://www.skilookout.com',
@@ -334,11 +305,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'MFR', gridX: 89, gridY: 62 },
     webcams: [
-      {
-        id: 'lodge',
-        name: 'Lodge',
-        url: 'https://www.mtashland.com/webcam.jpg',
-      },
+      // Mt. Ashland webcams have moved to a dynamic system
+      // Visit https://www.mtashland.com for current conditions
     ],
     color: '#ea580c',
     website: 'https://www.mtashland.com',
@@ -357,11 +325,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'PQR', gridX: 112, gridY: 69 },
     webcams: [
-      {
-        id: 'base',
-        name: 'Base Area',
-        url: 'https://www.willamettepass.com/webcam.jpg',
-      },
+      // Willamette Pass webcams have moved to a dynamic system
+      // Visit https://www.willamettepass.ski/weather-conditions-webcams for live cameras
     ],
     color: '#84cc16',
     website: 'https://www.willamettepass.com',
@@ -380,11 +345,8 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'PDT', gridX: 107, gridY: 65 },
     webcams: [
-      {
-        id: 'base',
-        name: 'Base Lodge',
-        url: 'https://www.skihoodoo.com/webcam.jpg',
-      },
+      // Hoodoo webcams have moved to a dynamic system
+      // Visit https://www.skihoodoo.com for current conditions
     ],
     color: '#f472b6',
     website: 'https://www.skihoodoo.com',
