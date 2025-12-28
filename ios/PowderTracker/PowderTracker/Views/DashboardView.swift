@@ -12,8 +12,7 @@ struct DashboardView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     if viewModel.isLoading && viewModel.conditions == nil {
-                        ProgressView("Loading conditions...")
-                            .frame(maxWidth: .infinity, minHeight: 300)
+                        DashboardSkeleton()
                     } else if let error = viewModel.error {
                         ErrorView(message: error) {
                             Task { await viewModel.refresh() }

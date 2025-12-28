@@ -6,9 +6,9 @@ struct ForecastView: View {
     var body: some View {
         List {
             if viewModel.isLoading && viewModel.forecast.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
+                ForecastViewSkeleton()
                     .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
             } else {
                 Section {
                     ForEach(Array(viewModel.forecast.enumerated()), id: \.element.id) { index, day in

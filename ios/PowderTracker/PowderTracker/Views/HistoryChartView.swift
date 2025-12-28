@@ -8,8 +8,7 @@ struct HistoryChartView: View {
         ScrollView {
             VStack(spacing: 20) {
                 if viewModel.isLoading && viewModel.history.isEmpty {
-                    ProgressView("Loading history...")
-                        .frame(height: 300)
+                    HistoryChartSkeleton()
                 } else if let error = viewModel.error {
                     Text("Error: \(error)")
                         .foregroundColor(.red)
