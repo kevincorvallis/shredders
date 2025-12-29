@@ -50,7 +50,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.crystalmountainresort.com',
     dataUrl: 'https://www.crystalmountainresort.com/the-mountain/mountain-report/',
     type: 'dynamic',  // Uses Puppeteer to bypass Incapsula bot protection
-    enabled: true,
+    enabled: false,  // Disabled: Puppeteer/Chromium not working on Vercel Hobby tier
     selectors: {
       // These will be tested/refined with Puppeteer
       liftsOpen: '[class*="lift"][class*="open"], .lift-status.open',
@@ -67,7 +67,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.summitatsnoqualmie.com',
     dataUrl: 'https://www.summitatsnoqualmie.com/mountain-report',
     type: 'dynamic',  // Uses Next.js client-side rendering - requires Puppeteer
-    enabled: true,
+    enabled: false,  // Disabled: Puppeteer/Chromium not working on Vercel Hobby tier
     selectors: {
       // Will extract from dynamically loaded content
       liftsOpen: '[aria-label*="Lift Status"], .lift-status',
