@@ -8,24 +8,14 @@ import { scraperOrchestrator } from '@/lib/scraper/ScraperOrchestrator';
  * In production, you'd protect this with authentication
  */
 export async function GET() {
-  // Use PostgreSQL storage if DATABASE_URL is set, otherwise use in-memory
-  const usePostgres = !!process.env.DATABASE_URL;
-  const storage = usePostgres
-    ? await import('@/lib/scraper/storage-postgres').then((m) => m.scraperStorage)
-    : await import('@/lib/scraper/storage').then((m) => m.scraperStorage);
   try {
-    console.log(`[API] Starting manual scrape (${usePostgres ? 'PostgreSQL' : 'in-memory'})...`);
+    console.log('[API] Starting manual scrape (no database persistence)...');
     const startTime = Date.now();
-
-    // Start tracking run if using PostgreSQL
-    if (usePostgres && 'startRun' in storage) {
-      await storage.startRun(3, 'github-actions'); // 3 mountains (Baker, Crystal, Snoqualmie)
-    }
 
     // Run all scrapers
     const results = await scraperOrchestrator.scrapeAll();
 
-    // Save successful results to storage
+    // Extract successful results
     const successfulData = Array.from(results.values())
       .filter((r) => r.success && r.data)
       .map((r) => r.data!);
@@ -35,15 +25,7 @@ export async function GET() {
     const totalCount = results.size;
     const failedCount = totalCount - successCount;
 
-    // Save data
-    if (usePostgres && 'saveMany' in storage) {
-      await storage.saveMany(successfulData);
-      if ('completeRun' in storage) {
-        await storage.completeRun(successCount, failedCount, duration);
-      }
-    } else if ('saveMany' in storage) {
-      storage.saveMany(successfulData);
-    }
+    console.log(`[API] Scrape completed: ${successCount}/${totalCount} successful in ${duration}ms`);
 
     return NextResponse.json({
       success: true,
@@ -56,15 +38,10 @@ export async function GET() {
       },
       data: successfulData,
       timestamp: new Date().toISOString(),
-      storage: usePostgres ? 'postgresql' : 'in-memory',
+      storage: 'none',
     });
   } catch (error) {
     console.error('[API] Scraper run failed:', error);
-
-    // Mark run as failed if using PostgreSQL
-    if (usePostgres && 'failRun' in storage) {
-      await storage.failRun(error instanceof Error ? error.message : 'Unknown error');
-    }
 
     return NextResponse.json(
       {
