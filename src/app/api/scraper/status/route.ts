@@ -40,17 +40,19 @@ export async function GET(request: Request) {
       });
     } else {
       // Get all statuses
-      const allStatus = usePostgres && 'getAll' in storage
-        ? await storage.getAll()
-        : 'getAll' in storage
-        ? storage.getAll()
-        : [];
+      let allStatus: any[];
+      let stats: any;
 
-      const stats = usePostgres && 'getStats' in storage
-        ? await storage.getStats()
-        : 'getStats' in storage
-        ? storage.getStats()
-        : {};
+      if (usePostgres && 'getAll' in storage) {
+        allStatus = await storage.getAll();
+        stats = 'getStats' in storage ? await storage.getStats() : {};
+      } else if ('getAll' in storage) {
+        allStatus = storage.getAll();
+        stats = 'getStats' in storage ? storage.getStats() : {};
+      } else {
+        allStatus = [];
+        stats = {};
+      }
 
       return NextResponse.json({
         success: true,
