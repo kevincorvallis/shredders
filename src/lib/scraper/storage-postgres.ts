@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { createClient } from '@vercel/postgres';
 import type { ScrapedMountainStatus } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { getMountain } from '@/data/mountains';
@@ -9,6 +9,9 @@ import { getMountain } from '@/data/mountains';
  */
 class PostgresScraperStorage {
   private runId: string = '';
+  private db = createClient({
+    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL
+  });
 
   /**
    * Helper to map database row to ScrapedMountainStatus
@@ -47,7 +50,7 @@ class PostgresScraperStorage {
     this.runId = `run-${Date.now()}-${uuidv4().slice(0, 8)}`;
 
     try {
-      await sql`
+      await this.db.sql`
         INSERT INTO scraper_runs (
           run_id,
           total_mountains,
@@ -75,7 +78,7 @@ class PostgresScraperStorage {
     if (!this.runId) return;
 
     try {
-      await sql`
+      await this.db.sql`
         UPDATE scraper_runs
         SET
           successful_count = ${successful},
@@ -98,7 +101,7 @@ class PostgresScraperStorage {
     if (!this.runId) return;
 
     try {
-      await sql`
+      await this.db.sql`
         UPDATE scraper_runs
         SET
           status = 'failed',
@@ -117,7 +120,7 @@ class PostgresScraperStorage {
    */
   async save(data: ScrapedMountainStatus): Promise<void> {
     try {
-      await sql`
+      await this.db.sql`
         INSERT INTO mountain_status (
           mountain_id,
           is_open,
@@ -183,7 +186,7 @@ class PostgresScraperStorage {
    */
   async get(mountainId: string): Promise<ScrapedMountainStatus | null> {
     try {
-      const result = await sql`
+      const result = await this.db.sql`
         SELECT
           mountain_id,
           is_open,
@@ -215,7 +218,7 @@ class PostgresScraperStorage {
    */
   async getAll(): Promise<ScrapedMountainStatus[]> {
     try {
-      const result = await sql`
+      const result = await this.db.sql`
         SELECT
           mountain_id,
           is_open,
@@ -243,7 +246,7 @@ class PostgresScraperStorage {
    */
   async getHistory(mountainId: string, days = 30): Promise<ScrapedMountainStatus[]> {
     try {
-      const result = await sql`
+      const result = await this.db.sql`
         SELECT
           mountain_id,
           is_open,
@@ -273,17 +276,17 @@ class PostgresScraperStorage {
    */
   async getStats() {
     try {
-      const mountainsResult = await sql`
+      const mountainsResult = await this.db.sql`
         SELECT COUNT(DISTINCT mountain_id) as total_mountains
         FROM mountain_status
       `;
 
-      const historyResult = await sql`
+      const historyResult = await this.db.sql`
         SELECT COUNT(*) as total_history
         FROM mountain_status
       `;
 
-      const recentRunsResult = await sql`
+      const recentRunsResult = await this.db.sql`
         SELECT
           COUNT(*) as total_runs,
           AVG(successful_count) as avg_successful,
@@ -323,7 +326,7 @@ class PostgresScraperStorage {
    */
   async cleanup(): Promise<number> {
     try {
-      const result = await sql`
+      const result = await this.db.sql`
         SELECT cleanup_old_mountain_status() as deleted_count
       `;
       const deletedCount = result.rows[0]?.deleted_count || 0;
