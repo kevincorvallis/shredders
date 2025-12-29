@@ -1,5 +1,6 @@
 import { HTMLScraper } from './HTMLScraper';
 import { APIScraper } from './APIScraper';
+import { PuppeteerScraper } from './PuppeteerScraper';
 import { getEnabledConfigs, getScraperConfig } from './configs';
 import type { BaseScraper } from './BaseScraper';
 import type { ScraperResult, ScraperConfig } from './types';
@@ -41,12 +42,11 @@ export class ScraperOrchestrator {
       case 'api':
         return new APIScraper(config);
       case 'dynamic':
-        // For dynamic sites, we'll use HTML scraper for now
-        // In production, you'd use Puppeteer here
-        console.warn(
-          `[ScraperOrchestrator] Dynamic scraping not yet implemented for ${config.id}, using HTML scraper`
+        // Use Puppeteer for dynamic/JavaScript-heavy sites
+        console.log(
+          `[ScraperOrchestrator] Using Puppeteer scraper for ${config.id}`
         );
-        return new HTMLScraper(config);
+        return new PuppeteerScraper(config);
       default:
         console.error(`[ScraperOrchestrator] Unknown scraper type for ${config.id}`);
         return null;

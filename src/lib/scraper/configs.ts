@@ -49,13 +49,15 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     name: 'Crystal Mountain',
     url: 'https://www.crystalmountainresort.com',
     dataUrl: 'https://www.crystalmountainresort.com/the-mountain/mountain-report/',
-    type: 'dynamic',  // Requires Puppeteer - blocked by Incapsula bot protection
-    enabled: false,
+    type: 'dynamic',  // Uses Puppeteer to bypass Incapsula bot protection
+    enabled: true,
     selectors: {
-      liftsOpen: '.lifts-open',
-      runsOpen: '.runs-open',
-      percentOpen: '.percent-open',
-      status: '.resort-status',
+      // These will be tested/refined with Puppeteer
+      liftsOpen: '[class*="lift"][class*="open"], .lift-status.open',
+      runsOpen: '[class*="run"][class*="open"], .trail-status.open',
+      percentOpen: '[class*="percent"]',
+      status: '[class*="status"], h1, h2',
+      message: '[class*="conditions"], [class*="message"]',
     },
   },
 
@@ -65,11 +67,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.summitatsnoqualmie.com',
     dataUrl: 'https://www.summitatsnoqualmie.com/mountain-report',
     type: 'dynamic',  // Uses Next.js client-side rendering - requires Puppeteer
-    enabled: false,
+    enabled: true,
     selectors: {
-      liftsOpen: '.lift-count',
-      runsOpen: '.run-count',
-      status: '.operating-status',
+      // Will extract from dynamically loaded content
+      liftsOpen: '[aria-label*="Lift Status"], .lift-status',
+      runsOpen: '[aria-label*="Trail Status"], .trail-status',
+      status: 'h1, h2, [class*="status"]',
+      message: '[class*="daily-report"], [class*="conditions"]',
     },
   },
 
