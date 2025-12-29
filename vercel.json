@@ -3,5 +3,11 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["sfo1"]
+  "regions": ["sfo1"],
+  "crons": [
+    {
+      "path": "/api/scraper/run",
+      "schedule": "0 6,18 * * *"
+    }
+  ]
 }

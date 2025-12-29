@@ -20,7 +20,7 @@ export async function GET() {
 
     // Start tracking run if using PostgreSQL
     if (usePostgres && 'startRun' in storage) {
-      await storage.startRun(1, 'manual'); // 1 mountain for testing (Baker only)
+      await storage.startRun(3, 'github-actions'); // 3 mountains (Baker, Crystal, Snoqualmie)
     }
 
     // Run all scrapers

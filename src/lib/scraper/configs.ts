@@ -52,7 +52,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.crystalmountainresort.com',
     dataUrl: 'https://www.crystalmountainresort.com/the-mountain/mountain-report/',
     type: 'html',
-    enabled: false, // Temporarily disabled to test with single mountain
+    enabled: true, // Re-enabled for Vercel Cron
     selectors: {
       liftsOpen: '.lifts-open',
       runsOpen: '.runs-open',
@@ -67,7 +67,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.summitatsnoqualmie.com',
     dataUrl: 'https://www.summitatsnoqualmie.com/mountain-report',
     type: 'html',
-    enabled: false, // Temporarily disabled to test with single mountain
+    enabled: true, // Re-enabled for Vercel Cron
     selectors: {
       liftsOpen: '.lift-count',
       runsOpen: '.run-count',
