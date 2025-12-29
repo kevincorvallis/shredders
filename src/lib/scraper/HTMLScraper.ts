@@ -28,11 +28,28 @@ export class HTMLScraper extends BaseScraper {
       // Extract data using configured selectors
       const selectors = this.config.selectors || {};
 
+      // Handle lifts: could be text like "8/10" or multiple elements to count
       const liftsText = selectors.liftsOpen ? $(selectors.liftsOpen).text().trim() : '';
-      const liftsRatio = this.parseRatio(liftsText);
+      let liftsRatio = this.parseRatio(liftsText);
 
+      // If no ratio found, count matching elements (e.g., multiple .status-open)
+      if (liftsRatio.total === 0 && selectors.liftsOpen) {
+        const openLifts = $(selectors.liftsOpen).length;
+        if (openLifts > 0) {
+          liftsRatio = { open: openLifts, total: openLifts };
+        }
+      }
+
+      // Handle runs similarly
       const runsText = selectors.runsOpen ? $(selectors.runsOpen).text().trim() : '';
-      const runsRatio = this.parseRatio(runsText);
+      let runsRatio = this.parseRatio(runsText);
+
+      if (runsRatio.total === 0 && selectors.runsOpen) {
+        const openRuns = $(selectors.runsOpen).length;
+        if (openRuns > 0) {
+          runsRatio = { open: openRuns, total: openRuns };
+        }
+      }
 
       const percentText = selectors.percentOpen
         ? $(selectors.percentOpen).text().trim()
@@ -43,7 +60,8 @@ export class HTMLScraper extends BaseScraper {
       const acresOpen = this.extractNumber(acresText);
 
       const statusText = selectors.status ? $(selectors.status).text().trim() : '';
-      const isOpen = statusText.toLowerCase().includes('open');
+      // Check for "OPEN" in status (not just "open" which might be in messages)
+      const isOpen = statusText.toUpperCase().includes('OPEN') && !statusText.toUpperCase().includes('CLOSED');
 
       const message = selectors.message ? $(selectors.message).text().trim() : undefined;
 

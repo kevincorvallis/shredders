@@ -21,12 +21,10 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     type: 'html',
     enabled: true,
     selectors: {
-      // Note: These are placeholders - need to inspect actual HTML
-      liftsOpen: '.lift-status-open',
-      runsOpen: '.runs-open',
-      percentOpen: '.terrain-percent',
-      status: '.mountain-status',
-      message: '.conditions-message',
+      // Mt. Baker uses status classes on lift table cells
+      liftsOpen: '.table-lifts .status-icon.status-open',  // Count all open lifts
+      status: '.title.h3',  // "OPEN FOR THE SEASON" text
+      message: '.conditions-conditions_summary p',  // Daily conditions message
     },
   },
 
@@ -51,8 +49,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     name: 'Crystal Mountain',
     url: 'https://www.crystalmountainresort.com',
     dataUrl: 'https://www.crystalmountainresort.com/the-mountain/mountain-report/',
-    type: 'html',
-    enabled: true, // Re-enabled for Vercel Cron
+    type: 'dynamic',  // Requires Puppeteer - blocked by Incapsula bot protection
+    enabled: false,
     selectors: {
       liftsOpen: '.lifts-open',
       runsOpen: '.runs-open',
@@ -66,8 +64,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     name: 'Summit at Snoqualmie',
     url: 'https://www.summitatsnoqualmie.com',
     dataUrl: 'https://www.summitatsnoqualmie.com/mountain-report',
-    type: 'html',
-    enabled: true, // Re-enabled for Vercel Cron
+    type: 'dynamic',  // Uses Next.js client-side rendering - requires Puppeteer
+    enabled: false,
     selectors: {
       liftsOpen: '.lift-count',
       runsOpen: '.run-count',
