@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server';
 
-// Use PostgreSQL storage if DATABASE_URL is set, otherwise use in-memory
-const usePostgres = !!process.env.DATABASE_URL;
-const storage = usePostgres
-  ? await import('@/lib/scraper/storage-postgres').then((m) => m.scraperStorage)
-  : await import('@/lib/scraper/storage').then((m) => m.scraperStorage);
-
 /**
  * Get scraped status data
  * GET /api/scraper/status?mountain=baker
  * GET /api/scraper/status (all mountains)
  */
 export async function GET(request: Request) {
+  // Use PostgreSQL storage if DATABASE_URL is set, otherwise use in-memory
+  const usePostgres = !!process.env.DATABASE_URL;
+  const storage = usePostgres
+    ? await import('@/lib/scraper/storage-postgres').then((m) => m.scraperStorage)
+    : await import('@/lib/scraper/storage').then((m) => m.scraperStorage);
   try {
     const { searchParams } = new URL(request.url);
     const mountainId = searchParams.get('mountain');

@@ -20,8 +20,8 @@ struct HomeView: View {
                         // Mountain Selector
                         mountainSelector
 
-                        // Snowfall Tracker
-                        SnowfallTableView(daysBack: 7, daysForward: 7)
+                        // Snowfall Tracker (OpenSnow Style)
+                        OpenSnowStyleSnowfallView(daysBack: 3, daysForward: 7)
 
                         // HERO: 7-Day Forecast (Horizontal Cards)
                         if !dashboardViewModel.forecast.isEmpty {

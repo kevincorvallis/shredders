@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server';
 import { scraperOrchestrator } from '@/lib/scraper/ScraperOrchestrator';
 
-// Use PostgreSQL storage if DATABASE_URL is set, otherwise use in-memory
-const usePostgres = !!process.env.DATABASE_URL;
-const storage = usePostgres
-  ? await import('@/lib/scraper/storage-postgres').then((m) => m.scraperStorage)
-  : await import('@/lib/scraper/storage').then((m) => m.scraperStorage);
-
 /**
  * Manual trigger endpoint to run the scraper
  * GET /api/scraper/run
@@ -14,6 +8,11 @@ const storage = usePostgres
  * In production, you'd protect this with authentication
  */
 export async function GET() {
+  // Use PostgreSQL storage if DATABASE_URL is set, otherwise use in-memory
+  const usePostgres = !!process.env.DATABASE_URL;
+  const storage = usePostgres
+    ? await import('@/lib/scraper/storage-postgres').then((m) => m.scraperStorage)
+    : await import('@/lib/scraper/storage').then((m) => m.scraperStorage);
   try {
     console.log(`[API] Starting manual scrape (${usePostgres ? 'PostgreSQL' : 'in-memory'})...`);
     const startTime = Date.now();
