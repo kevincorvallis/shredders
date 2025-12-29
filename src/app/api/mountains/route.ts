@@ -19,6 +19,8 @@ export async function GET(request: Request) {
       website: m.website,
       hasSnotel: !!m.snotel,
       webcamCount: m.webcams.length,
+      logo: m.logo,
+      status: m.status,
     })),
   });
 }

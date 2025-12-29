@@ -32,175 +32,232 @@ function calculatePowderScore(
     visibility: number | null;
     skyCover: number | null;
     precipProbability: number | null;
-  }
+  },
+  baseDepth?: number,
+  snowfall72h?: number
 ): { score: number; factors: ScoreFactor[] } {
   const factors: ScoreFactor[] = [];
 
-  // Enhanced weights with weather.gov data
-  // Fresh 25%, Recent 12%, Temp 10%, Wind 8%, Upcoming 15%, Snow Line 18%, Visibility 7%, Conditions 5%
-  const hasRainRisk = rainRisk !== null && rainRisk !== undefined;
-  const hasWeatherGov = weatherGovData !== null && weatherGovData !== undefined;
+  // ===== PRIMARY FACTORS (60% of total) =====
 
-  const weights = hasRainRisk && hasWeatherGov
-    ? { fresh: 0.25, recent: 0.12, temp: 0.10, wind: 0.08, upcoming: 0.15, snowLine: 0.18, visibility: 0.07, conditions: 0.05 }
-    : hasRainRisk
-    ? { fresh: 0.30, recent: 0.15, temp: 0.10, wind: 0.10, upcoming: 0.15, snowLine: 0.20, visibility: 0, conditions: 0 }
-    : { fresh: 0.35, recent: 0.20, temp: 0.15, wind: 0.15, upcoming: 0.15, snowLine: 0, visibility: 0, conditions: 0 };
+  // 24h Snowfall (40% of Primary = 24% of total)
+  let snowfallScore = 0;
+  if (snowfall24h === 0) snowfallScore = 0;
+  else if (snowfall24h <= 3) snowfallScore = 4;
+  else if (snowfall24h <= 6) snowfallScore = 6;
+  else if (snowfall24h <= 12) snowfallScore = 8;
+  else snowfallScore = 10;
 
-  // Fresh snow factor (0-10) - most important
-  const freshSnowScore = Math.min(10, snowfall24h / 2);
-  factors.push({
-    name: 'Fresh Snow (24h)',
-    value: snowfall24h,
-    weight: weights.fresh,
-    contribution: freshSnowScore * weights.fresh,
-    description: `${snowfall24h}" in last 24 hours`,
-    isPositive: snowfall24h >= 4,
-  });
-
-  // Recent snow factor (0-10)
-  const recentSnowScore = Math.min(10, snowfall48h / 3);
-  factors.push({
-    name: 'Recent Snow (48h)',
-    value: snowfall48h,
-    weight: weights.recent,
-    contribution: recentSnowScore * weights.recent,
-    description: `${snowfall48h}" in last 48 hours`,
-    isPositive: snowfall48h >= 6,
-  });
-
-  // Temperature factor (0-10) - ideal is 28-32F
-  let tempScore = 0;
-  if (temperature <= 32 && temperature >= 20) {
-    tempScore = 10 - Math.abs(30 - temperature) / 2;
-  } else if (temperature < 20) {
-    tempScore = 6; // Very cold, snow might be too dry
-  } else {
-    tempScore = Math.max(0, 10 - (temperature - 32)); // Above freezing, risk of rain
+  // Snow Density (30% of Primary = 18% of total)
+  // Estimate from temperature and humidity - ideal is <10% water content (light powder)
+  const humidity = weatherGovData?.humidity ?? 70;
+  let densityScore = 8; // Default good
+  if (temperature > 32 || humidity > 85) {
+    densityScore = 2; // Heavy, wet snow
+  } else if (temperature >= 28 && humidity >= 70 && humidity <= 80) {
+    densityScore = 5; // Medium density
+  } else if (temperature >= 25 && temperature <= 32 && humidity < 70) {
+    densityScore = 8; // Light powder
+  } else if (temperature < 25 && humidity < 60) {
+    densityScore = 10; // Champagne powder
   }
+
+  // Freshness (30% of Primary = 18% of total)
+  // Estimate when snow fell based on 24h vs 48h accumulation
+  const recentSnow = snowfall24h;
+  const olderSnow = Math.max(0, snowfall48h - snowfall24h);
+  let freshnessScore = 0;
+  if (recentSnow >= olderSnow * 2) {
+    freshnessScore = 10; // Most snow fell recently (0-6hrs)
+  } else if (recentSnow >= olderSnow) {
+    freshnessScore = 8; // Decent fresh snow (6-12hrs)
+  } else if (recentSnow > 0) {
+    freshnessScore = 6; // Some fresh snow (12-24hrs)
+  } else if (olderSnow > 0) {
+    freshnessScore = 4; // Snow 24-48hrs old
+  } else if (snowfall72h && snowfall72h > 0) {
+    freshnessScore = 2; // Snow 48-72hrs old
+  } else {
+    freshnessScore = 0; // 72h+ old
+  }
+
+  const primaryScore = (snowfallScore * 0.40) + (densityScore * 0.30) + (freshnessScore * 0.30);
+
   factors.push({
-    name: 'Temperature',
-    value: temperature,
-    weight: weights.temp,
-    contribution: tempScore * weights.temp,
-    description: `${temperature}°F - ${temperature <= 32 ? 'good for snow preservation' : 'warm, watch for wet conditions'}`,
-    isPositive: temperature <= 32 && temperature >= 20,
+    name: '24h Snowfall',
+    value: snowfall24h,
+    weight: 0.24, // 40% of 60%
+    contribution: snowfallScore * 0.24,
+    description: `${snowfall24h}" fresh snow`,
+    isPositive: snowfall24h >= 6,
   });
 
-  // Wind factor (0-10) - lower is better for powder, consider gusts
+  factors.push({
+    name: 'Snow Density',
+    value: densityScore,
+    weight: 0.18, // 30% of 60%
+    contribution: densityScore * 0.18,
+    description: densityScore >= 8 ? 'Light powder' : densityScore >= 5 ? 'Medium density' : 'Heavy/wet',
+    isPositive: densityScore >= 8,
+  });
+
+  factors.push({
+    name: 'Freshness',
+    value: freshnessScore,
+    weight: 0.18, // 30% of 60%
+    contribution: freshnessScore * 0.18,
+    description: freshnessScore >= 8 ? 'Just fell' : freshnessScore >= 6 ? 'Recent' : freshnessScore >= 4 ? '1-2 days' : 'Older snow',
+    isPositive: freshnessScore >= 8,
+  });
+
+  // ===== SECONDARY FACTORS (25% of total) =====
+
+  // Wind Speed (40% of Secondary = 10% of total)
   const effectiveWind = weatherGovData?.windGust
-    ? Math.max(windSpeed, weatherGovData.windGust * 0.8) // Gusts matter more
+    ? Math.max(windSpeed, weatherGovData.windGust * 0.8)
     : windSpeed;
-  const windScore = Math.max(0, 10 - effectiveWind / 5);
-  const windDesc = weatherGovData?.windGust
-    ? `${windSpeed} mph (gusts ${weatherGovData.windGust}) - ${effectiveWind < 15 ? 'light' : effectiveWind < 30 ? 'moderate' : 'strong'} winds`
-    : `${windSpeed} mph - ${windSpeed < 15 ? 'light winds' : windSpeed < 30 ? 'moderate winds' : 'strong winds'}`;
+  let windScore = 0;
+  if (effectiveWind <= 5) windScore = 10;
+  else if (effectiveWind <= 15) windScore = 7;
+  else if (effectiveWind <= 25) windScore = 4;
+  else windScore = 1;
+
+  // Temperature (35% of Secondary = 8.75% of total)
+  let tempScore = 0;
+  if (temperature < 15) tempScore = 10;
+  else if (temperature <= 25) tempScore = 8;
+  else if (temperature <= 32) tempScore = 5;
+  else tempScore = 2;
+
+  // Aspect (25% of Secondary = 6.25% of total)
+  // Since we don't have real-time aspect data, use a neutral score of 7
+  // In a full implementation, this would vary based on sun exposure and wind direction
+  const aspectScore = 7; // Neutral - could be enhanced with wind direction data
+
+  const secondaryScore = (windScore * 0.40) + (tempScore * 0.35) + (aspectScore * 0.25);
 
   factors.push({
     name: 'Wind',
     value: Math.round(effectiveWind),
-    weight: weights.wind,
-    contribution: windScore * weights.wind,
-    description: windDesc,
-    isPositive: effectiveWind < 20,
+    weight: 0.10, // 40% of 25%
+    contribution: windScore * 0.10,
+    description: `${Math.round(effectiveWind)} mph${weatherGovData?.windGust ? ` (gusts ${weatherGovData.windGust})` : ''} - ${effectiveWind <= 15 ? 'calm' : effectiveWind <= 25 ? 'moderate' : 'strong'}`,
+    isPositive: effectiveWind <= 15,
   });
 
-  // Forecast factor (0-10) - upcoming snow
-  const forecastScore = Math.min(10, upcomingSnow / 2);
   factors.push({
-    name: 'Upcoming Snow',
-    value: upcomingSnow,
-    weight: weights.upcoming,
-    contribution: forecastScore * weights.upcoming,
-    description: `${upcomingSnow}" expected in next 48 hours`,
-    isPositive: upcomingSnow >= 4,
+    name: 'Temperature',
+    value: temperature,
+    weight: 0.0875, // 35% of 25%
+    contribution: tempScore * 0.0875,
+    description: `${temperature}°F - ${temperature < 15 ? 'cold & dry' : temperature <= 25 ? 'ideal' : temperature <= 32 ? 'good' : 'warm'}`,
+    isPositive: temperature <= 25,
   });
 
-  // Snow Line factor (0-10) - from Open-Meteo freezing level
-  if (hasRainRisk && rainRisk) {
+  // ===== TERTIARY FACTORS (15% of total) =====
+
+  // Base Depth (30% of Tertiary = 4.5% of total)
+  const depth = baseDepth ?? 0;
+  let baseScore = 3;
+  if (depth >= 72) baseScore = 10;
+  else if (depth >= 48) baseScore = 8;
+  else if (depth >= 24) baseScore = 6;
+  else baseScore = 3;
+
+  // Sky Conditions (35% of Tertiary = 5.25% of total)
+  const skyCover = weatherGovData?.skyCover ?? 50;
+  let skyScore = 6;
+  if (skyCover >= 70 || snowfall24h > 0) skyScore = 10; // Overcast/snowing
+  else if (skyCover >= 40) skyScore = 6; // Partly cloudy
+  else skyScore = 3; // Clear/sunny
+
+  // Crowd Factor (35% of Tertiary = 5.25% of total)
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+  const hour = now.getHours();
+  let crowdScore = 7;
+  if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+    // Weekday
+    crowdScore = hour < 9 ? 10 : 7;
+  } else {
+    // Weekend
+    crowdScore = hour < 8 ? 5 : 2;
+  }
+
+  const tertiaryScore = (baseScore * 0.30) + (skyScore * 0.35) + (crowdScore * 0.35);
+
+  factors.push({
+    name: 'Base Depth',
+    value: depth,
+    weight: 0.045, // 30% of 15%
+    contribution: baseScore * 0.045,
+    description: depth >= 48 ? 'Deep base' : depth >= 24 ? 'Good coverage' : 'Limited base',
+    isPositive: depth >= 48,
+  });
+
+  factors.push({
+    name: 'Sky Conditions',
+    value: skyCover,
+    weight: 0.0525, // 35% of 15%
+    contribution: skyScore * 0.0525,
+    description: skyCover >= 70 ? 'Overcast/snowing' : skyCover >= 40 ? 'Partly cloudy' : 'Bluebird',
+    isPositive: skyCover >= 70 || snowfall24h > 0,
+  });
+
+  factors.push({
+    name: 'Crowd Level',
+    value: crowdScore,
+    weight: 0.0525, // 35% of 15%
+    contribution: crowdScore * 0.0525,
+    description: crowdScore >= 9 ? 'Weekday early' : crowdScore >= 6 ? 'Weekday' : crowdScore >= 4 ? 'Weekend early' : 'Peak crowds',
+    isPositive: crowdScore >= 7,
+  });
+
+  // Calculate base score
+  let baseScoreTotal = (primaryScore * 0.60) + (secondaryScore * 0.25) + (tertiaryScore * 0.15);
+
+  // ===== MODIFIERS =====
+  const modifiers: string[] = [];
+
+  // No new snow in 72h+ - cap at 3
+  if (snowfall24h === 0 && snowfall48h === 0) {
+    baseScoreTotal = Math.min(baseScoreTotal, 3);
+    modifiers.push('No recent snow (capped at 3)');
+  }
+
+  // Wind > 30mph sustained - penalty
+  if (effectiveWind > 30) {
+    baseScoreTotal = Math.max(1, baseScoreTotal - 2);
+    modifiers.push('High winds (−2)');
+  }
+
+  // Rain event - cap at 2
+  if (rainRisk && rainRisk.score < 4) {
+    baseScoreTotal = Math.min(baseScoreTotal, 2);
+    modifiers.push('Rain risk (capped at 2)');
+  }
+
+  // 48h snowfall > 24" - bonus
+  if (snowfall48h > 24) {
+    baseScoreTotal = Math.min(10, baseScoreTotal + 1);
+    modifiers.push('Storm cycling (+1)');
+  }
+
+  // Add modifiers to description if any
+  if (modifiers.length > 0) {
     factors.push({
-      name: 'Snow Line',
-      value: rainRisk.score,
-      weight: weights.snowLine,
-      contribution: rainRisk.score * weights.snowLine,
-      description: rainRisk.description,
-      isPositive: rainRisk.score >= 7,
+      name: 'Modifiers',
+      value: 0,
+      weight: 0,
+      contribution: 0,
+      description: modifiers.join(', '),
+      isPositive: modifiers.some(m => m.includes('+')),
     });
   }
 
-  // Visibility factor (0-10) - from weather.gov gridded data
-  if (hasWeatherGov && weatherGovData && weatherGovData.visibility !== null && weights.visibility > 0) {
-    const visibilityMiles = weatherGovData.visibility;
-    let visibilityScore = 10;
-    let visibilityDesc = '';
+  const finalScore = Math.round(Math.max(1, Math.min(10, baseScoreTotal)) * 10) / 10;
 
-    if (visibilityMiles >= 5) {
-      visibilityScore = 10;
-      visibilityDesc = `Excellent (${visibilityMiles.toFixed(1)} mi)`;
-    } else if (visibilityMiles >= 2) {
-      visibilityScore = 7;
-      visibilityDesc = `Good (${visibilityMiles.toFixed(1)} mi)`;
-    } else if (visibilityMiles >= 0.5) {
-      visibilityScore = 4;
-      visibilityDesc = `Limited (${visibilityMiles.toFixed(1)} mi) - fog/snow`;
-    } else {
-      visibilityScore = 2;
-      visibilityDesc = `Poor (${visibilityMiles.toFixed(1)} mi) - whiteout risk`;
-    }
-
-    factors.push({
-      name: 'Visibility',
-      value: Math.round(visibilityMiles * 10) / 10,
-      weight: weights.visibility,
-      contribution: visibilityScore * weights.visibility,
-      description: visibilityDesc,
-      isPositive: visibilityMiles >= 2,
-    });
-  }
-
-  // Weather Conditions factor (0-10) - from weather.gov
-  if (hasWeatherGov && weatherGovData && weights.conditions > 0) {
-    const { skyCover, humidity, precipProbability } = weatherGovData;
-    let conditionsScore = 7; // Default neutral
-    let conditionsDesc = 'Conditions monitoring';
-
-    // Perfect powder conditions: clear/partly cloudy, low humidity, low precip probability
-    if (skyCover !== null && humidity !== null && precipProbability !== null) {
-      // Sky cover: less is better unless we want snow
-      const skyScore = upcomingSnow > 2 ? Math.min(10, skyCover / 10) : Math.max(0, 10 - skyCover / 10);
-
-      // Humidity: moderate is best (too low = ice, too high = wet)
-      const humidityScore = humidity >= 60 && humidity <= 80 ? 10 : Math.max(0, 10 - Math.abs(70 - humidity) / 10);
-
-      // Precip probability: align with upcoming snow forecast
-      const precipScore = upcomingSnow > 2 ? Math.min(10, precipProbability / 10) : Math.max(0, 10 - precipProbability / 10);
-
-      conditionsScore = (skyScore + humidityScore + precipScore) / 3;
-
-      if (upcomingSnow > 4) {
-        conditionsDesc = `Active weather - ${precipProbability}% precip chance`;
-      } else if (skyCover < 50 && precipProbability < 30) {
-        conditionsDesc = `Bluebird - ${skyCover}% clouds, ${precipProbability}% precip`;
-      } else {
-        conditionsDesc = `Mixed - ${skyCover}% clouds, ${humidity}% humidity`;
-      }
-    }
-
-    factors.push({
-      name: 'Conditions',
-      value: Math.round(conditionsScore * 10) / 10,
-      weight: weights.conditions,
-      contribution: conditionsScore * weights.conditions,
-      description: conditionsDesc,
-      isPositive: conditionsScore >= 6,
-    });
-  }
-
-  // Calculate final score
-  const totalScore = factors.reduce((sum, f) => sum + f.contribution, 0);
-  const score = Math.round(totalScore * 10) / 10;
-
-  return { score: Math.min(10, Math.max(1, score)), factors };
+  return { score: finalScore, factors };
 }
 
 export async function GET(
@@ -295,6 +352,8 @@ export async function GET(
     // Calculate powder score
     const snowfall24h = snotelData?.snowfall24h ?? 0;
     const snowfall48h = snotelData?.snowfall48h ?? 0;
+    const snowfall72h = snotelData?.snowfall7d ?? 0; // Use 7-day as proxy for 72h
+    const baseDepth = snotelData?.snowDepth ?? 0;
     const temperature = extendedWeatherData?.temperature ?? weatherData?.temperature ?? snotelData?.temperature ?? 32;
     const windSpeed = extendedWeatherData?.windSpeed ?? weatherData?.windSpeed ?? 0;
 
@@ -305,7 +364,9 @@ export async function GET(
       windSpeed,
       bestUpcomingSnow,
       rainRisk,
-      weatherGovData
+      weatherGovData,
+      baseDepth,
+      snowfall72h
     );
 
     // Generate verdict

@@ -3,7 +3,7 @@ import { getMountain } from '@/data/mountains';
 import { withCache } from '@/lib/cache';
 import { getCurrentConditions } from '@/lib/apis/snotel';
 import { getForecast, getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
-import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';
+import { getCurrentFreezingLevelFeet, calculateRainRiskScore, getDailyForecast } from '@/lib/apis/open-meteo';
 import { getWeatherAlerts } from '@/lib/apis/noaa';
 
 /**
@@ -41,6 +41,7 @@ export async function GET(
           forecastData,
           alertsData,
           freezingLevel,
+          openMeteoDaily,
         ] = await Promise.allSettled([
           // SNOTEL data
           mountain.snotel
@@ -54,6 +55,8 @@ export async function GET(
           getWeatherAlerts(mountain.location.lat, mountain.location.lng).catch(() => []),
           // Freezing level
           getCurrentFreezingLevelFeet(mountain.location.lat, mountain.location.lng).catch(() => null),
+          // Open-Meteo daily forecast (for sunrise/sunset)
+          getDailyForecast(mountain.location.lat, mountain.location.lng, 1).catch(() => []),
         ]);
 
         // Extract values from PromiseSettledResult
@@ -62,6 +65,15 @@ export async function GET(
         const forecast = forecastData.status === 'fulfilled' ? forecastData.value : [];
         const alerts = alertsData.status === 'fulfilled' ? alertsData.value : [];
         const freezing = freezingLevel.status === 'fulfilled' ? freezingLevel.value : null;
+        const dailyForecast = openMeteoDaily.status === 'fulfilled' ? openMeteoDaily.value : [];
+
+        // Extract today's sunrise/sunset
+        const todaySunData = dailyForecast.length > 0 && dailyForecast[0].sunrise && dailyForecast[0].sunset
+          ? {
+              sunrise: dailyForecast[0].sunrise,
+              sunset: dailyForecast[0].sunset,
+            }
+          : null;
 
         // Calculate rain risk
         const rainRisk = freezing
@@ -167,10 +179,13 @@ export async function GET(
             location: mountain.location,
             website: mountain.website,
             webcams: mountain.webcams,
+            logo: mountain.logo,
+            status: mountain.status,
           },
           conditions,
           powderScore,
           forecast: forecast || [],
+          sunData: todaySunData,
           roads: null, // Roads require WSDOT API - skip for now
           tripAdvice: null, // Trip advice requires AI - skip for now
           powderDay: null, // Powder day plan requires AI - skip for now
@@ -180,6 +195,7 @@ export async function GET(
             hourly: `https://forecast.weather.gov/MapClick.php?lat=${mountain.location.lat}&lon=${mountain.location.lng}&FcstType=graphical`,
             alerts: `https://alerts.weather.gov/search?point=${mountain.location.lat},${mountain.location.lng}`,
           },
+          status: mountain.status,
           cachedAt: new Date().toISOString(),
         };
       },

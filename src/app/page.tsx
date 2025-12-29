@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MountainMap } from '@/components/MountainMapLoader';
 import { Intro } from '@/components/Intro';
+import { SnowfallTable } from '@/components/SnowfallTable';
 import { getAllMountains, getMountainsByRegion, type MountainConfig } from '@/data/mountains';
 import { getPowderScoreStyle } from '@/lib/design-tokens';
 import { prefetchMountainData } from '@/lib/hooks/useMountainData';
@@ -759,6 +760,11 @@ export default function Dashboard() {
             onNavigate={() => handleMountainClick(topMountain.id)}
           />
         )}
+
+        {/* Snowfall Tracker Table */}
+        <div className="mb-6">
+          <SnowfallTable daysBack={7} daysForward={7} />
+        </div>
 
         {/* Stats Grid */}
         <StatsGrid mountains={mountains} />

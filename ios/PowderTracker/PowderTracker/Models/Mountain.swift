@@ -19,6 +19,15 @@ struct MountainElevation: Codable {
     }
 }
 
+struct MountainStatus: Codable {
+    let isOpen: Bool
+    let percentOpen: Int?
+    let liftsOpen: String?
+    let runsOpen: String?
+    let message: String?
+    let lastUpdated: String?
+}
+
 struct Mountain: Codable, Identifiable, Hashable {
     let id: String
     let name: String
@@ -30,6 +39,8 @@ struct Mountain: Codable, Identifiable, Hashable {
     let website: String
     let hasSnotel: Bool
     let webcamCount: Int
+    let logo: String?
+    let status: MountainStatus?
 
     // Computed property for distance from user
     var distance: Double?
@@ -67,6 +78,8 @@ struct MountainDetail: Codable {
     let roadWebcams: [RoadWebcam]?
     let color: String
     let website: String
+    let logo: String?
+    let status: MountainStatus?
 
     struct SnotelInfo: Codable {
         let stationId: String
@@ -108,7 +121,16 @@ extension Mountain {
         color: "#3b82f6",
         website: "https://www.mtbaker.us",
         hasSnotel: true,
-        webcamCount: 3
+        webcamCount: 3,
+        logo: "/logos/baker.svg",
+        status: MountainStatus(
+            isOpen: true,
+            percentOpen: 85,
+            liftsOpen: "8/10",
+            runsOpen: "70/82",
+            message: "Great conditions!",
+            lastUpdated: nil
+        )
     )
 
     static let mockMountains: [Mountain] = [
@@ -123,7 +145,16 @@ extension Mountain {
             color: "#10b981",
             website: "https://www.stevenspass.com",
             hasSnotel: true,
-            webcamCount: 1
+            webcamCount: 1,
+            logo: "/logos/stevens.svg",
+            status: MountainStatus(
+                isOpen: true,
+                percentOpen: 90,
+                liftsOpen: "9/10",
+                runsOpen: "55/61",
+                message: "Full operations",
+                lastUpdated: nil
+            )
         ),
         Mountain(
             id: "crystal",
@@ -135,7 +166,16 @@ extension Mountain {
             color: "#8b5cf6",
             website: "https://www.crystalmountainresort.com",
             hasSnotel: true,
-            webcamCount: 1
+            webcamCount: 1,
+            logo: "/logos/crystal.svg",
+            status: MountainStatus(
+                isOpen: true,
+                percentOpen: 88,
+                liftsOpen: "10/11",
+                runsOpen: "50/57",
+                message: "Excellent skiing",
+                lastUpdated: nil
+            )
         ),
     ]
 }

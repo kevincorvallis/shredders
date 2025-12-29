@@ -61,6 +61,9 @@
 		CA30E630ED0E974A9D724ACF /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2157D2D009AB7E7771B8E03B /* LocationManager.swift */; };
 		CF58C94B833F15B2364444DF /* TripPlanning.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB690059FB550B67B1D97817 /* TripPlanning.swift */; };
 		E0CA30E94F41AB09EEFDE036 /* PowderScoreGauge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */; };
+		41B23A7E52BF4641B509DA6B /* MountainStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4998A4DFC41943DDB5E1392C /* MountainStatusView.swift */; };
+		36F4901B7C5E48A08AF8DA65 /* NavigateButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9BE7CF34788455BB0F9DF60 /* NavigateButton.swift */; };
+		C84274952BA94BE385ACB144 /* SnowfallTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7FC27A968AC400D9DA826AE /* SnowfallTableView.swift */; };
 		E16D3DB2D2DC4ADBE533C0C8 /* WeatherGovLinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C86B43A0DD3865E47BCD1D /* WeatherGovLinksView.swift */; };
 		EAF4C924CB45FC9FACEAB8D7 /* PowderScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */; };
 		ECD77A0B9D5E10086C8546F0 /* ForecastDayRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */; };
@@ -69,7 +72,18 @@
 		C8A39D424FB24639A7AFFED4 /* ListSkeleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8A6FAD1314B47CB86F17402 /* ListSkeleton.swift */; };
 		B83BF86F0F8D4E20B4769BCF /* ForecastSkeleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3238CB19C584B729EBB8E08 /* ForecastSkeleton.swift */; };
 		6594AE0895E54B9ABD9EBB01 /* DashboardSkeleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80BB1FD7FB544E84AF42A144 /* DashboardSkeleton.swift */; };
-		E22BA522BAE84F38BF067A0D /* SkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66765242E2E4DAD985123AF /* SkeletonView.swift */; };/* End PBXBuildFile section */
+		E22BA522BAE84F38BF067A0D /* SkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66765242E2E4DAD985123AF /* SkeletonView.swift */; };		A2597FD91E371D4BD3DF4B56 /* LocationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60C72AF306EB3430535B148B /* LocationViewModel.swift */; };
+		61CCE693883A7260403D1690 /* SunData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451F40690CAE401D35734E80 /* SunData.swift */; };
+		9C593CF081FEA62F73D5A561 /* FavoriteMountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66E8B1F1D81EA6751A0481B /* FavoriteMountain.swift */; };
+		829A6CADEFDF8468DBC60A0B /* FavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 207ABA757FA24AFD81F66026 /* FavoritesManager.swift */; };
+		FC68109389EB4A6467547647 /* LocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8777CFBA8072C859E984B610 /* LocationView.swift */; };
+		4BA3E14DA223199551094487 /* SnowDepthSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22ECCD541BB7DF52E245594 /* SnowDepthSection.swift */; };
+		0693C2A405BB2A68EF5B9035 /* WeatherConditionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8C513137CDD1E76218F998 /* WeatherConditionsSection.swift */; };
+		C36BDE75593A97F4CF999091 /* RoadConditionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCE16F85D781188A3163CCA /* RoadConditionsSection.swift */; };
+		362812D04723DD1947E81250 /* WebcamsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48383F82E1BAF958738D8FE /* WebcamsSection.swift */; };
+		F6444A85EA760C4BFBC37D3A /* SunData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451F40690CAE401D35734E80 /* SunData.swift */; };
+		9901A56CF8A117787FC2A598 /* FavoriteMountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66E8B1F1D81EA6751A0481B /* FavoriteMountain.swift */; };
+/* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		FFC0B07DF4B62A8B956C6DE4 /* PBXContainerItemProxy */ = {
@@ -118,6 +132,9 @@
 		4D5DBA53149931BA130994B0 /* ForecastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastView.swift; sourceTree = "<group>"; };
 		4F42690B312118CCC3712822 /* Forecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Forecast.swift; sourceTree = "<group>"; };
 		5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderScoreGauge.swift; sourceTree = "<group>"; };
+		4998A4DFC41943DDB5E1392C /* MountainStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainStatusView.swift; sourceTree = "<group>"; };
+		B9BE7CF34788455BB0F9DF60 /* NavigateButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigateButton.swift; sourceTree = "<group>"; };
+		B7FC27A968AC400D9DA826AE /* SnowfallTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowfallTableView.swift; sourceTree = "<group>"; };
 		621F222D5C8E9B5E1A24EAB5 /* RoadsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadsCard.swift; sourceTree = "<group>"; };
 		655660B700EA5371AA209F0D /* MountainSelectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainSelectionViewModel.swift; sourceTree = "<group>"; };
 		6843B6F4EA6B85F3B4DC8597 /* MountainResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainResponses.swift; sourceTree = "<group>"; };
@@ -153,6 +170,15 @@
 		80BB1FD7FB544E84AF42A144 /* DashboardSkeleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSkeleton.swift; sourceTree = "<group>"; };
 		B3238CB19C584B729EBB8E08 /* ForecastSkeleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastSkeleton.swift; sourceTree = "<group>"; };
 		A8A6FAD1314B47CB86F17402 /* ListSkeleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSkeleton.swift; sourceTree = "<group>"; };
+		60C72AF306EB3430535B148B /* LocationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationViewModel.swift; sourceTree = "<group>"; };
+		451F40690CAE401D35734E80 /* SunData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SunData.swift; sourceTree = "<group>"; };
+		C66E8B1F1D81EA6751A0481B /* FavoriteMountain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteMountain.swift; sourceTree = "<group>"; };
+		207ABA757FA24AFD81F66026 /* FavoritesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesManager.swift; sourceTree = "<group>"; };
+		8777CFBA8072C859E984B610 /* LocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationView.swift; sourceTree = "<group>"; };
+		C22ECCD541BB7DF52E245594 /* SnowDepthSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowDepthSection.swift; sourceTree = "<group>"; };
+		EE8C513137CDD1E76218F998 /* WeatherConditionsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherConditionsSection.swift; sourceTree = "<group>"; };
+		EFCE16F85D781188A3163CCA /* RoadConditionsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadConditionsSection.swift; sourceTree = "<group>"; };
+		C48383F82E1BAF958738D8FE /* WebcamsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebcamsSection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -191,6 +217,7 @@
 				0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */,
 				655660B700EA5371AA209F0D /* MountainSelectionViewModel.swift */,
 				E558ABF80EA303FC196A18C0 /* TripPlanningViewModel.swift */,
+				60C72AF306EB3430535B148B /* LocationViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -217,6 +244,7 @@
 			children = (
 				22899CFF2589BF56026F6C79 /* APIClient.swift */,
 				2157D2D009AB7E7771B8E03B /* LocationManager.swift */,
+				207ABA757FA24AFD81F66026 /* FavoritesManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -238,6 +266,9 @@
 				7DA187DF47BCE728766FC51E /* MountainConditionsCard.swift */,
 				89DC97097CADC4B75F0B84FF /* PowderDayCard.swift */,
 				5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */,
+				4998A4DFC41943DDB5E1392C /* MountainStatusView.swift */,
+				B9BE7CF34788455BB0F9DF60 /* NavigateButton.swift */,
+				B7FC27A968AC400D9DA826AE /* SnowfallTableView.swift */,
 				621F222D5C8E9B5E1A24EAB5 /* RoadsCard.swift */,
 				D09D79F661133B42636813CB /* SnowDepthChart.swift */,
 				4AE79DEBD298C70C92CA299A /* TripAdviceCard.swift */,
@@ -246,6 +277,19 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		7347C955B23421C87FA427BF /* Location */ = {
+			isa = PBXGroup;
+			children = (
+				8777CFBA8072C859E984B610 /* LocationView.swift */,
+				C22ECCD541BB7DF52E245594 /* SnowDepthSection.swift */,
+				EE8C513137CDD1E76218F998 /* WeatherConditionsSection.swift */,
+				EFCE16F85D781188A3163CCA /* RoadConditionsSection.swift */,
+				C48383F82E1BAF958738D8FE /* WebcamsSection.swift */,
+			);
+			path = Location;
+			sourceTree = "<group>";
+		};
+
 		AD84568A050F508FB9284B6C /* PowderTrackerWidget */ = {
 			isa = PBXGroup;
 			children = (
@@ -269,11 +313,13 @@
 			children = (
 				01FC72C486A24966EC54ABAE /* ChatMessage.swift */,
 				0E66CAE21D58028E82BB124F /* Conditions.swift */,
+				C66E8B1F1D81EA6751A0481B /* FavoriteMountain.swift */,
 				4F42690B312118CCC3712822 /* Forecast.swift */,
 				01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */,
 				8A37340F3AB0D4B44C537773 /* Mountain.swift */,
 				6843B6F4EA6B85F3B4DC8597 /* MountainResponses.swift */,
 				0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */,
+				451F40690CAE401D35734E80 /* SunData.swift */,
 				FB690059FB550B67B1D97817 /* TripPlanning.swift */,
 			);
 			path = Models;
@@ -298,6 +344,7 @@
 				BBF69C67679CEF2F265DC270 /* PatrolView.swift */,
 				41C86B43A0DD3865E47BCD1D /* WeatherGovLinksView.swift */,
 				AAD53D080257007E2F41F249 /* WebcamsView.swift */,
+				7347C955B23421C87FA427BF /* Location */,
 				AB287A8A884E4E3BD60F605C /* Components */,
 			);
 			path = Views;
@@ -435,6 +482,9 @@
 				73CEF6913664BD454D4FD10A /* PowderDayCard.swift in Sources */,
 				2057E9B038D9321A3BF1FFA0 /* PowderScore.swift in Sources */,
 				E0CA30E94F41AB09EEFDE036 /* PowderScoreGauge.swift in Sources */,
+				41B23A7E52BF4641B509DA6B /* MountainStatusView.swift in Sources */,
+				36F4901B7C5E48A08AF8DA65 /* NavigateButton.swift in Sources */,
+				C84274952BA94BE385ACB144 /* SnowfallTableView.swift in Sources */,
 				2D3E603A8AE77090B45FA99A /* PowderTrackerApp.swift in Sources */,
 				8BF7EAFC78F6B5523D2C9B68 /* RoadsCard.swift in Sources */,
 				37EF014A6B4954D34E76A7E6 /* SnowDepthChart.swift in Sources */,
@@ -443,11 +493,21 @@
 				56E5A63E48CFA29A8F0F3670 /* TripPlanningViewModel.swift in Sources */,
 				E16D3DB2D2DC4ADBE533C0C8 /* WeatherGovLinksView.swift in Sources */,
 				B40821D03E1127C38548D58A /* WebcamsView.swift in Sources */,
-			
+
 				C8A39D424FB24639A7AFFED4 /* ListSkeleton.swift in Sources */,
 				B83BF86F0F8D4E20B4769BCF /* ForecastSkeleton.swift in Sources */,
 				6594AE0895E54B9ABD9EBB01 /* DashboardSkeleton.swift in Sources */,
-				E22BA522BAE84F38BF067A0D /* SkeletonView.swift in Sources */,);
+				E22BA522BAE84F38BF067A0D /* SkeletonView.swift in Sources */,
+				A2597FD91E371D4BD3DF4B56 /* LocationViewModel.swift in Sources */,
+				61CCE693883A7260403D1690 /* SunData.swift in Sources */,
+				9C593CF081FEA62F73D5A561 /* FavoriteMountain.swift in Sources */,
+				829A6CADEFDF8468DBC60A0B /* FavoritesManager.swift in Sources */,
+				FC68109389EB4A6467547647 /* LocationView.swift in Sources */,
+				4BA3E14DA223199551094487 /* SnowDepthSection.swift in Sources */,
+				0693C2A405BB2A68EF5B9035 /* WeatherConditionsSection.swift in Sources */,
+				C36BDE75593A97F4CF999091 /* RoadConditionsSection.swift in Sources */,
+				362812D04723DD1947E81250 /* WebcamsSection.swift in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		1B935F4BCD0BFE2CD5F747DE /* Sources */ = {
@@ -466,6 +526,8 @@
 				A5394B2614799063241081C6 /* PowderTrackerWidgetBundle.swift in Sources */,
 				AB9D52519316557167B1E855 /* SmallWidgetView.swift in Sources */,
 				CF58C94B833F15B2364444DF /* TripPlanning.swift in Sources */,
+				F6444A85EA760C4BFBC37D3A /* SunData.swift in Sources */,
+				9901A56CF8A117787FC2A598 /* FavoriteMountain.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

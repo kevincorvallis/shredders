@@ -1,0 +1,15 @@
+{
+  "note": "Add these dependencies to your package.json",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node-cron": "^3.0.11",
+    "puppeteer": "^21.0.0"
+  },
+  "scripts": {
+    "scraper:test": "curl http://localhost:3000/api/scraper/run",
+    "scraper:status": "curl http://localhost:3000/api/scraper/status"
+  }
+}

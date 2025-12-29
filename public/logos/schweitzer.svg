@@ -1,0 +1,5 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="120" fill="#0ea5e9" rx="12"/>
+  <path d="M60 30 L90 80 L30 80 Z" fill="white" opacity="0.9"/>
+  <text x="60" y="102" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">SCHWEITZER</text>
+</svg>

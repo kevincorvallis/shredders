@@ -179,11 +179,13 @@ struct MountainBatchedResponse: Codable {
     let conditions: MountainConditions
     let powderScore: MountainPowderScore
     let forecast: [ForecastDay]
+    let sunData: SunData?
     let roads: RoadsResponse?
     let tripAdvice: TripAdviceResponse?
     let powderDay: PowderDayPlanResponse?
     let alerts: [WeatherAlert]
     let weatherGovLinks: WeatherGovLinks?
+    let status: MountainStatus?
     let cachedAt: String
 }
 

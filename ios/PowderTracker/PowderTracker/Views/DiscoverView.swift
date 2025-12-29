@@ -142,8 +142,9 @@ struct DiscoverView: View {
     }
 
     private var mountainHeader: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             if let conditions = dashboardViewModel.conditions {
+                // Mountain Name and Change Button
                 HStack(spacing: 8) {
                     Text(conditions.mountain.name)
                         .font(.title2)
@@ -164,6 +165,12 @@ struct DiscoverView: View {
                 }
 
                 if let mountain = viewModel.mountains.first(where: { $0.id == selectedMountainId }) {
+                    // Mountain Status
+                    if let status = mountain.status {
+                        MountainStatusView(status: status, variant: .compact)
+                    }
+
+                    // Elevation and Distance
                     HStack(spacing: 12) {
                         Label("\(mountain.elevation.summit.formatted())'", systemImage: "mountain.2")
                             .font(.caption)
@@ -175,6 +182,34 @@ struct DiscoverView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+
+                    // Navigation Button
+                    NavigateButton(mountain: mountain, variant: .primary, size: .large)
+                        .padding(.top, 4)
+
+                    // Location Details Link
+                    NavigationLink {
+                        LocationView(mountain: mountain)
+                    } label: {
+                        HStack {
+                            Image(systemName: "info.circle.fill")
+                            Text("View Full Location Details")
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                colors: [.blue.opacity(0.6), .blue.opacity(0.4)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(12)
+                    }
+                    .padding(.top, 4)
                 }
             }
         }

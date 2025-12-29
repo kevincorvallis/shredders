@@ -189,14 +189,14 @@ export function MountainMap({
       </div>
 
       {/* Mountain list by region */}
-      <div className="bg-slate-900/95 border-t border-slate-700 p-4 max-h-72 overflow-y-auto">
-        <div className="grid md:grid-cols-3 gap-4">
+      <div className="bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 p-6 max-h-96 overflow-y-auto rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
+        <div className="grid md:grid-cols-3 gap-6">
           {/* Washington */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
               Washington ({mountainsByRegion.washington.length})
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {mountainsByRegion.washington.map((mountain) => (
                 <MountainButton key={mountain.id} mountain={mountain} />
               ))}
@@ -205,10 +205,10 @@ export function MountainMap({
 
           {/* Oregon */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
               Oregon ({mountainsByRegion.oregon.length})
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {mountainsByRegion.oregon.map((mountain) => (
                 <MountainButton key={mountain.id} mountain={mountain} />
               ))}
@@ -217,10 +217,10 @@ export function MountainMap({
 
           {/* Idaho */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
               Idaho ({mountainsByRegion.idaho.length})
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {mountainsByRegion.idaho.map((mountain) => (
                 <MountainButton key={mountain.id} mountain={mountain} />
               ))}

@@ -8,6 +8,9 @@ import { Shield, Home, History, Camera } from 'lucide-react';
 import { MountainSelector } from '@/components/MountainSelector';
 import { useMountain } from '@/context/MountainContext';
 import { useMountainData } from '@/lib/hooks/useMountainData';
+import { MountainStatus } from '@/components/MountainStatus';
+import { NavigateButton } from '@/components/NavigateButton';
+import Image from 'next/image';
 
 interface Conditions {
   snowDepth: number | null;
@@ -223,19 +226,50 @@ export default function MountainPage({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
+
+            {/* Mountain Logo */}
+            {mountain.logo && (
+              <div className="flex-shrink-0">
+                <Image
+                  src={mountain.logo}
+                  alt={`${mountain.name} logo`}
+                  width={40}
+                  height={40}
+                  className="rounded-lg"
+                />
+              </div>
+            )}
+
             {/* Mountain Selector */}
             <MountainSelector
               selectedId={mountainId}
               onChange={handleMountainChange}
             />
-            <a
-              href={mountain.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-auto text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Official Site ↗
-            </a>
+
+            {/* Status Badge */}
+            {mountain.status && (
+              <div className="hidden md:block">
+                <MountainStatus status={mountain.status} variant="compact" />
+              </div>
+            )}
+
+            <div className="ml-auto flex items-center gap-2">
+              <NavigateButton
+                lat={mountain.location.lat}
+                lng={mountain.location.lng}
+                mountainName={mountain.name}
+                variant="secondary"
+                size="sm"
+              />
+              <a
+                href={mountain.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-400 hover:text-white transition-colors hidden sm:block"
+              >
+                Official Site ↗
+              </a>
+            </div>
           </div>
         </div>
 
@@ -295,6 +329,13 @@ export default function MountainPage({
           </div>
         ) : (
           <>
+            {/* Mountain Status - Mobile */}
+            {mountain.status && (
+              <div className="md:hidden">
+                <MountainStatus status={mountain.status} variant="full" />
+              </div>
+            )}
+
             {/* Weather Alerts */}
             {alerts.length > 0 && (
               <div className="space-y-3">
@@ -359,18 +400,17 @@ export default function MountainPage({
                 </div>
                 <p className="text-gray-300 mb-4">{powderScore.verdict}</p>
 
-                {/* Trip Planning CTA */}
-                <a
-                  href={`https://maps.google.com/maps?daddr=${mountain.location.lat},${mountain.location.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full mb-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold text-center transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                  Plan Trip to {mountain.shortName}
-                </a>
+                {/* Navigate CTA */}
+                <div className="mb-4">
+                  <NavigateButton
+                    lat={mountain.location.lat}
+                    lng={mountain.location.lng}
+                    mountainName={mountain.shortName}
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {powderScore.factors.map((factor: any, i: number) => (

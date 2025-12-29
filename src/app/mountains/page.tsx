@@ -47,24 +47,25 @@ export default function MountainsPage() {
       setMountains(baseMountains);
       setIsLoading(false);
 
-      // Fetch powder scores in parallel
-      const scores = await Promise.allSettled(
-        baseMountains.map(async (m) => {
-          const res = await fetch(`/api/mountains/${m.id}/powder-score`);
-          if (!res.ok) return null;
-          return res.json();
-        })
-      );
+      // Fetch all powder scores in one request instead of 15!
+      try {
+        const res = await fetch('/api/mountains/batch/powder-scores');
+        if (res.ok) {
+          const batchData = await res.json();
+          const scoreMap = new Map(
+            batchData.scores.map((s: any) => [s.mountainId, s.score])
+          );
 
-      setMountains((prev) =>
-        prev.map((m, i) => ({
-          ...m,
-          powderScore:
-            scores[i].status === 'fulfilled' && scores[i].value
-              ? scores[i].value.score
-              : undefined,
-        }))
-      );
+          setMountains((prev) =>
+            prev.map((m) => ({
+              ...m,
+              powderScore: scoreMap.get(m.id) as number | undefined,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error('Error fetching powder scores:', error);
+      }
     }
 
     fetchData();

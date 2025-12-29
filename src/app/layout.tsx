@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { MountainProvider } from "@/context/MountainContext";
 import { SiteHeader } from "@/components/SiteHeader";
+import NextTopLoader from 'nextjs-toploader';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,6 +67,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 min-h-screen`}
       >
+        <NextTopLoader
+          color="#38bdf8"
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+          shadow="0 0 10px #38bdf8,0 0 5px #38bdf8"
+        />
         <MountainProvider>
           <SiteHeader />
           <main>{children}</main>
