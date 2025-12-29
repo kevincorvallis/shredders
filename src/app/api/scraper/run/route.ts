@@ -39,7 +39,9 @@ export async function GET() {
     // Save data
     if (usePostgres && 'saveMany' in storage) {
       await storage.saveMany(successfulData);
-      await storage.completeRun(successCount, failedCount, duration);
+      if ('completeRun' in storage) {
+        await storage.completeRun(successCount, failedCount, duration);
+      }
     } else if ('saveMany' in storage) {
       storage.saveMany(successfulData);
     }
