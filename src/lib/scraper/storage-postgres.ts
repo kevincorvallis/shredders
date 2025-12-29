@@ -1,6 +1,7 @@
 import { sql } from '@vercel/postgres';
 import type { ScrapedMountainStatus } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import { getMountain } from '@/data/mountains';
 
 /**
  * PostgreSQL storage for scraped mountain data
@@ -8,6 +9,36 @@ import { v4 as uuidv4 } from 'uuid';
  */
 class PostgresScraperStorage {
   private runId: string = '';
+
+  /**
+   * Helper to map database row to ScrapedMountainStatus
+   */
+  private mapRowToStatus(row: any): ScrapedMountainStatus {
+    const mountain = getMountain(row.mountain_id);
+    const liftsOpen = row.lifts_open || 0;
+    const liftsTotal = row.lifts_total || 0;
+    const runsOpen = row.runs_open || 0;
+    const runsTotal = row.runs_total || 0;
+
+    return {
+      mountainId: row.mountain_id,
+      mountainName: mountain?.name || row.mountain_id,
+      isOpen: row.is_open,
+      percentOpen: row.percent_open,
+      liftsOpen,
+      liftsClosed: liftsTotal - liftsOpen,
+      liftsTotal,
+      runsOpen,
+      runsClosed: runsTotal - runsOpen,
+      runsTotal,
+      acresOpen: null,
+      acresTotal: null,
+      message: row.message,
+      source: row.source_url,
+      dataUrl: row.source_url,
+      lastUpdated: row.scraped_at,
+    };
+  }
 
   /**
    * Start a new scraper run (for tracking)
@@ -172,19 +203,7 @@ class PostgresScraperStorage {
 
       if (result.rows.length === 0) return null;
 
-      const row = result.rows[0];
-      return {
-        mountainId: row.mountain_id,
-        isOpen: row.is_open,
-        percentOpen: row.percent_open,
-        liftsOpen: row.lifts_open,
-        liftsTotal: row.lifts_total,
-        runsOpen: row.runs_open,
-        runsTotal: row.runs_total,
-        message: row.message,
-        source: row.source_url,
-        lastUpdated: row.scraped_at,
-      };
+      return this.mapRowToStatus(result.rows[0]);
     } catch (error) {
       console.error(`[Storage] Failed to get ${mountainId}:`, error);
       return null;
@@ -212,18 +231,7 @@ class PostgresScraperStorage {
         ORDER BY mountain_id
       `;
 
-      return result.rows.map((row) => ({
-        mountainId: row.mountain_id,
-        isOpen: row.is_open,
-        percentOpen: row.percent_open,
-        liftsOpen: row.lifts_open,
-        liftsTotal: row.lifts_total,
-        runsOpen: row.runs_open,
-        runsTotal: row.runs_total,
-        message: row.message,
-        source: row.source_url,
-        lastUpdated: row.scraped_at,
-      }));
+      return result.rows.map((row) => this.mapRowToStatus(row));
     } catch (error) {
       console.error('[Storage] Failed to get all:', error);
       return [];
@@ -253,18 +261,7 @@ class PostgresScraperStorage {
         ORDER BY scraped_at DESC
       `;
 
-      return result.rows.map((row) => ({
-        mountainId: row.mountain_id,
-        isOpen: row.is_open,
-        percentOpen: row.percent_open,
-        liftsOpen: row.lifts_open,
-        liftsTotal: row.lifts_total,
-        runsOpen: row.runs_open,
-        runsTotal: row.runs_total,
-        message: row.message,
-        source: row.source_url,
-        lastUpdated: row.scraped_at,
-      }));
+      return result.rows.map((row) => this.mapRowToStatus(row));
     } catch (error) {
       console.error(`[Storage] Failed to get history for ${mountainId}:`, error);
       return [];

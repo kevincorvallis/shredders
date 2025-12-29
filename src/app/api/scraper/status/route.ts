@@ -40,18 +40,16 @@ export async function GET(request: Request) {
       });
     } else {
       // Get all statuses
-      let allStatus: any[];
-      let stats: any;
+      let allStatus: any[] = [];
+      let stats: any = {};
 
       if (usePostgres && 'getAll' in storage) {
-        allStatus = await storage.getAll();
+        allStatus = await storage.getAll() as any[];
         stats = 'getStats' in storage ? await storage.getStats() : {};
       } else if ('getAll' in storage) {
-        allStatus = storage.getAll();
+        const result = storage.getAll();
+        allStatus = Array.isArray(result) ? result : [];
         stats = 'getStats' in storage ? storage.getStats() : {};
-      } else {
-        allStatus = [];
-        stats = {};
       }
 
       return NextResponse.json({
