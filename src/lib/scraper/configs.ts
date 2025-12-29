@@ -81,7 +81,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://skiwhitepass.com',
     dataUrl: 'https://skiwhitepass.com/mountain-report/',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lifts-operating',
       runsOpen: '.runs-open',
@@ -141,7 +141,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.missionridge.com',
     dataUrl: 'https://www.missionridge.com/mountain-report',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lifts-open',
       runsOpen: '.runs-open',
@@ -155,7 +155,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.ski49n.com',
     dataUrl: 'https://www.ski49n.com/conditions',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lift-count',
       runsOpen: '.run-count',
@@ -185,7 +185,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.skilookout.com',
     dataUrl: 'https://www.skilookout.com/conditions',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lift-status',
       runsOpen: '.run-count',
@@ -200,7 +200,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.mtashland.com',
     dataUrl: 'https://www.mtashland.com/conditions',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lifts-open',
       runsOpen: '.runs-open',
@@ -214,7 +214,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.willamettepass.com',
     dataUrl: 'https://www.willamettepass.com/conditions',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lift-count',
       runsOpen: '.run-count',
@@ -228,7 +228,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.skihoodoo.com',
     dataUrl: 'https://www.skihoodoo.com/mountain-report',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lifts-operating',
       runsOpen: '.runs-open',
