@@ -3,27 +3,25 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            DiscoverView()
+            HomeView()
                 .tabItem {
-                    Label("Discover", systemImage: "mountain.2.circle.fill")
+                    Label("Home", systemImage: "house.fill")
                 }
 
-            ChatView()
+            MountainMapView()
                 .tabItem {
-                    Label("Chat", systemImage: "bubble.left.and.bubble.right")
+                    Label("Mountains", systemImage: "map.fill")
                 }
 
-            PatrolView()
+            AlertsView()
                 .tabItem {
-                    Label("Patrol", systemImage: "shield")
+                    Label("Alerts", systemImage: "exclamationmark.triangle.fill")
                 }
 
-            NavigationStack {
-                ForecastView()
-            }
-            .tabItem {
-                Label("Forecast", systemImage: "calendar")
-            }
+            MoreView()
+                .tabItem {
+                    Label("More", systemImage: "ellipsis.circle.fill")
+                }
         }
     }
 }
