@@ -96,7 +96,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.skihood.com',
     dataUrl: 'https://www.skihood.com/the-mountain/mountain-report',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lift-status',
       runsOpen: '.terrain-open',
@@ -111,7 +111,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.timberlinelodge.com',
     dataUrl: 'https://www.timberlinelodge.com/conditions',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lifts-open',
       runsOpen: '.runs-open',
@@ -170,7 +170,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.schweitzer.com',
     dataUrl: 'https://www.schweitzer.com/the-mountain/mountain-report/',
     type: 'html',
-    enabled: true,
+    enabled: false, // Disabled to reduce scraper timeout
     selectors: {
       liftsOpen: '.lifts-operating',
       runsOpen: '.trails-open',
