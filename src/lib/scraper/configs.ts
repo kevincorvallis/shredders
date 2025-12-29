@@ -36,7 +36,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.stevenspass.com',
     dataUrl: 'https://www.stevenspass.com/the-mountain/mountain-conditions.aspx',
     type: 'dynamic', // Uses JavaScript to load data
-    enabled: true,
+    enabled: false, // Temporarily disabled for testing (timeout issue)
     selectors: {
       liftsOpen: '.header__weather__lifts_open',
       runsOpen: '.header__weather__runs_open',
@@ -125,7 +125,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.mtbachelor.com',
     dataUrl: 'https://www.mtbachelor.com/the-mountain/conditions-weather/',
     type: 'html',
-    enabled: true,
+    enabled: false, // Temporarily disabled for testing (timeout issue)
     selectors: {
       liftsOpen: '.lift-status-count',
       runsOpen: '.run-count',

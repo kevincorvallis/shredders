@@ -20,7 +20,7 @@ export async function GET() {
 
     // Start tracking run if using PostgreSQL
     if (usePostgres && 'startRun' in storage) {
-      await storage.startRun(5, 'manual'); // 5 top PNW mountains (reduced to avoid timeout)
+      await storage.startRun(3, 'manual'); // 3 mountains for testing (Baker, Crystal, Snoqualmie)
     }
 
     // Run all scrapers
