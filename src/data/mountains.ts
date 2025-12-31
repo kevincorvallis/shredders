@@ -74,7 +74,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#3b82f6',
     website: 'https://www.mtbaker.us',
-    logo: '/logos/baker.svg',
+    logo: '/logos/baker.png',
     status: { isOpen: true, percentOpen: 85, liftsOpen: '8/10', runsOpen: '70/82', message: 'Great conditions!' },
   },
 
@@ -100,7 +100,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#10b981',
     website: 'https://www.stevenspass.com',
-    logo: '/logos/stevens.svg',
+    logo: '/logos/stevens.png',
     status: { isOpen: true, percentOpen: 90, liftsOpen: '9/10', runsOpen: '55/61', message: 'Full operations' },
   },
 
@@ -122,7 +122,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#8b5cf6',
     website: 'https://www.crystalmountainresort.com',
-    logo: '/logos/crystal.svg',
+    logo: '/logos/crystal.png',
     status: { isOpen: true, percentOpen: 88, liftsOpen: '10/11', runsOpen: '50/57', message: 'Excellent skiing' },
   },
 
@@ -266,7 +266,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#f59e0b',
     website: 'https://www.summitatsnoqualmie.com',
-    logo: '/logos/snoqualmie.svg',
+    logo: '/logos/snoqualmie.png',
     status: { isOpen: true, percentOpen: 95, liftsOpen: '20/22', runsOpen: '64/67', message: 'All areas open' },
   },
 
@@ -288,7 +288,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#ec4899',
     website: 'https://skiwhitepass.com',
-    logo: '/logos/whitepass.svg',
+    logo: '/logos/whitepass.png',
     status: { isOpen: true, percentOpen: 75, liftsOpen: '4/6', runsOpen: '30/40', message: 'Good conditions' },
   },
 
@@ -310,7 +310,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#06b6d4',
     website: 'https://www.skihood.com',
-    logo: '/logos/meadows.svg',
+    logo: '/logos/meadows.png',
     status: { isOpen: true, percentOpen: 80, liftsOpen: '7/9', runsOpen: '65/81', message: 'Great skiing' },
   },
 
@@ -332,7 +332,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#14b8a6',
     website: 'https://www.timberlinelodge.com',
-    logo: '/logos/timberline.svg',
+    logo: '/logos/timberline.png',
     status: { isOpen: true, percentOpen: 70, liftsOpen: '4/6', runsOpen: '40/57', message: 'Spring skiing' },
   },
 
@@ -354,7 +354,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#f97316',
     website: 'https://www.mtbachelor.com',
-    logo: '/logos/bachelor.svg',
+    logo: '/logos/bachelor.png',
     status: { isOpen: true, percentOpen: 85, liftsOpen: '10/12', runsOpen: '62/73', message: 'Excellent conditions' },
   },
 
@@ -377,7 +377,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#dc2626',
     website: 'https://www.missionridge.com',
-    logo: '/logos/missionridge.svg',
+    logo: '/logos/missionridge.png',
     status: { isOpen: true, percentOpen: 80, liftsOpen: '4/5', runsOpen: '32/40', message: 'Good coverage' },
   },
 
@@ -399,7 +399,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#7c3aed',
     website: 'https://www.ski49n.com',
-    logo: '/logos/fortynine.svg',
+    logo: '/logos/fortynine.png',
     status: { isOpen: true, percentOpen: 75, liftsOpen: '5/7', runsOpen: '28/38', message: 'Good skiing' },
   },
 
@@ -422,7 +422,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#0ea5e9',
     website: 'https://www.schweitzer.com',
-    logo: '/logos/schweitzer.svg',
+    logo: '/logos/schweitzer.png',
     status: { isOpen: true, percentOpen: 85, liftsOpen: '8/10', runsOpen: '70/82', message: 'Great conditions' },
   },
 
@@ -444,7 +444,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#059669',
     website: 'https://www.skilookout.com',
-    logo: '/logos/lookout.svg',
+    logo: '/logos/lookout.png',
     status: { isOpen: true, percentOpen: 65, liftsOpen: '3/4', runsOpen: '26/40', message: 'Limited terrain' },
   },
 
@@ -467,7 +467,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#ea580c',
     website: 'https://www.mtashland.com',
-    logo: '/logos/ashland.svg',
+    logo: '/logos/ashland.png',
     status: { isOpen: false, percentOpen: 0, liftsOpen: '0/4', runsOpen: '0/23', message: 'Closed for season' },
   },
 
@@ -489,7 +489,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#84cc16',
     website: 'https://www.willamettepass.com',
-    logo: '/logos/willamette.svg',
+    logo: '/logos/willamette.png',
     status: { isOpen: true, percentOpen: 60, liftsOpen: '2/4', runsOpen: '18/30', message: 'Limited operations' },
   },
 
@@ -511,7 +511,7 @@ export const mountains: Record<string, MountainConfig> = {
     ],
     color: '#f472b6',
     website: 'https://www.skihoodoo.com',
-    logo: '/logos/hoodoo.svg',
+    logo: '/logos/hoodoo.png',
     status: { isOpen: true, percentOpen: 70, liftsOpen: '3/5', runsOpen: '22/32', message: 'Good conditions' },
   },
 };
