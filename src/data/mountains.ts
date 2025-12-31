@@ -526,10 +526,40 @@ export const mountains: Record<string, MountainConfig> = {
     // No NOAA grid (using Open-Meteo for Canadian weather)
     webcams: [
       {
-        id: 'village',
-        name: 'Whistler Village',
-        url: 'https://www.whistlerblackcomb.com/the-mountain/mountain-conditions/mountain-cams.aspx',
-        refreshUrl: 'https://www.whistlerblackcomb.com/the-mountain/mountain-conditions/mountain-cams.aspx',
+        id: 'roundhouse',
+        name: 'Roundhouse Lodge, Whistler Mountain',
+        url: 'https://ots-webcams.s3.amazonaws.com/493/19901/2025-12-20_2303/xl.jpg',
+        refreshUrl: 'https://ots-webcams.s3.amazonaws.com/493/19901/2025-12-20_2303/xl.jpg',
+      },
+      {
+        id: 'whistler-peak',
+        name: 'Whistler Peak',
+        url: 'https://ots-webcams.s3.amazonaws.com/493/25393/2025-12-20_2304/xl.jpg',
+        refreshUrl: 'https://ots-webcams.s3.amazonaws.com/493/25393/2025-12-20_2304/xl.jpg',
+      },
+      {
+        id: 'rendezvous',
+        name: 'Rendezvous Lodge, Blackcomb Mountain',
+        url: 'https://ots-webcams.s3.amazonaws.com/493/25394/2025-12-31_0004/xl.jpg',
+        refreshUrl: 'https://ots-webcams.s3.amazonaws.com/493/25394/2025-12-31_0004/xl.jpg',
+      },
+      {
+        id: '7th-heaven',
+        name: '7th Heaven, Blackcomb Mountain',
+        url: 'https://ots-webcams.s3.amazonaws.com/493/25203/2025-12-31_0004/xl.jpg',
+        refreshUrl: 'https://ots-webcams.s3.amazonaws.com/493/25203/2025-12-31_0004/xl.jpg',
+      },
+      {
+        id: 'creekside',
+        name: 'Creekside Village',
+        url: 'https://ots-webcams.s3.amazonaws.com/493/25399/2025-12-31_0004/xl.jpg',
+        refreshUrl: 'https://ots-webcams.s3.amazonaws.com/493/25399/2025-12-31_0004/xl.jpg',
+      },
+      {
+        id: 'blackcomb-base',
+        name: 'Blackcomb Base, Upper Village',
+        url: 'https://ots-webcams.s3.amazonaws.com/493/25397/2025-12-20_1804/xl.jpg',
+        refreshUrl: 'https://ots-webcams.s3.amazonaws.com/493/25397/2025-12-20_1804/xl.jpg',
       },
     ],
     color: '#0066b3',

@@ -18,6 +18,20 @@ struct MountainDetailView: View {
                         Task { await viewModel.refresh() }
                     }
                 } else {
+                    // Mountain Logo Header
+                    if let mountain = viewModel.mountain {
+                        HStack {
+                            Spacer()
+                            MountainLogoView(
+                                logoUrl: mountain.logo,
+                                color: mountain.color,
+                                size: 80
+                            )
+                            Spacer()
+                        }
+                        .padding(.vertical, 8)
+                    }
+
                     // Powder Score
                     if let score = viewModel.powderScore {
                         powderScoreSection(score)

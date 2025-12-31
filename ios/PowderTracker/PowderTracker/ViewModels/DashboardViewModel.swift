@@ -7,6 +7,7 @@ class DashboardViewModel {
     var conditions: MountainConditions?
     var powderScore: MountainPowderScore?
     var forecast: [ForecastDay] = []
+    var mountain: Mountain?
     var isLoading = false
     var error: String?
 
@@ -22,12 +23,14 @@ class DashboardViewModel {
             async let conditionsTask = apiClient.fetchConditions(for: mountainId)
             async let powderScoreTask = apiClient.fetchPowderScore(for: mountainId)
             async let forecastTask = apiClient.fetchForecast(for: mountainId)
+            async let mountainsTask = apiClient.fetchMountains()
 
-            let (conditions, powderScore, forecastResponse) = try await (conditionsTask, powderScoreTask, forecastTask)
+            let (conditions, powderScore, forecastResponse, mountainsResponse) = try await (conditionsTask, powderScoreTask, forecastTask, mountainsTask)
 
             self.conditions = conditions
             self.powderScore = powderScore
             self.forecast = forecastResponse.forecast
+            self.mountain = mountainsResponse.mountains.first(where: { $0.id == mountainId })
 
         } catch {
             self.error = error.localizedDescription
