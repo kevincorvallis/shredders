@@ -10,38 +10,8 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Filter tabs (Weather, Snow Summary, Snow Forecast)
                 filterTabs
-
-                // Favorites list
-                ScrollView {
-                    VStack(spacing: 12) {
-                        if favoritesManager.favoriteIds.isEmpty {
-                            emptyState
-                        } else {
-                            ForEach(favoritesManager.favoriteIds, id: \.self) { mountainId in
-                                if let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
-                                   let data = viewModel.mountainData[mountainId] {
-                                    NavigationLink {
-                                        MountainDetailView(mountainId: mountainId, mountainName: mountain.name)
-                                    } label: {
-                                        MountainTimelineCard(
-                                            mountain: mountain,
-                                            conditions: data.conditions,
-                                            powderScore: data.powderScore,
-                                            forecast: data.forecast,
-                                            filterMode: selectedFilter
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                }
-                .background(Color(.systemGroupedBackground))
+                favoritesListView
             }
             .navigationTitle("Favorites")
             .navigationBarTitleDisplayMode(.large)
@@ -66,12 +36,77 @@ struct HomeView: View {
         }
     }
 
+    private var favoritesListView: some View {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                if favoritesManager.favoriteIds.isEmpty {
+                    emptyState
+                        .transition(.scale.combined(with: .opacity))
+                } else if viewModel.isLoading && viewModel.mountainData.isEmpty {
+                    loadingSkeletons
+                } else {
+                    mountainCardsList
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: viewModel.mountainData.count)
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: favoritesManager.favoriteIds)
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private var loadingSkeletons: some View {
+        ForEach(0..<3, id: \.self) { _ in
+            SkeletonMountainCard()
+                .transition(.scale.combined(with: .opacity))
+        }
+    }
+
+    private var mountainCardsList: some View {
+        ForEach(favoritesManager.favoriteIds, id: \.self) { mountainId in
+            if let mountain = viewModel.mountains.first(where: { $0.id == mountainId }) {
+                mountainCardRow(for: mountain, mountainId: mountainId)
+            }
+        }
+    }
+
+    private func mountainCardRow(for mountain: Mountain, mountainId: String) -> some View {
+        Group {
+            if let data = viewModel.mountainData[mountainId] {
+                NavigationLink {
+                    MountainDetailView(mountainId: mountainId, mountainName: mountain.name)
+                } label: {
+                    MountainTimelineCard(
+                        mountain: mountain,
+                        conditions: data.conditions,
+                        powderScore: data.powderScore,
+                        forecast: data.forecast,
+                        filterMode: selectedFilter
+                    )
+                }
+                .buttonStyle(ScaleButtonStyle())
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.9).combined(with: .opacity),
+                    removal: .scale(scale: 0.95).combined(with: .opacity)
+                ))
+            } else {
+                SkeletonMountainCard()
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+    }
+
     private var filterTabs: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
                 ForEach(SnowFilter.allCases, id: \.self) { filter in
                     Button {
-                        selectedFilter = filter
+                        let impactMed = UIImpactFeedbackGenerator(style: .light)
+                        impactMed.impactOccurred()
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedFilter = filter
+                        }
                     } label: {
                         Text(filter.rawValue)
                             .font(.caption)
@@ -81,7 +116,9 @@ struct HomeView: View {
                             .padding(.vertical, 7)
                             .background(selectedFilter == filter ? Color.blue : Color(.secondarySystemBackground))
                             .cornerRadius(16)
+                            .scaleEffect(selectedFilter == filter ? 1.0 : 0.96)
                     }
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedFilter)
                 }
             }
             .padding(.horizontal, 12)
@@ -525,6 +562,98 @@ class SingleMountainViewModel {
         }
 
         snowTimelineData = timeline
+    }
+}
+
+// MARK: - Custom Button Styles
+
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Skeleton Loading Card
+
+struct SkeletonMountainCard: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 44, height: 44)
+                    .shimmering(isAnimating: isAnimating)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 120, height: 16)
+                        .shimmering(isAnimating: isAnimating)
+
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: 80, height: 12)
+                        .shimmering(isAnimating: isAnimating)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color(.tertiarySystemBackground))
+
+            // Content area
+            VStack(spacing: 8) {
+                HStack(spacing: 0) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        VStack(spacing: 4) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(height: 20)
+
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(Color.gray.opacity(0.15))
+                                .frame(height: 10)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 12)
+            }
+        }
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
+// MARK: - Shimmer Effect
+
+extension View {
+    func shimmering(isAnimating: Bool) -> some View {
+        self.overlay(
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.clear,
+                    Color.white.opacity(0.3),
+                    Color.clear
+                ]),
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .offset(x: isAnimating ? 200 : -200)
+            .mask(self)
+        )
     }
 }
 
