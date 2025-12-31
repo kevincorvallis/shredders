@@ -19,14 +19,14 @@ export async function GET() {
         const results = await Promise.allSettled(
           mountains.map(async (mountain) => {
             try {
-              const noaaConfig: NOAAGridConfig = mountain.noaa;
-
               // Fetch SNOTEL and NOAA data in parallel
               const [snotelData, weatherData] = await Promise.allSettled([
                 mountain.snotel
                   ? getCurrentConditions(mountain.snotel.stationId)
                   : Promise.resolve(null),
-                getCurrentWeather(noaaConfig),
+                mountain.noaa
+                  ? getCurrentWeather(mountain.noaa)
+                  : Promise.resolve(null),
               ]);
 
               const snotel = snotelData.status === 'fulfilled' ? snotelData.value : null;

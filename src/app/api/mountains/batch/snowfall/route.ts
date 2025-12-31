@@ -23,14 +23,14 @@ export async function GET(request: Request) {
         const results = await Promise.allSettled(
           mountains.map(async (mountain) => {
             try {
-              const noaaConfig: NOAAGridConfig = mountain.noaa;
-
               // Fetch history and forecast in parallel
               const [historyData, forecastData] = await Promise.allSettled([
                 mountain.snotel
                   ? getHistoricalData(mountain.snotel.stationId, daysBack + 1)
                   : Promise.resolve(null),
-                getForecast(noaaConfig),
+                mountain.noaa
+                  ? getForecast(mountain.noaa)
+                  : Promise.resolve([]),
               ]);
 
               const history =

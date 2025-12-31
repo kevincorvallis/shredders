@@ -286,21 +286,22 @@ export async function GET(
     }
 
     // Get NOAA data (enhanced with gridded data)
-    if (!mountain.noaa) { const noaaConfig = null; } else { const noaaConfig: NOAAGridConfig = mountain.noaa; }
     let weatherData = null;
     let extendedWeatherData = null;
     let forecast = null;
     let hourlyForecast = null;
 
-    try {
-      [weatherData, extendedWeatherData, forecast, hourlyForecast] = await Promise.all([
-        getCurrentWeather(noaaConfig),
-        getExtendedCurrentWeather(noaaConfig),
-        getForecast(noaaConfig),
-        getHourlyForecast(noaaConfig, 24),
-      ]);
-    } catch (error) {
-      console.error(`NOAA error for ${mountain.name}:`, error);
+    if (mountain.noaa) {
+      try {
+        [weatherData, extendedWeatherData, forecast, hourlyForecast] = await Promise.all([
+          getCurrentWeather(mountain.noaa),
+          getExtendedCurrentWeather(mountain.noaa),
+          getForecast(mountain.noaa),
+          getHourlyForecast(mountain.noaa, 24),
+        ]);
+      } catch (error) {
+        console.error(`NOAA error for ${mountain.name}:`, error);
+      }
     }
 
     // Get freezing level from Open-Meteo

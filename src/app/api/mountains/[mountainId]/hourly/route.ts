@@ -20,7 +20,21 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const hours = parseInt(searchParams.get('hours') || '48');
 
-    if (!mountain.noaa) { return NextResponse.json({ mountain: { id: mountain.id, name: mountain.name, shortName: mountain.shortName }, hourly: [], source: { provider: "Open-Meteo", gridOffice: "N/A" } }); }
+    if (!mountain.noaa) {
+      return NextResponse.json({
+        mountain: {
+          id: mountain.id,
+          name: mountain.name,
+          shortName: mountain.shortName,
+        },
+        hourly: [],
+        source: {
+          provider: 'Open-Meteo',
+          gridOffice: 'N/A',
+        },
+      });
+    }
+
     const hourly = await getHourlyForecast(mountain.noaa);
 
     return NextResponse.json({
@@ -29,7 +43,7 @@ export async function GET(
         name: mountain.name,
         shortName: mountain.shortName,
       },
-      hourly: hourlyForecast,
+      hourly,
       source: {
         provider: 'NOAA Weather.gov',
         gridOffice: mountain.noaa.gridOffice,
