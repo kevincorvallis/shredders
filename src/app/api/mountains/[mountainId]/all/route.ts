@@ -6,6 +6,7 @@ import { getForecast, getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/
 import { getCurrentFreezingLevelFeet, calculateRainRiskScore, getDailyForecast } from '@/lib/apis/open-meteo';
 import { getWeatherAlerts } from '@/lib/apis/noaa';
 import { getLatestLiftStatus } from '@/lib/dynamodb';
+import { calculateMountainTemperatures, estimateReferenceElevation } from '@/lib/calculations/temperature-lapse';
 
 /**
  * Batched API endpoint that fetches all mountain data in one request
@@ -87,6 +88,25 @@ export async function GET(
           ? calculateRainRiskScore(freezing, mountain.elevation.base, mountain.elevation.summit)
           : null;
 
+        // Calculate temperatures at different elevations
+        const referenceTemp = weather?.temperature ?? snotel?.temperature ?? null;
+        let temperaturesByElevation = null;
+
+        if (referenceTemp !== null) {
+          const referenceElevation = estimateReferenceElevation(
+            null, // We don't have SNOTEL station elevation in our data
+            mountain.elevation.base,
+            mountain.elevation.summit
+          );
+
+          temperaturesByElevation = calculateMountainTemperatures(
+            referenceTemp,
+            referenceElevation,
+            mountain.elevation.base,
+            mountain.elevation.summit
+          );
+        }
+
         // Build conditions object
         const conditions = {
           mountain: {
@@ -99,7 +119,8 @@ export async function GET(
           snowfall24h: snotel?.snowfall24h ?? 0,
           snowfall48h: snotel?.snowfall48h ?? 0,
           snowfall7d: snotel?.snowfall7d ?? 0,
-          temperature: weather?.temperature ?? snotel?.temperature ?? null,
+          temperature: referenceTemp,
+          temperatureByElevation: temperaturesByElevation,
           conditions: weather?.conditions ?? 'Unknown',
           wind: weather
             ? {

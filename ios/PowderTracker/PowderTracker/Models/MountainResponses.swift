@@ -110,11 +110,21 @@ struct MountainConditions: Codable {
     let snowfall48h: Int
     let snowfall7d: Int
     let temperature: Int?
+    let temperatureByElevation: TemperatureByElevation?
     let conditions: String
     let wind: WindInfo?
     let lastUpdated: String
     let liftStatus: LiftStatus?
     let dataSources: DataSources
+
+    struct TemperatureByElevation: Codable {
+        let base: Int
+        let mid: Int
+        let summit: Int
+        let referenceElevation: Int
+        let referenceTemp: Int
+        let lapseRate: Double
+    }
 
     struct WindInfo: Codable {
         let speed: Int

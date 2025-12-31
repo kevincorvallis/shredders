@@ -3,6 +3,7 @@ import { getMountain } from '@/data/mountains';
 import { getCurrentConditions } from '@/lib/apis/snotel';
 import { getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
 import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';
+import { calculateMountainTemperatures, estimateReferenceElevation } from '@/lib/calculations/temperature-lapse';
 
 export async function GET(
   request: Request,
@@ -60,6 +61,25 @@ export async function GET(
       freezingLevel = Math.round(4000 + (temp - 32) * 285);
     }
 
+    // Calculate temperatures at different elevations
+    const referenceTemp = weatherData?.temperature ?? snotelData?.temperature ?? null;
+    let temperaturesByElevation = null;
+
+    if (referenceTemp !== null) {
+      const referenceElevation = estimateReferenceElevation(
+        null, // We don't have SNOTEL station elevation in our data
+        mountain.elevation.base,
+        mountain.elevation.summit
+      );
+
+      temperaturesByElevation = calculateMountainTemperatures(
+        referenceTemp,
+        referenceElevation,
+        mountain.elevation.base,
+        mountain.elevation.summit
+      );
+    }
+
     // Combine data
     const conditions = {
       mountain: {
@@ -72,7 +92,9 @@ export async function GET(
       snowfall24h: snotelData?.snowfall24h ?? 0,
       snowfall48h: snotelData?.snowfall48h ?? 0,
       snowfall7d: snotelData?.snowfall7d ?? 0,
-      temperature: weatherData?.temperature ?? snotelData?.temperature ?? null,
+      temperature: referenceTemp,
+      // New: Temperatures at different elevations
+      temperatureByElevation: temperaturesByElevation,
       conditions: weatherData?.conditions ?? 'Unknown',
       wind: weatherData
         ? {

@@ -22,14 +22,33 @@ struct MountainConditionsCard: View {
                     ConditionMetric(icon: "ruler", title: "Snow Depth", value: "\(snowDepth)\"")
                 }
                 ConditionMetric(icon: "snowflake", title: "24hr Snow", value: "\(conditions.snowfall24h)\"")
-                if let temp = conditions.temperature {
-                    ConditionMetric(icon: "thermometer.snowflake", title: "Temperature", value: "\(temp)°F")
-                }
                 if let wind = conditions.wind {
                     ConditionMetric(icon: "wind", title: "Wind", value: "\(wind.speed) mph \(wind.direction)")
                 }
                 ConditionMetric(icon: "cloud.snow", title: "48hr Snow", value: "\(conditions.snowfall48h)\"")
                 ConditionMetric(icon: "calendar", title: "7 Day Snow", value: "\(conditions.snowfall7d)\"")
+            }
+
+            // Temperature by elevation section
+            if let tempByElevation = conditions.temperatureByElevation {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Temperature by Elevation")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 16) {
+                        ElevationTempView(label: "Base", temp: tempByElevation.base, icon: "arrow.down.to.line")
+                        Spacer()
+                        ElevationTempView(label: "Mid", temp: tempByElevation.mid, icon: "minus")
+                        Spacer()
+                        ElevationTempView(label: "Summit", temp: tempByElevation.summit, icon: "arrow.up.to.line")
+                    }
+                }
+                .padding(.top, 8)
+            } else if let temp = conditions.temperature {
+                // Fallback to single temperature if elevation data not available
+                ConditionMetric(icon: "thermometer.snowflake", title: "Temperature", value: "\(temp)°F")
             }
 
             HStack {
@@ -88,6 +107,40 @@ struct ConditionMetric: View {
 
             Spacer()
         }
+    }
+}
+
+struct ElevationTempView: View {
+    let label: String
+    let temp: Int
+    let icon: String
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            Text("\(temp)°F")
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundColor(tempColor)
+
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(8)
+    }
+
+    private var tempColor: Color {
+        if temp <= 20 { return .blue }
+        if temp <= 32 { return .cyan }
+        if temp <= 40 { return .green }
+        return .orange
     }
 }
 
