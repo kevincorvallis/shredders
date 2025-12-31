@@ -12,105 +12,8 @@ struct MountainsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Search and filters
-                    VStack(spacing: 12) {
-                        // Search bar
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(.secondary)
-
-                            TextField("Search mountains...", text: $searchText)
-                                .textFieldStyle(.plain)
-
-                            if !searchText.isEmpty {
-                                Button {
-                                    searchText = ""
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                        .padding(12)
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(12)
-
-                        // Filter chips
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                // Sort options
-                                Menu {
-                                    ForEach(SortOption.allCases, id: \.self) { option in
-                                        Button {
-                                            sortBy = option
-                                        } label: {
-                                            Label(
-                                                option.rawValue,
-                                                systemImage: sortBy == option ? "checkmark" : ""
-                                            )
-                                        }
-                                    }
-                                } label: {
-                                    FilterChip(
-                                        icon: "arrow.up.arrow.down",
-                                        label: sortBy.rawValue,
-                                        isActive: true
-                                    )
-                                }
-
-                                // Region filters
-                                ForEach(RegionFilter.allCases, id: \.self) { region in
-                                    Button {
-                                        filterRegion = region
-                                    } label: {
-                                        FilterChip(
-                                            icon: region.icon,
-                                            label: region.rawValue,
-                                            isActive: filterRegion == region
-                                        )
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 4)
-                        }
-                    }
-                    .padding(.horizontal)
-
-                    // Mountains grid
-                    if filteredMountains.isEmpty {
-                        EmptyStateView(
-                            icon: "mountain.2",
-                            message: "No mountains found",
-                            description: "Try adjusting your filters"
-                        )
-                        .padding(.top, 60)
-                    } else {
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 16) {
-                            ForEach(filteredMountains) { mountain in
-                                NavigationLink {
-                                    MountainDetailView(
-                                        mountainId: mountain.id,
-                                        mountainName: mountain.name
-                                    )
-                                } label: {
-                                    MountainGridCard(
-                                        mountain: mountain,
-                                        score: viewModel.getScore(for: mountain),
-                                        distance: viewModel.getDistance(to: mountain),
-                                        isFavorite: favoritesManager.isFavorite(mountain.id),
-                                        onFavoriteToggle: {
-                                            toggleFavorite(mountain.id)
-                                        }
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
+                    searchAndFiltersSection
+                    mountainsGridSection
                 }
                 .padding(.vertical)
             }
@@ -118,12 +21,127 @@ struct MountainsView: View {
             .navigationTitle("Mountains")
             .navigationBarTitleDisplayMode(.large)
             .refreshable {
-                await viewModel.loadData()
+                await viewModel.loadMountains()
             }
             .task {
-                await viewModel.loadData()
+                await viewModel.loadMountains()
             }
         }
+    }
+
+    private var searchAndFiltersSection: some View {
+        VStack(spacing: 12) {
+            searchBar
+            filterChipsRow
+        }
+        .padding(.horizontal)
+    }
+
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+
+            TextField("Search mountains...", text: $searchText)
+                .textFieldStyle(.plain)
+
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(12)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+
+    private var filterChipsRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                sortMenu
+
+                ForEach(RegionFilter.allCases, id: \.self) { region in
+                    Button {
+                        filterRegion = region
+                    } label: {
+                        FilterChip(
+                            icon: region.icon,
+                            label: region.rawValue,
+                            isActive: filterRegion == region
+                        )
+                    }
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+    }
+
+    private var sortMenu: some View {
+        Menu {
+            ForEach(SortOption.allCases, id: \.self) { option in
+                Button {
+                    sortBy = option
+                } label: {
+                    Label(
+                        option.rawValue,
+                        systemImage: sortBy == option ? "checkmark" : ""
+                    )
+                }
+            }
+        } label: {
+            FilterChip(
+                icon: "arrow.up.arrow.down",
+                label: sortBy.rawValue,
+                isActive: true
+            )
+        }
+    }
+
+    private var mountainsGridSection: some View {
+        Group {
+            if filteredMountains.isEmpty {
+                EmptyStateView(
+                    icon: "mountain.2",
+                    message: "No mountains found",
+                    description: "Try adjusting your filters"
+                )
+                .padding(.top, 60)
+            } else {
+                mountainsGrid
+            }
+        }
+    }
+
+    private var mountainsGrid: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: 16) {
+            ForEach(filteredMountains) { mountain in
+                NavigationLink {
+                    MountainDetailView(
+                        mountainId: mountain.id,
+                        mountainName: mountain.name
+                    )
+                } label: {
+                    MountainGridCard(
+                        mountain: mountain,
+                        score: viewModel.getScore(for: mountain),
+                        distance: viewModel.getDistance(to: mountain),
+                        isFavorite: favoritesManager.isFavorite(mountain.id),
+                        onFavoriteToggle: {
+                            toggleFavorite(mountain.id)
+                        }
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal)
     }
 
     private var filteredMountains: [Mountain] {
