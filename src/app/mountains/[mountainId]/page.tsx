@@ -855,7 +855,7 @@ export default function MountainPage({
                   <div className="flex justify-between">
                     <span className="text-gray-400">NOAA Grid</span>
                     <span className="text-white">
-                      {mountain.noaa.gridOffice}/{mountain.noaa.gridX},{mountain.noaa.gridY}
+                      {mountain.noaa ? `${mountain.noaa.gridOffice}/${mountain.noaa.gridX},${mountain.noaa.gridY}` : 'N/A'}
                     </span>
                   </div>
                 </div>
