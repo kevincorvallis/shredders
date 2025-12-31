@@ -17,8 +17,23 @@ export async function GET(
   }
 
   try {
-    const noaaConfig: NOAAGridConfig = mountain.noaa;
-    const forecast = await getForecast(noaaConfig);
+    if (!mountain.noaa) {
+      // For international mountains without NOAA, return empty forecast
+      return NextResponse.json({
+        mountain: {
+          id: mountain.id,
+          name: mountain.name,
+          shortName: mountain.shortName,
+        },
+        forecast: [],
+        source: {
+          provider: 'Open-Meteo',
+          gridOffice: 'N/A',
+        },
+      });
+    }
+
+    const forecast = await getForecast(mountain.noaa);
 
     return NextResponse.json({
       mountain: {
@@ -28,7 +43,7 @@ export async function GET(
       },
       forecast,
       source: {
-        provider: 'NOAA',
+        provider: 'NOAA Weather.gov',
         gridOffice: mountain.noaa.gridOffice,
       },
     });

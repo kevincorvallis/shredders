@@ -55,13 +55,15 @@ struct WeatherGovLinksView: View {
                             url: links.alerts
                         )
 
-                        Divider().padding(.leading, 50)
+                        if let discussion = links.discussion {
+                            Divider().padding(.leading, 50)
 
-                        WeatherGovLinkRow(
-                            title: "Forecast Discussion",
-                            icon: "doc.text",
-                            url: links.discussion
-                        )
+                            WeatherGovLinkRow(
+                                title: "Forecast Discussion",
+                                icon: "doc.text",
+                                url: discussion
+                            )
+                        }
                     }
                 }
                 .background(Color(.systemBackground))

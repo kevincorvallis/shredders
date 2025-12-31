@@ -76,6 +76,12 @@ struct DiscoverView: View {
                             // Header
                             mountainHeader
 
+                            // Lift Status Card
+                            if let conditions = dashboardViewModel.conditions,
+                               let liftStatus = conditions.liftStatus {
+                                LiftStatusCard(liftStatus: liftStatus)
+                            }
+
                             // Powder Score
                             if let score = dashboardViewModel.powderScore {
                                 powderScoreSection(score)
@@ -165,8 +171,10 @@ struct DiscoverView: View {
                 }
 
                 if let mountain = viewModel.mountains.first(where: { $0.id == selectedMountainId }) {
-                    // Mountain Status
-                    if let status = mountain.status {
+                    // Lift Status (dynamic from API) or fallback to static status
+                    if let liftStatus = conditions.liftStatus {
+                        LiftStatusBadge(liftStatus: liftStatus)
+                    } else if let status = mountain.status {
                         MountainStatusView(status: status, variant: .compact)
                     }
 
@@ -227,7 +235,7 @@ struct DiscoverView: View {
                 Spacer()
             }
 
-            Text(score.verdict)
+            Text(score.verdict ?? "")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

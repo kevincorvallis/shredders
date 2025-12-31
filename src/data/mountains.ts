@@ -19,12 +19,12 @@ export interface MountainConfig {
     base: number;
     summit: number;
   };
-  region: 'washington' | 'oregon' | 'idaho';
+  region: 'washington' | 'oregon' | 'idaho' | 'canada';
   snotel?: {
     stationId: string;
     stationName: string;
   };
-  noaa: {
+  noaa?: {
     gridOffice: string;
     gridX: number;
     gridY: number;
@@ -514,6 +514,29 @@ export const mountains: Record<string, MountainConfig> = {
     logo: '/logos/hoodoo.png',
     status: { isOpen: true, percentOpen: 70, liftsOpen: '3/5', runsOpen: '22/32', message: 'Good conditions' },
   },
+
+  whistler: {
+    id: 'whistler',
+    name: 'Whistler Blackcomb',
+    shortName: 'Whistler',
+    location: { lat: 50.115, lng: -122.95 },
+    elevation: { base: 2214, summit: 7494 },
+    region: 'canada',
+    // No SNOTEL data (Canada)
+    // No NOAA grid (using Open-Meteo for Canadian weather)
+    webcams: [
+      {
+        id: 'village',
+        name: 'Whistler Village',
+        url: 'https://www.whistlerblackcomb.com/the-mountain/mountain-conditions/mountain-cams.aspx',
+        refreshUrl: 'https://www.whistlerblackcomb.com/the-mountain/mountain-conditions/mountain-cams.aspx',
+      },
+    ],
+    color: '#0066b3',
+    website: 'https://www.whistlerblackcomb.com',
+    logo: '/logos/whistler.png',
+    status: { isOpen: true, percentOpen: 90, liftsOpen: '35/37', runsOpen: '190/200', message: 'Excellent conditions!' },
+  },
 };
 
 export function getMountain(id: string): MountainConfig | undefined {
@@ -524,7 +547,7 @@ export function getAllMountains(): MountainConfig[] {
   return Object.values(mountains);
 }
 
-export function getMountainsByRegion(region: 'washington' | 'oregon' | 'idaho'): MountainConfig[] {
+export function getMountainsByRegion(region: 'washington' | 'oregon' | 'idaho' | 'canada'): MountainConfig[] {
   return getAllMountains().filter((m) => m.region === region);
 }
 

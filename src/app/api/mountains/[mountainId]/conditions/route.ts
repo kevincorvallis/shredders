@@ -29,13 +29,15 @@ export async function GET(
       }
     }
 
-    // Fetch NOAA weather data
-    const noaaConfig: NOAAGridConfig = mountain.noaa;
+    // Fetch NOAA weather data (if available for this region)
     let weatherData = null;
-    try {
-      weatherData = await getCurrentWeather(noaaConfig);
-    } catch (error) {
-      console.error(`NOAA error for ${mountain.name}:`, error);
+    if (mountain.noaa) {
+      const noaaConfig: NOAAGridConfig = mountain.noaa;
+      try {
+        weatherData = await getCurrentWeather(noaaConfig);
+      } catch (error) {
+        console.error(`NOAA error for ${mountain.name}:`, error);
+      }
     }
 
     // Fetch freezing level from Open-Meteo
@@ -95,10 +97,15 @@ export async function GET(
               stationName: mountain.snotel.stationName,
             }
           : null,
-        noaa: {
-          available: !!weatherData,
-          gridOffice: mountain.noaa.gridOffice,
-        },
+        noaa: mountain.noaa
+          ? {
+              available: !!weatherData,
+              gridOffice: mountain.noaa.gridOffice,
+            }
+          : {
+              available: false,
+              gridOffice: 'N/A',
+            },
         openMeteo: {
           available: freezingLevel !== null,
         },

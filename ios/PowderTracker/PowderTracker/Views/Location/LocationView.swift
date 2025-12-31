@@ -24,6 +24,10 @@ struct LocationView: View {
                     }
                     .padding()
                 } else if viewModel.locationData != nil {
+                    // Lift Status Section
+                    LiftStatusSection(viewModel: viewModel)
+                        .padding(.horizontal)
+
                     // Snow Depth Section
                     SnowDepthSection(viewModel: viewModel)
                         .padding(.horizontal)

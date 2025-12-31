@@ -286,7 +286,7 @@ export async function GET(
     }
 
     // Get NOAA data (enhanced with gridded data)
-    const noaaConfig: NOAAGridConfig = mountain.noaa;
+    if (!mountain.noaa) { const noaaConfig = null; } else { const noaaConfig: NOAAGridConfig = mountain.noaa; }
     let weatherData = null;
     let extendedWeatherData = null;
     let forecast = null;

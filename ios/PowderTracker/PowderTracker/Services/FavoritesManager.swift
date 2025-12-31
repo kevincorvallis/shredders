@@ -8,6 +8,9 @@ class FavoritesManager: ObservableObject {
     private let maxFavorites = 5
     private let storageKey = "favoriteMountainIds"
 
+    // Default favorites for first-time users
+    static let defaultFavorites = ["baker", "crystal", "stevens"]
+
     @Published var favoriteIds: [String] = []
 
     init() {
@@ -44,6 +47,13 @@ class FavoritesManager: ObservableObject {
         saveFavorites()
     }
 
+    func reorder(from source: IndexSet, to destination: Int) {
+        var ids = favoriteIds
+        ids.move(fromOffsets: source, toOffset: destination)
+        favoriteIds = ids
+        saveFavorites()
+    }
+
     func canAddMore() -> Bool {
         favoriteIds.count < maxFavorites
     }
@@ -77,6 +87,14 @@ class FavoritesManager: ObservableObject {
         if let legacyId = UserDefaults.standard.string(forKey: "selectedMountainId"),
            !legacyId.isEmpty {
             _ = add(legacyId)
+
+            // Add remaining defaults (exclude legacy ID if already added)
+            for defaultId in Self.defaultFavorites where defaultId != legacyId && favoriteIds.count < 3 {
+                _ = add(defaultId)
+            }
+        } else {
+            // No legacy selection - use all defaults
+            Self.defaultFavorites.forEach { _ = add($0) }
         }
     }
 }

@@ -33,9 +33,9 @@ struct WeatherAlertsResponse: Codable {
 struct WeatherGovLinks: Codable {
     let forecast: String
     let hourly: String
-    let detailed: String
+    let detailed: String?
     let alerts: String
-    let discussion: String
+    let discussion: String?
 }
 
 struct WeatherGovLinksResponse: Codable {
@@ -77,6 +77,30 @@ struct HourlyForecastResponse: Codable {
     }
 }
 
+// MARK: - Lift Status
+struct LiftStatus: Codable {
+    let isOpen: Bool
+    let liftsOpen: Int
+    let liftsTotal: Int
+    let runsOpen: Int
+    let runsTotal: Int
+    let message: String?
+    let lastUpdated: String
+
+    var percentOpen: Int {
+        guard liftsTotal > 0 else { return 0 }
+        return Int(round(Double(liftsOpen) / Double(liftsTotal) * 100))
+    }
+
+    var statusColor: String {
+        isOpen ? "green" : "red"
+    }
+
+    var percentColor: String {
+        percentOpen >= 80 ? "green" : percentOpen >= 50 ? "yellow" : "orange"
+    }
+}
+
 // MARK: - Mountain Conditions Response
 struct MountainConditions: Codable {
     let mountain: MountainInfo
@@ -89,6 +113,7 @@ struct MountainConditions: Codable {
     let conditions: String
     let wind: WindInfo?
     let lastUpdated: String
+    let liftStatus: LiftStatus?
     let dataSources: DataSources
 
     struct WindInfo: Codable {
@@ -99,6 +124,7 @@ struct MountainConditions: Codable {
     struct DataSources: Codable {
         let snotel: SnotelSource?
         let noaa: NOAASource
+        let liftStatus: LiftStatusSource?
 
         struct SnotelSource: Codable {
             let available: Bool
@@ -108,6 +134,10 @@ struct MountainConditions: Codable {
         struct NOAASource: Codable {
             let available: Bool
             let gridOffice: String
+        }
+
+        struct LiftStatusSource: Codable {
+            let available: Bool
         }
     }
 }
@@ -131,9 +161,9 @@ struct MountainPowderScore: Codable, Identifiable {
     let mountain: MountainInfo
     let score: Double
     let factors: [ScoreFactor]
-    let verdict: String
-    let conditions: ScoreConditions
-    let dataAvailable: DataAvailability
+    let verdict: String?
+    let conditions: ScoreConditions?
+    let dataAvailable: DataAvailability?
 
     struct ScoreFactor: Codable, Identifiable {
         var id: String { name }
@@ -202,9 +232,19 @@ extension MountainConditions {
         conditions: "Snow",
         wind: WindInfo(speed: 15, direction: "SW"),
         lastUpdated: ISO8601DateFormatter().string(from: Date()),
+        liftStatus: LiftStatus(
+            isOpen: true,
+            liftsOpen: 9,
+            liftsTotal: 10,
+            runsOpen: 45,
+            runsTotal: 52,
+            message: nil,
+            lastUpdated: ISO8601DateFormatter().string(from: Date())
+        ),
         dataSources: DataSources(
             snotel: DataSources.SnotelSource(available: true, stationName: "Wells Creek"),
-            noaa: DataSources.NOAASource(available: true, gridOffice: "SEW")
+            noaa: DataSources.NOAASource(available: true, gridOffice: "SEW"),
+            liftStatus: DataSources.LiftStatusSource(available: true)
         )
     )
 }

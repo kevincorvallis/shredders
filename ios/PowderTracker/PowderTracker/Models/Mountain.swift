@@ -73,7 +73,7 @@ struct MountainDetail: Codable {
     let elevation: MountainElevation
     let region: String
     let snotel: SnotelInfo?
-    let noaa: NOAAInfo
+    let noaa: NOAAInfo?
     let webcams: [Webcam]
     let roadWebcams: [RoadWebcam]?
     let color: String

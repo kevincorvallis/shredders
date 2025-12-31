@@ -33,8 +33,6 @@ export async function GET(
     const data = await withCache(
       `mountain:${mountainId}:all`,
       async () => {
-        const noaaConfig: NOAAGridConfig = mountain.noaa;
-
         // Fetch all data in parallel using direct function calls
         const [
           snotelData,
@@ -49,10 +47,14 @@ export async function GET(
           mountain.snotel
             ? getCurrentConditions(mountain.snotel.stationId).catch(() => null)
             : Promise.resolve(null),
-          // Current weather
-          getCurrentWeather(noaaConfig).catch(() => null),
-          // Forecast
-          getForecast(noaaConfig).catch(() => []),
+          // Current weather (NOAA if available)
+          mountain.noaa
+            ? getCurrentWeather(mountain.noaa).catch(() => null)
+            : Promise.resolve(null),
+          // Forecast (NOAA if available, fallback to Open-Meteo)
+          mountain.noaa
+            ? getForecast(mountain.noaa).catch(() => [])
+            : Promise.resolve([]),
           // Alerts
           getWeatherAlerts(mountain.location.lat, mountain.location.lng).catch(() => []),
           // Freezing level
@@ -132,10 +134,15 @@ export async function GET(
                   stationName: mountain.snotel.stationName,
                 }
               : null,
-            noaa: {
-              available: !!weather,
-              gridOffice: mountain.noaa.gridOffice,
-            },
+            noaa: mountain.noaa
+              ? {
+                  available: !!weather,
+                  gridOffice: mountain.noaa.gridOffice,
+                }
+              : {
+                  available: false,
+                  gridOffice: 'N/A',
+                },
             openMeteo: {
               available: freezing !== null,
             },

@@ -20,8 +20,8 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const hours = parseInt(searchParams.get('hours') || '48');
 
-    const noaaConfig: NOAAGridConfig = mountain.noaa;
-    const hourlyForecast = await getHourlyForecast(noaaConfig, hours);
+    if (!mountain.noaa) { return NextResponse.json({ mountain: { id: mountain.id, name: mountain.name, shortName: mountain.shortName }, hourly: [], source: { provider: "Open-Meteo", gridOffice: "N/A" } }); }
+    const hourly = await getHourlyForecast(mountain.noaa);
 
     return NextResponse.json({
       mountain: {

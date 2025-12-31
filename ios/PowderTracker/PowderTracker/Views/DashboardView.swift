@@ -128,7 +128,7 @@ struct DashboardView: View {
                 Spacer()
             }
 
-            Text(score.verdict)
+            Text(score.verdict ?? "")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

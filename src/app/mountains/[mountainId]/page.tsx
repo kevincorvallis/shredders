@@ -247,9 +247,23 @@ export default function MountainPage({
             />
 
             {/* Status Badge */}
-            {mountain.status && (
+            {(conditions?.liftStatus || mountain.status) && (
               <div className="hidden md:block">
-                <MountainStatus status={mountain.status} variant="compact" />
+                <MountainStatus
+                  status={conditions?.liftStatus ? {
+                    isOpen: conditions.liftStatus.isOpen,
+                    liftsOpen: `${conditions.liftStatus.liftsOpen}/${conditions.liftStatus.liftsTotal}`,
+                    runsOpen: conditions.liftStatus.runsOpen && conditions.liftStatus.runsTotal
+                      ? `${conditions.liftStatus.runsOpen}/${conditions.liftStatus.runsTotal}`
+                      : undefined,
+                    message: conditions.liftStatus.message || undefined,
+                    lastUpdated: conditions.liftStatus.lastUpdated,
+                    percentOpen: conditions.liftStatus.liftsTotal > 0
+                      ? Math.round((conditions.liftStatus.liftsOpen / conditions.liftStatus.liftsTotal) * 100)
+                      : undefined,
+                  } : mountain.status}
+                  variant="compact"
+                />
               </div>
             )}
 
@@ -330,9 +344,23 @@ export default function MountainPage({
         ) : (
           <>
             {/* Mountain Status - Mobile */}
-            {mountain.status && (
+            {(conditions?.liftStatus || mountain.status) && (
               <div className="md:hidden">
-                <MountainStatus status={mountain.status} variant="full" />
+                <MountainStatus
+                  status={conditions?.liftStatus ? {
+                    isOpen: conditions.liftStatus.isOpen,
+                    liftsOpen: `${conditions.liftStatus.liftsOpen}/${conditions.liftStatus.liftsTotal}`,
+                    runsOpen: conditions.liftStatus.runsOpen && conditions.liftStatus.runsTotal
+                      ? `${conditions.liftStatus.runsOpen}/${conditions.liftStatus.runsTotal}`
+                      : undefined,
+                    message: conditions.liftStatus.message || undefined,
+                    lastUpdated: conditions.liftStatus.lastUpdated,
+                    percentOpen: conditions.liftStatus.liftsTotal > 0
+                      ? Math.round((conditions.liftStatus.liftsOpen / conditions.liftStatus.liftsTotal) * 100)
+                      : undefined,
+                  } : mountain.status}
+                  variant="full"
+                />
               </div>
             )}
 
