@@ -213,11 +213,13 @@ struct SnowMetricCard: View {
     let mockScore = MountainPowderScore(
         mountain: MountainInfo(id: "baker", name: "Mt. Baker", shortName: "Baker"),
         score: 8.2,
+        factors: [],
         verdict: "SEND IT! Epic powder conditions!",
-        factors: []
+        conditions: nil,
+        dataAvailable: nil
     )
 
-    return SnowSummarySection(conditions: mockConditions, powderScore: mockScore)
+    SnowSummarySection(conditions: mockConditions, powderScore: mockScore)
         .padding()
         .background(Color(.systemGroupedBackground))
 }

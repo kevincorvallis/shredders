@@ -166,6 +166,14 @@ struct MountainCardRow: View {
                 snowfall48h: 14,
                 snowfall7d: 32,
                 temperature: 28,
+                temperatureByElevation: MountainConditions.TemperatureByElevation(
+                    base: 32,
+                    mid: 28,
+                    summit: 25,
+                    referenceElevation: 4500,
+                    referenceTemp: 28,
+                    lapseRate: 3.5
+                ),
                 conditions: "Snow",
                 wind: MountainConditions.WindInfo(speed: 15, direction: "SW"),
                 lastUpdated: ISO8601DateFormatter().string(from: Date()),
@@ -211,6 +219,7 @@ struct MountainCardRow: View {
                 snowfall48h: 2,
                 snowfall7d: 12,
                 temperature: 32,
+                temperatureByElevation: nil,
                 conditions: "Partly Cloudy",
                 wind: MountainConditions.WindInfo(speed: 10, direction: "W"),
                 lastUpdated: ISO8601DateFormatter().string(from: Date()),

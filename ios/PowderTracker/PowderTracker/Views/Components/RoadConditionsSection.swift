@@ -119,16 +119,6 @@ struct RoadConditionRow: View {
     }
 }
 
-// MARK: - Road Condition Model
-
-struct RoadCondition: Identifiable {
-    let id = UUID()
-    let name: String
-    let status: String
-    let conditions: String?
-    let chainsRequired: Bool
-}
-
 // MARK: - Preview
 
 #Preview {

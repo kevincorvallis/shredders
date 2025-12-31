@@ -4,13 +4,13 @@ struct ContentView: View {
     var body: some View {
         TabView {
             // OpenSnow-style Home with horizontal forecast timeline
-            NewHomeView()
+            HomeView()
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }
 
             // Redesigned Mountains grid view
-            NewMountainsView()
+            MountainsView()
                 .tabItem {
                     Label("Mountains", systemImage: "mountain.2.fill")
                 }

@@ -239,6 +239,14 @@ extension MountainConditions {
         snowfall48h: 14,
         snowfall7d: 32,
         temperature: 28,
+        temperatureByElevation: TemperatureByElevation(
+            base: 32,
+            mid: 28,
+            summit: 25,
+            referenceElevation: 4500,
+            referenceTemp: 28,
+            lapseRate: 3.5
+        ),
         conditions: "Snow",
         wind: WindInfo(speed: 15, direction: "SW"),
         lastUpdated: ISO8601DateFormatter().string(from: Date()),

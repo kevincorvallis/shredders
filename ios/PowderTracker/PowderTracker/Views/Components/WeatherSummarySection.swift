@@ -71,8 +71,7 @@ struct WeatherSummarySection: View {
                             WeatherMetric(
                                 icon: "wind",
                                 label: "Wind",
-                                value: "\(wind.speed) mph",
-                                detail: wind.direction
+                                value: "\(wind.speed) mph \(wind.direction)"
                             )
                         }
 
@@ -81,8 +80,7 @@ struct WeatherSummarySection: View {
                         WeatherMetric(
                             icon: "snowflake",
                             label: "24hr Snow",
-                            value: "\(conditions.snowfall24h)\"",
-                            detail: nil
+                            value: "\(conditions.snowfall24h)\""
                         )
                     }
                 }
@@ -208,40 +206,6 @@ struct TempGradientBar: View {
         if temp <= 32 { return Color(red: 0.4, green: 0.8, blue: 1.0) } // Light blue
         if temp <= 40 { return Color(red: 0.5, green: 0.9, blue: 0.6) } // Green
         return Color(red: 1.0, green: 0.6, blue: 0.3) // Orange
-    }
-}
-
-// MARK: - Weather Metric
-
-struct WeatherMetric: View {
-    let icon: String
-    let label: String
-    let value: String
-    let detail: String?
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(.blue)
-                .frame(width: 28)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Text(value)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-
-                if let detail = detail {
-                    Text(detail)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
     }
 }
 

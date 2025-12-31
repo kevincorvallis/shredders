@@ -1,110 +1,57 @@
 import SwiftUI
 
+/// OpenSnow-inspired Home view with horizontal snow timeline and sectioned content
 struct HomeView: View {
-    @StateObject private var viewModel = HomeViewModel()
+    @State private var viewModel = SingleMountainViewModel()
     @StateObject private var favoritesManager = FavoritesManager.shared
-    @State private var showingManagement = false
+    @State private var showingMountainPicker = false
+
+    // Get primary favorite (first one) or default to Baker
+    private var selectedMountainId: String {
+        favoritesManager.favoriteIds.first ?? "baker"
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Header
-                    HStack {
-                        Text("My Mountains")
-                            .font(.title2)
-                            .fontWeight(.bold)
-
-                        Spacer()
-
-                        Button {
-                            showingManagement = true
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "star.fill")
-                                    .font(.caption)
-                                Text("Manage")
-                                    .font(.subheadline)
-                            }
-                            .foregroundColor(.blue)
-                        }
-                    }
+                    // Mountain selector header
+                    MountainSelectorHeader(
+                        mountainName: viewModel.mountain?.name ?? "Loading...",
+                        onTap: { showingMountainPicker = true }
+                    )
                     .padding(.horizontal)
                     .padding(.top, 8)
 
-                    // Loading state for initial load
-                    if viewModel.isLoading && favoritesManager.favoriteIds.isEmpty {
-                        ProgressView("Loading mountains...")
-                            .padding(.top, 40)
-                    }
-                    // Error state
-                    else if let error = viewModel.error, viewModel.mountains.isEmpty {
-                        ErrorView(message: error) {
-                            Task {
-                                await viewModel.refresh()
-                            }
-                        }
-                        .padding()
-                    }
-                    // Favorites list or empty state
-                    else if favoritesManager.favoriteIds.isEmpty {
-                        FavoritesEmptyState {
-                            showingManagement = true
-                        }
+                    if viewModel.isLoading && viewModel.conditions == nil {
+                        ProgressView("Loading...")
+                            .padding(.top, 60)
                     } else {
-                        // Favorite mountains cards
-                        VStack(spacing: 12) {
-                            ForEach(favoritesManager.favoriteIds, id: \.self) { mountainId in
-                                if let mountain = viewModel.mountains.first(where: { $0.id == mountainId }) {
-                                    NavigationLink {
-                                        MountainDetailView(mountainId: mountain.id, mountainName: mountain.name)
-                                    } label: {
-                                        MountainCardRow(
-                                            mountain: mountain,
-                                            conditions: viewModel.mountainData[mountainId]?.conditions,
-                                            powderScore: viewModel.mountainData[mountainId]?.powderScore
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
+                        // Snow Timeline (OpenSnow-style horizontal scroll)
+                        if !viewModel.snowTimelineData.isEmpty {
+                            SnowTimelineView(
+                                snowData: viewModel.snowTimelineData,
+                                liftStatus: viewModel.conditions?.liftStatus
+                            )
+                            .padding(.horizontal)
                         }
+
+                        // Weather section
+                        WeatherSummarySection(conditions: viewModel.conditions)
+                            .padding(.horizontal)
+
+                        // Snow Summary section
+                        SnowSummarySection(
+                            conditions: viewModel.conditions,
+                            powderScore: viewModel.powderScore
+                        )
                         .padding(.horizontal)
-                    }
 
-                    // All mountains section
-                    if !viewModel.mountains.isEmpty {
-                        Divider()
-                            .padding(.vertical, 8)
+                        // TODO: Road Conditions - Wire up LocationViewModel integration
 
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("All Mountains")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-
-                                Spacer()
-
-                                Text("\(viewModel.mountains.count) resorts")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+                        // Quick actions
+                        QuickActionsGrid(mountainId: selectedMountainId)
                             .padding(.horizontal)
-
-                            ForEach(viewModel.mountains) { mountain in
-                                NavigationLink {
-                                    MountainDetailView(mountainId: mountain.id, mountainName: mountain.name)
-                                } label: {
-                                    CompactMountainRow(
-                                        mountain: mountain,
-                                        isFavorite: favoritesManager.isFavorite(mountain.id),
-                                        hasLiveData: viewModel.hasLiveData(for: mountain.id)
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                            .padding(.horizontal)
-                        }
                     }
                 }
                 .padding(.vertical)
@@ -115,99 +62,301 @@ struct HomeView: View {
                 await viewModel.refresh()
             }
             .task {
-                await viewModel.loadData()
+                await viewModel.loadData(for: selectedMountainId)
             }
-            .onChange(of: favoritesManager.favoriteIds) { oldValue, newValue in
-                // Reload favorites data when favorites change
+            .onChange(of: selectedMountainId) { oldValue, newValue in
                 Task {
-                    await viewModel.loadFavoritesData()
+                    await viewModel.loadData(for: newValue)
                 }
             }
-            .sheet(isPresented: $showingManagement) {
-                FavoritesManagementView(mountains: viewModel.mountains)
+            .sheet(isPresented: $showingMountainPicker) {
+                MountainPickerSheet(
+                    selectedMountainId: selectedMountainId,
+                    onSelect: { mountainId in
+                        // Update favorite to make it primary
+                        if !favoritesManager.isFavorite(mountainId) {
+                            _ = favoritesManager.add(mountainId)
+                        }
+                        // Move to first position
+                        if let index = favoritesManager.favoriteIds.firstIndex(of: mountainId) {
+                            favoritesManager.reorder(from: IndexSet(integer: index), to: 0)
+                        }
+                        showingMountainPicker = false
+                    }
+                )
             }
         }
     }
 }
 
-// MARK: - Compact Mountain Row
+// MARK: - Mountain Selector Header
 
-struct CompactMountainRow: View {
-    let mountain: Mountain
-    let isFavorite: Bool
-    let hasLiveData: Bool
+struct MountainSelectorHeader: View {
+    let mountainName: String
+    let onTap: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Star icon
-            Image(systemName: isFavorite ? "star.fill" : "star")
-                .foregroundColor(isFavorite ? .yellow : .secondary.opacity(0.4))
-                .font(.body)
-                .frame(width: 24)
+        Button(action: onTap) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Current Mountain")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
 
-            // Mountain logo
-            MountainLogoView(
-                logoUrl: mountain.logo,
-                color: mountain.color,
-                size: 32
-            )
+                    Text(mountainName)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                }
 
-            // Mountain name
-            VStack(alignment: .leading, spacing: 2) {
-                Text(mountain.shortName)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                Spacer()
 
-                Text(mountain.region.uppercased())
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                Image(systemName: "chevron.down.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.blue)
             }
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+        }
+        .buttonStyle(.plain)
+    }
+}
 
-            Spacer()
+// MARK: - Quick Actions Grid
 
-            // Live/Static indicator
-            if hasLiveData {
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(Color.green)
-                        .frame(width: 6, height: 6)
-                    Text("LIVE")
-                        .font(.caption2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.green)
+struct QuickActionsGrid: View {
+    let mountainId: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Quick Actions")
+                .font(.headline)
+                .padding(.horizontal, 4)
+
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                NavigationLink {
+                    ForecastView()
+                } label: {
+                    QuickActionCard(
+                        icon: "calendar",
+                        title: "7-Day Forecast",
+                        color: .blue
+                    )
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(6)
-            } else if mountain.hasSnotel {
-                HStack(spacing: 4) {
-                    Image(systemName: "cloud.snow.fill")
-                        .font(.caption2)
-                    Text("DATA")
-                        .font(.caption2)
-                        .fontWeight(.semibold)
+
+                NavigationLink {
+                    WebcamsView()
+                } label: {
+                    QuickActionCard(
+                        icon: "video.fill",
+                        title: "Webcams",
+                        color: .purple
+                    )
                 }
-                .foregroundColor(.blue)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(6)
-            } else {
-                Text("STATIC")
-                    .font(.caption2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.orange)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.orange.opacity(0.1))
-                    .cornerRadius(6)
+
+                NavigationLink {
+                    HistoryChartView()
+                } label: {
+                    QuickActionCard(
+                        icon: "chart.line.uptrend.xyaxis",
+                        title: "Snow History",
+                        color: .green
+                    )
+                }
+
+                NavigationLink {
+                    MountainDetailView(mountainId: mountainId, mountainName: "")
+                } label: {
+                    QuickActionCard(
+                        icon: "info.circle.fill",
+                        title: "Full Details",
+                        color: .orange
+                    )
+                }
             }
         }
-        .padding(12)
+    }
+}
+
+struct QuickActionCard: View {
+    let icon: String
+    let title: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title)
+                .foregroundColor(color)
+
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - Mountain Picker Sheet
+
+struct MountainPickerSheet: View {
+    @State private var viewModel = MountainSelectionViewModel()
+    let selectedMountainId: String
+    let onSelect: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            List {
+                ForEach(viewModel.mountains) { mountain in
+                    Button {
+                        onSelect(mountain.id)
+                    } label: {
+                        HStack {
+                            MountainLogoView(
+                                logoUrl: mountain.logo,
+                                color: mountain.color,
+                                size: 40
+                            )
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(mountain.name)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+
+                                Text(mountain.region.uppercased())
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            if mountain.id == selectedMountainId {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .navigationTitle("Choose Mountain")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .task {
+                await viewModel.loadMountains()
+            }
+        }
+    }
+}
+
+// MARK: - Single Mountain ViewModel
+
+@MainActor
+@Observable
+class SingleMountainViewModel {
+    var mountain: Mountain?
+    var conditions: MountainConditions?
+    var powderScore: MountainPowderScore?
+    var forecast: [ForecastDay] = []
+    var snowTimelineData: [SnowDataPoint] = []
+    var isLoading = false
+    var error: String?
+
+    // Mock road conditions - TODO: Wire up real data
+    var mockRoadConditions: [RoadCondition] = [
+        RoadCondition(
+            name: "Main Access Road",
+            status: "Open",
+            conditions: "Snow and ice, drive carefully",
+            chainsRequired: true
+        )
+    ]
+
+    private let apiClient = APIClient.shared
+    private var currentMountainId: String = ""
+
+    func loadData(for mountainId: String) async {
+        currentMountainId = mountainId
+        isLoading = true
+        error = nil
+
+        do {
+            // Load mountain info
+            let mountainsResponse = try await apiClient.fetchMountains()
+            mountain = mountainsResponse.mountains.first { $0.id == mountainId }
+
+            // Load full data
+            let data = try await apiClient.fetchMountainData(for: mountainId)
+            conditions = data.conditions
+            powderScore = data.powderScore
+            forecast = data.forecast
+
+            // Build snow timeline from forecast
+            buildSnowTimeline()
+
+        } catch {
+            self.error = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+
+    func refresh() async {
+        await loadData(for: currentMountainId)
+    }
+
+    private func buildSnowTimeline() {
+        var timeline: [SnowDataPoint] = []
+        let today = Date()
+
+        // Past 7 days (use historical data if available, or zeros)
+        for i in (1...7).reversed() {
+            let date = Calendar.current.date(byAdding: .day, value: -i, to: today)!
+            timeline.append(SnowDataPoint(
+                date: date,
+                snowfall: 0, // TODO: Add historical snowfall API
+                isForecast: false,
+                isToday: false
+            ))
+        }
+
+        // Today
+        timeline.append(SnowDataPoint(
+            date: today,
+            snowfall: conditions?.snowfall24h ?? 0,
+            isForecast: false,
+            isToday: true
+        ))
+
+        // Future from forecast
+        for (index, day) in forecast.prefix(7).enumerated() {
+            let date = Calendar.current.date(byAdding: .day, value: index + 1, to: today)!
+            timeline.append(SnowDataPoint(
+                date: date,
+                snowfall: Int(day.snowfall),
+                isForecast: true,
+                isToday: false
+            ))
+        }
+
+        snowTimelineData = timeline
     }
 }
 
