@@ -122,147 +122,145 @@ struct MountainTimelineCard: View {
         }
     }
 
-    // MARK: - Snow Timeline
+    // MARK: - Snow Timeline (OpenSnow-style with centered "Last 24 Hours")
 
     private var snowTimeline: some View {
-        VStack(spacing: 8) {
-            // Summary header
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("24h")
+        VStack(spacing: 0) {
+            // Three-column header: Prev 1-5 Days | Last 24 Hours | Next 1-5 Days
+            HStack(spacing: 0) {
+                // Past summary
+                VStack(spacing: 4) {
+                    Text("Prev 1-5 Days")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text("\(pastFiveDaysTotal)\"")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.orange)
+                }
+                .frame(maxWidth: .infinity)
+
+                // TODAY - BIG NUMBER (focal point)
+                VStack(spacing: 4) {
+                    Text("Last 24 Hours")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                     Text("\(conditions?.snowfall24h ?? 0)\"")
-                        .font(.title2)
-                        .fontWeight(.bold)
+                        .font(.system(size: 48, weight: .bold))
                         .foregroundColor(.primary)
                 }
-                .frame(width: 60)
+                .frame(maxWidth: .infinity)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("48h")
+                // Future summary
+                VStack(spacing: 4) {
+                    Text("Next 1-5 Days")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-                    Text("\(conditions?.snowfall48h ?? 0)\"")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                }
-                .frame(width: 60)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("7d")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Text("\(conditions?.snowfall7d ?? 0)\"")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                }
-                .frame(width: 60)
-
-                Spacer()
-
-                if nextFiveDaysTotal > 0 {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("Next 5d")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                    if nextFiveDaysTotal > 0 {
                         Text("\(nextFiveDaysTotal)\"")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.blue)
+                    } else {
+                        Text("-")
+                            .font(.system(size: 16))
+                            .foregroundColor(.secondary)
                     }
                 }
+                .frame(maxWidth: .infinity)
             }
+            .padding(.vertical, 12)
             .padding(.horizontal, 12)
-            .padding(.top, 8)
 
             Divider()
-                .padding(.horizontal, 12)
 
-            // Horizontally scrollable daily timeline
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(-7...7, id: \.self) { dayOffset in
-                        dailySnowCard(for: dayOffset)
+            // Horizontally scrollable daily timeline - starts centered on TODAY
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 2) {
+                        ForEach(-7...7, id: \.self) { dayOffset in
+                            dayBarColumn(for: dayOffset)
+                                .id(dayOffset)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                }
+                .onAppear {
+                    // Auto-scroll to TODAY (offset 0) on appear
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo(0, anchor: .center)
+                        }
                     }
                 }
-                .padding(.horizontal, 12)
             }
-            .padding(.bottom, 8)
 
-            // Scroll hint
-            Text("← Swipe to see daily forecast →")
-                .font(.system(size: 9))
-                .foregroundColor(.secondary)
+            // Reported time
+            if let lastUpdated = conditions?.lastUpdated {
+                let date = ISO8601DateFormatter().date(from: lastUpdated) ?? Date()
+                HStack(spacing: 4) {
+                    Text(date.formatted(.dateTime.weekday(.abbreviated).day().hour().minute()))
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                    Text("Reported")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
                 .padding(.bottom, 6)
+            }
         }
     }
 
-    private func dailySnowCard(for offset: Int) -> some View {
+    private func dayBarColumn(for offset: Int) -> some View {
         let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
         let snowfall = snowfallForDay(offset: offset)
         let isToday = offset == 0
         let isPast = offset < 0
-        let isFuture = offset > 0
 
-        return VStack(spacing: 6) {
-            // Day label
-            Text(isToday ? "TODAY" : date.formatted(.dateTime.weekday(.abbreviated)).uppercased())
-                .font(.system(size: 10, weight: isToday ? .bold : .medium))
+        return VStack(spacing: 3) {
+            // Day letter
+            Text(date.formatted(.dateTime.weekday(.abbreviated)).prefix(1))
+                .font(.system(size: 10, weight: isToday ? .bold : .regular))
                 .foregroundColor(isToday ? .primary : .secondary)
 
-            // Date
-            Text(date.formatted(.dateTime.month(.abbreviated).day()))
-                .font(.system(size: 9))
-                .foregroundColor(.secondary)
+            // Date number
+            Text(date.formatted(.dateTime.day()))
+                .font(.system(size: 11, weight: isToday ? .bold : .regular))
+                .foregroundColor(isToday ? .primary : .secondary)
 
-            // Snow bar
+            // Bar chart
             VStack {
                 Spacer()
                 if snowfall > 0 {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(isPast ? Color.orange : isFuture ? Color.blue : Color.green)
-                        .frame(width: 20, height: min(CGFloat(snowfall) * 3, 60))
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(isPast ? Color.orange.opacity(0.8) : isToday ? Color.green : Color.blue.opacity(0.8))
+                        .frame(width: 12, height: min(CGFloat(snowfall) * 2.5, 50))
                 } else {
-                    RoundedRectangle(cornerRadius: 3)
+                    RoundedRectangle(cornerRadius: 1)
                         .fill(Color.gray.opacity(0.2))
-                        .frame(width: 20, height: 4)
+                        .frame(width: 12, height: 3)
                 }
             }
-            .frame(height: 60)
+            .frame(height: 50)
 
-            // Snowfall amount
+            // Snowfall amount (only if > 0)
             if snowfall > 0 {
                 Text("\(snowfall)\"")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 9, weight: .semibold))
                     .foregroundColor(.primary)
             } else {
-                Text("0\"")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-            }
-
-            // Forecast info for future days
-            if isFuture && offset - 1 < forecast.count {
-                let day = forecast[offset - 1]
-                HStack(spacing: 2) {
-                    Text("\(day.high)°")
-                        .font(.system(size: 9))
-                        .foregroundColor(.secondary)
-                    Text(day.icon.prefix(1))
-                        .font(.system(size: 10))
-                }
+                Text(" ")
+                    .font(.system(size: 9))
             }
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 10)
+        .frame(width: 32)
+        .padding(.vertical, 4)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(isToday ? Color.blue.opacity(0.1) : Color(.tertiarySystemBackground))
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isToday ? Color.blue.opacity(0.12) : Color.clear)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(isToday ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(isToday ? Color.blue.opacity(0.4) : Color.clear, lineWidth: 1.5)
         )
     }
 
