@@ -1,89 +1,254 @@
 import SwiftUI
 
-/// OpenSnow-inspired Home view with horizontal snow timeline and sectioned content
+/// OpenSnow-style Favorites view - List of mountains with snow timelines
 struct HomeView: View {
-    @State private var viewModel = SingleMountainViewModel()
+    @StateObject private var viewModel = FavoritesViewModel()
     @StateObject private var favoritesManager = FavoritesManager.shared
-    @State private var showingMountainPicker = false
-
-    // Get primary favorite (first one) or default to Baker
-    private var selectedMountainId: String {
-        favoritesManager.favoriteIds.first ?? "baker"
-    }
+    @State private var selectedFilter: SnowFilter = .snowSummary
+    @State private var showingManageFavorites = false
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Mountain selector header
-                    MountainSelectorHeader(
-                        mountainName: viewModel.mountain?.name ?? "Loading...",
-                        onTap: { showingMountainPicker = true }
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 8)
+            VStack(spacing: 0) {
+                // Filter tabs (Weather, Snow Summary, Snow Forecast)
+                filterTabs
 
-                    if viewModel.isLoading && viewModel.conditions == nil {
-                        ProgressView("Loading...")
-                            .padding(.top, 60)
-                    } else {
-                        // Snow Timeline (OpenSnow-style horizontal scroll)
-                        if !viewModel.snowTimelineData.isEmpty {
-                            SnowTimelineView(
-                                snowData: viewModel.snowTimelineData,
-                                liftStatus: viewModel.conditions?.liftStatus
-                            )
-                            .padding(.horizontal)
+                // Favorites list
+                ScrollView {
+                    VStack(spacing: 16) {
+                        if favoritesManager.favoriteIds.isEmpty {
+                            emptyState
+                        } else {
+                            ForEach(favoritesManager.favoriteIds, id: \.self) { mountainId in
+                                if let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
+                                   let data = viewModel.mountainData[mountainId] {
+                                    NavigationLink {
+                                        MountainDetailView(mountainId: mountainId, mountainName: mountain.name)
+                                    } label: {
+                                        MountainTimelineCard(
+                                            mountain: mountain,
+                                            conditions: data.conditions,
+                                            powderScore: data.powderScore,
+                                            forecast: data.forecast
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
                         }
-
-                        // Weather section
-                        WeatherSummarySection(conditions: viewModel.conditions)
-                            .padding(.horizontal)
-
-                        // Snow Summary section
-                        SnowSummarySection(
-                            conditions: viewModel.conditions,
-                            powderScore: viewModel.powderScore
-                        )
-                        .padding(.horizontal)
-
-                        // TODO: Road Conditions - Wire up LocationViewModel integration
-
-                        // Quick actions
-                        QuickActionsGrid(mountainId: selectedMountainId)
-                            .padding(.horizontal)
+                    }
+                    .padding()
+                }
+                .background(Color(.systemGroupedBackground))
+            }
+            .navigationTitle("Favorites")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingManageFavorites = true
+                    } label: {
+                        Image(systemName: "gear")
                     }
                 }
-                .padding(.vertical)
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationBarTitleDisplayMode(.inline)
             .refreshable {
                 await viewModel.refresh()
             }
             .task {
-                await viewModel.loadData(for: selectedMountainId)
+                await viewModel.loadData()
             }
-            .onChange(of: selectedMountainId) { oldValue, newValue in
-                Task {
-                    await viewModel.loadData(for: newValue)
+            .sheet(isPresented: $showingManageFavorites) {
+                FavoritesManagementSheet()
+            }
+        }
+    }
+
+    private var filterTabs: some View {
+        HStack(spacing: 12) {
+            ForEach(SnowFilter.allCases, id: \.self) { filter in
+                Button {
+                    selectedFilter = filter
+                } label: {
+                    Text(filter.rawValue)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(selectedFilter == filter ? .white : .primary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(selectedFilter == filter ? Color.blue : Color(.secondarySystemBackground))
+                        .cornerRadius(20)
                 }
             }
-            .sheet(isPresented: $showingMountainPicker) {
-                MountainPickerSheet(
-                    selectedMountainId: selectedMountainId,
-                    onSelect: { mountainId in
-                        // Update favorite to make it primary
-                        if !favoritesManager.isFavorite(mountainId) {
-                            _ = favoritesManager.add(mountainId)
-                        }
-                        // Move to first position
-                        if let index = favoritesManager.favoriteIds.firstIndex(of: mountainId) {
-                            favoritesManager.reorder(from: IndexSet(integer: index), to: 0)
-                        }
-                        showingMountainPicker = false
+
+            Spacer()
+        }
+        .padding()
+        .background(Color(.systemBackground))
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "star.slash")
+                .font(.system(size: 60))
+                .foregroundColor(.secondary)
+
+            Text("No Favorites Yet")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text("Add mountains to track conditions and snowfall")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+
+            Button {
+                showingManageFavorites = true
+            } label: {
+                Text("Add Favorites")
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.blue)
+                    .cornerRadius(10)
+            }
+        }
+        .padding(.top, 80)
+    }
+}
+
+// MARK: - Snow Filter Enum
+
+enum SnowFilter: String, CaseIterable {
+    case weather = "Weather"
+    case snowSummary = "Snow Summary"
+    case snowForecast = "Snow Forecast"
+}
+
+// MARK: - Favorites ViewModel
+
+@MainActor
+class FavoritesViewModel: ObservableObject {
+    @Published var mountains: [Mountain] = []
+    @Published var mountainData: [String: MountainBatchedResponse] = [:]
+    @Published var isLoading = false
+
+    private let apiClient = APIClient.shared
+    private let favoritesManager = FavoritesManager.shared
+
+    func loadData() async {
+        isLoading = true
+
+        // Load mountains list
+        do {
+            let response = try await apiClient.fetchMountains()
+            mountains = response.mountains
+        } catch {
+            print("Failed to load mountains: \(error)")
+        }
+
+        // Load data for each favorite
+        await loadFavoritesData()
+
+        isLoading = false
+    }
+
+    func loadFavoritesData() async {
+        await withTaskGroup(of: (String, MountainBatchedResponse?).self) { group in
+            for mountainId in favoritesManager.favoriteIds {
+                group.addTask {
+                    do {
+                        let data = try await self.apiClient.fetchMountainData(for: mountainId)
+                        return (mountainId, data)
+                    } catch {
+                        print("Failed to load \(mountainId): \(error)")
+                        return (mountainId, nil)
                     }
-                )
+                }
+            }
+
+            for await (id, data) in group {
+                if let data = data {
+                    mountainData[id] = data
+                }
+            }
+        }
+    }
+
+    func refresh() async {
+        await loadData()
+    }
+}
+
+// MARK: - Favorites Management Sheet
+
+struct FavoritesManagementSheet: View {
+    @StateObject private var viewModel = MountainSelectionViewModel()
+    @StateObject private var favoritesManager = FavoritesManager.shared
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            List {
+                Section {
+                    ForEach(favoritesManager.favoriteIds, id: \.self) { id in
+                        if let mountain = viewModel.mountains.first(where: { $0.id == id }) {
+                            HStack {
+                                Image(systemName: "line.3.horizontal")
+                                    .foregroundColor(.secondary)
+
+                                Text(mountain.shortName)
+
+                                Spacer()
+
+                                Button {
+                                    favoritesManager.remove(id)
+                                } label: {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                }
+                            }
+                        }
+                    }
+                    .onMove { source, destination in
+                        favoritesManager.reorder(from: source, to: destination)
+                    }
+                } header: {
+                    Text("Favorites (\(favoritesManager.favoriteIds.count)/5)")
+                }
+
+                Section("All Mountains") {
+                    ForEach(viewModel.mountains.filter { !favoritesManager.isFavorite($0.id) }) { mountain in
+                        Button {
+                            _ = favoritesManager.add(mountain.id)
+                        } label: {
+                            HStack {
+                                Text(mountain.shortName)
+                                    .foregroundColor(.primary)
+
+                                Spacer()
+
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .disabled(favoritesManager.favoriteIds.count >= 5)
+                        .opacity(favoritesManager.favoriteIds.count >= 5 ? 0.5 : 1)
+                    }
+                }
+            }
+            .navigationTitle("Manage Favorites")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .task {
+                await viewModel.loadMountains()
             }
         }
     }
