@@ -503,11 +503,11 @@ export async function getForecastDiscussion(
 }
 
 // Generate weather.gov URLs for deep linking
-export function getWeatherGovUrls(lat: number, lng: number, config: NOAAGridConfig) {
+export function getWeatherGovUrls(lat: number, lng: number, config?: NOAAGridConfig) {
   const latRounded = lat.toFixed(4);
   const lngRounded = lng.toFixed(4);
 
-  return {
+  const baseUrls = {
     // Main forecast page
     forecast: `https://forecast.weather.gov/MapClick.php?lat=${latRounded}&lon=${lngRounded}`,
 
@@ -519,11 +519,19 @@ export function getWeatherGovUrls(lat: number, lng: number, config: NOAAGridConf
 
     // Alerts
     alerts: `https://alerts.weather.gov/search?lat=${latRounded}&lon=${lngRounded}`,
-
-    // Grid data
-    grid: `https://api.weather.gov/gridpoints/${config.gridOffice}/${config.gridX},${config.gridY}`,
-
-    // Forecast discussion
-    discussion: `https://forecast.weather.gov/product.php?site=${config.gridOffice}&issuedby=${config.gridOffice}&product=AFD`,
   };
+
+  // Add grid-specific URLs only if config is provided
+  if (config) {
+    return {
+      ...baseUrls,
+      // Grid data
+      grid: `https://api.weather.gov/gridpoints/${config.gridOffice}/${config.gridX},${config.gridY}`,
+
+      // Forecast discussion
+      discussion: `https://forecast.weather.gov/product.php?site=${config.gridOffice}&issuedby=${config.gridOffice}&product=AFD`,
+    };
+  }
+
+  return baseUrls;
 }
