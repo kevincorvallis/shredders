@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// OpenSnow-style mountain card with snow timeline
+/// Dynamic, creative mountain card with gradient backgrounds and animations
 struct MountainTimelineCard: View {
     let mountain: Mountain
     let conditions: MountainConditions?
@@ -8,52 +8,134 @@ struct MountainTimelineCard: View {
     let forecast: [ForecastDay]
     let filterMode: SnowFilter
 
-    var body: some View {
-        VStack(spacing: 0) {
-            header
+    @State private var isAnimating = false
 
-            // Content based on filter mode with smooth transitions
-            Group {
-                switch filterMode {
-                case .weather:
-                    weatherContent
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                case .snowSummary:
-                    snowTimeline
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                case .snowForecast:
-                    forecastList
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                }
-            }
-            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: filterMode)
+    // Dynamic gradient based on powder conditions
+    private var dynamicGradient: LinearGradient {
+        let snowfall24h = conditions?.snowfall24h ?? 0
+
+        if snowfall24h >= 10 {
+            // Epic powder - vibrant blue to purple
+            return LinearGradient(
+                colors: [Color(hex: "#667eea") ?? .blue, Color(hex: "#764ba2") ?? .purple],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        } else if snowfall24h >= 6 {
+            // Great snow - blue to cyan
+            return LinearGradient(
+                colors: [Color(hex: "#4facfe") ?? .blue, Color(hex: "#00f2fe") ?? .cyan],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        } else if snowfall24h >= 3 {
+            // Good snow - teal gradient
+            return LinearGradient(
+                colors: [Color(hex: "#43e97b") ?? .green, Color(hex: "#38f9d7") ?? .cyan],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        } else {
+            // Light/no snow - subtle gray
+            return LinearGradient(
+                colors: [Color(.systemGray5), Color(.systemGray6)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         }
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
     }
 
-    private var header: some View {
+    private var hasFreshPowder: Bool {
+        (conditions?.snowfall24h ?? 0) >= 6
+    }
+
+    var body: some View {
+        ZStack {
+            // Dynamic gradient background
+            RoundedRectangle(cornerRadius: 16)
+                .fill(dynamicGradient)
+                .opacity(0.15)
+
+            // Glassmorphic overlay
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+
+            // Snow particles for fresh powder
+            if hasFreshPowder {
+                SnowParticlesView()
+                    .allowsHitTesting(false)
+            }
+
+            VStack(spacing: 0) {
+                glassmorphicHeader
+
+                // Content based on filter mode with smooth transitions
+                Group {
+                    switch filterMode {
+                    case .weather:
+                        weatherContent
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            ))
+                    case .snowSummary:
+                        snowTimeline
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            ))
+                    case .snowForecast:
+                        forecastList
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            ))
+                    }
+                }
+                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: filterMode)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: hasFreshPowder ? .blue.opacity(0.3) : .black.opacity(0.08),
+                radius: hasFreshPowder ? 12 : 8,
+                x: 0,
+                y: 4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(hasFreshPowder ? Color.blue.opacity(0.4) : Color.clear, lineWidth: 1.5)
+        )
+        .scaleEffect(isAnimating ? 1.0 : 0.95)
+        .opacity(isAnimating ? 1.0 : 0)
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                isAnimating = true
+            }
+        }
+    }
+
+    private var glassmorphicHeader: some View {
         HStack(spacing: 10) {
+            // Animated logo with depth
             MountainLogoView(
                 logoUrl: mountain.logo,
                 color: mountain.color,
                 size: 44
             )
+            .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+            .scaleEffect(isAnimating ? 1.0 : 0.8)
+            .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.1), value: isAnimating)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(mountain.name)
                     .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
+                    .fontWeight(.bold)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.primary, .primary.opacity(0.8)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
 
                 Text("\(mountain.elevation.base) ft · \(mountain.region.capitalized)")
                     .font(.caption2)
@@ -62,45 +144,61 @@ struct MountainTimelineCard: View {
 
             Spacer()
 
+            // Dynamic status badge
             if let liftStatus = conditions?.liftStatus {
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: 3) {
                     HStack(spacing: 4) {
                         Text(liftStatus.isOpen ? "Open" : "Closed")
                             .font(.caption)
-                            .fontWeight(.semibold)
+                            .fontWeight(.bold)
 
                         Circle()
                             .fill(liftStatus.isOpen ? Color.green : Color.red)
-                            .frame(width: 6, height: 6)
+                            .frame(width: 7, height: 7)
+                            .shadow(color: liftStatus.isOpen ? .green.opacity(0.6) : .red.opacity(0.6),
+                                    radius: 4, x: 0, y: 0)
                     }
                     .foregroundColor(liftStatus.isOpen ? .green : .red)
 
                     if liftStatus.percentOpen > 0 {
-                        Text("(\(liftStatus.percentOpen)%)")
+                        Text("\(liftStatus.percentOpen)%")
                             .font(.caption2)
+                            .fontWeight(.semibold)
                             .foregroundColor(.green)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.green.opacity(0.15))
+                            .cornerRadius(4)
                     }
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color(.tertiarySystemBackground))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(.ultraThinMaterial)
     }
 
     // MARK: - Weather Content
 
     private var weatherContent: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             if let conditions = conditions {
+                // Main conditions
                 HStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Temperature")
+                        Text("Base Temp")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         Text("\(conditions.temperature ?? 0)°F")
                             .font(.title2)
                             .fontWeight(.bold)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.primary, .primary.opacity(0.7)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                     }
 
                     if let wind = conditions.wind {
@@ -108,18 +206,98 @@ struct MountainTimelineCard: View {
                             Text("Wind")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
-                            Text("\(wind.speed) mph \(wind.direction)")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
+                            HStack(spacing: 4) {
+                                Image(systemName: "wind")
+                                    .font(.caption)
+                                Text("\(wind.speed) mph \(wind.direction)")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
                         }
                     }
 
                     Spacer()
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 14)
+                .padding(.top, 12)
+
+                // Elevation temperatures
+                if let tempByElevation = conditions.temperatureByElevation {
+                    Divider()
+                        .padding(.horizontal, 14)
+
+                    VStack(spacing: 8) {
+                        Text("Temperatures by Elevation")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 14)
+
+                        HStack(spacing: 12) {
+                            elevationTempCard(
+                                label: "Base",
+                                temp: tempByElevation.base,
+                                elevation: mountain.elevation.base,
+                                icon: "arrow.down.to.line"
+                            )
+
+                            elevationTempCard(
+                                label: "Mid",
+                                temp: tempByElevation.mid,
+                                elevation: (mountain.elevation.base + mountain.elevation.summit) / 2,
+                                icon: "minus"
+                            )
+
+                            elevationTempCard(
+                                label: "Summit",
+                                temp: tempByElevation.summit,
+                                elevation: mountain.elevation.summit,
+                                icon: "arrow.up.to.line"
+                            )
+                        }
+                        .padding(.horizontal, 14)
+                    }
+                }
+
+                // Conditions
+                if !conditions.conditions.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "cloud.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text(conditions.conditions)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 12)
+                }
             }
         }
+    }
+
+    private func elevationTempCard(label: String, temp: Int, elevation: Int, icon: String) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            Text("\(temp)°")
+                .font(.title3)
+                .fontWeight(.bold)
+
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundColor(.secondary)
+
+            Text("\(elevation) ft")
+                .font(.system(size: 8))
+                .foregroundColor(.secondary.opacity(0.8))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial)
+        .cornerRadius(8)
     }
 
     // MARK: - Snow Timeline (OpenSnow-style with centered "Last 24 Hours")
@@ -215,6 +393,32 @@ struct MountainTimelineCard: View {
         let snowfall = snowfallForDay(offset: offset)
         let isToday = offset == 0
         let isPast = offset < 0
+        let barHeight = min(CGFloat(snowfall) * 2.5, 50)
+
+        // Pre-compute gradient colors
+        let barGradient: LinearGradient = {
+            if isPast {
+                return LinearGradient(
+                    colors: [Color.orange.opacity(0.9), Color.orange.opacity(0.6)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            } else if isToday {
+                return LinearGradient(
+                    colors: [Color.green.opacity(0.9), Color.green.opacity(0.6)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            } else {
+                return LinearGradient(
+                    colors: [Color.blue.opacity(0.9), Color.blue.opacity(0.6)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+        }()
+
+        let shadowColor: Color = isPast ? .orange : isToday ? .green : .blue
 
         return VStack(spacing: 3) {
             // Day letter
@@ -227,41 +431,76 @@ struct MountainTimelineCard: View {
                 .font(.system(size: 11, weight: isToday ? .bold : .regular))
                 .foregroundColor(isToday ? .primary : .secondary)
 
-            // Bar chart
+            // Animated bar chart with gradient
             VStack {
                 Spacer()
                 if snowfall > 0 {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(isPast ? Color.orange.opacity(0.8) : isToday ? Color.green : Color.blue.opacity(0.8))
-                        .frame(width: 12, height: min(CGFloat(snowfall) * 2.5, 50))
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(barGradient)
+                        .frame(width: 14, height: isAnimating ? barHeight : 0)
+                        .shadow(
+                            color: shadowColor.opacity(0.4),
+                            radius: snowfall > 6 ? 4 : 2,
+                            x: 0,
+                            y: 2
+                        )
+                        .overlay(
+                            snowfall > 6
+                                ? LinearGradient(
+                                    colors: [.white.opacity(0), .white.opacity(0.3), .white.opacity(0)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                                : nil
+                        )
                 } else {
                     RoundedRectangle(cornerRadius: 1)
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: 12, height: 3)
+                        .fill(Color.gray.opacity(0.15))
+                        .frame(width: 14, height: 3)
                 }
             }
             .frame(height: 50)
 
-            // Snowfall amount (only if > 0)
+            // Snowfall amount with dynamic styling
             if snowfall > 0 {
                 Text("\(snowfall)\"")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .font(.system(size: snowfall > 10 ? 11 : 9, weight: snowfall > 6 ? .bold : .semibold))
+                    .foregroundColor(snowfall > 10 ? .primary : .primary.opacity(0.9))
+                    .shadow(color: snowfall > 10 ? .black.opacity(0.2) : .clear, radius: 2, x: 0, y: 1)
             } else {
                 Text(" ")
                     .font(.system(size: 9))
             }
         }
-        .frame(width: 32)
-        .padding(.vertical, 4)
+        .frame(width: 36)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 4)
         .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(isToday ? Color.blue.opacity(0.12) : Color.clear)
+            Group {
+                if isToday {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.blue.opacity(0.05))
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                } else {
+                    Color.clear
+                }
+            }
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .strokeBorder(isToday ? Color.blue.opacity(0.4) : Color.clear, lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(
+                    isToday
+                        ? LinearGradient(
+                            colors: [Color.blue.opacity(0.6), Color.cyan.opacity(0.4)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        : LinearGradient(colors: [.clear], startPoint: .top, endPoint: .bottom),
+                    lineWidth: 2
+                )
         )
+        .scaleEffect(isToday ? 1.05 : 1.0)
     }
 
     // MARK: - Forecast List
@@ -390,4 +629,56 @@ struct MountainTimelineCard: View {
         .padding()
     }
     .background(Color(.systemGroupedBackground))
+}
+
+// MARK: - Snow Particles Animation
+
+struct SnowParticlesView: View {
+    @State private var particles: [SnowParticle] = []
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                ForEach(particles) { particle in
+                    Circle()
+                        .fill(Color.white.opacity(0.6))
+                        .frame(width: particle.size, height: particle.size)
+                        .position(particle.position)
+                        .blur(radius: 1)
+                }
+            }
+            .onAppear {
+                generateParticles(in: geometry.size)
+                animateParticles()
+            }
+        }
+    }
+
+    private func generateParticles(in size: CGSize) {
+        particles = (0..<20).map { _ in
+            SnowParticle(
+                position: CGPoint(
+                    x: CGFloat.random(in: 0...size.width),
+                    y: CGFloat.random(in: -50...size.height)
+                ),
+                size: CGFloat.random(in: 2...4)
+            )
+        }
+    }
+
+    private func animateParticles() {
+        withAnimation(.linear(duration: 10).repeatForever(autoreverses: false)) {
+            particles = particles.map { particle in
+                var newParticle = particle
+                newParticle.position.y += 200
+                return newParticle
+            }
+        }
+    }
+}
+
+struct SnowParticle: Identifiable {
+    let id = UUID()
+    var position: CGPoint
+    let size: CGFloat
 }
