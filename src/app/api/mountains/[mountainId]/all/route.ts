@@ -159,13 +159,24 @@ export async function GET(
         score += windSpeed < 10 ? 2 : windSpeed < 20 ? 1 : 0; // 0-2 points for wind
         score += rainRisk ? Math.min(rainRisk.score / 10 * 1.8, 1.8) : 0; // 0-1.8 points for rain risk
 
+        // Generate verdict based on score
+        const finalScore = Math.min(Math.max(score, 0), 10);
+        let verdict = '';
+        if (finalScore >= 8) verdict = 'Epic conditions - powder day!';
+        else if (finalScore >= 6) verdict = 'Great day for skiing - fresh snow awaits!';
+        else if (finalScore >= 4) verdict = 'Good conditions - worth the trip';
+        else verdict = 'Fair conditions';
+
+        // Calculate upcoming snow from forecast
+        const upcomingSnow = forecast.slice(0, 2).reduce((sum: number, day: any) => sum + (day.snowfall || 0), 0);
+
         const powderScore = {
           mountain: {
             id: mountain.id,
             name: mountain.name,
             shortName: mountain.shortName,
           },
-          score: Math.min(Math.max(score, 0), 10),
+          score: finalScore,
           factors: [
             {
               name: 'Fresh Snow (24h)',
@@ -173,7 +184,6 @@ export async function GET(
               weight: 0.25,
               contribution: Math.min(snowfall24h / 12 * 2.5, 2.5),
               description: `${snowfall24h}" in last 24 hours`,
-              isPositive: snowfall24h > 6,
             },
             {
               name: 'Temperature',
@@ -181,10 +191,20 @@ export async function GET(
               weight: 0.25,
               contribution: temperature < 28 ? 2.5 : temperature < 32 ? 1.5 : 0,
               description: `${temperature}°F - ${temperature < 32 ? 'Cold smoke' : 'Mild'}`,
-              isPositive: temperature < 32,
             },
           ],
-          lastUpdated: new Date().toISOString(),
+          verdict,
+          conditions: {
+            snowfall24h,
+            snowfall48h,
+            temperature: temperature ?? 0,
+            windSpeed,
+            upcomingSnow,
+          },
+          dataAvailable: {
+            snotel: !!snotel,
+            noaa: !!weather,
+          },
         };
 
         return {
