@@ -5,6 +5,7 @@ import { getCurrentConditions } from '@/lib/apis/snotel';
 import { getForecast, getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
 import { getCurrentFreezingLevelFeet, calculateRainRiskScore, getDailyForecast } from '@/lib/apis/open-meteo';
 import { getWeatherAlerts } from '@/lib/apis/noaa';
+import { getLatestLiftStatus } from '@/lib/dynamodb';
 
 /**
  * Batched API endpoint that fetches all mountain data in one request
@@ -42,6 +43,7 @@ export async function GET(
           alertsData,
           freezingLevel,
           openMeteoDaily,
+          liftStatusData,
         ] = await Promise.allSettled([
           // SNOTEL data
           mountain.snotel
@@ -57,6 +59,8 @@ export async function GET(
           getCurrentFreezingLevelFeet(mountain.location.lat, mountain.location.lng).catch(() => null),
           // Open-Meteo daily forecast (for sunrise/sunset)
           getDailyForecast(mountain.location.lat, mountain.location.lng, 1).catch(() => []),
+          // Lift status from DynamoDB
+          getLatestLiftStatus(mountainId).catch(() => null),
         ]);
 
         // Extract values from PromiseSettledResult
@@ -66,6 +70,7 @@ export async function GET(
         const alerts = alertsData.status === 'fulfilled' ? alertsData.value : [];
         const freezing = freezingLevel.status === 'fulfilled' ? freezingLevel.value : null;
         const dailyForecast = openMeteoDaily.status === 'fulfilled' ? openMeteoDaily.value : [];
+        const liftStatus = liftStatusData.status === 'fulfilled' ? liftStatusData.value : null;
 
         // Extract today's sunrise/sunset
         const todaySunData = dailyForecast.length > 0 && dailyForecast[0].sunrise && dailyForecast[0].sunset
@@ -109,6 +114,17 @@ export async function GET(
               }
             : null,
           elevation: mountain.elevation,
+          liftStatus: liftStatus
+            ? {
+                isOpen: liftStatus.isOpen,
+                liftsOpen: liftStatus.liftsOpen,
+                liftsTotal: liftStatus.liftsTotal,
+                runsOpen: liftStatus.runsOpen,
+                runsTotal: liftStatus.runsTotal,
+                message: liftStatus.message,
+                lastUpdated: liftStatus.scrapedAt,
+              }
+            : null,
           dataSources: {
             snotel: mountain.snotel
               ? {
@@ -122,6 +138,9 @@ export async function GET(
             },
             openMeteo: {
               available: freezing !== null,
+            },
+            liftStatus: {
+              available: !!liftStatus,
             },
           },
         };
@@ -179,8 +198,11 @@ export async function GET(
             location: mountain.location,
             website: mountain.website,
             webcams: mountain.webcams,
+            roadWebcams: mountain.roadWebcams,
             logo: mountain.logo,
             status: mountain.status,
+            snotel: mountain.snotel,
+            noaa: mountain.noaa,
           },
           conditions,
           powderScore,
