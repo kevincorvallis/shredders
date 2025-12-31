@@ -3,14 +3,16 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            HomeView()
+            // OpenSnow-style Home with horizontal forecast timeline
+            NewHomeView()
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }
 
-            MountainMapView()
+            // Redesigned Mountains grid view
+            NewMountainsView()
                 .tabItem {
-                    Label("Mountains", systemImage: "map.fill")
+                    Label("Mountains", systemImage: "mountain.2.fill")
                 }
 
             AlertsView()
