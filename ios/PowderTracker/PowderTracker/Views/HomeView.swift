@@ -15,7 +15,7 @@ struct HomeView: View {
 
                 // Favorites list
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 12) {
                         if favoritesManager.favoriteIds.isEmpty {
                             emptyState
                         } else {
@@ -29,7 +29,8 @@ struct HomeView: View {
                                             mountain: mountain,
                                             conditions: data.conditions,
                                             powderScore: data.powderScore,
-                                            forecast: data.forecast
+                                            forecast: data.forecast,
+                                            filterMode: selectedFilter
                                         )
                                     }
                                     .buttonStyle(.plain)
@@ -37,7 +38,8 @@ struct HomeView: View {
                             }
                         }
                     }
-                    .padding()
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
                 }
                 .background(Color(.systemGroupedBackground))
             }
@@ -65,25 +67,26 @@ struct HomeView: View {
     }
 
     private var filterTabs: some View {
-        HStack(spacing: 12) {
-            ForEach(SnowFilter.allCases, id: \.self) { filter in
-                Button {
-                    selectedFilter = filter
-                } label: {
-                    Text(filter.rawValue)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(selectedFilter == filter ? .white : .primary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(selectedFilter == filter ? Color.blue : Color(.secondarySystemBackground))
-                        .cornerRadius(20)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(SnowFilter.allCases, id: \.self) { filter in
+                    Button {
+                        selectedFilter = filter
+                    } label: {
+                        Text(filter.rawValue)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(selectedFilter == filter ? .white : .primary)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(selectedFilter == filter ? Color.blue : Color(.secondarySystemBackground))
+                            .cornerRadius(16)
+                    }
                 }
             }
-
-            Spacer()
+            .padding(.horizontal, 12)
         }
-        .padding()
+        .padding(.vertical, 8)
         .background(Color(.systemBackground))
     }
 
