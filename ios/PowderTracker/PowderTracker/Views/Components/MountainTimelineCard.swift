@@ -290,79 +290,149 @@ struct MountainTimelineCard: View {
         .cornerRadius(8)
     }
 
-    // MARK: - Snow Timeline (OpenSnow-style with centered "Last 24 Hours")
+    // MARK: - Snow Timeline (Clean synchronized view)
 
     private var snowTimeline: some View {
-        VStack(spacing: 0) {
-            // Three-column header: Prev 1-5 Days | Last 24 Hours | Next 1-5 Days
-            HStack(spacing: 0) {
-                // Past summary
-                VStack(spacing: 4) {
-                    Text("Prev 1-5 Days")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Text("\(pastFiveDaysTotal)\"")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.orange)
-                }
-                .frame(maxWidth: .infinity)
+        VStack(spacing: 8) {
+            // Timeline header with range
+            HStack {
+                Text(timelineRangeLabel)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
 
-                // TODAY - BIG NUMBER (focal point)
-                VStack(spacing: 4) {
-                    Text("Last 24 Hours")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Text("\(conditions?.snowfall24h ?? 0)\"")
-                        .font(.system(size: 36, weight: .bold))
-                        .foregroundColor(.primary)
-                }
-                .frame(maxWidth: .infinity)
+                Spacer()
 
-                // Future summary
-                VStack(spacing: 4) {
-                    Text("Next 1-5 Days")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    if nextFiveDaysTotal > 0 {
-                        Text("\(nextFiveDaysTotal)\"")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.blue)
-                    } else {
-                        Text("-")
-                            .font(.system(size: 16))
+                // Total for visible window
+                if totalVisibleSnow > 0 {
+                    HStack(spacing: 4) {
+                        Text("Total:")
+                            .font(.caption2)
                             .foregroundColor(.secondary)
+                        Text("\(totalVisibleSnow)\"")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
                     }
                 }
-                .frame(maxWidth: .infinity)
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
 
-            Divider()
-
-            // Compact synchronized timeline - shows 7-day window
-            HStack(spacing: 1) {
+            // Redesigned bar chart - better proportions
+            HStack(spacing: 3) {
                 ForEach(visibleDayRange, id: \.self) { dayOffset in
-                    compactDayBarColumn(for: dayOffset)
+                    redesignedDayBar(for: dayOffset)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
 
             // Reported time
             if let lastUpdated = conditions?.lastUpdated {
                 let date = ISO8601DateFormatter().date(from: lastUpdated) ?? Date()
                 HStack(spacing: 4) {
-                    Text(date.formatted(.dateTime.weekday(.abbreviated).day().hour().minute()))
-                        .font(.system(size: 9))
+                    Image(systemName: "clock")
+                        .font(.system(size: 8))
                         .foregroundColor(.secondary)
-                    Text("Reported")
+                    Text(date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
                         .font(.system(size: 9))
                         .foregroundColor(.secondary)
                 }
                 .padding(.bottom, 6)
             }
         }
+    }
+
+    private var timelineRangeLabel: String {
+        guard let firstDay = visibleDayRange.first,
+              let lastDay = visibleDayRange.last else {
+            return "Snow Timeline"
+        }
+
+        let startDate = Calendar.current.date(byAdding: .day, value: firstDay, to: Date())!
+        let endDate = Calendar.current.date(byAdding: .day, value: lastDay, to: Date())!
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+
+        return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+    }
+
+    private var totalVisibleSnow: Int {
+        visibleDayRange.reduce(0) { total, offset in
+            total + snowfallForDay(offset: offset)
+        }
+    }
+
+    // Redesigned day bar - clean, balanced proportions
+    private func redesignedDayBar(for offset: Int) -> some View {
+        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+        let snowfall = snowfallForDay(offset: offset)
+        let isToday = offset == 0
+        let isPast = offset < 0
+        let barHeight = min(CGFloat(snowfall) * 3.5, 55)
+
+        let barColor: Color = isPast ? .orange : isToday ? .green : .blue
+
+        return VStack(spacing: 2) {
+            // Date display
+            VStack(spacing: 0) {
+                Text(date.formatted(.dateTime.weekday(.abbreviated)).prefix(1))
+                    .font(.system(size: 9, weight: isToday ? .bold : .medium))
+                    .foregroundColor(isToday ? .primary : .secondary)
+                Text(date.formatted(.dateTime.day()))
+                    .font(.system(size: 10, weight: isToday ? .bold : .regular))
+                    .foregroundColor(isToday ? .primary : .secondary)
+            }
+
+            // Bar chart
+            ZStack(alignment: .bottom) {
+                // Background track
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(width: 16, height: 55)
+
+                // Animated bar
+                if snowfall > 0 {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(
+                            LinearGradient(
+                                colors: [barColor, barColor.opacity(0.7)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 16, height: isAnimating ? barHeight : 0)
+                        .shadow(
+                            color: barColor.opacity(0.4),
+                            radius: snowfall > 6 ? 4 : 2,
+                            x: 0,
+                            y: 2
+                        )
+                }
+            }
+            .frame(height: 55)
+
+            // Snowfall amount
+            Text(snowfall > 0 ? "\(snowfall)\"" : "-")
+                .font(.system(size: 9, weight: snowfall > 6 ? .bold : .medium))
+                .foregroundColor(snowfall > 0 ? .primary : .secondary.opacity(0.6))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 2)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isToday ? Color.blue.opacity(0.08) : Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(
+                            isToday ? Color.blue.opacity(0.5) : Color.clear,
+                            lineWidth: 1.5
+                        )
+                )
+        )
     }
 
     // Compact day bar column - ultra condensed for synchronized scrolling
@@ -637,7 +707,7 @@ struct MountainTimelineCard: View {
     // Powder quality badge
     @ViewBuilder
     private func powderQualityBadge(for snowfall: Int) -> some View {
-        let (emoji, label) = powderQuality(for: snowfall)
+        let (emoji, _) = powderQuality(for: snowfall)
         Text(emoji)
             .font(.caption)
     }

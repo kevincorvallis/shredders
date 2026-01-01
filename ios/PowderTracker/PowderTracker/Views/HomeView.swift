@@ -101,37 +101,49 @@ struct HomeView: View {
     }
 
     private var timelineNavigator: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             // Previous button
             Button {
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    timelineOffset = max(-7, timelineOffset - 3)
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    timelineOffset = max(-7, timelineOffset - 1)
                 }
             } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.blue)
-                    .frame(width: 32, height: 32)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(Circle())
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Day")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                }
+                .foregroundColor(timelineOffset <= -7 ? .secondary : .blue)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(8)
             }
             .disabled(timelineOffset <= -7)
-            .opacity(timelineOffset <= -7 ? 0.4 : 1.0)
+            .opacity(timelineOffset <= -7 ? 0.5 : 1.0)
 
             Spacer()
 
             // Current position indicator
-            VStack(spacing: 2) {
+            VStack(spacing: 1) {
                 Text(timelineLabel)
                     .font(.caption)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .foregroundColor(.primary)
                 Text(timelineSubtitle)
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(Color.blue.opacity(0.1))
+            )
 
             Spacer()
 
@@ -139,22 +151,28 @@ struct HomeView: View {
             Button {
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    timelineOffset = min(7, timelineOffset + 3)
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                    timelineOffset = min(7, timelineOffset + 1)
                 }
             } label: {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.blue)
-                    .frame(width: 32, height: 32)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(Circle())
+                HStack(spacing: 4) {
+                    Text("Day")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundColor(timelineOffset >= 7 ? .secondary : .blue)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(8)
             }
             .disabled(timelineOffset >= 7)
-            .opacity(timelineOffset >= 7 ? 0.4 : 1.0)
+            .opacity(timelineOffset >= 7 ? 0.5 : 1.0)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
         .background(Color(.systemBackground))
     }
 
