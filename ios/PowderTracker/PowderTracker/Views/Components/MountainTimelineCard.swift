@@ -7,6 +7,7 @@ struct MountainTimelineCard: View {
     let powderScore: MountainPowderScore?
     let forecast: [ForecastDay]
     let filterMode: SnowFilter
+    let timelineOffset: Int // Global synchronized timeline position
 
     @State private var isAnimating = false
 
@@ -53,6 +54,13 @@ struct MountainTimelineCard: View {
 
     private var hasFreshPowder: Bool {
         (conditions?.snowfall24h ?? 0) >= 6
+    }
+
+    // Visible day range based on global timeline offset
+    private var visibleDayRange: [Int] {
+        let start = timelineOffset - 3
+        let end = timelineOffset + 3
+        return Array(start...end)
     }
 
     var body: some View {
@@ -332,27 +340,14 @@ struct MountainTimelineCard: View {
 
             Divider()
 
-            // Horizontally scrollable daily timeline - starts centered on TODAY
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 2) {
-                        ForEach(-7...7, id: \.self) { dayOffset in
-                            dayBarColumn(for: dayOffset)
-                                .id(dayOffset)
-                        }
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                }
-                .onAppear {
-                    // Auto-scroll to TODAY (offset 0) on appear
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            proxy.scrollTo(0, anchor: .center)
-                        }
-                    }
+            // Compact synchronized timeline - shows 7-day window
+            HStack(spacing: 1) {
+                ForEach(visibleDayRange, id: \.self) { dayOffset in
+                    compactDayBarColumn(for: dayOffset)
                 }
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
 
             // Reported time
             if let lastUpdated = conditions?.lastUpdated {
@@ -368,6 +363,72 @@ struct MountainTimelineCard: View {
                 .padding(.bottom, 6)
             }
         }
+    }
+
+    // Compact day bar column - ultra condensed for synchronized scrolling
+    private func compactDayBarColumn(for offset: Int) -> some View {
+        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+        let snowfall = snowfallForDay(offset: offset)
+        let isToday = offset == 0
+        let isPast = offset < 0
+        let barHeight = min(CGFloat(snowfall) * 2.0, 35)
+
+        let barColor: Color = isPast ? .orange : isToday ? .green : .blue
+
+        return VStack(spacing: 1) {
+            // Day letter (single char)
+            Text(date.formatted(.dateTime.weekday(.abbreviated)).prefix(1))
+                .font(.system(size: 8, weight: isToday ? .bold : .regular))
+                .foregroundColor(isToday ? .primary : .secondary)
+
+            // Animated bar chart
+            VStack {
+                Spacer()
+                if snowfall > 0 {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(barColor.opacity(0.8))
+                        .frame(width: 10, height: isAnimating ? barHeight : 0)
+                        .shadow(
+                            color: barColor.opacity(0.3),
+                            radius: snowfall > 6 ? 3 : 1,
+                            x: 0,
+                            y: 1
+                        )
+                } else {
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color.gray.opacity(0.15))
+                        .frame(width: 10, height: 2)
+                }
+            }
+            .frame(height: 35)
+
+            // Snowfall amount
+            if snowfall > 0 {
+                Text("\(snowfall)\"")
+                    .font(.system(size: 7, weight: snowfall > 6 ? .bold : .regular))
+                    .foregroundColor(.primary.opacity(0.9))
+            } else {
+                Text(" ")
+                    .font(.system(size: 7))
+            }
+        }
+        .frame(width: 20)
+        .padding(.vertical, 2)
+        .padding(.horizontal, 1)
+        .background(
+            Group {
+                if isToday {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.blue.opacity(0.05))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Color.blue.opacity(0.4), lineWidth: 1)
+                        )
+                } else {
+                    Color.clear
+                }
+            }
+        )
     }
 
     private func dayBarColumn(for offset: Int) -> some View {
@@ -490,17 +551,30 @@ struct MountainTimelineCard: View {
     private var forecastList: some View {
         VStack(spacing: 0) {
             ForEach(Array(forecast.prefix(5))) { day in
-                HStack(spacing: 12) {
-                    Text(String(day.date.prefix(5)))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .frame(width: 40, alignment: .leading)
+                HStack(spacing: 10) {
+                    // Formatted date
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(formatForecastDate(day.date))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                        Text(day.dayOfWeek)
+                            .font(.system(size: 9))
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(width: 35, alignment: .leading)
 
+                    // Powder quality indicator
+                    powderQualityBadge(for: Int(day.snowfall))
+
+                    // Snowfall amount
                     Text("\(day.snowfall)\"")
                         .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .frame(width: 30, alignment: .trailing)
+                        .fontWeight(.bold)
+                        .foregroundColor(snowfallColor(for: Int(day.snowfall)))
+                        .frame(width: 28, alignment: .trailing)
 
+                    // Conditions
                     Text(day.conditions)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -508,12 +582,22 @@ struct MountainTimelineCard: View {
 
                     Spacer()
 
-                    Text("\(day.high)°")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    // Temperature range
+                    HStack(spacing: 2) {
+                        Text("\(day.high)°")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                        Text("/")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(day.low)°")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .padding(.horizontal, 10)
-                .padding(.vertical, 4)
+                .padding(.vertical, 5)
 
                 if day.id != forecast.prefix(5).last?.id {
                     Divider()
@@ -521,6 +605,55 @@ struct MountainTimelineCard: View {
                 }
             }
             .padding(.vertical, 4)
+        }
+    }
+
+    // Format forecast date (e.g., "Jan 15")
+    private func formatForecastDate(_ dateString: String) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withFullDate]
+        guard let date = formatter.date(from: dateString) else {
+            return String(dateString.suffix(5)) // Fallback to "MM-DD"
+        }
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "MMM d"
+        return outputFormatter.string(from: date)
+    }
+
+    // Color code snowfall amounts
+    private func snowfallColor(for snowfall: Int) -> Color {
+        switch snowfall {
+        case 10...:
+            return Color(red: 0.290, green: 0.871, blue: 0.502) // Green - epic
+        case 6...9:
+            return .blue // Good
+        case 3...5:
+            return .cyan // Moderate
+        default:
+            return .secondary // Light/none
+        }
+    }
+
+    // Powder quality badge
+    @ViewBuilder
+    private func powderQualityBadge(for snowfall: Int) -> some View {
+        let (emoji, label) = powderQuality(for: snowfall)
+        Text(emoji)
+            .font(.caption)
+    }
+
+    private func powderQuality(for snowfall: Int) -> (emoji: String, label: String) {
+        switch snowfall {
+        case 12...:
+            return ("🔥", "Epic")
+        case 8...11:
+            return ("⭐️", "Great")
+        case 4...7:
+            return ("👍", "Good")
+        case 1...3:
+            return ("❄️", "Light")
+        default:
+            return ("", "None")
         }
     }
 
@@ -605,7 +738,8 @@ struct MountainTimelineCard: View {
                     ForecastDay(date: "2024-12-14", dayOfWeek: "Mon", high: 35, low: 28, snowfall: 6, precipProbability: 90, precipType: "snow", wind: .init(speed: 10, gust: 18), conditions: "Snow", icon: "snow"),
                     ForecastDay(date: "2024-12-15", dayOfWeek: "Tue", high: 33, low: 26, snowfall: 3, precipProbability: 70, precipType: "snow", wind: .init(speed: 12, gust: 20), conditions: "Light Snow", icon: "snow"),
                 ],
-                filterMode: .snowSummary
+                filterMode: .snowSummary,
+                timelineOffset: 0
             )
         }
         .padding()
