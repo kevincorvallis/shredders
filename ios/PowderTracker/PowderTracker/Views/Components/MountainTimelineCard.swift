@@ -300,6 +300,7 @@ struct MountainTimelineCard: View {
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
+                    .id("range-\(timelineOffset)") // Smooth text update
 
                 Spacer()
 
@@ -314,19 +315,27 @@ struct MountainTimelineCard: View {
                             .fontWeight(.bold)
                             .foregroundColor(.blue)
                     }
+                    .transition(.scale.combined(with: .opacity))
+                    .id("total-\(totalVisibleSnow)") // Smooth number update
                 }
             }
             .padding(.horizontal, 12)
             .padding(.top, 8)
+            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: timelineOffset)
 
             // Redesigned bar chart - better proportions
             HStack(spacing: 3) {
                 ForEach(visibleDayRange, id: \.self) { dayOffset in
                     redesignedDayBar(for: dayOffset)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .trailing).combined(with: .opacity),
+                            removal: .move(edge: .leading).combined(with: .opacity)
+                        ))
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
+            .id(timelineOffset) // Force rebuild when offset changes
 
             // Reported time
             if let lastUpdated = conditions?.lastUpdated {
@@ -342,6 +351,7 @@ struct MountainTimelineCard: View {
                 .padding(.bottom, 6)
             }
         }
+        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: timelineOffset)
     }
 
     private var timelineRangeLabel: String {
@@ -403,7 +413,7 @@ struct MountainTimelineCard: View {
                                 endPoint: .bottom
                             )
                         )
-                        .frame(width: 16, height: isAnimating ? barHeight : 0)
+                        .frame(width: 16, height: barHeight)
                         .shadow(
                             color: barColor.opacity(0.4),
                             radius: snowfall > 6 ? 4 : 2,
