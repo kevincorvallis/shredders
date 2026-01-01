@@ -16,22 +16,28 @@ struct MountainTimelineCard: View {
 
         if snowfall24h >= 10 {
             // Epic powder - vibrant blue to purple
+            let color1: Color = Color(hex: "#667eea") ?? .blue
+            let color2: Color = Color(hex: "#764ba2") ?? .purple
             return LinearGradient(
-                colors: [Color(hex: "#667eea") ?? .blue, Color(hex: "#764ba2") ?? .purple],
+                colors: [color1, color2],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         } else if snowfall24h >= 6 {
             // Great snow - blue to cyan
+            let color1: Color = Color(hex: "#4facfe") ?? .blue
+            let color2: Color = Color(hex: "#00f2fe") ?? .cyan
             return LinearGradient(
-                colors: [Color(hex: "#4facfe") ?? .blue, Color(hex: "#00f2fe") ?? .cyan],
+                colors: [color1, color2],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         } else if snowfall24h >= 3 {
             // Good snow - teal gradient
+            let color1: Color = Color(hex: "#43e97b") ?? .green
+            let color2: Color = Color(hex: "#38f9d7") ?? .cyan
             return LinearGradient(
-                colors: [Color(hex: "#43e97b") ?? .green, Color(hex: "#38f9d7") ?? .cyan],
+                colors: [color1, color2],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -144,44 +150,20 @@ struct MountainTimelineCard: View {
 
             Spacer()
 
-            // Dynamic status badge
+            // Creative circular progress status indicator
             if let liftStatus = conditions?.liftStatus {
-                VStack(alignment: .trailing, spacing: 3) {
-                    HStack(spacing: 4) {
-                        Text(liftStatus.isOpen ? "Open" : "Closed")
-                            .font(.caption)
-                            .fontWeight(.bold)
-
-                        Circle()
-                            .fill(liftStatus.isOpen ? Color.green : Color.red)
-                            .frame(width: 7, height: 7)
-                            .shadow(color: liftStatus.isOpen ? .green.opacity(0.6) : .red.opacity(0.6),
-                                    radius: 4, x: 0, y: 0)
-                    }
-                    .foregroundColor(liftStatus.isOpen ? .green : .red)
-
-                    if liftStatus.percentOpen > 0 {
-                        Text("\(liftStatus.percentOpen)%")
-                            .font(.caption2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.green)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.green.opacity(0.15))
-                            .cornerRadius(4)
-                    }
-                }
+                CompactMountainStatus(liftStatus: liftStatus)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(.ultraThinMaterial)
     }
 
     // MARK: - Weather Content
 
     private var weatherContent: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             if let conditions = conditions {
                 // Main conditions
                 HStack(spacing: 16) {
@@ -218,20 +200,20 @@ struct MountainTimelineCard: View {
 
                     Spacer()
                 }
-                .padding(.horizontal, 14)
-                .padding(.top, 12)
+                .padding(.horizontal, 10)
+                .padding(.top, 8)
 
                 // Elevation temperatures
                 if let tempByElevation = conditions.temperatureByElevation {
                     Divider()
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 10)
 
                     VStack(spacing: 8) {
                         Text("Temperatures by Elevation")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 14)
+                            .padding(.horizontal, 10)
 
                         HStack(spacing: 12) {
                             elevationTempCard(
@@ -255,7 +237,7 @@ struct MountainTimelineCard: View {
                                 icon: "arrow.up.to.line"
                             )
                         }
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 10)
                     }
                 }
 
@@ -269,8 +251,8 @@ struct MountainTimelineCard: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.bottom, 12)
+                    .padding(.horizontal, 10)
+                    .padding(.bottom, 8)
                 }
             }
         }
@@ -295,7 +277,7 @@ struct MountainTimelineCard: View {
                 .foregroundColor(.secondary.opacity(0.8))
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
         .background(.ultraThinMaterial)
         .cornerRadius(8)
     }
@@ -323,7 +305,7 @@ struct MountainTimelineCard: View {
                         .font(.caption2)
                         .foregroundColor(.secondary)
                     Text("\(conditions?.snowfall24h ?? 0)\"")
-                        .font(.system(size: 48, weight: .bold))
+                        .font(.system(size: 36, weight: .bold))
                         .foregroundColor(.primary)
                 }
                 .frame(maxWidth: .infinity)
@@ -345,8 +327,8 @@ struct MountainTimelineCard: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
 
             Divider()
 
@@ -359,8 +341,8 @@ struct MountainTimelineCard: View {
                                 .id(dayOffset)
                         }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
                 }
                 .onAppear {
                     // Auto-scroll to TODAY (offset 0) on appear
@@ -473,8 +455,8 @@ struct MountainTimelineCard: View {
             }
         }
         .frame(width: 36)
-        .padding(.vertical, 6)
-        .padding(.horizontal, 4)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 2)
         .background(
             Group {
                 if isToday {
@@ -530,12 +512,12 @@ struct MountainTimelineCard: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
 
                 if day.id != forecast.prefix(5).last?.id {
                     Divider()
-                        .padding(.leading, 12)
+                        .padding(.leading, 10)
                 }
             }
             .padding(.vertical, 4)

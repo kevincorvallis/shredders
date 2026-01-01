@@ -38,7 +38,7 @@ struct HomeView: View {
 
     private var favoritesListView: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
+            LazyVStack(spacing: 6) {
                 if favoritesManager.favoriteIds.isEmpty {
                     emptyState
                         .transition(.scale.combined(with: .opacity))
@@ -48,8 +48,8 @@ struct HomeView: View {
                     mountainCardsList
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: viewModel.mountainData.count)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: favoritesManager.favoriteIds)
         }
