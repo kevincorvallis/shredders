@@ -283,45 +283,138 @@ struct MountainTimelineCard: View {
         .cornerRadius(8)
     }
 
-    // MARK: - Snow Timeline (Horizontally scrollable, synchronized)
+    // MARK: - Snow Timeline (OpenSnow-style 3-section layout)
 
     private var snowTimeline: some View {
-        VStack(spacing: 6) {
-            // Scrollable timeline
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 3) {
-                        ForEach(-7...7, id: \.self) { dayOffset in
-                            redesignedDayBar(for: dayOffset)
-                                .id(dayOffset)
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+        VStack(spacing: 0) {
+            // Three-column header with totals
+            HStack(spacing: 0) {
+                // Prev 1-5 Days section
+                VStack(spacing: 4) {
+                    Text("Prev 1-5 Days")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    Text("\(prevFiveDaysTotal)\"")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
                 }
-                .onAppear {
-                    // Center on today
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        withAnimation(.easeOut(duration: 0.3)) {
-                            proxy.scrollTo(0, anchor: .center)
-                        }
-                    }
-                }
-            }
+                .frame(maxWidth: .infinity)
 
-            // Reported time
-            if let lastUpdated = conditions?.lastUpdated {
-                let date = ISO8601DateFormatter().date(from: lastUpdated) ?? Date()
-                HStack(spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 8))
+                // Last 24 Hours - BIG CENTER NUMBER
+                VStack(spacing: 2) {
+                    Text("Last 24 Hours")
+                        .font(.system(size: 11))
                         .foregroundColor(.secondary)
-                    Text(date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
-                        .font(.system(size: 9))
-                        .foregroundColor(.secondary)
+                    Text("\(conditions?.snowfall24h ?? 0)\"")
+                        .font(.system(size: 72, weight: .bold))
+                        .foregroundColor(.primary)
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
                 }
-                .padding(.bottom, 4)
+                .frame(maxWidth: .infinity)
+
+                // Next 1-5 Days section
+                VStack(spacing: 4) {
+                    Text("Next 1-5 Days")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                    if nextFiveDaysTotal > 0 {
+                        Text("\(nextFiveDaysTotal)\"")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.blue)
+                    } else {
+                        Text("-")
+                            .font(.system(size: 18))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity)
             }
+            .padding(.vertical, 10)
+            .padding(.horizontal, 12)
+
+            // Three-column bar graphs
+            HStack(alignment: .bottom, spacing: 0) {
+                // Past 5 days bars
+                HStack(spacing: 2) {
+                    ForEach(-5..<0, id: \.self) { dayOffset in
+                        compactDayColumn(for: dayOffset, color: Color(red: 0.984, green: 0.573, blue: 0.235))
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                // Center - Reported timestamp
+                VStack(spacing: 4) {
+                    if let lastUpdated = conditions?.lastUpdated {
+                        let date = ISO8601DateFormatter().date(from: lastUpdated) ?? Date()
+                        Text(date.formatted(.dateTime.weekday(.abbreviated).day().hour().minute()))
+                            .font(.system(size: 10))
+                            .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
+                        Text("Reported")
+                            .font(.system(size: 9))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 10)
+
+                // Next 5 days bars
+                HStack(spacing: 2) {
+                    ForEach(1...5, id: \.self) { dayOffset in
+                        compactDayColumn(for: dayOffset, color: .blue)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
+        }
+    }
+
+    // Compact day column for 5-day sections
+    private func compactDayColumn(for offset: Int, color: Color) -> some View {
+        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+        let snowfall = snowfallForDay(offset: offset)
+        let barHeight = min(CGFloat(snowfall) * 3.0, 40)
+
+        return VStack(spacing: 2) {
+            // Bar
+            VStack {
+                Spacer()
+                if snowfall > 0 {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(color.opacity(0.8))
+                        .frame(width: 8, height: barHeight)
+                } else {
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color.gray.opacity(0.15))
+                        .frame(width: 8, height: 3)
+                }
+            }
+            .frame(height: 40)
+
+            // Day letter
+            Text(date.formatted(.dateTime.weekday(.abbreviated)).prefix(1))
+                .font(.system(size: 9))
+                .foregroundColor(.secondary)
+
+            // Date number
+            Text(date.formatted(.dateTime.day()))
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var prevFiveDaysTotal: Int {
+        (-5..<0).reduce(0) { total, offset in
+            total + snowfallForDay(offset: offset)
+        }
+    }
+
+    private var nextFiveDaysTotal: Int {
+        (1...5).reduce(0) { total, offset in
+            total + snowfallForDay(offset: offset)
         }
     }
 
@@ -710,10 +803,6 @@ struct MountainTimelineCard: View {
 
     private var pastFiveDaysTotal: Int {
         conditions?.snowfall7d ?? 0
-    }
-
-    private var nextFiveDaysTotal: Int {
-        Int(forecast.prefix(5).reduce(0) { $0 + $1.snowfall })
     }
 }
 
