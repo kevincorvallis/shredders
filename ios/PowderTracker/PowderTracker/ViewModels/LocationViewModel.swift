@@ -76,8 +76,10 @@ class LocationViewModel: ObservableObject {
     }
 
     var hasWebcams: Bool {
-        guard let webcams = locationData?.mountain.roadWebcams else { return false }
-        return !webcams.isEmpty
+        guard let mountain = locationData?.mountain else { return false }
+        let hasResortWebcams = !mountain.webcams.isEmpty
+        let hasRoadWebcams = mountain.roadWebcams?.isEmpty == false
+        return hasResortWebcams || hasRoadWebcams
     }
 
     // MARK: - Historical Data for Chart
