@@ -19,7 +19,18 @@ class LocationViewModel: ObservableObject {
         error = nil
 
         do {
+            // Add a small delay to ensure view is stable before fetching
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
             let data = try await APIClient.shared.fetchMountainData(for: mountain.id)
+
+            // Check if task was cancelled
+            guard !Task.isCancelled else {
+                print("⚠️ LocationViewModel: Task was cancelled")
+                isLoading = false
+                return
+            }
+
             locationData = data
             isLoading = false
             print("✅ LocationViewModel: Successfully fetched data, locationData is \(locationData != nil ? "NOT nil" : "nil")")
@@ -27,6 +38,17 @@ class LocationViewModel: ObservableObject {
             // Fetch lift data (don't block on errors)
             await fetchLiftData()
         } catch {
+            // Ignore cancellation errors
+            if (error as NSError).code == NSURLErrorCancelled {
+                print("⚠️ LocationViewModel: Request was cancelled, will retry...")
+                // Retry once after a delay
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                if !Task.isCancelled {
+                    await fetchData()
+                }
+                return
+            }
+
             self.error = error.localizedDescription
             isLoading = false
             print("❌ LocationViewModel: Error fetching data: \(error.localizedDescription)")
