@@ -287,39 +287,40 @@ struct MountainTimelineCard: View {
 
     private var snowTimeline: some View {
         VStack(spacing: 0) {
-            // Static three-column header (stays fixed while scrolling)
+            // Dynamic three-column header (updates as you scroll)
             HStack(spacing: 0) {
-                // Prev 5d (static - always relative to today)
+                // Prev 5d (dynamic - relative to centered day)
                 VStack(spacing: 2) {
                     Text("Prev 5d")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    Text("\(prevFiveDaysTotal)\"")
+                    Text("\(dynamicPrevFiveDaysTotal)\"")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
                 }
                 .frame(maxWidth: .infinity)
 
-                // Last 24h (static - always today's snowfall)
+                // Centered day (dynamic - updates with scroll)
                 VStack(spacing: 1) {
-                    Text("Last 24h")
+                    Text(centeredDayLabel)
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    Text("\(conditions?.snowfall24h ?? 0)\"")
+                    Text("\(snowfallForDay(offset: centerDayOffset))\"")
                         .font(.system(size: 48, weight: .bold))
                         .foregroundColor(.primary)
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity)
+                .id("header-\(centerDayOffset)")
 
-                // Next 5d (static - always relative to today)
+                // Next 5d (dynamic - relative to centered day)
                 VStack(spacing: 2) {
                     Text("Next 5d")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    if nextFiveDaysTotal > 0 {
-                        Text("\(nextFiveDaysTotal)\"")
+                    if dynamicNextFiveDaysTotal > 0 {
+                        Text("\(dynamicNextFiveDaysTotal)\"")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.blue)
                     } else {
@@ -332,6 +333,7 @@ struct MountainTimelineCard: View {
             }
             .padding(.vertical, 6)
             .padding(.horizontal, 12)
+            .animation(.easeOut(duration: 0.2), value: centerDayOffset)
 
             // Continuous horizontally scrollable bar graph
             ScrollViewReader { proxy in
@@ -382,6 +384,38 @@ struct MountainTimelineCard: View {
                 }
                 .padding(.bottom, 4)
             }
+        }
+    }
+
+    // MARK: - Dynamic Header Calculations
+
+    /// Centered day offset (which day is in center of viewport)
+    private var centerDayOffset: Int {
+        scrollPosition ?? 0
+    }
+
+    /// Dynamic totals for prev 5 days (relative to centered day)
+    private var dynamicPrevFiveDaysTotal: Int {
+        (centerDayOffset - 5..<centerDayOffset).reduce(0) { total, offset in
+            total + snowfallForDay(offset: offset)
+        }
+    }
+
+    /// Dynamic totals for next 5 days (relative to centered day)
+    private var dynamicNextFiveDaysTotal: Int {
+        (centerDayOffset + 1...centerDayOffset + 5).reduce(0) { total, offset in
+            total + snowfallForDay(offset: offset)
+        }
+    }
+
+    /// Dynamic label for centered day
+    private var centeredDayLabel: String {
+        if centerDayOffset == 0 {
+            return "Last 24h"
+        } else if centerDayOffset < 0 {
+            return "\(abs(centerDayOffset))d Ago"
+        } else {
+            return "In \(centerDayOffset)d"
         }
     }
 
