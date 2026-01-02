@@ -20,6 +20,7 @@ struct LocationMapSection: View {
 
             // Map View
             Map(position: $cameraPosition) {
+
                 // Mountain annotation
                 Annotation(
                     mountainDetail.name,

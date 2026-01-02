@@ -48,7 +48,8 @@ struct LocationView: View {
                     .padding(.horizontal)
 
                     // Lift Line Predictor (AI-powered)
-                    if viewModel.locationData?.conditions.liftStatus != nil {
+                    // TEMP: Always show for testing until AWS credentials are added to Vercel
+                    if viewModel.locationData != nil {
                         LiftLinePredictorCard(viewModel: viewModel)
                             .padding(.horizontal)
                     }

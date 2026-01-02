@@ -6,17 +6,19 @@ struct LiftLinePredictorCard: View {
     @State private var showingDetails = false
 
     private var prediction: (overall: LiftLinePredictor.BusynessLevel, predictions: [LiftLinePredictor.LiftPrediction]) {
-        guard let liftStatus = viewModel.locationData?.conditions.liftStatus else {
-            return (.moderate, [])
-        }
+        // Use actual lift status if available, otherwise use mock data for testing
+        let liftStatus = viewModel.locationData?.conditions.liftStatus
+        let percentOpen = liftStatus?.percentOpen ?? 85
+        let liftsOpen = liftStatus?.liftsOpen ?? 8
+        let liftsTotal = liftStatus?.liftsTotal ?? 10
 
         return LiftLinePredictor.predictMountainBusyness(
             powderScore: viewModel.powderScore ?? 5,
             temperature: viewModel.temperature ?? 32,
             windSpeed: viewModel.windSpeed ?? 10,
-            percentOpen: liftStatus.percentOpen,
-            liftsOpen: liftStatus.liftsOpen,
-            liftsTotal: liftStatus.liftsTotal
+            percentOpen: percentOpen,
+            liftsOpen: liftsOpen,
+            liftsTotal: liftsTotal
         )
     }
 

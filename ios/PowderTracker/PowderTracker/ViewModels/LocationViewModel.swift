@@ -5,6 +5,7 @@ class LocationViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
     @Published var locationData: MountainBatchedResponse?
+    @Published var liftData: LiftGeoJSON?
 
     let mountain: Mountain
 
@@ -20,9 +21,25 @@ class LocationViewModel: ObservableObject {
             let data = try await APIClient.shared.fetchMountainData(for: mountain.id)
             locationData = data
             isLoading = false
+
+            // Fetch lift data (don't block on errors)
+            await fetchLiftData()
         } catch {
             self.error = error.localizedDescription
             isLoading = false
+        }
+    }
+
+    func fetchLiftData() async {
+        guard let url = URL(string: "\(APIClient.baseURL)/api/mountains/\(mountain.id)/lifts") else { return }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let lifts = try JSONDecoder().decode(LiftGeoJSON.self, from: data)
+            liftData = lifts
+        } catch {
+            print("Failed to fetch lift data: \(error.localizedDescription)")
+            // Don't set error - lift data is optional
         }
     }
 
