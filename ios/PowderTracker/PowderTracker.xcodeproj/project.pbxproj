@@ -16,6 +16,8 @@
 		0A16E9772F07A54600A94BD8 /* LiftLinePredictor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A16E9762F07A54600A94BD8 /* LiftLinePredictor.swift */; };
 		0A16E9792F07AC0700A94BD8 /* LiftData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A16E9782F07AC0700A94BD8 /* LiftData.swift */; };
 		0A16E97A2F07AC0700A94BD8 /* LiftData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A16E9782F07AC0700A94BD8 /* LiftData.swift */; };
+		0A71D8AD2F07C4660036DEBF /* SnowComparison.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A71D8AC2F07C4660036DEBF /* SnowComparison.swift */; };
+		0A71D8AF2F07C4660036DEBF /* SnowComparison.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A71D8AC2F07C4660036DEBF /* SnowComparison.swift */; };
 		0F6FD20D0854EC952BEC3D7D /* Mountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A37340F3AB0D4B44C537773 /* Mountain.swift */; };
 		1086BCB50612C478052AB672 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E8F75C7ACA67E68B1B910FC /* ContentView.swift */; };
 		11207E055A0CD480A55F1A84 /* MountainPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE94660DDA20DBD2211E2245 /* MountainPickerView.swift */; };
@@ -145,6 +147,7 @@
 		0A16E9762F07A54600A94BD8 /* LiftLinePredictor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftLinePredictor.swift; sourceTree = "<group>"; };
 		0A16E9782F07AC0700A94BD8 /* LiftData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftData.swift; sourceTree = "<group>"; };
 		0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderScore.swift; sourceTree = "<group>"; };
+		0A71D8AC2F07C4660036DEBF /* SnowComparison.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowComparison.swift; sourceTree = "<group>"; };
 		0E66CAE21D58028E82BB124F /* Conditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conditions.swift; sourceTree = "<group>"; };
 		0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		1AEFF19B138318E73462A0B0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -382,6 +385,7 @@
 		DA2F471601079E33498D575B /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				0A71D8AC2F07C4660036DEBF /* SnowComparison.swift */,
 				0A16E9782F07AC0700A94BD8 /* LiftData.swift */,
 				01FC72C486A24966EC54ABAE /* ChatMessage.swift */,
 				0E66CAE21D58028E82BB124F /* Conditions.swift */,
@@ -529,6 +533,7 @@
 				88FD4BA8275444B5949E8C6D /* AlertsView.swift in Sources */,
 				6B5C95870DBF4E088E9DD85E /* MoreView.swift in Sources */,
 				1E767F11EB82CC4C6D411224 /* DashboardViewModel.swift in Sources */,
+				0A71D8AF2F07C4660036DEBF /* SnowComparison.swift in Sources */,
 				0A16E9772F07A54600A94BD8 /* LiftLinePredictor.swift in Sources */,
 				C74DA7539E5D7B9C4C45B8B3 /* Date+Extensions.swift in Sources */,
 				94F1249534AFF241CDAFACC4 /* Forecast.swift in Sources */,
@@ -607,6 +612,7 @@
 				2F21742B0CA9620510CD2AE9 /* PowderTrackerWidget.swift in Sources */,
 				A5394B2614799063241081C6 /* PowderTrackerWidgetBundle.swift in Sources */,
 				AB9D52519316557167B1E855 /* SmallWidgetView.swift in Sources */,
+				0A71D8AD2F07C4660036DEBF /* SnowComparison.swift in Sources */,
 				CF58C94B833F15B2364444DF /* TripPlanning.swift in Sources */,
 				0A16E97A2F07AC0700A94BD8 /* LiftData.swift in Sources */,
 				F6444A85EA760C4BFBC37D3A /* SunData.swift in Sources */,

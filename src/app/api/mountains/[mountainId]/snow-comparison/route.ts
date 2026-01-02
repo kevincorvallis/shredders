@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getYearOverYearComparison } from '@/lib/apis/snotel';
-import { MOUNTAINS } from '@/data/mountains';
+import { getMountain } from '@/data/mountains';
 
 /**
  * Snow depth guidelines by elevation range
@@ -98,7 +98,7 @@ export async function GET(
     const { mountainId } = await params;
 
     // Find mountain configuration
-    const mountain = MOUNTAINS.find(m => m.id === mountainId);
+    const mountain = getMountain(mountainId);
     if (!mountain) {
       return NextResponse.json(
         { error: 'Mountain not found' },
