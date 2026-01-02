@@ -4,6 +4,7 @@ import MapKit
 struct LocationMapSection: View {
     let mountain: Mountain
     let mountainDetail: MountainDetail
+    let liftData: LiftGeoJSON?
     @State private var cameraPosition: MapCameraPosition = .automatic
 
     var body: some View {
@@ -16,10 +17,32 @@ struct LocationMapSection: View {
                     .font(.headline)
 
                 Spacer()
+
+                // Lift count badge
+                if let liftCount = liftData?.properties.liftCount, liftCount > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "cablecar.fill")
+                            .font(.caption2)
+                        Text("\(liftCount) lifts")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.8))
+                    .cornerRadius(12)
+                }
             }
 
             // Map View
             Map(position: $cameraPosition) {
+                // Lift lines (draw first so they appear under annotations)
+                if let lifts = liftData?.features {
+                    ForEach(lifts) { lift in
+                        MapPolyline(coordinates: lift.mapCoordinates)
+                            .stroke(liftColor(for: lift.properties.type), lineWidth: 3)
+                    }
+                }
 
                 // Mountain annotation
                 Annotation(
@@ -109,5 +132,24 @@ struct LocationMapSection: View {
         let latDirection = lat >= 0 ? "N" : "S"
         let lngDirection = lng >= 0 ? "E" : "W"
         return String(format: "%.4f°%@ %.4f°%@", abs(lat), latDirection, abs(lng), lngDirection)
+    }
+
+    private func liftColor(for type: String) -> Color {
+        switch type {
+        case "gondola", "cable_car":
+            return .red
+        case "chair_lift":
+            return .blue
+        case "drag_lift", "t-bar", "j-bar", "platter":
+            return .green
+        case "rope_tow":
+            return .orange
+        case "magic_carpet":
+            return .purple
+        case "mixed_lift":
+            return .indigo
+        default:
+            return .gray
+        }
     }
 }

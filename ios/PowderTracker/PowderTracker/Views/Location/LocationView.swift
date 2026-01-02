@@ -86,10 +86,14 @@ struct LocationView: View {
                             WeatherConditionsSection(viewModel: viewModel)
                                 .transition(.move(edge: .top).combined(with: .opacity))
 
-                            // Map Section
+                            // Map Section with Lift Lines
                             if let mountainDetail = viewModel.locationData?.mountain {
-                                LocationMapSection(mountain: mountain, mountainDetail: mountainDetail)
-                                    .transition(.move(edge: .top).combined(with: .opacity))
+                                LocationMapSection(
+                                    mountain: mountain,
+                                    mountainDetail: mountainDetail,
+                                    liftData: viewModel.liftData
+                                )
+                                .transition(.move(edge: .top).combined(with: .opacity))
                             }
 
                             // Road Conditions Section (only if has data)
