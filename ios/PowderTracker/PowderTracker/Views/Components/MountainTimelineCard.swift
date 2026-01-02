@@ -10,7 +10,7 @@ struct MountainTimelineCard: View {
     @ObservedObject var scrollSync: TimelineScrollSync // Synchronized horizontal scrolling
 
     @State private var isAnimating = false
-    @State private var centerDayOffset: Int = 0 // Which day is centered in the view
+    @State private var scrollPosition: Int? = 0 // Track snapped day
 
     // Dynamic gradient based on powder conditions
     private var dynamicGradient: LinearGradient {
@@ -287,40 +287,39 @@ struct MountainTimelineCard: View {
 
     private var snowTimeline: some View {
         VStack(spacing: 0) {
-            // Dynamic three-column header (updates based on scroll position)
+            // Static three-column header
             HStack(spacing: 0) {
-                // Prev 1-5 Days section (relative to centered day)
+                // Prev 5d (static)
                 VStack(spacing: 2) {
-                    Text("Prev 1-5 Days")
+                    Text("Prev 5d")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    Text("\(dynamicPrevFiveDaysTotal)\"")
+                    Text("\(prevFiveDaysTotal)\"")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
                 }
                 .frame(maxWidth: .infinity)
 
-                // Centered day - BIG NUMBER (updates as you scroll)
+                // Last 24h (static)
                 VStack(spacing: 1) {
-                    Text(centeredDayLabel)
+                    Text("Last 24h")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    Text("\(snowfallForDay(offset: centerDayOffset))\"")
+                    Text("\(conditions?.snowfall24h ?? 0)\"")
                         .font(.system(size: 48, weight: .bold))
                         .foregroundColor(.primary)
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity)
-                .id("header-\(centerDayOffset)") // Force update on scroll
 
-                // Next 1-5 Days section (relative to centered day)
+                // Next 5d (static)
                 VStack(spacing: 2) {
-                    Text("Next 1-5 Days")
+                    Text("Next 5d")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    if dynamicNextFiveDaysTotal > 0 {
-                        Text("\(dynamicNextFiveDaysTotal)\"")
+                    if nextFiveDaysTotal > 0 {
+                        Text("\(nextFiveDaysTotal)\"")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.blue)
                     } else {
@@ -333,7 +332,6 @@ struct MountainTimelineCard: View {
             }
             .padding(.vertical, 6)
             .padding(.horizontal, 12)
-            .animation(.easeOut(duration: 0.2), value: centerDayOffset)
 
             // Continuous horizontally scrollable bar graph
             ScrollViewReader { proxy in
@@ -343,29 +341,27 @@ struct MountainTimelineCard: View {
                             ForEach(-7...7, id: \.self) { dayOffset in
                                 fullDayColumn(for: dayOffset)
                                     .id(dayOffset)
-                                    .background(
-                                        GeometryReader { geo in
-                                            Color.clear
-                                                .preference(
-                                                    key: DayOffsetPreferenceKey.self,
-                                                    value: [dayOffset: geo.frame(in: .named("scroll")).midX]
-                                                )
-                                        }
-                                    )
+                                    .containerRelativeFrame(.horizontal, count: 5, spacing: 2)
                             }
                         }
+                        .scrollTargetLayout()
                         .padding(.horizontal, outerGeo.size.width / 2 - 20) // Center padding
                         .padding(.vertical, 6)
                     }
-                    .coordinateSpace(name: "scroll")
-                    .onPreferenceChange(DayOffsetPreferenceKey.self) { positions in
-                        updateCenterDay(from: positions, viewWidth: outerGeo.size.width)
+                    .scrollTargetBehavior(.viewAligned)
+                    .scrollPosition(id: $scrollPosition)
+                    .onChange(of: scrollPosition) { oldValue, newValue in
+                        if oldValue != newValue, newValue != nil {
+                            let impact = UIImpactFeedbackGenerator(style: .light)
+                            impact.impactOccurred()
+                        }
                     }
+                    .coordinateSpace(name: "scroll")
                     .onAppear {
                         // Scroll to today initially
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            withAnimation(.easeOut(duration: 0.3)) {
-                                proxy.scrollTo(0, anchor: .center)
+                            withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+                                scrollPosition = 0
                             }
                         }
                     }
@@ -389,46 +385,26 @@ struct MountainTimelineCard: View {
         }
     }
 
-    // Update which day is centered based on scroll position
-    private func updateCenterDay(from positions: [Int: CGFloat], viewWidth: CGFloat) {
-        let viewCenter = viewWidth / 2
-        var closestDay = 0
-        var closestDistance: CGFloat = .infinity
+    // MARK: - Animation Helpers
 
-        for (day, position) in positions {
-            let distance = abs(position - viewCenter)
-            if distance < closestDistance {
-                closestDistance = distance
-                closestDay = day
-            }
-        }
-
-        if closestDay != centerDayOffset {
-            centerDayOffset = closestDay
-        }
+    /// Calculate scale based on distance from center
+    private func barAnimationScale(for dayOffset: Int, geometry: GeometryProxy) -> CGFloat {
+        let barCenter = geometry.frame(in: .named("scroll")).midX
+        let viewportCenter = geometry.size.width / 2
+        let distance = abs(barCenter - viewportCenter)
+        let maxDistance: CGFloat = 200
+        let normalizedDistance = min(distance / maxDistance, 1.0)
+        return 1.0 - (normalizedDistance * 0.3)  // 1.0 at center, 0.7 at edges
     }
 
-    // Dynamic totals based on centered day
-    private var dynamicPrevFiveDaysTotal: Int {
-        (centerDayOffset - 5..<centerDayOffset).reduce(0) { total, offset in
-            total + snowfallForDay(offset: offset)
-        }
-    }
-
-    private var dynamicNextFiveDaysTotal: Int {
-        (centerDayOffset + 1...centerDayOffset + 5).reduce(0) { total, offset in
-            total + snowfallForDay(offset: offset)
-        }
-    }
-
-    private var centeredDayLabel: String {
-        if centerDayOffset == 0 {
-            return "Last 24 Hours"
-        } else if centerDayOffset < 0 {
-            return "\(abs(centerDayOffset)) Day\(abs(centerDayOffset) == 1 ? "" : "s") Ago"
-        } else {
-            return "In \(centerDayOffset) Day\(centerDayOffset == 1 ? "" : "s")"
-        }
+    /// Calculate opacity based on distance from center
+    private func barAnimationOpacity(for dayOffset: Int, geometry: GeometryProxy) -> CGFloat {
+        let barCenter = geometry.frame(in: .named("scroll")).midX
+        let viewportCenter = geometry.size.width / 2
+        let distance = abs(barCenter - viewportCenter)
+        let maxDistance: CGFloat = 200
+        let normalizedDistance = min(distance / maxDistance, 1.0)
+        return 1.0 - (normalizedDistance * 0.6)  // 1.0 at center, 0.4 at edges
     }
 
     // Full-size day column for continuous scrolling
@@ -441,63 +417,69 @@ struct MountainTimelineCard: View {
 
         let barColor: Color = isPast ? Color(red: 0.984, green: 0.573, blue: 0.235) : .blue
 
-        return VStack(spacing: 1) {
-            // Date display
-            VStack(spacing: 0) {
-                Text(date.formatted(.dateTime.weekday(.abbreviated)).prefix(1))
-                    .font(.system(size: 8, weight: isToday ? .bold : .medium))
-                    .foregroundColor(isToday ? .primary : .secondary)
-                Text(date.formatted(.dateTime.day()))
-                    .font(.system(size: 9, weight: isToday ? .bold : .regular))
-                    .foregroundColor(isToday ? .primary : .secondary)
-            }
-
-            // Bar chart
-            ZStack(alignment: .bottom) {
-                // Background track
-                RoundedRectangle(cornerRadius: 2.5)
-                    .fill(Color.gray.opacity(0.1))
-                    .frame(width: 16, height: 40)
-
-                // Bar
-                if snowfall > 0 {
-                    RoundedRectangle(cornerRadius: 2.5)
-                        .fill(
-                            LinearGradient(
-                                colors: [barColor, barColor.opacity(0.7)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(width: 16, height: barHeight)
-                        .shadow(
-                            color: barColor.opacity(0.3),
-                            radius: snowfall > 6 ? 2 : 1,
-                            x: 0,
-                            y: 1
-                        )
+        return GeometryReader { geometry in
+            VStack(spacing: 1) {
+                // Date display
+                VStack(spacing: 0) {
+                    Text(date.formatted(.dateTime.weekday(.abbreviated)).prefix(1))
+                        .font(.system(size: 8, weight: isToday ? .bold : .medium))
+                        .foregroundColor(isToday ? .primary : .secondary)
+                    Text(date.formatted(.dateTime.day()))
+                        .font(.system(size: 9, weight: isToday ? .bold : .regular))
+                        .foregroundColor(isToday ? .primary : .secondary)
                 }
-            }
-            .frame(height: 40)
 
-            // Snowfall amount
-            Text(snowfall > 0 ? "\(snowfall)\"" : "-")
-                .font(.system(size: 8, weight: snowfall > 6 ? .bold : .medium))
-                .foregroundColor(snowfall > 0 ? .primary : .secondary.opacity(0.6))
+                // Bar chart
+                ZStack(alignment: .bottom) {
+                    // Background track
+                    RoundedRectangle(cornerRadius: 2.5)
+                        .fill(Color.gray.opacity(0.1))
+                        .frame(width: 16, height: 40)
+
+                    // Bar
+                    if snowfall > 0 {
+                        RoundedRectangle(cornerRadius: 2.5)
+                            .fill(
+                                LinearGradient(
+                                    colors: [barColor, barColor.opacity(0.7)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(width: 16, height: barHeight)
+                            .shadow(
+                                color: barColor.opacity(0.3),
+                                radius: snowfall > 6 ? 2 : 1,
+                                x: 0,
+                                y: 1
+                            )
+                    }
+                }
+                .frame(height: 40)
+
+                // Snowfall amount
+                Text(snowfall > 0 ? "\(snowfall)\"" : "-")
+                    .font(.system(size: 8, weight: snowfall > 6 ? .bold : .medium))
+                    .foregroundColor(snowfall > 0 ? .primary : .secondary.opacity(0.6))
+            }
+            .frame(width: 26)
+            .padding(.vertical, 1)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isToday ? Color.blue.opacity(0.08) : Color.clear)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(
+                                isToday ? Color.blue.opacity(0.5) : Color.clear,
+                                lineWidth: 1.5
+                            )
+                    )
+            )
+            .scaleEffect(barAnimationScale(for: offset, geometry: geometry))
+            .opacity(barAnimationOpacity(for: offset, geometry: geometry))
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: scrollPosition)
         }
-        .frame(width: 26)
-        .padding(.vertical, 1)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(isToday ? Color.blue.opacity(0.08) : Color.clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(
-                            isToday ? Color.blue.opacity(0.5) : Color.clear,
-                            lineWidth: 1.5
-                        )
-                )
-        )
+        .frame(width: 26)  // Fixed width for GeometryReader
     }
 
     // Compact day column for 5-day sections
@@ -993,15 +975,6 @@ struct MountainTimelineCard: View {
         .padding()
     }
     .background(Color(.systemGroupedBackground))
-}
-
-// MARK: - Preference Key for Day Position Tracking
-
-struct DayOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: [Int: CGFloat] { [:] }
-    static func reduce(value: inout [Int: CGFloat], nextValue: () -> [Int: CGFloat]) {
-        value.merge(nextValue()) { $1 }
-    }
 }
 
 // MARK: - Snow Particles Animation
