@@ -59,19 +59,20 @@ struct LocationMapSection: View {
                 // User location
                 UserAnnotation()
             }
-            .mapStyle(.standard(elevation: .realistic))
+            .mapStyle(.hybrid(elevation: .realistic))
             .mapControls {
                 MapUserLocationButton()
                 MapCompass()
+                MapScaleView()
             }
             .frame(height: 280)
             .cornerRadius(12)
             .onAppear {
-                // Center map on mountain with some zoom
+                // Center map on mountain with tight zoom to show terrain detail
                 cameraPosition = .region(
                     MKCoordinateRegion(
                         center: mountainDetail.location.coordinate,
-                        span: MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
+                        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
                     )
                 )
             }
