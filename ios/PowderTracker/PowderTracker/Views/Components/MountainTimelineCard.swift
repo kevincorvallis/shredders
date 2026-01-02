@@ -122,21 +122,20 @@ struct MountainTimelineCard: View {
     }
 
     private var glassmorphicHeader: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             // Animated logo with depth
             MountainLogoView(
                 logoUrl: mountain.logo,
                 color: mountain.color,
-                size: 44
+                size: 38
             )
-            .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+            .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 2)
             .scaleEffect(isAnimating ? 1.0 : 0.8)
             .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.1), value: isAnimating)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(mountain.name)
-                    .font(.subheadline)
-                    .fontWeight(.bold)
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [.primary, .primary.opacity(0.8)],
@@ -146,7 +145,7 @@ struct MountainTimelineCard: View {
                     )
 
                 Text("\(mountain.elevation.base) ft · \(mountain.region.capitalized)")
-                    .font(.caption2)
+                    .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
 
@@ -157,8 +156,8 @@ struct MountainTimelineCard: View {
                 CompactMountainStatus(liftStatus: liftStatus)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
         .background(.ultraThinMaterial)
     }
 
@@ -291,23 +290,23 @@ struct MountainTimelineCard: View {
             // Dynamic three-column header (updates based on scroll position)
             HStack(spacing: 0) {
                 // Prev 1-5 Days section (relative to centered day)
-                VStack(spacing: 4) {
+                VStack(spacing: 2) {
                     Text("Prev 1-5 Days")
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundColor(.secondary)
                     Text("\(dynamicPrevFiveDaysTotal)\"")
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
                 }
                 .frame(maxWidth: .infinity)
 
                 // Centered day - BIG NUMBER (updates as you scroll)
-                VStack(spacing: 2) {
+                VStack(spacing: 1) {
                     Text(centeredDayLabel)
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundColor(.secondary)
                     Text("\(snowfallForDay(offset: centerDayOffset))\"")
-                        .font(.system(size: 72, weight: .bold))
+                        .font(.system(size: 48, weight: .bold))
                         .foregroundColor(.primary)
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
@@ -316,23 +315,23 @@ struct MountainTimelineCard: View {
                 .id("header-\(centerDayOffset)") // Force update on scroll
 
                 // Next 1-5 Days section (relative to centered day)
-                VStack(spacing: 4) {
+                VStack(spacing: 2) {
                     Text("Next 1-5 Days")
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundColor(.secondary)
                     if dynamicNextFiveDaysTotal > 0 {
                         Text("\(dynamicNextFiveDaysTotal)\"")
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.blue)
                     } else {
                         Text("-")
-                            .font(.system(size: 18))
+                            .font(.system(size: 16))
                             .foregroundColor(.secondary)
                     }
                 }
                 .frame(maxWidth: .infinity)
             }
-            .padding(.vertical, 10)
+            .padding(.vertical, 6)
             .padding(.horizontal, 12)
             .animation(.easeOut(duration: 0.2), value: centerDayOffset)
 
@@ -340,7 +339,7 @@ struct MountainTimelineCard: View {
             ScrollViewReader { proxy in
                 GeometryReader { outerGeo in
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 3) {
+                        HStack(spacing: 2) {
                             ForEach(-7...7, id: \.self) { dayOffset in
                                 fullDayColumn(for: dayOffset)
                                     .id(dayOffset)
@@ -356,7 +355,7 @@ struct MountainTimelineCard: View {
                             }
                         }
                         .padding(.horizontal, outerGeo.size.width / 2 - 20) // Center padding
-                        .padding(.vertical, 12)
+                        .padding(.vertical, 6)
                     }
                     .coordinateSpace(name: "scroll")
                     .onPreferenceChange(DayOffsetPreferenceKey.self) { positions in
@@ -371,21 +370,21 @@ struct MountainTimelineCard: View {
                         }
                     }
                 }
-                .frame(height: 90)
+                .frame(height: 65)
             }
 
             // Reported timestamp
             if let lastUpdated = conditions?.lastUpdated {
                 let date = ISO8601DateFormatter().date(from: lastUpdated) ?? Date()
-                HStack(spacing: 4) {
+                HStack(spacing: 3) {
                     Image(systemName: "clock")
-                        .font(.system(size: 8))
+                        .font(.system(size: 7))
                         .foregroundColor(.secondary)
                     Text(date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
-                        .font(.system(size: 9))
+                        .font(.system(size: 8))
                         .foregroundColor(.secondary)
                 }
-                .padding(.bottom, 6)
+                .padding(.bottom, 4)
             }
         }
     }
@@ -438,31 +437,31 @@ struct MountainTimelineCard: View {
         let snowfall = snowfallForDay(offset: offset)
         let isToday = offset == 0
         let isPast = offset < 0
-        let barHeight = min(CGFloat(snowfall) * 3.5, 55)
+        let barHeight = min(CGFloat(snowfall) * 3.0, 40)
 
         let barColor: Color = isPast ? Color(red: 0.984, green: 0.573, blue: 0.235) : .blue
 
-        return VStack(spacing: 2) {
+        return VStack(spacing: 1) {
             // Date display
             VStack(spacing: 0) {
                 Text(date.formatted(.dateTime.weekday(.abbreviated)).prefix(1))
-                    .font(.system(size: 9, weight: isToday ? .bold : .medium))
+                    .font(.system(size: 8, weight: isToday ? .bold : .medium))
                     .foregroundColor(isToday ? .primary : .secondary)
                 Text(date.formatted(.dateTime.day()))
-                    .font(.system(size: 10, weight: isToday ? .bold : .regular))
+                    .font(.system(size: 9, weight: isToday ? .bold : .regular))
                     .foregroundColor(isToday ? .primary : .secondary)
             }
 
             // Bar chart
             ZStack(alignment: .bottom) {
                 // Background track
-                RoundedRectangle(cornerRadius: 3)
+                RoundedRectangle(cornerRadius: 2.5)
                     .fill(Color.gray.opacity(0.1))
-                    .frame(width: 18, height: 55)
+                    .frame(width: 16, height: 40)
 
                 // Bar
                 if snowfall > 0 {
-                    RoundedRectangle(cornerRadius: 3)
+                    RoundedRectangle(cornerRadius: 2.5)
                         .fill(
                             LinearGradient(
                                 colors: [barColor, barColor.opacity(0.7)],
@@ -470,24 +469,24 @@ struct MountainTimelineCard: View {
                                 endPoint: .bottom
                             )
                         )
-                        .frame(width: 18, height: barHeight)
+                        .frame(width: 16, height: barHeight)
                         .shadow(
                             color: barColor.opacity(0.3),
-                            radius: snowfall > 6 ? 3 : 1,
+                            radius: snowfall > 6 ? 2 : 1,
                             x: 0,
-                            y: 2
+                            y: 1
                         )
                 }
             }
-            .frame(height: 55)
+            .frame(height: 40)
 
             // Snowfall amount
             Text(snowfall > 0 ? "\(snowfall)\"" : "-")
-                .font(.system(size: 9, weight: snowfall > 6 ? .bold : .medium))
+                .font(.system(size: 8, weight: snowfall > 6 ? .bold : .medium))
                 .foregroundColor(snowfall > 0 ? .primary : .secondary.opacity(0.6))
         }
-        .frame(width: 28)
-        .padding(.vertical, 2)
+        .frame(width: 26)
+        .padding(.vertical, 1)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(isToday ? Color.blue.opacity(0.08) : Color.clear)
