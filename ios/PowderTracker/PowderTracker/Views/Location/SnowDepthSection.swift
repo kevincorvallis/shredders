@@ -26,6 +26,81 @@ struct SnowDepthSection: View {
                 }
             }
 
+            // Year-over-Year Comparison & Base Quality
+            if let comparison = viewModel.snowComparison {
+                VStack(spacing: 12) {
+                    // Base Quality Rating
+                    if let rating = comparison.baseDepthGuidelines.currentRating {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(Color(hex: rating.color) ?? .gray)
+                                .frame(width: 12, height: 12)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("\(rating.rating) Base")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+
+                                Text(rating.description)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(8)
+                    }
+
+                    // Year-over-Year Comparison
+                    if let lastYear = comparison.comparison.lastYear,
+                       let difference = comparison.comparison.difference {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("vs. Last Year")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                HStack(spacing: 6) {
+                                    Text("\(Int(lastYear.snowDepth))\"")
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+
+                                    HStack(spacing: 4) {
+                                        Image(systemName: difference >= 0 ? "arrow.up" : "arrow.down")
+                                            .font(.caption)
+                                        Text("\(abs(difference))\"")
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                    }
+                                    .foregroundColor(difference >= 0 ? .green : .red)
+                                }
+                            }
+
+                            Spacer()
+
+                            if let percentChange = comparison.comparison.percentChange {
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    Text("\(percentChange >= 0 ? "+" : "")\(percentChange)%")
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(percentChange >= 0 ? .green : .red)
+
+                                    Text(percentChange >= 0 ? "More snow" : "Less snow")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .padding(12)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(8)
+                    }
+                }
+            }
+
             // Recent Snowfall Grid
             HStack(spacing: 12) {
                 if let snow24h = viewModel.snowDepth24h {

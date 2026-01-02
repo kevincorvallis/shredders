@@ -211,6 +211,74 @@ export async function getHistoricalData(
   return history;
 }
 
+/**
+ * Get snow depth comparison between current date and same date last year
+ * Useful for year-over-year context
+ */
+export async function getYearOverYearComparison(
+  stationId: string = DEFAULT_SNOTEL_STATION
+): Promise<{
+  currentYear: { date: string; snowDepth: number; } | null;
+  lastYear: { date: string; snowDepth: number; } | null;
+}> {
+  const today = new Date();
+  const lastYearToday = new Date(today);
+  lastYearToday.setFullYear(today.getFullYear() - 1);
+
+  // Fetch a small window around both dates (7 days) to handle missing data
+  const currentStart = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const currentEnd = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const lastYearStart = new Date(lastYearToday.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const lastYearEnd = new Date(lastYearToday.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+  try {
+    // Fetch current year data
+    const currentResponse = await fetchSnotelData(
+      stationId,
+      ['SNWD'],
+      formatDate(currentStart),
+      formatDate(currentEnd)
+    );
+
+    // Fetch last year data
+    const lastYearResponse = await fetchSnotelData(
+      stationId,
+      ['SNWD'],
+      formatDate(lastYearStart),
+      formatDate(lastYearEnd)
+    );
+
+    const currentData = currentResponse[0]?.data.find(d => d.stationElement.elementCode === 'SNWD');
+    const lastYearData = lastYearResponse[0]?.data.find(d => d.stationElement.elementCode === 'SNWD');
+
+    // Find closest non-null value to today
+    const currentValue = currentData?.values
+      .filter(v => v.value !== null)
+      .sort((a, b) => {
+        const diffA = Math.abs(new Date(a.date).getTime() - today.getTime());
+        const diffB = Math.abs(new Date(b.date).getTime() - today.getTime());
+        return diffA - diffB;
+      })[0];
+
+    // Find closest non-null value to last year today
+    const lastYearValue = lastYearData?.values
+      .filter(v => v.value !== null)
+      .sort((a, b) => {
+        const diffA = Math.abs(new Date(a.date).getTime() - lastYearToday.getTime());
+        const diffB = Math.abs(new Date(b.date).getTime() - lastYearToday.getTime());
+        return diffA - diffB;
+      })[0];
+
+    return {
+      currentYear: currentValue ? { date: currentValue.date, snowDepth: currentValue.value! } : null,
+      lastYear: lastYearValue ? { date: lastYearValue.date, snowDepth: lastYearValue.value! } : null,
+    };
+  } catch (error) {
+    console.error('Error fetching year-over-year comparison:', error);
+    return { currentYear: null, lastYear: null };
+  }
+}
+
 export async function getStationMetadata(stationId: string = DEFAULT_SNOTEL_STATION) {
   const url = `${BASE_URL}/stations?stationTriplets=${stationId}`;
   const response = await fetch(url);

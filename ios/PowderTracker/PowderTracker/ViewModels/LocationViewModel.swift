@@ -6,6 +6,7 @@ class LocationViewModel: ObservableObject {
     @Published var error: String?
     @Published var locationData: MountainBatchedResponse?
     @Published var liftData: LiftGeoJSON?
+    @Published var snowComparison: SnowComparisonResponse?
 
     let mountain: Mountain
 
@@ -35,8 +36,9 @@ class LocationViewModel: ObservableObject {
             isLoading = false
             print("✅ LocationViewModel: Successfully fetched data, locationData is \(locationData != nil ? "NOT nil" : "nil")")
 
-            // Fetch lift data (don't block on errors)
+            // Fetch lift data and snow comparison (don't block on errors)
             await fetchLiftData()
+            await fetchSnowComparison()
         } catch {
             // Ignore cancellation errors
             if (error as NSError).code == NSURLErrorCancelled {
@@ -65,6 +67,20 @@ class LocationViewModel: ObservableObject {
         } catch {
             print("Failed to fetch lift data: \(error.localizedDescription)")
             // Don't set error - lift data is optional
+        }
+    }
+
+    func fetchSnowComparison() async {
+        guard let url = URL(string: "\(AppConfig.apiBaseURL)/mountains/\(mountain.id)/snow-comparison") else { return }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let comparison = try JSONDecoder().decode(SnowComparisonResponse.self, from: data)
+            snowComparison = comparison
+            print("✅ LocationViewModel: Fetched snow comparison - current: \(comparison.comparison.current?.snowDepth ?? 0)\", last year: \(comparison.comparison.lastYear?.snowDepth ?? 0)\"")
+        } catch {
+            print("Failed to fetch snow comparison: \(error.localizedDescription)")
+            // Don't set error - snow comparison is optional
         }
     }
 
