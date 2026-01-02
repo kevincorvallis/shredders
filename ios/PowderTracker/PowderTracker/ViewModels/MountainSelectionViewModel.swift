@@ -6,6 +6,7 @@ import Combine
 class MountainSelectionViewModel: ObservableObject {
     @Published var mountains: [Mountain] = []
     @Published var mountainScores: [String: Double] = [:]
+    @Published var mountainConditions: [String: MountainConditions] = [:]
     @Published var selectedMountain: Mountain?
     @Published var isLoading = false
     @Published var error: Error?
@@ -35,8 +36,9 @@ class MountainSelectionViewModel: ObservableObject {
             // Request location to calculate distances
             locationManager.requestLocation()
 
-            // Fetch powder scores for all mountains
+            // Fetch powder scores and conditions for all mountains
             await fetchAllPowderScores()
+            await fetchAllConditions()
 
             // Set default selection if none
             if selectedMountain == nil, let first = mountains.first {
@@ -70,6 +72,28 @@ class MountainSelectionViewModel: ObservableObject {
         }
     }
 
+    private func fetchAllConditions() async {
+        await withTaskGroup(of: (String, MountainConditions?).self) { group in
+            for mountain in mountains {
+                group.addTask {
+                    do {
+                        let conditions = try await self.apiClient.fetchConditions(for: mountain.id)
+                        return (mountain.id, conditions)
+                    } catch {
+                        print("Failed to fetch conditions for \(mountain.id): \(error.localizedDescription)")
+                        return (mountain.id, nil)
+                    }
+                }
+            }
+
+            for await (id, conditions) in group {
+                if let conditions = conditions {
+                    mountainConditions[id] = conditions
+                }
+            }
+        }
+    }
+
     private func updateDistances() {
         guard locationManager.location != nil else { return }
 
@@ -90,6 +114,10 @@ class MountainSelectionViewModel: ObservableObject {
 
     func getScore(for mountain: Mountain) -> Double? {
         mountainScores[mountain.id]
+    }
+
+    func getConditions(for mountain: Mountain) -> MountainConditions? {
+        mountainConditions[mountain.id]
     }
 
     func getDistance(to mountain: Mountain) -> Double? {

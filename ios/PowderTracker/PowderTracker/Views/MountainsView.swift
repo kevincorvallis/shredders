@@ -139,7 +139,7 @@ struct MountainsView: View {
                 } label: {
                     MountainCardRow(
                         mountain: mountain,
-                        conditions: nil,
+                        conditions: viewModel.getConditions(for: mountain),
                         powderScore: viewModel.getScore(for: mountain).map { score in
                             MountainPowderScore(
                                 mountain: MountainInfo(
