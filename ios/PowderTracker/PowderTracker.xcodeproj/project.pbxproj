@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		997055FB30834D22AA82D65A /* LocationMapSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 397C91C097DF45C8BE00B16D /* LocationMapSection.swift */; };
         AD25C5F0650448FDBDBB8BEC /* MountainStatusIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF09AA1914B54B6FB8CF1BA6 /* MountainStatusIndicator.swift */; };
 		0693C2A405BB2A68EF5B9035 /* WeatherConditionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8C513137CDD1E76218F998 /* WeatherConditionsSection.swift */; };
 		0F6FD20D0854EC952BEC3D7D /* Mountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A37340F3AB0D4B44C537773 /* Mountain.swift */; };
@@ -125,6 +126,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		397C91C097DF45C8BE00B16D /* LocationMapSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMapSection.swift; sourceTree = "<group>"; };
         AF09AA1914B54B6FB8CF1BA6 /* MountainStatusIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainStatusIndicator.swift; sourceTree = "<group>"; };
 		01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryData.swift; sourceTree = "<group>"; };
 		01FC72C486A24966EC54ABAE /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
@@ -255,6 +257,7 @@
 		7347C955B23421C87FA427BF /* Location */ = {
 			isa = PBXGroup;
 			children = (
+				397C91C097DF45C8BE00B16D /* LocationMapSection.swift */,
 				8777CFBA8072C859E984B610 /* LocationView.swift */,
 				C22ECCD541BB7DF52E245594 /* SnowDepthSection.swift */,
 				EE8C513137CDD1E76218F998 /* WeatherConditionsSection.swift */,
@@ -486,6 +489,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				997055FB30834D22AA82D65A /* LocationMapSection.swift in Sources */,
                 AD25C5F0650448FDBDBB8BEC /* MountainStatusIndicator.swift in Sources */,
 				D485E896975C4C92834F08E3 /* HomeViewModel.swift in Sources */,
 				ED82B9D251094BD9B1BF2FF9 /* MountainLogoView.swift in Sources */,
@@ -567,6 +571,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				997055FB30834D22AA82D65A /* LocationMapSection.swift in Sources */,
                 AD25C5F0650448FDBDBB8BEC /* MountainStatusIndicator.swift in Sources */,
 				A4AB7832C4CDFD5C0822FFFD /* ChatMessage.swift in Sources */,
 				74AB4EBB52A2A9892F1FFABB /* Conditions.swift in Sources */,

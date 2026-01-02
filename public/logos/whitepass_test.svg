@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script type="text/javascript"> (function(c,l,a,r,i,t,y){ c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)}; t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i; y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y); })(window, document, "clarity", "script", "o24qf2hxow"); </script>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>404 - Not Found | White Pass Ski Area</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="apple-touch-icon-precomposed" sizes="57x57" href="https://d2iw90bb10toin.cloudfront.net/icons/apple-touch-icon-57x57.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="https://d2iw90bb10toin.cloudfront.net/icons/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="https://d2iw90bb10toin.cloudfront.net/icons/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://d2iw90bb10toin.cloudfront.net/icons/apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon-precomposed" sizes="60x60" href="https://d2iw90bb10toin.cloudfront.net/icons/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon-precomposed" sizes="120x120" href="https://d2iw90bb10toin.cloudfront.net/icons/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon-precomposed" sizes="76x76" href="https://d2iw90bb10toin.cloudfront.net/icons/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon-precomposed" sizes="152x152" href="https://d2iw90bb10toin.cloudfront.net/icons/apple-touch-icon-152x152.png">
+<link rel="icon" type="image/png" href="https://d2iw90bb10toin.cloudfront.net/icons/favicon-196x196.png" sizes="196x196">
+<link rel="icon" type="image/png" href="https://d2iw90bb10toin.cloudfront.net/icons/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="https://d2iw90bb10toin.cloudfront.net/icons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="https://d2iw90bb10toin.cloudfront.net/icons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="https://d2iw90bb10toin.cloudfront.net/icons/favicon-128.png" sizes="128x128">
+<meta name="application-name" content="&nbsp;"/>
+<meta name="msapplication-TileColor" content="#FFFFFF">
+<meta name="msapplication-TileImage" content="https://d2iw90bb10toin.cloudfront.net/icons/mstile-144x144.png">
+<meta name="msapplication-square70x70logo" content="https://d2iw90bb10toin.cloudfront.net/icons/mstile-70x70.png">
+<meta name="msapplication-square150x150logo" content="https://d2iw90bb10toin.cloudfront.net/icons/mstile-150x150.png">
+<meta name="msapplication-wide310x150logo" content="https://d2iw90bb10toin.cloudfront.net/icons/mstile-310x150.png">
+<meta name="msapplication-square310x310logo" content="https://d2iw90bb10toin.cloudfront.net/icons/mstile-310x310.png">
+<link rel="preload" as="style" href="https://skiwhitepass.com/build/assets/app-MxlsSPt-.css" /><link rel="modulepreload" href="https://skiwhitepass.com/build/assets/app-BbVUCrwY.js" /><link rel="stylesheet" href="https://skiwhitepass.com/build/assets/app-MxlsSPt-.css" /><script type="module" src="https://skiwhitepass.com/build/assets/app-BbVUCrwY.js"></script><!-- Facebook Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window,document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '4434851476586308'); 
+fbq('track', 'PageView');
+</script>
+<!-- End Facebook Pixel Code -->
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4CB1J0253G"></script>
+<script>
+window.dataLayer = window.dataLayer || []; 
+function gtag(){dataLayer.push(arguments);} 
+gtag('js', new Date()); 
+gtag('config', 'G-4CB1J0253G');
+</script>
+</head>
+<body class="font-montserrat leading-normal antialiased">
+    <div id="app">
+
+        <header class="fixed top-0 z-20 w-full min-h-24">
+                        <nav class="xl:flex xl:items-center xl:justify-between bg-wp-green xl:bg-wp-dark-green">
+    <div class="flex items-center justify-between bg-wp-green">
+        <a href="/">
+            <svg-sprite icon="whitepass" class="h-14 m-4 my-6 sm:h-16 sm:m-6 xl:h-18 xl:mx-8 xl:my-6" fill="#fff"></svg-sprite>
+        </a>
+
+        <div class="xl:hidden">
+            <button class="mr-6 outline-none" type="button" @click="mobileNavOpen = !mobileNavOpen">
+                <span v-show="!mobileNavOpen">
+                    <svg-sprite icon="fa-bars" class="fill-white w-6 h-6 sm:w-8 sm:h-8" />
+                </span>
+                <span v-show="mobileNavOpen">
+                    <svg-sprite icon="fa-xmark" class="fill-white w-6 h-6 sm:w-8 sm:h-8" />
+                </span>
+            </button>
+
+            <button class="mr-6 outline-none" type="button" @click="searchOpen = !searchOpen">
+                <svg-sprite icon="fa-magnifying-glass" class="fill-white w-6 h-6 sm:w-8 sm:h-8" />
+            </button>
+        </div>
+    </div>
+
+    <mobile-navigation v-show="mobileNavOpen" class="bg-wp-green max-h-screen overflow-y-auto m-3 pb-96 md:mx-6 xl:hidden">
+                <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="/events">
+            Events
+                    </a>
+                <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="/the-mountain/snow-report">
+            Weather
+             28&deg;        </a>
+                <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="/mountain-cams">
+            Mountain Cams
+                    </a>
+                <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="https://estore.skiwhitepass.com/">
+            EStore
+                    </a>
+        
+                <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="/the-mountain">The Mountain</a>
+                        <mobile-sub-navigation class="relative">
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/snow-report">Snow Report</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/season-passes">Season Passes</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/lift-tickets">Lift Tickets</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/trail-maps">Trail Maps</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/hours-and-lifts">Hours &amp; Lifts</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/getting-here">Getting Here</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/ski-and-snowboard-demo-sales-and-service">Ski &amp; Snowboard Demo, Sales &amp; Service</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/nordic-center">Nordic Center</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/white-pass-parks">White Pass Parks</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/indypass">Indypass</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/grooming-report">Grooming Report</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/lost-and-found">Lost and Found</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/snowshoe-tours">Snowshoe Tours</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/jobs">Jobs</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/contact-us">Contact Us</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/accessibility">Accessibility</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/uphill-travel-policy">Uphill Travel Policy</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/privacy-policy">Privacy Policy</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/winter-operations-plan">Winter Operations Plan</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/the-mountain/safety">Safety</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="https://skiwhitepass.com/the-mountain/whats-new">What&#039;s New</a>
+                            </mobile-sub-navigation>
+                            <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="/for-the-family">For The Family</a>
+                        <mobile-sub-navigation class="relative">
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/for-the-family/first-day-checklist">First Day Checklist</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/for-the-family/insider-tips">Insider Tips</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/for-the-family/tubing-hill">Tubing Hill</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/for-the-family/packages-and-special-offers">Packages &amp; Special Offers</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/for-the-family/faq">FAQ</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/for-the-family/winter-activity-guide">Winter Activity Guide</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="https://skiwhitepass.com/lessons-and-rentals/sno-go">Sno-Go</a>
+                            </mobile-sub-navigation>
+                            <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="/lessons-and-rentals">Lessons &amp; Rentals</a>
+                        <mobile-sub-navigation class="relative">
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/group-private-instruction">Group/Private Instruction</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/rental-equipment">Rental Equipment</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/girlswithgrit">Girls with Grit Clinics and Camp</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/discount-packages">Discount Packages</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/kids-clinic">Kids&#039; Clinic</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/wp-ski-and-snowboard-club">Team White Pass</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/find-your-ski-ride-level">Find your ski / ride level</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/adult-ski-and-snowboard-workshop">Adult Workshop</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/sno-go">Sno-Go</a>
+                            </mobile-sub-navigation>
+                            <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="/lodging-and-dining">Lodging &amp; Dining</a>
+                        <mobile-sub-navigation class="relative">
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="/lodging-and-dining">Lodging &amp; Dining</a>
+                                <a class="font-montserrat font-normal text-sm text-white block px-2 py-1 normal-case" href="https://skiwhitepass.com/lodging-and-dining/rv-parking">RV Parking</a>
+                            </mobile-sub-navigation>
+                            <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="/shopping">Shopping</a>
+                            <a class="font-montserrat font-semibold text-sm text-white block ml-2 px-2 py-2 uppercase w-3/4 md:m-0 relative" href="/news">News</a>
+                        </mobile-navigation>
+
+    <div class="hidden xl:block xl:flex-1">
+        <div class="flex items-center justify-end mb-2 pr-3">
+                        <div class="flex items-center ml-2">
+                <svg-sprite icon="fa-calendar-days" class="h-4 fill-wp-orange"></svg-sprite>
+                <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="/events">
+                    Events
+                                    </a>
+            </div>
+                        <div class="flex items-center ml-2">
+                <svg-sprite icon="fa-snowflakes" class="h-4 fill-wp-orange"></svg-sprite>
+                <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="/the-mountain/snow-report">
+                    Weather
+                     28&deg;                </a>
+            </div>
+                        <div class="flex items-center ml-2">
+                <svg-sprite icon="fa-camera-web" class="h-4 fill-wp-orange"></svg-sprite>
+                <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="/mountain-cams">
+                    Mountain Cams
+                                    </a>
+            </div>
+                        <div class="flex items-center ml-2">
+                <svg-sprite icon="fa-id-card" class="h-4 fill-wp-orange"></svg-sprite>
+                <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="https://estore.skiwhitepass.com/">
+                    EStore
+                                    </a>
+            </div>
+            
+            <button class="mx-4 outline-none" type="button" @click="searchOpen = !searchOpen">
+                <svg-sprite icon="fa-magnifying-glass" class="fill-white w-6 h-6" />
+            </button>
+        </div>
+
+        <main-navigation class="flex items-center justify-end border-t-4 border-wp-green pt-2 pr-3">
+                                            <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="/the-mountain" @click.prevent="toggleMainDropdown('the-mountain')">The Mountain</a>
+                                                            <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="/for-the-family" @click.prevent="toggleMainDropdown('for-the-family')">For The Family</a>
+                                                            <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="/lessons-and-rentals" @click.prevent="toggleMainDropdown('lessons-and-rentals')">Lessons &amp; Rentals</a>
+                                                            <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="/lodging-and-dining" @click.prevent="toggleMainDropdown('lodging-and-dining')">Lodging &amp; Dining</a>
+                                                            <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="/shopping">Shopping</a>
+                                                            <a class="font-montserrat font-semibold text-sm text-white mx-1 p-2 uppercase hover:text-wp-orange relative" href="/news">News</a>
+                                    </main-navigation>
+    </div>
+
+</nav>
+
+<div class="hidden xl:block bg-wp-dark-green">
+                    <main-dropdown id="main-dropdown-the-mountain" class="container p-12" :visible="mainDropdownOpen === 'the-mountain'">
+            <div class="grid grid-cols-3 gap-x-4 gap-y-2">
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/snow-report">Snow Report</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/season-passes">Season Passes</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/lift-tickets">Lift Tickets</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/trail-maps">Trail Maps</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/hours-and-lifts">Hours &amp; Lifts</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/getting-here">Getting Here</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/ski-and-snowboard-demo-sales-and-service">Ski &amp; Snowboard Demo, Sales &amp; Service</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/nordic-center">Nordic Center</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/white-pass-parks">White Pass Parks</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/indypass">Indypass</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/grooming-report">Grooming Report</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/lost-and-found">Lost and Found</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/snowshoe-tours">Snowshoe Tours</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/jobs">Jobs</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/contact-us">Contact Us</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/accessibility">Accessibility</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/uphill-travel-policy">Uphill Travel Policy</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/privacy-policy">Privacy Policy</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/winter-operations-plan">Winter Operations Plan</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/safety">Safety</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="https://skiwhitepass.com/the-mountain/whats-new">What&#039;s New</a>
+                            </div>
+        </main-dropdown>
+                            <main-dropdown id="main-dropdown-for-the-family" class="container p-12" :visible="mainDropdownOpen === 'for-the-family'">
+            <div class="grid grid-cols-3 gap-x-4 gap-y-2">
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/for-the-family/first-day-checklist">First Day Checklist</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/for-the-family/insider-tips">Insider Tips</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/for-the-family/tubing-hill">Tubing Hill</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/for-the-family/packages-and-special-offers">Packages &amp; Special Offers</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/for-the-family/faq">FAQ</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/for-the-family/winter-activity-guide">Winter Activity Guide</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="https://skiwhitepass.com/lessons-and-rentals/sno-go">Sno-Go</a>
+                            </div>
+        </main-dropdown>
+                            <main-dropdown id="main-dropdown-lessons-and-rentals" class="container p-12" :visible="mainDropdownOpen === 'lessons-and-rentals'">
+            <div class="grid grid-cols-3 gap-x-4 gap-y-2">
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/group-private-instruction">Group/Private Instruction</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/rental-equipment">Rental Equipment</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/girlswithgrit">Girls with Grit Clinics and Camp</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/discount-packages">Discount Packages</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/kids-clinic">Kids&#039; Clinic</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/wp-ski-and-snowboard-club">Team White Pass</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/find-your-ski-ride-level">Find your ski / ride level</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/adult-ski-and-snowboard-workshop">Adult Workshop</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lessons-and-rentals/sno-go">Sno-Go</a>
+                            </div>
+        </main-dropdown>
+                            <main-dropdown id="main-dropdown-lodging-and-dining" class="container p-12" :visible="mainDropdownOpen === 'lodging-and-dining'">
+            <div class="grid grid-cols-3 gap-x-4 gap-y-2">
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lodging-and-dining">Lodging &amp; Dining</a>
+                                <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="https://skiwhitepass.com/lodging-and-dining/rv-parking">RV Parking</a>
+                            </div>
+        </main-dropdown>
+                                    </div>
+
+<div v-show="searchOpen" class="w-full bg-wp-dark-green">
+    <div class="container max-w-3xl px-4 pt-10 pb-12 sm:px-16">
+        <div class="search-form">
+    <form action="/search">
+        <div class="flex">
+            <input class="bg-white border border-gray-50 outline-none focus:border-wp-orange focus:ring-wp-orange flex-1" type="search" name="q" placeholder="Search" value="">
+            <button class="btn button-green py-2.5" type="submit">Search</button>
+        </div>
+    </form>
+</div>
+
+                        <div class="quick-links mt-6">
+            <span class="font-oswald uppercase font-bold text-2xl text-white block my-4">Quick Links</span>
+                            <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/snow-report">Snow Report</a>
+                            <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain">The Mountain</a>
+                            <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/mountain-cams">Mountain Cams</a>
+                            <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/the-mountain/lift-tickets">Lift Tickets</a>
+                            <a class="font-montserrat font-normal text-base text-white block px-2 py-1 normal-case" href="/lodging-and-dining/rv-parking">RV Parking</a>
+                    </div>
+                    </div>
+</div>
+        </header>
+
+        <main role="main" class="bg-white mt-24 xl:mt-28">
+            <div class="mt-28"></div>
+    
+                                                            <section class="announcement bg-wp-orange py-12">
+    <div class="container px-8 xl:px-0">
+                <div class="flex justify-center mb-4">
+            <svg-sprite icon="fa-skier" class="h-14 text-white fill-white"></svg-sprite>
+        </div>
+        
+        <div class="prose prose-xl mx-6 md:mx-auto text-center text-white">
+            <p><strong>Happy New Year! Full-day tickets are sold out for January 1st. Some half-day tickets are available.</strong></p><p>Tickets are available for January 2, 3, and 4 - we expect to sell out soon.</p><p>XC Skiing and Snowshoe along with Tubing are available today!</p>
+        </div>
+
+                <div class="button-row flex flex-col items-center justify-center sm:flex-row mt-4">
+                        <cta-button class="btn w-full m-1 block text-center sm:inline-block sm:w-auto button-white-outline" url="https://skiwhitepass.com/the-mountain/snow-report">Snow Report</cta-button>
+                        <cta-button class="btn w-full m-1 block text-center sm:inline-block sm:w-auto button-white-outline" url="https://estore.skiwhitepass.com/products/holiday-gift-specials">Holiday Gift Specials!</cta-button>
+            
+                    </div>
+            </div>
+</section>
+                                        
+            <section class="marquee relative">
+    <img class="w-full h-full object-cover" src="https://d2iw90bb10toin.cloudfront.net/1600x600/-yourcarisyourdaylodge-8-.png" alt="Marquee Image">
+    <div class="absolute right-0 bottom-6 sm:bottom-24 left-8 xl:bottom-36 xl:left-24">
+        <div class="caption white">
+            <h1 class="font-oswald uppercase text-3xl sm:text-6xl xl:text-7xl xl:ml-36">
+                404: Not Found<br>It's always the last place you look.
+            </h1>
+        </div>
+    </div>
+</section>
+
+                    </main>
+
+        <footer class="flex flex-col">
+            <div class="bg-wp-dark-green py-12">
+    <div class="container">
+        <div class="prose max-w-none text-white text-center mb-8">
+            <a class="no-underline" href="/">
+                <svg-sprite icon="whitepass" class="h-14 m-2 mx-auto" fill="#fff"></svg-sprite>
+            </a>
+            <p class="my-1">
+    <a class="no-underline hover:text-wp-orange group flex items-center justify-center" href="https://www.google.com/maps/place/White+Pass+Ski+Resort/@46.6370506,-121.3937731,17z/data=!3m1!4b1!4m5!3m4!1s0x54973b0fabf486e3:0xdf4be958f1498184!8m2!3d46.6370506!4d-121.3915844" target="_blank">
+        <svg-sprite icon="fa-location-dot" class="h-4 mr-2 fill-white group-hover:fill-wp-orange"></svg-sprite>
+        48935 US Hwy 12,
+        Naches,
+        WA
+        98937
+    </a>
+</p>
+
+<p class="my-1">
+        <a class="no-underline hover:text-wp-orange group flex items-center justify-center" href="tel:15096723101">
+        <svg-sprite icon="fa-phone-rotary" class="h-4 mr-2 fill-white group-hover:fill-wp-orange"></svg-sprite>
+        Business office: 509/672.3101
+    </a>
+    </p>
+
+            <div class="flex items-center justify-center">
+        <a class="no-underline hover:text-wp-orange p-2" href="https://twitter.com/WhitePass" target="_blank">
+        <svg-sprite icon="fa-twitter" class="h-6 fill-white hover:fill-wp-orange"></svg-sprite>
+    </a>
+        <a class="no-underline hover:text-wp-orange p-2" href="https://www.instagram.com/whitepass" target="_blank">
+        <svg-sprite icon="fa-instagram" class="h-6 fill-white hover:fill-wp-orange"></svg-sprite>
+    </a>
+        <a class="no-underline hover:text-wp-orange p-2" href="https://www.facebook.com/SkiWhitePass" target="_blank">
+        <svg-sprite icon="fa-facebook" class="h-6 fill-white hover:fill-wp-orange"></svg-sprite>
+    </a>
+    </div>
+        </div>
+
+        <div id="mc_embed_signup" class="sm:max-w-2xl sm:mx-auto">
+    <div class="prose max-w-none text-white text-center">
+        <h5 class="text-white text-center">Sign Up for Daily Snow Conditions</h5>
+    </div>
+
+    <form action="https://skiwhitepass.us16.list-manage.com/subscribe/post?u=7c9281b6cfb0e556188e4c9ba&amp;id=53b1034bef" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mx-2 sm:flex sm:items-center sm:justify-center sm:-mx-2 my-2">
+            <div class="form-group mx-2 my-2">
+                <label class="block text-white sr-only" for="mce-EMAIL">Email <small><em>(* required)</em></small></label>
+                <input class="block w-full bg-transparent border border-gray-50 text-white text-center outline-none focus:border-wp-orange focus:ring-wp-orange" type="email" id="mce-EMAIL" name="EMAIL" placeholder="email@example.com">
+            </div>
+
+            <div class="form-group mx-2 my-2">
+                <label class="block text-white sr-only" for="mce-FNAME">First Name</label>
+                <input class="block w-full bg-transparent border border-gray-50 text-white text-center outline-none focus:border-wp-orange focus:ring-wp-orange" type="text" id="mce-FNAME" name="FNAME" placeholder="First name">
+            </div>
+
+            <div class="form-group mx-2 my-2">
+                <label class="block text-white sr-only" for="mce-LNAME">Last Name</label>
+                <input class="block w-full bg-transparent border border-gray-50 text-white text-center outline-none focus:border-wp-orange focus:ring-wp-orange" type="text" id="mce-LNAME" name="LNAME" placeholder="Last name">
+            </div>
+        </div>
+
+        <div id="mce-responses" class="clear">
+            <div class="response text-white text-sm text-center italic" id="mce-error-response" style="display:none"></div>
+            <div class="response text-white text-sm text-center italic" id="mce-success-response" style="display:none"></div>
+        </div>
+
+        
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_7c9281b6cfb0e556188e4c9ba_c15e4b067b" tabindex="-1" value=""></div>
+
+        <div class="form-group mx-4 my-4">
+            <button class="btn button-white-outline py-2 w-full flex items-center justify-center" type="submit">Subscribe</button>
+        </div>
+    </form>
+</div>
+
+    </div>
+</div>
+
+<div class="bg-wp-medium-green">
+        <div class="border-b border-wp-tan">
+        <div class="container px-6 py-6 xl:px-0">
+            <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-2 pb-1" href="/the-mountain">The Mountain</a>
+            <div class="sm:grid sm:grid-cols-2 sm:gap-x-3 sm:gap-y-1 lg:grid-cols-3 xl:grid-cols-4 mb-4">
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/snow-report">Snow Report</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/season-passes">Season Passes</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/lift-tickets">Lift Tickets</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/trail-maps">Trail Maps</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/hours-and-lifts">Hours &amp; Lifts</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/getting-here">Getting Here</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/ski-and-snowboard-demo-sales-and-service">Ski &amp; Snowboard Demo, Sales &amp; Service</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/nordic-center">Nordic Center</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/white-pass-parks">White Pass Parks</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/indypass">Indypass</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/grooming-report">Grooming Report</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/lost-and-found">Lost and Found</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/jobs">Jobs</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/contact-us">Contact Us</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/accessibility">Accessibility</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/uphill-travel-policy">Uphill Travel Policy</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/privacy-policy">Privacy Policy</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/winter-operations-plan">Winter Operations Plan</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/safety">Safety</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/snowshoe-tours">Snowshoe Tours</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/the-mountain/whats-new">What&#039;s New</a>
+                            </div>
+        </div>
+    </div>
+        <div class="border-b border-wp-tan">
+        <div class="container px-6 py-6 xl:px-0">
+            <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-2 pb-1" href="/for-the-family">For The Family</a>
+            <div class="sm:grid sm:grid-cols-2 sm:gap-x-3 sm:gap-y-1 lg:grid-cols-3 xl:grid-cols-4 mb-4">
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/for-the-family/first-day-checklist">First Day Checklist</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/for-the-family/insider-tips">Insider Tips</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/for-the-family/tubing-hill">Tubing Hill</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/for-the-family/packages-and-special-offers">Packages &amp; Special Offers</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/for-the-family/faq">FAQ</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/for-the-family/winter-activity-guide">Winter Activity Guide</a>
+                            </div>
+        </div>
+    </div>
+        <div class="border-b border-wp-tan">
+        <div class="container px-6 py-6 xl:px-0">
+            <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-2 pb-1" href="/lessons-and-rentals">Lessons &amp; Rentals</a>
+            <div class="sm:grid sm:grid-cols-2 sm:gap-x-3 sm:gap-y-1 lg:grid-cols-3 xl:grid-cols-4 mb-4">
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/group-private-instruction">Group/Private Instruction</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/rental-equipment">Rental Equipment</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/discount-packages">Discount Packages</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/kids-clinic-1">Kids&#039; Clinic First Tracks</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/kids-clinic">Kids&#039; Clinic</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/adult-ski-and-snowboard-workshop">Adult Workshop</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/girlswithgrit">Girls with Grit Clinics and Camp</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/wp-ski-and-snowboard-club">Team White Pass</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/find-your-ski-ride-level">Find your ski / ride level</a>
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lessons-and-rentals/sno-go">Sno-Go</a>
+                            </div>
+        </div>
+    </div>
+        <div class="border-b border-wp-tan">
+        <div class="container px-6 py-6 xl:px-0">
+            <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-2 pb-1" href="/lodging-and-dining">Lodging &amp; Dining</a>
+            <div class="sm:grid sm:grid-cols-2 sm:gap-x-3 sm:gap-y-1 lg:grid-cols-3 xl:grid-cols-4 mb-4">
+                                <a class="font-montserrat font-normal normal-case text-sm text-white hover:text-wp-orange block whitespace-nowrap ml-2 px-2 pb-1" href="/lodging-and-dining/rv-parking">RV Parking</a>
+                            </div>
+        </div>
+    </div>
+        <div class="border-b border-wp-tan">
+        <div class="container px-6 py-6 xl:px-0">
+            <div class="sm:grid sm:grid-cols-2 sm:gap-x-3 sm:gap-y-1 lg:grid-cols-3 xl:grid-cols-4 mb-4">
+                                <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-1" href="/white-pass-adventures">White Pass Adventures</a>
+                                <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-1" href="/events">Events</a>
+                                <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-1" href="/news">News</a>
+                                <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-1" href="/mountain-cams">Mountain Cams</a>
+                                <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-1" href="/shopping">Shopping</a>
+                                <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-1" href="/online-day-ticket-sales">Day Tickets</a>
+                                <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-1" href="/25-26-season-pass-page">25-26 Season Pass Page</a>
+                                <a class="font-montserrat font-semibold uppercase text-sm text-white hover:text-wp-orange block whitespace-nowrap my-1 p-1" href="/military-discount-eligibility">Military Discount Eligibility</a>
+                            </div>
+        </div>
+    </div>
+
+    <a class="block text-sm text-white text-center p-4" href="/">&copy; 2016-2026 White Pass Ski Area</a>
+</div>
+        </footer>
+
+            </div>
+
+<script type='text/javascript' src='//s3.amazonaws.com/downloads.mailchimp.com/js/mc-validate.js'></script>
+<script type='text/javascript'>(function($) {window.fnames = new Array(); window.ftypes = new Array();fnames[0]='EMAIL';ftypes[0]='email';fnames[1]='FNAME';ftypes[1]='text';fnames[2]='LNAME';ftypes[2]='text';fnames[3]='ADDRESS';ftypes[3]='address';fnames[4]='PHONE';ftypes[4]='phone';}(jQuery));var $mcj = jQuery.noConflict(true);</script>
+</body>
+</html>

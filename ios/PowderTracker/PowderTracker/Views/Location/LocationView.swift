@@ -32,6 +32,12 @@ struct LocationView: View {
                     SnowDepthSection(viewModel: viewModel)
                         .padding(.horizontal)
 
+                    // Map Section
+                    if let mountainDetail = viewModel.locationData?.mountain {
+                        LocationMapSection(mountain: mountain, mountainDetail: mountainDetail)
+                            .padding(.horizontal)
+                    }
+
                     // Weather Conditions Section
                     WeatherConditionsSection(viewModel: viewModel)
                         .padding(.horizontal)
