@@ -283,7 +283,7 @@ struct MountainTimelineCard: View {
         .cornerRadius(8)
     }
 
-    // MARK: - Snow Timeline (OpenSnow-style 3-section layout)
+    // MARK: - Snow Timeline (OpenSnow-style scrollable timeline)
 
     private var snowTimeline: some View {
         VStack(spacing: 0) {
@@ -333,41 +333,56 @@ struct MountainTimelineCard: View {
             .padding(.vertical, 10)
             .padding(.horizontal, 12)
 
-            // Three-column bar graphs
-            HStack(alignment: .bottom, spacing: 0) {
-                // Past 5 days bars
-                HStack(spacing: 2) {
-                    ForEach(-5..<0, id: \.self) { dayOffset in
-                        compactDayColumn(for: dayOffset, color: Color(red: 0.984, green: 0.573, blue: 0.235))
-                    }
-                }
-                .frame(maxWidth: .infinity)
+            // Horizontally scrollable bar graphs
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .bottom, spacing: 0) {
+                        // Past 5 days bars
+                        HStack(spacing: 2) {
+                            ForEach(-5..<0, id: \.self) { dayOffset in
+                                compactDayColumn(for: dayOffset, color: Color(red: 0.984, green: 0.573, blue: 0.235))
+                                    .id("past-\(dayOffset)")
+                            }
+                        }
+                        .padding(.trailing, 8)
 
-                // Center - Reported timestamp
-                VStack(spacing: 4) {
-                    if let lastUpdated = conditions?.lastUpdated {
-                        let date = ISO8601DateFormatter().date(from: lastUpdated) ?? Date()
-                        Text(date.formatted(.dateTime.weekday(.abbreviated).day().hour().minute()))
-                            .font(.system(size: 10))
-                            .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
-                        Text("Reported")
-                            .font(.system(size: 9))
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.bottom, 10)
+                        // Center - Reported timestamp
+                        VStack(spacing: 4) {
+                            if let lastUpdated = conditions?.lastUpdated {
+                                let date = ISO8601DateFormatter().date(from: lastUpdated) ?? Date()
+                                Text(date.formatted(.dateTime.weekday(.abbreviated).day().hour().minute()))
+                                    .font(.system(size: 10))
+                                    .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
+                                Text("Reported")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .frame(width: 100)
+                        .padding(.bottom, 10)
+                        .id("center")
 
-                // Next 5 days bars
-                HStack(spacing: 2) {
-                    ForEach(1...5, id: \.self) { dayOffset in
-                        compactDayColumn(for: dayOffset, color: .blue)
+                        // Next 5 days bars (scrollable - show more days)
+                        HStack(spacing: 2) {
+                            ForEach(1...10, id: \.self) { dayOffset in
+                                compactDayColumn(for: dayOffset, color: .blue)
+                                    .id("future-\(dayOffset)")
+                            }
+                        }
+                        .padding(.leading, 8)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
+                }
+                .onAppear {
+                    // Scroll to center the "Last 24 Hours" section
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            proxy.scrollTo("center", anchor: .center)
+                        }
                     }
                 }
-                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
         }
     }
 
