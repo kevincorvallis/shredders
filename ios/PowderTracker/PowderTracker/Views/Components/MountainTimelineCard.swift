@@ -10,6 +10,7 @@ struct MountainTimelineCard: View {
     @ObservedObject var scrollSync: TimelineScrollSync // Synchronized horizontal scrolling
 
     @State private var isAnimating = false
+    @State private var centerDayOffset: Int = 0 // Which day is centered in the view
 
     // Dynamic gradient based on powder conditions
     private var dynamicGradient: LinearGradient {
@@ -283,43 +284,44 @@ struct MountainTimelineCard: View {
         .cornerRadius(8)
     }
 
-    // MARK: - Snow Timeline (OpenSnow-style scrollable timeline)
+    // MARK: - Snow Timeline (Dynamically scrollable timeline)
 
     private var snowTimeline: some View {
         VStack(spacing: 0) {
-            // Three-column header with totals
+            // Dynamic three-column header (updates based on scroll position)
             HStack(spacing: 0) {
-                // Prev 1-5 Days section
+                // Prev 1-5 Days section (relative to centered day)
                 VStack(spacing: 4) {
                     Text("Prev 1-5 Days")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
-                    Text("\(prevFiveDaysTotal)\"")
+                    Text("\(dynamicPrevFiveDaysTotal)\"")
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
                 }
                 .frame(maxWidth: .infinity)
 
-                // Last 24 Hours - BIG CENTER NUMBER
+                // Centered day - BIG NUMBER (updates as you scroll)
                 VStack(spacing: 2) {
-                    Text("Last 24 Hours")
+                    Text(centeredDayLabel)
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
-                    Text("\(conditions?.snowfall24h ?? 0)\"")
+                    Text("\(snowfallForDay(offset: centerDayOffset))\"")
                         .font(.system(size: 72, weight: .bold))
                         .foregroundColor(.primary)
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity)
+                .id("header-\(centerDayOffset)") // Force update on scroll
 
-                // Next 1-5 Days section
+                // Next 1-5 Days section (relative to centered day)
                 VStack(spacing: 4) {
                     Text("Next 1-5 Days")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
-                    if nextFiveDaysTotal > 0 {
-                        Text("\(nextFiveDaysTotal)\"")
+                    if dynamicNextFiveDaysTotal > 0 {
+                        Text("\(dynamicNextFiveDaysTotal)\"")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.blue)
                     } else {
@@ -332,58 +334,171 @@ struct MountainTimelineCard: View {
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 12)
+            .animation(.easeOut(duration: 0.2), value: centerDayOffset)
 
-            // Horizontally scrollable bar graphs
+            // Continuous horizontally scrollable bar graph
             ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .bottom, spacing: 0) {
-                        // Past 5 days bars
-                        HStack(spacing: 2) {
-                            ForEach(-5..<0, id: \.self) { dayOffset in
-                                compactDayColumn(for: dayOffset, color: Color(red: 0.984, green: 0.573, blue: 0.235))
-                                    .id("past-\(dayOffset)")
+                GeometryReader { outerGeo in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 3) {
+                            ForEach(-7...7, id: \.self) { dayOffset in
+                                fullDayColumn(for: dayOffset)
+                                    .id(dayOffset)
+                                    .background(
+                                        GeometryReader { geo in
+                                            Color.clear
+                                                .preference(
+                                                    key: DayOffsetPreferenceKey.self,
+                                                    value: [dayOffset: geo.frame(in: .named("scroll")).midX]
+                                                )
+                                        }
+                                    )
                             }
                         }
-                        .padding(.trailing, 8)
-
-                        // Center - Reported timestamp
-                        VStack(spacing: 4) {
-                            if let lastUpdated = conditions?.lastUpdated {
-                                let date = ISO8601DateFormatter().date(from: lastUpdated) ?? Date()
-                                Text(date.formatted(.dateTime.weekday(.abbreviated).day().hour().minute()))
-                                    .font(.system(size: 10))
-                                    .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
-                                Text("Reported")
-                                    .font(.system(size: 9))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .frame(width: 100)
-                        .padding(.bottom, 10)
-                        .id("center")
-
-                        // Next 5 days bars (scrollable - show more days)
-                        HStack(spacing: 2) {
-                            ForEach(1...10, id: \.self) { dayOffset in
-                                compactDayColumn(for: dayOffset, color: .blue)
-                                    .id("future-\(dayOffset)")
-                            }
-                        }
-                        .padding(.leading, 8)
+                        .padding(.horizontal, outerGeo.size.width / 2 - 20) // Center padding
+                        .padding(.vertical, 12)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 12)
-                }
-                .onAppear {
-                    // Scroll to center the "Last 24 Hours" section
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        withAnimation(.easeOut(duration: 0.3)) {
-                            proxy.scrollTo("center", anchor: .center)
+                    .coordinateSpace(name: "scroll")
+                    .onPreferenceChange(DayOffsetPreferenceKey.self) { positions in
+                        updateCenterDay(from: positions, viewWidth: outerGeo.size.width)
+                    }
+                    .onAppear {
+                        // Scroll to today initially
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation(.easeOut(duration: 0.3)) {
+                                proxy.scrollTo(0, anchor: .center)
+                            }
                         }
                     }
                 }
+                .frame(height: 90)
+            }
+
+            // Reported timestamp
+            if let lastUpdated = conditions?.lastUpdated {
+                let date = ISO8601DateFormatter().date(from: lastUpdated) ?? Date()
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 8))
+                        .foregroundColor(.secondary)
+                    Text(date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.bottom, 6)
             }
         }
+    }
+
+    // Update which day is centered based on scroll position
+    private func updateCenterDay(from positions: [Int: CGFloat], viewWidth: CGFloat) {
+        let viewCenter = viewWidth / 2
+        var closestDay = 0
+        var closestDistance: CGFloat = .infinity
+
+        for (day, position) in positions {
+            let distance = abs(position - viewCenter)
+            if distance < closestDistance {
+                closestDistance = distance
+                closestDay = day
+            }
+        }
+
+        if closestDay != centerDayOffset {
+            centerDayOffset = closestDay
+        }
+    }
+
+    // Dynamic totals based on centered day
+    private var dynamicPrevFiveDaysTotal: Int {
+        (centerDayOffset - 5..<centerDayOffset).reduce(0) { total, offset in
+            total + snowfallForDay(offset: offset)
+        }
+    }
+
+    private var dynamicNextFiveDaysTotal: Int {
+        (centerDayOffset + 1...centerDayOffset + 5).reduce(0) { total, offset in
+            total + snowfallForDay(offset: offset)
+        }
+    }
+
+    private var centeredDayLabel: String {
+        if centerDayOffset == 0 {
+            return "Last 24 Hours"
+        } else if centerDayOffset < 0 {
+            return "\(abs(centerDayOffset)) Day\(abs(centerDayOffset) == 1 ? "" : "s") Ago"
+        } else {
+            return "In \(centerDayOffset) Day\(centerDayOffset == 1 ? "" : "s")"
+        }
+    }
+
+    // Full-size day column for continuous scrolling
+    private func fullDayColumn(for offset: Int) -> some View {
+        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+        let snowfall = snowfallForDay(offset: offset)
+        let isToday = offset == 0
+        let isPast = offset < 0
+        let barHeight = min(CGFloat(snowfall) * 3.5, 55)
+
+        let barColor: Color = isPast ? Color(red: 0.984, green: 0.573, blue: 0.235) : .blue
+
+        return VStack(spacing: 2) {
+            // Date display
+            VStack(spacing: 0) {
+                Text(date.formatted(.dateTime.weekday(.abbreviated)).prefix(1))
+                    .font(.system(size: 9, weight: isToday ? .bold : .medium))
+                    .foregroundColor(isToday ? .primary : .secondary)
+                Text(date.formatted(.dateTime.day()))
+                    .font(.system(size: 10, weight: isToday ? .bold : .regular))
+                    .foregroundColor(isToday ? .primary : .secondary)
+            }
+
+            // Bar chart
+            ZStack(alignment: .bottom) {
+                // Background track
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(width: 18, height: 55)
+
+                // Bar
+                if snowfall > 0 {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(
+                            LinearGradient(
+                                colors: [barColor, barColor.opacity(0.7)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 18, height: barHeight)
+                        .shadow(
+                            color: barColor.opacity(0.3),
+                            radius: snowfall > 6 ? 3 : 1,
+                            x: 0,
+                            y: 2
+                        )
+                }
+            }
+            .frame(height: 55)
+
+            // Snowfall amount
+            Text(snowfall > 0 ? "\(snowfall)\"" : "-")
+                .font(.system(size: 9, weight: snowfall > 6 ? .bold : .medium))
+                .foregroundColor(snowfall > 0 ? .primary : .secondary.opacity(0.6))
+        }
+        .frame(width: 28)
+        .padding(.vertical, 2)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isToday ? Color.blue.opacity(0.08) : Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(
+                            isToday ? Color.blue.opacity(0.5) : Color.clear,
+                            lineWidth: 1.5
+                        )
+                )
+        )
     }
 
     // Compact day column for 5-day sections
@@ -879,6 +994,15 @@ struct MountainTimelineCard: View {
         .padding()
     }
     .background(Color(.systemGroupedBackground))
+}
+
+// MARK: - Preference Key for Day Position Tracking
+
+struct DayOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: [Int: CGFloat] { [:] }
+    static func reduce(value: inout [Int: CGFloat], nextValue: () -> [Int: CGFloat]) {
+        value.merge(nextValue()) { $1 }
+    }
 }
 
 // MARK: - Snow Particles Animation
