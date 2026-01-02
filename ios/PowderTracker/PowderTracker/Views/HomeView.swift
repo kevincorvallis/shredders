@@ -6,13 +6,12 @@ struct HomeView: View {
     @StateObject private var favoritesManager = FavoritesManager.shared
     @State private var selectedFilter: SnowFilter = .snowSummary
     @State private var showingManageFavorites = false
-    @State private var timelineOffset: Int = 0 // Synchronized timeline scroll: -7 to +7
+    @StateObject private var scrollSync = TimelineScrollSync() // Synchronized horizontal scrolling
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 filterTabs
-                timelineNavigator
                 favoritesListView
             }
             .navigationTitle("Favorites")
@@ -85,7 +84,7 @@ struct HomeView: View {
                         powderScore: data.powderScore,
                         forecast: data.forecast,
                         filterMode: selectedFilter,
-                        timelineOffset: timelineOffset
+                        scrollSync: scrollSync
                     )
                 }
                 .buttonStyle(ScaleButtonStyle())
@@ -98,97 +97,6 @@ struct HomeView: View {
                     .transition(.scale.combined(with: .opacity))
             }
         }
-    }
-
-    private var timelineNavigator: some View {
-        HStack(spacing: 16) {
-            // Previous button
-            Button {
-                let impact = UIImpactFeedbackGenerator(style: .light)
-                impact.impactOccurred()
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                    timelineOffset = max(-7, timelineOffset - 1)
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 12, weight: .semibold))
-                    Text("Day")
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                }
-                .foregroundColor(timelineOffset <= -7 ? .secondary : .blue)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(8)
-            }
-            .disabled(timelineOffset <= -7)
-            .opacity(timelineOffset <= -7 ? 0.5 : 1.0)
-
-            Spacer()
-
-            // Current position indicator
-            VStack(spacing: 1) {
-                Text(timelineLabel)
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-                Text(timelineSubtitle)
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 4)
-            .background(
-                Capsule()
-                    .fill(Color.blue.opacity(0.1))
-            )
-
-            Spacer()
-
-            // Next button
-            Button {
-                let impact = UIImpactFeedbackGenerator(style: .light)
-                impact.impactOccurred()
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                    timelineOffset = min(7, timelineOffset + 1)
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Text("Day")
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                }
-                .foregroundColor(timelineOffset >= 7 ? .secondary : .blue)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(8)
-            }
-            .disabled(timelineOffset >= 7)
-            .opacity(timelineOffset >= 7 ? 0.5 : 1.0)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(Color(.systemBackground))
-    }
-
-    private var timelineLabel: String {
-        if timelineOffset == 0 {
-            return "Today"
-        } else if timelineOffset < 0 {
-            return "\(abs(timelineOffset)) days ago"
-        } else {
-            return "\(timelineOffset) days ahead"
-        }
-    }
-
-    private var timelineSubtitle: String {
-        let date = Calendar.current.date(byAdding: .day, value: timelineOffset, to: Date()) ?? Date()
-        return date.formatted(.dateTime.month(.abbreviated).day())
     }
 
     private var filterTabs: some View {
@@ -748,6 +656,26 @@ extension View {
             .offset(x: isAnimating ? 200 : -200)
             .mask(self)
         )
+    }
+}
+
+// MARK: - Timeline Scroll Synchronization
+
+class TimelineScrollSync: ObservableObject {
+    @Published var scrollOffset: CGFloat = 0
+    @Published var targetDayOffset: Int = 0
+
+    private let dayWidth: CGFloat = 26 // Width of each day column (20pt + 6pt spacing)
+
+    // Convert scroll offset to day offset
+    func updateFromScroll(_ offset: CGFloat) {
+        scrollOffset = offset
+        targetDayOffset = Int(round(offset / dayWidth))
+    }
+
+    // Convert day offset to scroll offset
+    func scrollPosition(for dayOffset: Int) -> CGFloat {
+        CGFloat(dayOffset) * dayWidth
     }
 }
 

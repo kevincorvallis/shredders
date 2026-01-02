@@ -7,7 +7,7 @@ struct MountainTimelineCard: View {
     let powderScore: MountainPowderScore?
     let forecast: [ForecastDay]
     let filterMode: SnowFilter
-    let timelineOffset: Int // Global synchronized timeline position
+    @ObservedObject var scrollSync: TimelineScrollSync // Synchronized horizontal scrolling
 
     @State private var isAnimating = false
 
@@ -54,13 +54,6 @@ struct MountainTimelineCard: View {
 
     private var hasFreshPowder: Bool {
         (conditions?.snowfall24h ?? 0) >= 6
-    }
-
-    // Visible day range based on global timeline offset
-    private var visibleDayRange: [Int] {
-        let start = timelineOffset - 3
-        let end = timelineOffset + 3
-        return Array(start...end)
     }
 
     var body: some View {
@@ -290,52 +283,31 @@ struct MountainTimelineCard: View {
         .cornerRadius(8)
     }
 
-    // MARK: - Snow Timeline (Clean synchronized view)
+    // MARK: - Snow Timeline (Horizontally scrollable, synchronized)
 
     private var snowTimeline: some View {
-        VStack(spacing: 8) {
-            // Timeline header with range
-            HStack {
-                Text(timelineRangeLabel)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.secondary)
-                    .id("range-\(timelineOffset)") // Smooth text update
-
-                Spacer()
-
-                // Total for visible window
-                if totalVisibleSnow > 0 {
-                    HStack(spacing: 4) {
-                        Text("Total:")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Text("\(totalVisibleSnow)\"")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
+        VStack(spacing: 6) {
+            // Scrollable timeline
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 3) {
+                        ForEach(-7...7, id: \.self) { dayOffset in
+                            redesignedDayBar(for: dayOffset)
+                                .id(dayOffset)
+                        }
                     }
-                    .transition(.scale.combined(with: .opacity))
-                    .id("total-\(totalVisibleSnow)") // Smooth number update
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                }
+                .onAppear {
+                    // Center on today
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            proxy.scrollTo(0, anchor: .center)
+                        }
+                    }
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.top, 8)
-            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: timelineOffset)
-
-            // Redesigned bar chart - better proportions
-            HStack(spacing: 3) {
-                ForEach(visibleDayRange, id: \.self) { dayOffset in
-                    redesignedDayBar(for: dayOffset)
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .id(timelineOffset) // Force rebuild when offset changes
 
             // Reported time
             if let lastUpdated = conditions?.lastUpdated {
@@ -348,30 +320,8 @@ struct MountainTimelineCard: View {
                         .font(.system(size: 9))
                         .foregroundColor(.secondary)
                 }
-                .padding(.bottom, 6)
+                .padding(.bottom, 4)
             }
-        }
-        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: timelineOffset)
-    }
-
-    private var timelineRangeLabel: String {
-        guard let firstDay = visibleDayRange.first,
-              let lastDay = visibleDayRange.last else {
-            return "Snow Timeline"
-        }
-
-        let startDate = Calendar.current.date(byAdding: .day, value: firstDay, to: Date())!
-        let endDate = Calendar.current.date(byAdding: .day, value: lastDay, to: Date())!
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-
-        return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
-    }
-
-    private var totalVisibleSnow: Int {
-        visibleDayRange.reduce(0) { total, offset in
-            total + snowfallForDay(offset: offset)
         }
     }
 
@@ -819,7 +769,7 @@ struct MountainTimelineCard: View {
                     ForecastDay(date: "2024-12-15", dayOfWeek: "Tue", high: 33, low: 26, snowfall: 3, precipProbability: 70, precipType: "snow", wind: .init(speed: 12, gust: 20), conditions: "Light Snow", icon: "snow"),
                 ],
                 filterMode: .snowSummary,
-                timelineOffset: 0
+                scrollSync: TimelineScrollSync()
             )
         }
         .padding()
