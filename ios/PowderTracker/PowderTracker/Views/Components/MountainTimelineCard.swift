@@ -10,7 +10,7 @@ struct MountainTimelineCard: View {
     @ObservedObject var scrollSync: TimelineScrollSync // Synchronized horizontal scrolling
 
     @State private var isAnimating = false
-    @State private var scrollPosition: Int? = 0 // Track snapped day
+    @State private var scrollPosition: Int? = 0 // Track snapped day (which day is centered)
 
     // Dynamic gradient based on powder conditions
     private var dynamicGradient: LinearGradient {
@@ -287,39 +287,40 @@ struct MountainTimelineCard: View {
 
     private var snowTimeline: some View {
         VStack(spacing: 0) {
-            // Static three-column header
+            // Dynamic three-column header (updates as you scroll)
             HStack(spacing: 0) {
-                // Prev 5d (static)
+                // Prev 5d (dynamic - relative to centered day)
                 VStack(spacing: 2) {
                     Text("Prev 5d")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    Text("\(prevFiveDaysTotal)\"")
+                    Text("\(dynamicPrevFiveDaysTotal)\"")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(Color(red: 0.984, green: 0.573, blue: 0.235))
                 }
                 .frame(maxWidth: .infinity)
 
-                // Last 24h (static)
+                // Centered day (dynamic - updates with scroll)
                 VStack(spacing: 1) {
-                    Text("Last 24h")
+                    Text(centeredDayLabel)
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    Text("\(conditions?.snowfall24h ?? 0)\"")
+                    Text("\(snowfallForDay(offset: centerDayOffset))\"")
                         .font(.system(size: 48, weight: .bold))
                         .foregroundColor(.primary)
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity)
+                .id("header-\(centerDayOffset)")
 
-                // Next 5d (static)
+                // Next 5d (dynamic - relative to centered day)
                 VStack(spacing: 2) {
                     Text("Next 5d")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
-                    if nextFiveDaysTotal > 0 {
-                        Text("\(nextFiveDaysTotal)\"")
+                    if dynamicNextFiveDaysTotal > 0 {
+                        Text("\(dynamicNextFiveDaysTotal)\"")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.blue)
                     } else {
@@ -332,6 +333,7 @@ struct MountainTimelineCard: View {
             }
             .padding(.vertical, 6)
             .padding(.horizontal, 12)
+            .animation(.easeOut(duration: 0.2), value: centerDayOffset)
 
             // Continuous horizontally scrollable bar graph
             ScrollViewReader { proxy in
@@ -385,6 +387,60 @@ struct MountainTimelineCard: View {
         }
     }
 
+    // MARK: - Dynamic Header Calculations
+
+    /// Centered day offset (which day is in center of viewport)
+    private var centerDayOffset: Int {
+        scrollPosition ?? 0
+    }
+
+    /// Dynamic totals for prev 5 days (relative to centered day)
+    private var dynamicPrevFiveDaysTotal: Int {
+        (centerDayOffset - 5..<centerDayOffset).reduce(0) { total, offset in
+            total + snowfallForDay(offset: offset)
+        }
+    }
+
+    /// Dynamic totals for next 5 days (relative to centered day)
+    private var dynamicNextFiveDaysTotal: Int {
+        (centerDayOffset + 1...centerDayOffset + 5).reduce(0) { total, offset in
+            total + snowfallForDay(offset: offset)
+        }
+    }
+
+    /// Dynamic label for centered day
+    private var centeredDayLabel: String {
+        if centerDayOffset == 0 {
+            return "Last 24h"
+        } else if centerDayOffset < 0 {
+            return "\(abs(centerDayOffset))d Ago"
+        } else {
+            return "In \(centerDayOffset)d"
+        }
+    }
+
+    // MARK: - Bar Color Coding
+
+    /// Get bar color based on snowfall amount and whether it's past/future
+    private func barColor(for snowfall: Int, isPast: Bool) -> Color {
+        // Color intensity based on snowfall amount
+        if snowfall == 0 {
+            return Color.gray.opacity(0.3)
+        } else if snowfall >= 10 {
+            // Epic snow - very bright, saturated
+            return isPast ? Color(red: 1.0, green: 0.6, blue: 0.2) : Color(red: 0.2, green: 0.6, blue: 1.0)
+        } else if snowfall >= 7 {
+            // Heavy snow - bright
+            return isPast ? Color(red: 0.984, green: 0.573, blue: 0.235) : Color(red: 0.3, green: 0.65, blue: 1.0)
+        } else if snowfall >= 4 {
+            // Moderate snow - medium
+            return isPast ? Color(red: 0.9, green: 0.5, blue: 0.25) : Color(red: 0.4, green: 0.7, blue: 0.95)
+        } else {
+            // Light snow - subtle
+            return isPast ? Color(red: 0.8, green: 0.45, blue: 0.25) : Color(red: 0.5, green: 0.75, blue: 0.9)
+        }
+    }
+
     // MARK: - Animation Helpers
 
     /// Calculate scale based on distance from center
@@ -415,7 +471,7 @@ struct MountainTimelineCard: View {
         let isPast = offset < 0
         let barHeight = min(CGFloat(snowfall) * 3.0, 40)
 
-        let barColor: Color = isPast ? Color(red: 0.984, green: 0.573, blue: 0.235) : .blue
+        let color = barColor(for: snowfall, isPast: isPast)
 
         return GeometryReader { geometry in
             VStack(spacing: 1) {
@@ -436,20 +492,20 @@ struct MountainTimelineCard: View {
                         .fill(Color.gray.opacity(0.1))
                         .frame(width: 16, height: 40)
 
-                    // Bar
+                    // Bar with dynamic color coding
                     if snowfall > 0 {
                         RoundedRectangle(cornerRadius: 2.5)
                             .fill(
                                 LinearGradient(
-                                    colors: [barColor, barColor.opacity(0.7)],
+                                    colors: [color, color.opacity(0.7)],
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )
                             )
                             .frame(width: 16, height: barHeight)
                             .shadow(
-                                color: barColor.opacity(0.3),
-                                radius: snowfall > 6 ? 2 : 1,
+                                color: color.opacity(0.3),
+                                radius: snowfall > 6 ? 3 : 1,
                                 x: 0,
                                 y: 1
                             )
