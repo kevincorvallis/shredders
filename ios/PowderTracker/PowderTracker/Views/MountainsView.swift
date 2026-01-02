@@ -132,10 +132,7 @@ struct MountainsView: View {
         LazyVStack(spacing: 12) {
             ForEach(filteredMountains) { mountain in
                 NavigationLink {
-                    MountainDetailView(
-                        mountainId: mountain.id,
-                        mountainName: mountain.name
-                    )
+                    LocationView(mountain: mountain)
                 } label: {
                     MountainCardRow(
                         mountain: mountain,
