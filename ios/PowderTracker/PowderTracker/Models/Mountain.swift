@@ -1,6 +1,12 @@
 import Foundation
 import CoreLocation
 
+enum PassType: String, Codable {
+    case epic = "epic"
+    case ikon = "ikon"
+    case independent = "independent"
+}
+
 struct MountainLocation: Codable {
     let lat: Double
     let lng: Double
@@ -41,6 +47,7 @@ struct Mountain: Codable, Identifiable, Hashable {
     let webcamCount: Int
     let logo: String?
     let status: MountainStatus?
+    let passType: PassType?
 
     // Computed property for distance from user
     var distance: Double?
@@ -80,6 +87,7 @@ struct MountainDetail: Codable {
     let website: String
     let logo: String?
     let status: MountainStatus?
+    let passType: PassType?
 
     struct SnotelInfo: Codable {
         let stationId: String
@@ -130,7 +138,8 @@ extension Mountain {
             runsOpen: "70/82",
             message: "Great conditions!",
             lastUpdated: nil
-        )
+        ),
+        passType: .independent
     )
 
     static let mockMountains: [Mountain] = [
@@ -154,7 +163,8 @@ extension Mountain {
                 runsOpen: "55/61",
                 message: "Full operations",
                 lastUpdated: nil
-            )
+            ),
+            passType: .epic
         ),
         Mountain(
             id: "crystal",
@@ -175,7 +185,8 @@ extension Mountain {
                 runsOpen: "50/57",
                 message: "Excellent skiing",
                 lastUpdated: nil
-            )
+            ),
+            passType: .ikon
         ),
     ]
 }

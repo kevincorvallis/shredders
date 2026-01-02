@@ -5,7 +5,7 @@ struct MountainsView: View {
     @StateObject private var viewModel = MountainSelectionViewModel()
     @StateObject private var favoritesManager = FavoritesManager.shared
     @State private var sortBy: SortOption = .distance
-    @State private var filterRegion: RegionFilter = .all
+    @State private var filterPass: PassFilter = .all
     @State private var searchText = ""
 
     var body: some View {
@@ -64,14 +64,14 @@ struct MountainsView: View {
             HStack(spacing: 12) {
                 sortMenu
 
-                ForEach(RegionFilter.allCases, id: \.self) { region in
+                ForEach(PassFilter.allCases, id: \.self) { passFilter in
                     Button {
-                        filterRegion = region
+                        filterPass = passFilter
                     } label: {
                         FilterChip(
-                            icon: region.icon,
-                            label: region.rawValue,
-                            isActive: filterRegion == region
+                            icon: passFilter.icon,
+                            label: passFilter.rawValue,
+                            isActive: filterPass == passFilter
                         )
                     }
                 }
@@ -104,10 +104,11 @@ struct MountainsView: View {
     private var mountainsGridSection: some View {
         Group {
             if filteredMountains.isEmpty {
+                let state = emptyStateMessage
                 EmptyStateView(
-                    icon: "mountain.2",
-                    message: "No mountains found",
-                    description: "Try adjusting your filters"
+                    icon: state.icon,
+                    message: state.message,
+                    description: state.description
                 )
                 .padding(.top, 60)
             } else {
@@ -116,11 +117,19 @@ struct MountainsView: View {
         }
     }
 
+    private var emptyStateMessage: (icon: String, message: String, description: String) {
+        switch filterPass {
+        case .epic:
+            return ("ticket.fill", "No Epic Pass mountains found", "Stevens Pass and Whistler Blackcomb honor Epic Pass")
+        case .ikon:
+            return ("star.square.fill", "No Ikon Pass mountains found", "Crystal, Snoqualmie, Bachelor, and Schweitzer honor Ikon Pass")
+        default:
+            return ("mountain.2", "No mountains found", "Try adjusting your search or filters")
+        }
+    }
+
     private var mountainsGrid: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ], spacing: 16) {
+        LazyVStack(spacing: 12) {
             ForEach(filteredMountains) { mountain in
                 NavigationLink {
                     MountainDetailView(
@@ -128,10 +137,32 @@ struct MountainsView: View {
                         mountainName: mountain.name
                     )
                 } label: {
-                    MountainGridCard(
+                    MountainCardRow(
                         mountain: mountain,
-                        score: viewModel.getScore(for: mountain),
-                        distance: viewModel.getDistance(to: mountain),
+                        conditions: nil,
+                        powderScore: viewModel.getScore(for: mountain).map { score in
+                            MountainPowderScore(
+                                mountain: MountainInfo(
+                                    id: mountain.id,
+                                    name: mountain.name,
+                                    shortName: mountain.shortName
+                                ),
+                                score: score,
+                                factors: [],
+                                verdict: "",
+                                conditions: MountainPowderScore.ScoreConditions(
+                                    snowfall24h: 0,
+                                    snowfall48h: 0,
+                                    temperature: 0,
+                                    windSpeed: 0,
+                                    upcomingSnow: 0
+                                ),
+                                dataAvailable: MountainPowderScore.DataAvailability(
+                                    snotel: mountain.hasSnotel,
+                                    noaa: true
+                                )
+                            )
+                        },
                         isFavorite: favoritesManager.isFavorite(mountain.id),
                         onFavoriteToggle: {
                             toggleFavorite(mountain.id)
@@ -147,9 +178,13 @@ struct MountainsView: View {
     private var filteredMountains: [Mountain] {
         var mountains = viewModel.mountains
 
-        // Apply region filter
-        if filterRegion != .all {
-            mountains = mountains.filter { $0.region == filterRegion.regionKey }
+        // Apply pass filter
+        if filterPass != .all {
+            if let passType = filterPass.passTypeKey {
+                mountains = mountains.filter {
+                    ($0.passType ?? .independent) == passType
+                }
+            }
         }
 
         // Apply search
@@ -362,30 +397,24 @@ enum SortOption: String, CaseIterable {
     case favorites = "Favorites"
 }
 
-enum RegionFilter: String, CaseIterable {
+enum PassFilter: String, CaseIterable {
     case all = "All"
-    case washington = "WA"
-    case oregon = "OR"
-    case idaho = "ID"
-    case canada = "BC"
+    case epic = "Epic"
+    case ikon = "Ikon"
 
     var icon: String {
         switch self {
         case .all: return "mountain.2.fill"
-        case .washington: return "w.circle.fill"
-        case .oregon: return "o.circle.fill"
-        case .idaho: return "i.circle.fill"
-        case .canada: return "c.circle.fill"
+        case .epic: return "e.square.fill"
+        case .ikon: return "i.square.fill"
         }
     }
 
-    var regionKey: String? {
+    var passTypeKey: PassType? {
         switch self {
         case .all: return nil
-        case .washington: return "washington"
-        case .oregon: return "oregon"
-        case .idaho: return "idaho"
-        case .canada: return "canada"
+        case .epic: return .epic
+        case .ikon: return .ikon
         }
     }
 }

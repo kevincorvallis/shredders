@@ -422,7 +422,8 @@ struct MetricBadge: View {
                     color: "#4A90E2",
                     website: "https://www.mtbaker.us",
                     logo: "/logos/baker.svg",
-                    status: nil
+                    status: nil,
+                    passType: .independent
                 ),
                 conditions: MountainConditions.mock,
                 powderScore: MountainPowderScore.mock,

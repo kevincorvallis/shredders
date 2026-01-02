@@ -990,6 +990,7 @@ struct MountainTimelineCard: View {
                     webcamCount: 3,
                     logo: "/logos/baker.svg",
                     status: nil,
+                    passType: .independent,
                     distance: nil
                 ),
                 conditions: MountainConditions(

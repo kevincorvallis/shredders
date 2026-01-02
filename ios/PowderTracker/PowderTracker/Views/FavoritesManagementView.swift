@@ -154,7 +154,8 @@ struct MountainManagementRow: View {
                 hasSnotel: true,
                 webcamCount: 3,
                 logo: "/logos/baker.svg",
-                status: nil
+                status: nil,
+                passType: .independent
             ),
             Mountain(
                 id: "crystal",
@@ -168,7 +169,8 @@ struct MountainManagementRow: View {
                 hasSnotel: true,
                 webcamCount: 4,
                 logo: "/logos/crystal.svg",
-                status: nil
+                status: nil,
+                passType: .ikon
             ),
             Mountain(
                 id: "meadows",
@@ -182,7 +184,8 @@ struct MountainManagementRow: View {
                 hasSnotel: true,
                 webcamCount: 2,
                 logo: "/logos/meadows.svg",
-                status: nil
+                status: nil,
+                passType: .independent
             )
         ]
     )

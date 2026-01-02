@@ -3,6 +3,8 @@ import SwiftUI
 /// Weather summary section showing current conditions and temperature gradient
 struct WeatherSummarySection: View {
     let conditions: MountainConditions?
+    var baseElevation: Int?
+    var summitElevation: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -58,7 +60,9 @@ struct WeatherSummarySection: View {
                                 TempGradientBar(
                                     base: tempByElev.base,
                                     mid: tempByElev.mid,
-                                    summit: tempByElev.summit
+                                    summit: tempByElev.summit,
+                                    baseElevation: baseElevation,
+                                    summitElevation: summitElevation
                                 )
                             }
                         }
@@ -113,6 +117,13 @@ struct TempGradientBar: View {
     let base: Int
     let mid: Int
     let summit: Int
+    var baseElevation: Int?
+    var summitElevation: Int?
+
+    private var midElevation: Int? {
+        guard let base = baseElevation, let summit = summitElevation else { return nil }
+        return (base + summit) / 2
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -139,9 +150,19 @@ struct TempGradientBar: View {
                         }
                     )
 
-                Text("Base")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                if let elevation = baseElevation {
+                    Text("Base")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    Text("(\(elevation.formatted(.number.grouping(.never))) ft)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("Base")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
             .frame(maxWidth: .infinity)
 
@@ -168,9 +189,19 @@ struct TempGradientBar: View {
                         }
                     )
 
-                Text("Mid")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                if let elevation = midElevation {
+                    Text("Mid")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    Text("(\(elevation.formatted(.number.grouping(.never))) ft)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("Mid")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
             .frame(maxWidth: .infinity)
 
@@ -191,9 +222,19 @@ struct TempGradientBar: View {
                         }
                     )
 
-                Text("Summit")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                if let elevation = summitElevation {
+                    Text("Summit")
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    Text("(\(elevation.formatted(.number.grouping(.never))) ft)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("Summit")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
             .frame(maxWidth: .infinity)
         }

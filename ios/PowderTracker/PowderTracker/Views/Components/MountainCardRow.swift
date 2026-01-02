@@ -4,6 +4,8 @@ struct MountainCardRow: View {
     let mountain: Mountain
     let conditions: MountainConditions?
     let powderScore: MountainPowderScore?
+    var isFavorite: Bool? = nil
+    var onFavoriteToggle: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 12) {
@@ -92,6 +94,16 @@ struct MountainCardRow: View {
 
             Spacer()
 
+            // Favorite button
+            if let isFavorite = isFavorite, let toggle = onFavoriteToggle {
+                Button(action: toggle) {
+                    Image(systemName: isFavorite ? "star.fill" : "star")
+                        .font(.title3)
+                        .foregroundColor(isFavorite ? .yellow : .gray)
+                }
+                .buttonStyle(.plain)
+            }
+
             // Powder score circle
             if let score = powderScore {
                 ZStack {
@@ -156,7 +168,8 @@ struct MountainCardRow: View {
                 hasSnotel: true,
                 webcamCount: 3,
                 logo: "/logos/baker.svg",
-                status: nil
+                status: nil,
+                passType: .independent
             ),
             conditions: MountainConditions(
                 mountain: MountainInfo(id: "baker", name: "Mt. Baker", shortName: "Baker"),
@@ -209,7 +222,8 @@ struct MountainCardRow: View {
                 hasSnotel: true,
                 webcamCount: 2,
                 logo: "/logos/meadows.svg",
-                status: nil
+                status: nil,
+                passType: .independent
             ),
             conditions: MountainConditions(
                 mountain: MountainInfo(id: "meadows", name: "Mt. Hood Meadows", shortName: "Meadows"),
@@ -268,7 +282,8 @@ struct MountainCardRow: View {
                 hasSnotel: true,
                 webcamCount: 4,
                 logo: "/logos/crystal.svg",
-                status: nil
+                status: nil,
+                passType: .ikon
             ),
             conditions: nil,
             powderScore: nil

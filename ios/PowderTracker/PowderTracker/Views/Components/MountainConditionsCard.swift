@@ -2,6 +2,8 @@ import SwiftUI
 
 struct MountainConditionsCard: View {
     let conditions: MountainConditions
+    var baseElevation: Int?
+    var summitElevation: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -38,11 +40,26 @@ struct MountainConditionsCard: View {
                         .foregroundColor(.secondary)
 
                     HStack(spacing: 16) {
-                        ElevationTempView(label: "Base", temp: tempByElevation.base, icon: "arrow.down.to.line")
+                        ElevationTempView(
+                            label: "Base",
+                            temp: tempByElevation.base,
+                            icon: "arrow.down.to.line",
+                            elevation: baseElevation
+                        )
                         Spacer()
-                        ElevationTempView(label: "Mid", temp: tempByElevation.mid, icon: "minus")
+                        ElevationTempView(
+                            label: "Mid",
+                            temp: tempByElevation.mid,
+                            icon: "minus",
+                            elevation: midElevation
+                        )
                         Spacer()
-                        ElevationTempView(label: "Summit", temp: tempByElevation.summit, icon: "arrow.up.to.line")
+                        ElevationTempView(
+                            label: "Summit",
+                            temp: tempByElevation.summit,
+                            icon: "arrow.up.to.line",
+                            elevation: summitElevation
+                        )
                     }
                 }
                 .padding(.top, 8)
@@ -82,6 +99,11 @@ struct MountainConditionsCard: View {
         if cond.contains("sun") || cond.contains("clear") { return "sun.max.fill" }
         return "cloud.fill"
     }
+
+    private var midElevation: Int? {
+        guard let base = baseElevation, let summit = summitElevation else { return nil }
+        return (base + summit) / 2
+    }
 }
 
 struct ConditionMetric: View {
@@ -114,6 +136,7 @@ struct ElevationTempView: View {
     let label: String
     let temp: Int
     let icon: String
+    var elevation: Int?
 
     var body: some View {
         VStack(spacing: 6) {
@@ -126,9 +149,19 @@ struct ElevationTempView: View {
                 .fontWeight(.bold)
                 .foregroundColor(tempColor)
 
-            Text(label)
-                .font(.caption2)
-                .foregroundColor(.secondary)
+            if let elevation = elevation {
+                Text("\(label)")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                Text("(\(elevation.formatted(.number.grouping(.never))) ft)")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            } else {
+                Text(label)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)

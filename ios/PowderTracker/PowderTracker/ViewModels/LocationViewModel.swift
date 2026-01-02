@@ -31,7 +31,7 @@ class LocationViewModel: ObservableObject {
     }
 
     func fetchLiftData() async {
-        guard let url = URL(string: "\(APIClient.baseURL)/api/mountains/\(mountain.id)/lifts") else { return }
+        guard let url = URL(string: "\(AppConfig.apiBaseURL)/mountains/\(mountain.id)/lifts") else { return }
 
         do {
             let (data, _) = try await URLSession.shared.data(from: url)

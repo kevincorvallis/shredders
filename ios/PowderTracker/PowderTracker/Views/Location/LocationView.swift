@@ -183,7 +183,8 @@ struct LocationView: View {
                 runsOpen: "50/57",
                 message: "Excellent skiing",
                 lastUpdated: nil
-            )
+            ),
+            passType: .ikon
         ))
     }
 }

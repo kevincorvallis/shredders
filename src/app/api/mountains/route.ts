@@ -21,6 +21,7 @@ export async function GET(request: Request) {
       webcamCount: m.webcams.length,
       logo: m.logo,
       status: m.status,
+      passType: m.passType || 'independent',
     })),
   });
 }

@@ -55,7 +55,8 @@ struct LiftStatusSection: View {
                     hasSnotel: true,
                     webcamCount: 3,
                     logo: "/logos/baker.svg",
-                    status: nil
+                    status: nil,
+                    passType: .independent
                 ))
 
                 // Mock lift status data
@@ -74,7 +75,8 @@ struct LiftStatusSection: View {
                         color: "#4A90E2",
                         website: "https://www.mtbaker.us",
                         logo: "/logos/baker.svg",
-                        status: nil
+                        status: nil,
+                        passType: .independent
                     ),
                     conditions: MountainConditions(
                         mountain: MountainInfo(id: "baker", name: "Mt. Baker", shortName: "Baker"),
