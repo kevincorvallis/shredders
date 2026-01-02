@@ -54,3 +54,6 @@ ios/PowderTracker/PowderTracker.xcodeproj/xcuserdata/
 ios/PowderTracker/*.xcuserstate
 ios/PowderTracker/DerivedData/
 *.xcuserstate
+# Ski lift data
+data/ski-lifts/*.osm
+data/ski-lifts/*.osm.gz

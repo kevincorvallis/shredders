@@ -4,6 +4,13 @@ struct LocationView: View {
     let mountain: Mountain
     @StateObject private var viewModel: LocationViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var viewMode: ViewMode = .glance
+    @State private var showingDetailedSections = false
+
+    enum ViewMode {
+        case glance  // At a Glance card
+        case radial  // Radial dashboard
+    }
 
     init(mountain: Mountain) {
         self.mountain = mountain
@@ -24,34 +31,79 @@ struct LocationView: View {
                     }
                     .padding()
                 } else if viewModel.locationData != nil {
-                    // Lift Status Section
-                    LiftStatusSection(viewModel: viewModel)
+
+                    // View mode toggle
+                    viewModeToggle
                         .padding(.horizontal)
 
-                    // Snow Depth Section
-                    SnowDepthSection(viewModel: viewModel)
-                        .padding(.horizontal)
+                    // Main visualization (toggleable)
+                    Group {
+                        switch viewMode {
+                        case .glance:
+                            AtAGlanceCard(viewModel: viewModel)
+                        case .radial:
+                            RadialDashboard(viewModel: viewModel)
+                        }
+                    }
+                    .padding(.horizontal)
 
-                    // Map Section
-                    if let mountainDetail = viewModel.locationData?.mountain {
-                        LocationMapSection(mountain: mountain, mountainDetail: mountainDetail)
+                    // Lift Line Predictor (AI-powered)
+                    if viewModel.locationData?.conditions.liftStatus != nil {
+                        LiftLinePredictorCard(viewModel: viewModel)
                             .padding(.horizontal)
                     }
 
-                    // Weather Conditions Section
-                    WeatherConditionsSection(viewModel: viewModel)
-                        .padding(.horizontal)
-
-                    // Road Conditions Section (only if has data)
-                    if viewModel.hasRoadData {
-                        RoadConditionsSection(viewModel: viewModel)
-                            .padding(.horizontal)
+                    // Detailed sections toggle
+                    Button {
+                        withAnimation(.spring()) {
+                            showingDetailedSections.toggle()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: showingDetailedSections ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                            Text(showingDetailedSections ? "Hide Detailed Sections" : "Show More Details")
+                                .fontWeight(.medium)
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.blue)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(12)
                     }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal)
 
-                    // Webcams Section (only if has webcams)
-                    if viewModel.hasWebcams {
-                        WebcamsSection(viewModel: viewModel)
-                            .padding(.horizontal)
+                    // Detailed sections (collapsible)
+                    if showingDetailedSections {
+                        VStack(spacing: 16) {
+                            // Snow Depth Section
+                            SnowDepthSection(viewModel: viewModel)
+                                .transition(.move(edge: .top).combined(with: .opacity))
+
+                            // Weather Conditions Section
+                            WeatherConditionsSection(viewModel: viewModel)
+                                .transition(.move(edge: .top).combined(with: .opacity))
+
+                            // Map Section
+                            if let mountainDetail = viewModel.locationData?.mountain {
+                                LocationMapSection(mountain: mountain, mountainDetail: mountainDetail)
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                            }
+
+                            // Road Conditions Section (only if has data)
+                            if viewModel.hasRoadData {
+                                RoadConditionsSection(viewModel: viewModel)
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                            }
+
+                            // Webcams Section (only if has webcams)
+                            if viewModel.hasWebcams {
+                                WebcamsSection(viewModel: viewModel)
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                            }
+                        }
+                        .padding(.horizontal)
                     }
                 } else {
                     Text("No data available")
@@ -69,6 +121,36 @@ struct LocationView: View {
         }
         .refreshable {
             await viewModel.fetchData()
+        }
+    }
+
+    // MARK: - View Mode Toggle
+
+    private var viewModeToggle: some View {
+        HStack(spacing: 12) {
+            ForEach([ViewMode.glance, ViewMode.radial], id: \.self) { mode in
+                Button {
+                    withAnimation(.spring(response: 0.3)) {
+                        viewMode = mode
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: mode == .glance ? "square.grid.2x2.fill" : "circle.grid.cross.fill")
+                            .font(.caption)
+                        Text(mode == .glance ? "At a Glance" : "Radial View")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(viewMode == mode ? .white : .blue)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        Capsule()
+                            .fill(viewMode == mode ? Color.blue : Color.blue.opacity(0.1))
+                    )
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 }
