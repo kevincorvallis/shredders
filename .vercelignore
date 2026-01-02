@@ -1,0 +1,16 @@
+# Ignore large data files
+data/ski-lifts/planet_pistes.osm
+data/ski-lifts/planet_pistes.osm.gz
+
+# Ignore iOS app
+ios/
+
+# Ignore scripts
+scripts/
+
+# Ignore node_modules (usually already ignored)
+node_modules/
+
+# Ignore environment files
+.env.local
+.env*.local

@@ -54,6 +54,12 @@ struct LocationView: View {
                             .padding(.horizontal)
                     }
 
+                    // Webcams Section (always visible when available)
+                    if viewModel.hasWebcams {
+                        WebcamsSection(viewModel: viewModel)
+                            .padding(.horizontal)
+                    }
+
                     // Detailed sections toggle
                     Button {
                         withAnimation(.spring()) {
@@ -99,12 +105,6 @@ struct LocationView: View {
                             // Road Conditions Section (only if has data)
                             if viewModel.hasRoadData {
                                 RoadConditionsSection(viewModel: viewModel)
-                                    .transition(.move(edge: .top).combined(with: .opacity))
-                            }
-
-                            // Webcams Section (only if has webcams)
-                            if viewModel.hasWebcams {
-                                WebcamsSection(viewModel: viewModel)
                                     .transition(.move(edge: .top).combined(with: .opacity))
                             }
                         }

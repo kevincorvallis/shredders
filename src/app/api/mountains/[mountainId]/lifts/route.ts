@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
-// Initialize S3 client
+// Initialize S3 client with explicit credentials from environment
 const s3Client = new S3Client({
-  region: 'us-west-2',
+  region: process.env.AWS_REGION || 'us-west-2',
+  credentials: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID.trim(),
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY.trim(),
+  } : undefined,
 });
 
 /**
