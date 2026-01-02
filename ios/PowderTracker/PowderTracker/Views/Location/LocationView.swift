@@ -18,7 +18,9 @@ struct LocationView: View {
     }
 
     var body: some View {
-        ScrollView {
+        let _ = print("📱 LocationView: isLoading=\(viewModel.isLoading), error=\(viewModel.error ?? "nil"), locationData=\(viewModel.locationData != nil ? "NOT nil" : "nil")")
+
+        return ScrollView {
             VStack(spacing: 16) {
                 if viewModel.isLoading {
                     ProgressView("Loading conditions...")

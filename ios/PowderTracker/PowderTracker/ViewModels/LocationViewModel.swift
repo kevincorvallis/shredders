@@ -14,6 +14,7 @@ class LocationViewModel: ObservableObject {
     }
 
     func fetchData() async {
+        print("🔄 LocationViewModel: Starting to fetch data for \(mountain.id)")
         isLoading = true
         error = nil
 
@@ -21,12 +22,14 @@ class LocationViewModel: ObservableObject {
             let data = try await APIClient.shared.fetchMountainData(for: mountain.id)
             locationData = data
             isLoading = false
+            print("✅ LocationViewModel: Successfully fetched data, locationData is \(locationData != nil ? "NOT nil" : "nil")")
 
             // Fetch lift data (don't block on errors)
             await fetchLiftData()
         } catch {
             self.error = error.localizedDescription
             isLoading = false
+            print("❌ LocationViewModel: Error fetching data: \(error.localizedDescription)")
         }
     }
 
