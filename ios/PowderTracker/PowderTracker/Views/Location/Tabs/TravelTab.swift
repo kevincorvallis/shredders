@@ -17,6 +17,9 @@ struct TravelTab: View {
                 ArrivalTimeErrorView(onRetry: loadArrivalTime)
             }
 
+            // Navigation Card - Open in Apple Maps
+            NavigationCard(mountain: mountain)
+
             // Road Conditions
             if viewModel.hasRoadData {
                 RoadConditionsSection(viewModel: viewModel)
