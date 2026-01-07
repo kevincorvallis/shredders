@@ -12,7 +12,15 @@ struct MountainsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    // Quick stats dashboard
+                    quickStatsDashboard
+                        .padding(.horizontal)
+
                     searchAndFiltersSection
+
+                    // Best powder today card
+                    bestPowderTodaySection
+
                     mountainsGridSection
                 }
                 .padding(.vertical)
@@ -27,6 +35,45 @@ struct MountainsView: View {
                 await viewModel.loadMountains()
             }
         }
+    }
+
+    // MARK: - Quick Stats Dashboard
+
+    private var quickStatsDashboard: some View {
+        QuickStatsDashboard(
+            mountains: viewModel.mountains,
+            conditionsMap: viewModel.mountainConditions,
+            scoresMap: viewModel.mountainScores.mapValues { Int($0) },
+            alertsMap: [:] // Will be populated when alerts are loaded
+        )
+    }
+
+    // MARK: - Best Powder Today
+
+    @ViewBuilder
+    private var bestPowderTodaySection: some View {
+        if let bestMountain = bestPowderMountain {
+            NavigationLink {
+                LocationView(mountain: bestMountain)
+            } label: {
+                BestPowderTodayCard(
+                    mountain: bestMountain,
+                    conditions: viewModel.getConditions(for: bestMountain),
+                    powderScore: viewModel.getScore(for: bestMountain).map { Int($0) },
+                    arrivalTime: nil // Will load dynamically
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal)
+        }
+    }
+
+    private var bestPowderMountain: Mountain? {
+        viewModel.mountains
+            .filter { viewModel.getScore(for: $0) != nil }
+            .max { m1, m2 in
+                (viewModel.getScore(for: m1) ?? 0) < (viewModel.getScore(for: m2) ?? 0)
+            }
     }
 
     private var searchAndFiltersSection: some View {
@@ -181,6 +228,15 @@ struct MountainsView: View {
                 mountains = mountains.filter {
                     ($0.passType ?? .independent) == passType
                 }
+            } else if filterPass == .freshPowder {
+                // Filter for mountains with 6"+ fresh snow in 24h
+                mountains = mountains.filter { mountain in
+                    guard let conditions = viewModel.getConditions(for: mountain) else { return false }
+                    return conditions.snowfall24h >= 6
+                }
+            } else if filterPass == .alertsActive {
+                // TODO: Filter for mountains with active alerts when alerts data is available
+                // For now, no filtering applied
             }
         }
 
@@ -398,12 +454,16 @@ enum PassFilter: String, CaseIterable {
     case all = "All"
     case epic = "Epic"
     case ikon = "Ikon"
+    case freshPowder = "Fresh Powder"
+    case alertsActive = "Alerts"
 
     var icon: String {
         switch self {
         case .all: return "mountain.2.fill"
         case .epic: return "e.square.fill"
         case .ikon: return "i.square.fill"
+        case .freshPowder: return "snow"
+        case .alertsActive: return "exclamationmark.triangle.fill"
         }
     }
 
@@ -412,6 +472,7 @@ enum PassFilter: String, CaseIterable {
         case .all: return nil
         case .epic: return .epic
         case .ikon: return .ikon
+        case .freshPowder, .alertsActive: return nil
         }
     }
 }
