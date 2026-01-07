@@ -80,15 +80,18 @@ struct AtAGlanceCard: View {
                     .foregroundColor(powderScoreColor)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(powderScoreLabel)
                     .font(.title3)
                     .fontWeight(.semibold)
                     .foregroundColor(powderScoreColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
 
                 Text("Powder Conditions")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
             }
 
             Spacer()
@@ -140,7 +143,8 @@ struct AtAGlanceCard: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .minimumScaleFactor(0.7)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 // Status indicator
@@ -305,9 +309,11 @@ struct AtAGlanceCard: View {
     // MARK: - Computed Properties
 
     private var snowMetrics: [String] {
-        [
-            "\(Int(viewModel.snowDepth24h ?? 0))\" 24h",
-            "\(Int(viewModel.currentSnowDepth ?? 0))\" base"
+        let snow24h = Int(viewModel.snowDepth24h ?? 0)
+        let baseDepth = Int(viewModel.currentSnowDepth ?? 0)
+        return [
+            "\(snow24h)\" 24h",
+            "\(baseDepth)\" base"
         ]
     }
 
@@ -320,9 +326,11 @@ struct AtAGlanceCard: View {
     }
 
     private var weatherMetrics: [String] {
-        [
-            "\(Int(viewModel.temperature ?? 0))°F",
-            "\(Int(viewModel.windSpeed ?? 0)) mph"
+        let temp = Int(viewModel.temperature ?? 0)
+        let windSpeed = Int(viewModel.windSpeed ?? 0)
+        return [
+            "\(temp)°F",
+            "\(windSpeed) mph"
         ]
     }
 
@@ -353,9 +361,11 @@ struct AtAGlanceCard: View {
         guard let liftStatus = viewModel.locationData?.conditions.liftStatus else {
             return ["N/A", "N/A"]
         }
+        let percent = liftStatus.percentOpen
+        let liftsInfo = "\(liftStatus.liftsOpen)/\(liftStatus.liftsTotal)"
         return [
-            "\(liftStatus.percentOpen)% open",
-            "\(liftStatus.liftsOpen)/\(liftStatus.liftsTotal)"
+            "\(percent)%",
+            liftsInfo
         ]
     }
 
