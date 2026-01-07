@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(AuthService.self) private var authService
+
     var body: some View {
         TabView {
             // OpenSnow-style Home with horizontal forecast timeline
@@ -18,6 +20,11 @@ struct ContentView: View {
             AlertsView()
                 .tabItem {
                     Label("Alerts", systemImage: "exclamationmark.triangle.fill")
+                }
+
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person.circle.fill")
                 }
 
             MoreView()

@@ -8,6 +8,14 @@
     {
       "path": "/api/scraper/run",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/check-weather-alerts",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/check-powder-alerts",
+      "schedule": "0 6 * * *"
     }
   ]
 }

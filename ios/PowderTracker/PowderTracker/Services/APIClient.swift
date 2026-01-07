@@ -96,6 +96,10 @@ actor APIClient {
         try await fetch(endpoint: "/mountains/\(mountainId)/hourly?hours=\(hours)")
     }
 
+    func fetchArrivalTime(for mountainId: String) async throws -> ArrivalTimeRecommendation {
+        try await fetch(endpoint: "/mountains/\(mountainId)/arrival-time")
+    }
+
     // MARK: - Legacy Endpoints (default to Baker for backwards compatibility)
 
     func fetchConditions() async throws -> Conditions {

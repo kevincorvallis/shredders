@@ -75,12 +75,34 @@ class LocationViewModel: ObservableObject {
 
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
+
+            // Debug: Print raw JSON response
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📦 Raw JSON response: \(jsonString)")
+            }
+
             let comparison = try JSONDecoder().decode(SnowComparisonResponse.self, from: data)
             snowComparison = comparison
             print("✅ LocationViewModel: Fetched snow comparison - current: \(comparison.comparison.current?.snowDepth ?? 0)\", last year: \(comparison.comparison.lastYear?.snowDepth ?? 0)\"")
+        } catch let DecodingError.keyNotFound(key, context) {
+            print("❌ Missing key: \(key.stringValue)")
+            print("   Context: \(context.debugDescription)")
+            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+        } catch let DecodingError.typeMismatch(type, context) {
+            print("❌ Type mismatch for type: \(type)")
+            print("   Context: \(context.debugDescription)")
+            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+        } catch let DecodingError.valueNotFound(type, context) {
+            print("❌ Value not found for type: \(type)")
+            print("   Context: \(context.debugDescription)")
+            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
+        } catch let DecodingError.dataCorrupted(context) {
+            print("❌ Data corrupted")
+            print("   Context: \(context.debugDescription)")
+            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
         } catch {
-            print("Failed to fetch snow comparison: \(error.localizedDescription)")
-            // Don't set error - snow comparison is optional
+            print("❌ Unknown decoding error: \(error)")
+            print("   Localized: \(error.localizedDescription)")
         }
     }
 

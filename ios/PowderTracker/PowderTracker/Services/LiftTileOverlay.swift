@@ -16,13 +16,13 @@ class LiftTileOverlay: MKTileOverlay {
 
     /// Initialize with mountain ID
     /// - Parameter mountainId: The mountain identifier (e.g., "crystal", "baker")
-    init(mountainId: String, baseURL: String = APIClient.baseURL) {
+    init(mountainId: String, baseURL: String = AppConfig.apiBaseURL) {
         self.mountainId = mountainId
         self.baseURL = baseURL
 
         // Initialize with template URL
         // MKTileOverlay will replace {x}, {y}, {z} with actual coordinates
-        let urlTemplate = "\(baseURL)/api/tiles/\(mountainId)/{z}/{x}/{y}.png"
+        let urlTemplate = "\(baseURL)/tiles/\(mountainId)/{z}/{x}/{y}.png"
         super.init(urlTemplate: urlTemplate)
 
         // Configure overlay properties
@@ -35,9 +35,9 @@ class LiftTileOverlay: MKTileOverlay {
     /// - Parameters:
     ///   - path: The tile path (x, y, z coordinates)
     ///   - result: Completion handler with tile data or error
-    override func loadTile(at path: MKTileOverlayPath, result: @escaping (Data?, Error?) -> Void) {
+    override func loadTile(at path: MKTileOverlayPath, result: @escaping @Sendable (Data?, Error?) -> Void) {
         // Construct URL for this specific tile
-        let urlString = "\(baseURL)/api/tiles/\(mountainId)/\(path.z)/\(path.x)/\(path.y).png"
+        let urlString = "\(baseURL)/tiles/\(mountainId)/\(path.z)/\(path.x)/\(path.y).png"
 
         guard let url = URL(string: urlString) else {
             result(nil, NSError(domain: "LiftTileOverlay", code: -1, userInfo: [

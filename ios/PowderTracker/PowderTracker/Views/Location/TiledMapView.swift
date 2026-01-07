@@ -124,13 +124,32 @@ struct TiledMapView_Previews: PreviewProvider {
                 id: "crystal",
                 name: "Crystal Mountain",
                 shortName: "Crystal",
-                location: Location(lat: 46.9355, lng: -121.4745),
-                elevation: Elevation(base: 4400, summit: 7012, vertical: 2612),
-                snotelStation: SnotelStation(
-                    id: "908",
-                    name: "Wells Creek",
-                    state: "WA"
-                )
+                location: MountainLocation(lat: 46.9355, lng: -121.4745),
+                elevation: MountainElevation(base: 4400, summit: 7012),
+                region: "washington",
+                snotel: MountainDetail.SnotelInfo(
+                    stationId: "908",
+                    stationName: "Wells Creek"
+                ),
+                noaa: MountainDetail.NOAAInfo(
+                    gridOffice: "SEW",
+                    gridX: 142,
+                    gridY: 90
+                ),
+                webcams: [],
+                roadWebcams: nil,
+                color: "#8b5cf6",
+                website: "https://www.crystalmountainresort.com",
+                logo: "/logos/crystal.svg",
+                status: MountainStatus(
+                    isOpen: true,
+                    percentOpen: 88,
+                    liftsOpen: "10/11",
+                    runsOpen: "50/57",
+                    message: "Excellent skiing",
+                    lastUpdated: nil
+                ),
+                passType: .ikon
             ),
             mountainId: "crystal",
             showLifts: true,

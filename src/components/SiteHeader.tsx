@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { MountainSelector } from './MountainSelector';
 import { useMountain } from '@/context/MountainContext';
+import { UserMenu } from './UserMenu';
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -72,6 +73,7 @@ export function SiteHeader() {
                 </Link>
               );
             })}
+            <UserMenu />
           </nav>
         </div>
       </div>

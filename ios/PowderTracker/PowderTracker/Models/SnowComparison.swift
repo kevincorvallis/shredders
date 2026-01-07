@@ -22,7 +22,7 @@ struct YearOverYearComparison: Codable {
 
 struct SnowDepthDataPoint: Codable {
     let date: String
-    let snowDepth: Double
+    let snowDepth: Int
 }
 
 struct BaseDepthGuidelines: Codable {

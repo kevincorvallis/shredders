@@ -4,6 +4,7 @@ struct MountainConditionsCard: View {
     let conditions: MountainConditions
     var baseElevation: Int?
     var summitElevation: Int?
+    var mountainDetail: MountainDetail? // Optional for temperature map navigation
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -31,35 +32,19 @@ struct MountainConditionsCard: View {
                 ConditionMetric(icon: "calendar", title: "7 Day Snow", value: "\(conditions.snowfall7d)\"")
             }
 
-            // Temperature by elevation section
+            // Temperature by elevation section (tappable when mountain detail available)
             if let tempByElevation = conditions.temperatureByElevation {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Temperature by Elevation")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
-
-                    HStack(spacing: 16) {
-                        ElevationTempView(
-                            label: "Base",
-                            temp: tempByElevation.base,
-                            icon: "arrow.down.to.line",
-                            elevation: baseElevation
-                        )
-                        Spacer()
-                        ElevationTempView(
-                            label: "Mid",
-                            temp: tempByElevation.mid,
-                            icon: "minus",
-                            elevation: midElevation
-                        )
-                        Spacer()
-                        ElevationTempView(
-                            label: "Summit",
-                            temp: tempByElevation.summit,
-                            icon: "arrow.up.to.line",
-                            elevation: summitElevation
-                        )
+                Group {
+                    if let mountain = mountainDetail {
+                        NavigationLink(destination: TemperatureElevationMapView(
+                            mountain: mountain,
+                            temperatureData: tempByElevation
+                        )) {
+                            temperatureSection(tempByElevation)
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        temperatureSection(tempByElevation)
                     }
                 }
                 .padding(.top, 8)
@@ -103,6 +88,56 @@ struct MountainConditionsCard: View {
     private var midElevation: Int? {
         guard let base = baseElevation, let summit = summitElevation else { return nil }
         return (base + summit) / 2
+    }
+
+    @ViewBuilder
+    private func temperatureSection(_ tempByElevation: MountainConditions.TemperatureByElevation) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Temperature by Elevation")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                if mountainDetail != nil {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            HStack(spacing: 16) {
+                ElevationTempView(
+                    label: "Base",
+                    temp: tempByElevation.base,
+                    icon: "arrow.down.to.line",
+                    elevation: baseElevation
+                )
+                Spacer()
+                ElevationTempView(
+                    label: "Mid",
+                    temp: tempByElevation.mid,
+                    icon: "minus",
+                    elevation: midElevation
+                )
+                Spacer()
+                ElevationTempView(
+                    label: "Summit",
+                    temp: tempByElevation.summit,
+                    icon: "arrow.up.to.line",
+                    elevation: summitElevation
+                )
+            }
+
+            if mountainDetail != nil {
+                Text("Tap to see temperature map")
+                    .font(.caption2)
+                    .foregroundColor(.blue)
+                    .padding(.top, 4)
+            }
+        }
     }
 }
 

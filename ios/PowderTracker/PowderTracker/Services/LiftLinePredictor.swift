@@ -208,7 +208,7 @@ class LiftLinePredictor {
         ))
 
         // 5. Gondola/Tram (if exists - busiest on bad weather days)
-        let windFactor = crowdFactor // Could enhance with actual wind data
+        // TODO: Could enhance with actual wind data to adjust crowd factor
         let gondolaCrowdFactor = crowdFactor * 1.15 // Generally busy
         predictions.append(LiftPrediction(
             liftName: "Gondola/Enclosed Lifts",

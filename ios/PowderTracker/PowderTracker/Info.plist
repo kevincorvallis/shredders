@@ -6,5 +6,9 @@
     <string>We use your location to show distances to nearby ski resorts and help you find the closest mountains.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>We use your location to show distances to nearby ski resorts and help you find the closest mountains.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Take photos of mountain conditions to share with the community.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Choose photos from your library to share mountain conditions with the community.</string>
 </dict>
 </plist>

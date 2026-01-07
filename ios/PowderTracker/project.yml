@@ -11,6 +11,11 @@ settings:
     SWIFT_VERSION: "6.0"
     DEVELOPMENT_TEAM: ""
 
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    version: 2.18.0
+
 targets:
   PowderTracker:
     type: application
@@ -32,6 +37,13 @@ targets:
     dependencies:
       - target: PowderTrackerWidgetExtension
         embed: true
+      - package: Supabase
+        products:
+          - Supabase
+          - Auth
+          - PostgREST
+          - Storage
+          - Realtime
 
   PowderTrackerWidgetExtension:
     type: app-extension
