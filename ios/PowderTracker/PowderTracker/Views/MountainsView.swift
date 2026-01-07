@@ -170,6 +170,10 @@ struct MountainsView: View {
             return ("ticket.fill", "No Epic Pass mountains found", "Stevens Pass and Whistler Blackcomb honor Epic Pass")
         case .ikon:
             return ("star.square.fill", "No Ikon Pass mountains found", "Crystal, Snoqualmie, Bachelor, and Schweitzer honor Ikon Pass")
+        case .favorites:
+            return ("star.fill", "No favorites yet", "Tap the star icon on any mountain to add it to your favorites")
+        case .freshPowder:
+            return ("snow", "No fresh powder today", "Check back after the next storm for powder days")
         default:
             return ("mountain.2", "No mountains found", "Try adjusting your search or filters")
         }
@@ -227,6 +231,11 @@ struct MountainsView: View {
             if let passType = filterPass.passTypeKey {
                 mountains = mountains.filter {
                     ($0.passType ?? .independent) == passType
+                }
+            } else if filterPass == .favorites {
+                // Filter for favorited mountains only
+                mountains = mountains.filter { mountain in
+                    favoritesManager.isFavorite(mountain.id)
                 }
             } else if filterPass == .freshPowder {
                 // Filter for mountains with 6"+ fresh snow in 24h
@@ -454,6 +463,7 @@ enum PassFilter: String, CaseIterable {
     case all = "All"
     case epic = "Epic"
     case ikon = "Ikon"
+    case favorites = "Favorites"
     case freshPowder = "Fresh Powder"
     case alertsActive = "Alerts"
 
@@ -462,6 +472,7 @@ enum PassFilter: String, CaseIterable {
         case .all: return "mountain.2.fill"
         case .epic: return "e.square.fill"
         case .ikon: return "i.square.fill"
+        case .favorites: return "star.fill"
         case .freshPowder: return "snow"
         case .alertsActive: return "exclamationmark.triangle.fill"
         }
@@ -472,7 +483,7 @@ enum PassFilter: String, CaseIterable {
         case .all: return nil
         case .epic: return .epic
         case .ikon: return .ikon
-        case .freshPowder, .alertsActive: return nil
+        case .favorites, .freshPowder, .alertsActive: return nil
         }
     }
 }
