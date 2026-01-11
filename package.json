@@ -1,22 +1,28 @@
 {
-  "name": "shredders-temp",
+  "name": "shredders-monorepo",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
+    "test": "turbo run test --filter=!shredders-monorepo",
+    "lint": "turbo run lint --filter=!shredders-monorepo",
+    "test:ui": "turbo run test:ui --filter=!shredders-monorepo",
+    "test:coverage": "turbo run test:coverage --filter=!shredders-monorepo",
+    "type-check": "next lint --dir .",
+    "web:dev": "pnpm --filter @shredders/web dev",
+    "lambda:build": "pnpm --filter @shredders/lambda build",
     "db:setup-aws": "bash scripts/setup-aws-database.sh",
     "db:setup": "bash scripts/run-db-setup.sh",
     "db:cleanup": "psql $DATABASE_URL -c \"SELECT cleanup_old_mountain_status();\"",
     "scraper:run": "curl http://localhost:3000/api/scraper/run",
-    "scraper:status": "curl http://localhost:3000/api/scraper/status"
+    "scraper:status": "curl http://localhost:3000/api/scraper/status",
+    "verify": "tsx scripts/verify-data-sources.ts"
   },
   "dependencies": {
+    "@shredders/shared": "workspace:*",
     "@ai-sdk/anthropic": "^2.0.56",
     "@ai-sdk/openai": "^2.0.88",
     "@ai-sdk/react": "^2.0.115",
@@ -46,6 +52,7 @@
     "next": "16.0.10",
     "nextjs-toploader": "^3.9.17",
     "node-cron": "^4.2.1",
+    "openai": "^6.16.0",
     "puppeteer-core": "^24.34.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
@@ -67,6 +74,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "turbo": "^2.7.3",
     "typescript": "^5",
     "vitest": "^2.1.9"
   }
