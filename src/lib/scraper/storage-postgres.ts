@@ -1,7 +1,7 @@
 import { createClient } from '@vercel/postgres';
 import type { ScrapedMountainStatus } from './types';
 import { v4 as uuidv4 } from 'uuid';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 
 /**
  * PostgreSQL storage for scraped mountain data
@@ -178,6 +178,32 @@ class PostgresScraperStorage {
     } catch (error) {
       console.error('[Storage] Failed to save multiple:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Save scraper failure details
+   */
+  async saveFail(mountainId: string, error: string, url: string): Promise<void> {
+    try {
+      await this.db.sql`
+        INSERT INTO scraper_failures (
+          run_id,
+          mountain_id,
+          error_message,
+          source_url,
+          failed_at
+        ) VALUES (
+          ${this.runId},
+          ${mountainId},
+          ${error},
+          ${url},
+          NOW()
+        )
+      `;
+      console.log(`[Storage] Logged failure for ${mountainId}: ${error}`);
+    } catch (error) {
+      console.error(`[Storage] Failed to log failure for ${mountainId}:`, error);
     }
   }
 

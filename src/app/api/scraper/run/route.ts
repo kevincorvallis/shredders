@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { scraperOrchestrator } from '@/lib/scraper/ScraperOrchestrator';
 import { scraperStorage } from '@/lib/scraper/storage-postgres';
+import { getScraperConfig } from '@/lib/scraper/configs';
+import { sendScraperAlert } from '@/lib/alerts/scraper-alerts';
 
 /**
  * Manual trigger endpoint to run the scraper
@@ -31,6 +33,16 @@ export async function GET() {
       await scraperStorage.saveMany(successfulData);
     }
 
+    // LOG failures for monitoring
+    for (const [mountainId, result] of results.entries()) {
+      if (!result.success && result.error) {
+        const config = getScraperConfig(mountainId);
+        if (config) {
+          await scraperStorage.saveFail(mountainId, result.error, config.url);
+        }
+      }
+    }
+
     const duration = Date.now() - startTime;
     const successCount = successfulData.length;
     const totalCount = results.size;
@@ -38,6 +50,21 @@ export async function GET() {
 
     // COMPLETE database tracking
     await scraperStorage.completeRun(successCount, failedCount, duration);
+
+    // SEND alerts if performance is degraded or failed
+    const successRate = totalCount > 0 ? (successCount / totalCount) * 100 : 0;
+    const failedMountains = Array.from(results.entries())
+      .filter(([_, r]) => !r.success)
+      .map(([id]) => id);
+
+    if (successRate < 80) {
+      await sendScraperAlert({
+        type: successRate < 50 ? 'failure' : 'degraded',
+        successRate,
+        failedMountains,
+        runId: runId!,
+      });
+    }
 
     console.log(`[API] Scrape completed: ${successCount}/${totalCount} successful in ${duration}ms`);
 
