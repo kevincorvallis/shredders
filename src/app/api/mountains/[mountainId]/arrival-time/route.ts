@@ -35,10 +35,11 @@ interface ArrivalTimeRecommendation {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { mountainId: string } }
+  { params }: { params: Promise<{ mountainId: string }> }
 ) {
   try {
-    const { mountainId } = params;
+    const resolvedParams = await params;
+    const { mountainId } = resolvedParams;
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     // Fetch all relevant data in parallel
