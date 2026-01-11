@@ -3,19 +3,19 @@
  * Revoke a specific session by ID
  */
 
-import { NextResponse } from 'next/server';
-import { getAuthUser } from '@/lib/auth/middleware';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUserAsync } from '@/lib/auth/middleware';
 import { getSessionById, revokeSession } from '@/lib/auth/session-manager';
 import { Errors, handleError } from '@/lib/errors';
 import { addToBlacklist } from '@/lib/auth/token-blacklist';
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate user
-    const user = await getAuthUser();
+    const user = await getAuthUserAsync(request);
     if (!user) {
       throw Errors.unauthorized();
     }
