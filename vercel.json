@@ -5,7 +5,7 @@
   "framework": "nextjs",
   "regions": ["sfo1"],
   "functions": {
-    "api/scraper/**/*.ts": {
+    "src/app/api/scraper/**/*.ts": {
       "maxDuration": 60
     }
   },
