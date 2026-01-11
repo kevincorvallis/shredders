@@ -4,6 +4,11 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["sfo1"],
+  "functions": {
+    "api/scraper/**/*.ts": {
+      "maxDuration": 60
+    }
+  },
   "crons": [
     {
       "path": "/api/scraper/run",
@@ -11,11 +16,11 @@
     },
     {
       "path": "/api/cron/check-weather-alerts",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/check-powder-alerts",
-      "schedule": "0 6 * * *"
+      "schedule": "0 7 * * *"
     }
   ]
 }
