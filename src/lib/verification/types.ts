@@ -176,7 +176,8 @@ export interface VerificationConfig {
   maxConcurrent: number;
 
   // Data validation
-  staleDataThreshold: number; // hours
+  staleDataThreshold: number; // hours (general threshold for most data sources)
+  snotelStaleDataThreshold?: number; // hours (SNOTEL-specific: daily reporting stations need longer threshold)
 
   // Filters
   includeTypes?: ('scraper' | 'noaa' | 'snotel' | 'open-meteo' | 'webcam')[];
@@ -195,6 +196,7 @@ export const DEFAULT_VERIFICATION_CONFIG: VerificationConfig = {
   timeout: 10000,
   maxConcurrent: 5,
   staleDataThreshold: 48,
+  snotelStaleDataThreshold: 96, // SNOTEL reports daily, so 96 hours (4 days) is acceptable
   saveToFile: true,
   outputDir: './verification-reports',
   saveToDB: false,

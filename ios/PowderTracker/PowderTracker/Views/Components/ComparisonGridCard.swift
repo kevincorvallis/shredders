@@ -59,24 +59,24 @@ struct ComparisonGridCard: View {
     var body: some View {
         ZStack {
             // Background gradient
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: .cornerRadiusCard)
                 .fill(backgroundGradient)
 
             // Glassmorphic overlay
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: .cornerRadiusCard)
                 .fill(.ultraThinMaterial)
 
             // Best powder glow
             if isBest {
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: .cornerRadiusCard)
                     .stroke(scoreColor, lineWidth: 2)
                     .shadow(color: scoreColor.opacity(0.5), radius: 8)
             }
 
             // Card content
-            VStack(spacing: 8) {
+            VStack(spacing: .spacingS) {
                 // Header: Mountain name + badge
-                HStack(spacing: 6) {
+                HStack(spacing: .spacingXS) {
                     Text(mountain.shortName)
                         .font(.subheadline)
                         .fontWeight(.semibold)
@@ -88,7 +88,7 @@ struct ComparisonGridCard: View {
 
                     // Live/Static badge
                     if let conditions = conditions {
-                        HStack(spacing: 3) {
+                        HStack(spacing: .spacingXS / 2) {
                             if conditions.dataSources.isLive {
                                 Circle()
                                     .fill(Color.white)
@@ -99,8 +99,8 @@ struct ComparisonGridCard: View {
                                 .fontWeight(.bold)
                         }
                         .foregroundColor(.white)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, .spacingS)
+                        .padding(.vertical, .spacingXS / 2)
                         .background(
                             Capsule()
                                 .fill(conditions.dataSources.isLive ? Color.green : Color.orange)
@@ -108,11 +108,11 @@ struct ComparisonGridCard: View {
                         )
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.top, 12)
+                .padding(.horizontal, .spacingM)
+                .padding(.top, .spacingM)
 
                 // Powder Score (Hero metric)
-                VStack(spacing: 4) {
+                VStack(spacing: .spacingXS) {
                     if let score = powderScore?.score {
                         Text(String(format: "%.1f", score))
                             .font(.system(size: 48, weight: .bold, design: .rounded))
@@ -131,10 +131,10 @@ struct ComparisonGridCard: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, .spacingXS)
 
                 // Snowfall 24h/48h
-                HStack(spacing: 4) {
+                HStack(spacing: .spacingXS) {
                     let snow24h = conditions?.snowfall24h ?? 0
                     let snow48h = conditions?.snowfall48h ?? 0
 
@@ -152,7 +152,7 @@ struct ComparisonGridCard: View {
                 }
 
                 // Trend indicator
-                HStack(spacing: 4) {
+                HStack(spacing: .spacingXS) {
                     Image(systemName: trend.iconName)
                         .font(.caption)
                         .foregroundColor(trend.color)
@@ -167,10 +167,10 @@ struct ComparisonGridCard: View {
                 Spacer()
 
                 // Bottom row: Lift status + Temperature
-                HStack(spacing: 12) {
+                HStack(spacing: .spacingM) {
                     // Lift status
                     if let liftStatus = conditions?.liftStatus {
-                        HStack(spacing: 4) {
+                        HStack(spacing: .spacingXS) {
                             Image(systemName: "cablecar.fill")
                                 .font(.caption)
 
@@ -187,7 +187,7 @@ struct ComparisonGridCard: View {
 
                     // Temperature
                     if let temp = conditions?.temperature {
-                        HStack(spacing: 4) {
+                        HStack(spacing: .spacingXS) {
                             Image(systemName: "thermometer.medium")
                                 .font(.caption)
 
@@ -200,8 +200,8 @@ struct ComparisonGridCard: View {
                         .foregroundColor(.primary)
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 14)
+                .padding(.horizontal, .spacingM)
+                .padding(.bottom, .spacingM)
             }
         }
         .frame(width: 165, height: 220)

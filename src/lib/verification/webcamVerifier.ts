@@ -168,6 +168,54 @@ function isValidImageType(contentType: string): boolean {
   return validTypes.some((type) => contentType.toLowerCase().includes(type));
 }
 
+/**
+ * Detects hardcoded timestamps in webcam URLs that indicate static images
+ * Examples:
+ * - /2025-12-20_2303/ (date_time format)
+ * - /202512202303/ (continuous timestamp)
+ * - /2025/12/20/23/03/ (separated date/time)
+ */
+function detectHardcodedTimestamp(url: string): {
+  hasTimestamp: boolean;
+  timestamp?: string;
+  message?: string;
+} {
+  // Pattern 1: Date_time format (e.g., 2025-12-20_2303)
+  const dateTimePattern = /\/(\d{4}-\d{2}-\d{2}_\d{4})\//;
+  const dateTimeMatch = url.match(dateTimePattern);
+  if (dateTimeMatch) {
+    return {
+      hasTimestamp: true,
+      timestamp: dateTimeMatch[1],
+      message: `URL contains hardcoded timestamp: ${dateTimeMatch[1]}`,
+    };
+  }
+
+  // Pattern 2: Continuous timestamp (e.g., 202512202303)
+  const continuousPattern = /\/(\d{12,14})\//;
+  const continuousMatch = url.match(continuousPattern);
+  if (continuousMatch) {
+    return {
+      hasTimestamp: true,
+      timestamp: continuousMatch[1],
+      message: `URL contains hardcoded timestamp: ${continuousMatch[1]}`,
+    };
+  }
+
+  // Pattern 3: Separated date components in path (e.g., /2025/12/20/)
+  const separatedPattern = /\/(\d{4}\/\d{2}\/\d{2})\//;
+  const separatedMatch = url.match(separatedPattern);
+  if (separatedMatch) {
+    return {
+      hasTimestamp: true,
+      timestamp: separatedMatch[1],
+      message: `URL contains hardcoded date: ${separatedMatch[1]}`,
+    };
+  }
+
+  return { hasTimestamp: false };
+}
+
 // ============================================================================
 // Main Verifier Functions
 // ============================================================================
@@ -216,6 +264,9 @@ export async function verifyWebcam(
   }
 
   const url = webcam.url;
+
+  // Check for hardcoded timestamps in URL
+  const timestampDetection = detectHardcodedTimestamp(url);
 
   try {
     const {
@@ -307,13 +358,24 @@ export async function verifyWebcam(
     let status: VerificationStatus = 'success';
     const recommendations: string[] = [];
 
+    // Check for hardcoded timestamp - this is a warning sign
+    if (timestampDetection.hasTimestamp) {
+      status = 'warning';
+      recommendations.push(
+        timestampDetection.message || 'URL contains hardcoded timestamp',
+        'Static URLs will become stale and need manual updates',
+        'Consider using OnTheSnow Partner API for dynamic webcam URLs',
+        'Or find alternative live webcam feeds from resort website'
+      );
+    }
+
     if (staleness === 'stale') {
       status = 'warning';
       recommendations.push(
         'Image has not been updated recently',
         'Webcam may be offline or stuck'
       );
-    } else if (staleness === 'unknown') {
+    } else if (staleness === 'unknown' && !timestampDetection.hasTimestamp) {
       recommendations.push('No Last-Modified header - cannot verify freshness');
     }
 

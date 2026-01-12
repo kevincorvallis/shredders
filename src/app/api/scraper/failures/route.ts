@@ -16,45 +16,60 @@ export async function GET(request: NextRequest) {
     });
 
     let result;
-    if (mountainId) {
-      // Get failures for specific mountain
-      result = await db.sql`
-        SELECT
-          f.id,
-          f.run_id,
-          f.mountain_id,
-          f.error_message,
-          f.source_url,
-          f.failed_at,
-          r.started_at as run_started_at,
-          r.successful_count,
-          r.failed_count
-        FROM scraper_failures f
-        LEFT JOIN scraper_runs r ON f.run_id = r.run_id
-        WHERE f.mountain_id = ${mountainId}
-          AND f.failed_at >= NOW() - INTERVAL '${days} days'
-        ORDER BY f.failed_at DESC
-        LIMIT 100
-      `;
-    } else {
-      // Get all recent failures
-      result = await db.sql`
-        SELECT
-          f.id,
-          f.run_id,
-          f.mountain_id,
-          f.error_message,
-          f.source_url,
-          f.failed_at,
-          r.started_at as run_started_at,
-          r.successful_count,
-          r.failed_count
-        FROM scraper_failures f
-        LEFT JOIN scraper_runs r ON f.run_id = r.run_id
-        WHERE f.failed_at >= NOW() - INTERVAL '${days} days'
-        ORDER BY f.failed_at DESC
-        LIMIT 100
-      `;
+    try {
+      if (mountainId) {
+        // Get failures for specific mountain
+        result = await db.sql`
+          SELECT
+            f.id,
+            f.run_id,
+            f.mountain_id,
+            f.error_message,
+            f.source_url,
+            f.failed_at,
+            r.started_at as run_started_at,
+            r.successful_count,
+            r.failed_count
+          FROM scraper_failures f
+          LEFT JOIN scraper_runs r ON f.run_id = r.run_id
+          WHERE f.mountain_id = ${mountainId}
+            AND f.failed_at >= NOW() - INTERVAL '${days} days'
+          ORDER BY f.failed_at DESC
+          LIMIT 100
+        `;
+      } else {
+        // Get all recent failures
+        result = await db.sql`
+          SELECT
+            f.id,
+            f.run_id,
+            f.mountain_id,
+            f.error_message,
+            f.source_url,
+            f.failed_at,
+            r.started_at as run_started_at,
+            r.successful_count,
+            r.failed_count
+          FROM scraper_failures f
+          LEFT JOIN scraper_runs r ON f.run_id = r.run_id
+          WHERE f.failed_at >= NOW() - INTERVAL '${days} days'
+          ORDER BY f.failed_at DESC
+          LIMIT 100
+        `;
+      }
+    } catch (error) {
+      console.error('[Failures] scraper_failures table may not exist yet:', error);
+      // Return empty result if table doesn't exist
+      return NextResponse.json({
+        failures: [],
+        summary: [],
+        filters: {
+          days,
+          mountainId: mountainId || 'all',
+        },
+        notice: 'No failure data available. The scraper_failures table may need to be created.',
+        timestamp: new Date().toISOString(),
+      });
     }
 
     // Group failures by mountain for summary

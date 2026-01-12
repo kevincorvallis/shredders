@@ -64,25 +64,80 @@ struct MountainTab: View {
 
     private var webcamsContent: some View {
         VStack(spacing: .spacingL) {
-            if mountain.webcams.isEmpty {
-                Text("No webcams available for this mountain")
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 200)
-                    .frame(alignment: .center)
-            } else {
-                WebcamsSection(mountain: mountain)
-            }
+            if let mountainDetail = viewModel.locationData?.mountain {
+                if mountainDetail.webcams.isEmpty {
+                    Text("No webcams available for this mountain")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, minHeight: 200)
+                        .frame(alignment: .center)
+                } else {
+                    VStack(alignment: .leading, spacing: .spacingM) {
+                        Text("Mountain Webcams")
+                            .sectionHeader()
 
-            // Road webcams if available
-            if let roadWebcams = mountain.roadWebcams, !roadWebcams.isEmpty {
-                VStack(alignment: .leading, spacing: .spacingM) {
-                    Text("Road Webcams")
-                        .sectionHeader()
+                        ForEach(mountainDetail.webcams) { webcam in
+                            VStack(alignment: .leading, spacing: .spacingS) {
+                                Text(webcam.name)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
 
-                    ForEach(roadWebcams, id: \.name) { webcam in
-                        WebcamCard(webcam: webcam)
+                                if let url = URL(string: webcam.url) {
+                                    Link(destination: url) {
+                                        HStack {
+                                            Text("View Live")
+                                            Spacer()
+                                            Image(systemName: "arrow.up.right")
+                                        }
+                                        .font(.caption)
+                                        .foregroundColor(.blue)
+                                    }
+                                }
+                            }
+                            .padding(.spacingM)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(.cornerRadiusCard)
+                        }
                     }
                 }
+
+                // Road webcams if available
+                if let roadWebcams = mountainDetail.roadWebcams, !roadWebcams.isEmpty {
+                    VStack(alignment: .leading, spacing: .spacingM) {
+                        Text("Road Webcams")
+                            .sectionHeader()
+
+                        ForEach(roadWebcams) { webcam in
+                            VStack(alignment: .leading, spacing: .spacingS) {
+                                Text(webcam.name)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+
+                                Text("\(webcam.highway) - \(webcam.agency)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+
+                                if let url = URL(string: webcam.url) {
+                                    Link(destination: url) {
+                                        HStack {
+                                            Text("View Live")
+                                            Spacer()
+                                            Image(systemName: "arrow.up.right")
+                                        }
+                                        .font(.caption)
+                                        .foregroundColor(.blue)
+                                    }
+                                }
+                            }
+                            .padding(.spacingM)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(.cornerRadiusCard)
+                        }
+                    }
+                }
+            } else {
+                Text("Loading webcam data...")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, minHeight: 200)
             }
         }
     }
@@ -130,25 +185,16 @@ struct MountainTab: View {
                         SafetyInfoRow(
                             icon: "thermometer.snowflake",
                             title: "Temperature",
-                            value: "\(Int(conditions.temperature ?? 0))°F",
-                            color: temperatureColor(conditions.temperature ?? 32)
+                            value: "\(conditions.temperature ?? 0)°F",
+                            color: temperatureColor(Double(conditions.temperature ?? 32))
                         )
 
                         SafetyInfoRow(
                             icon: "wind",
                             title: "Wind Speed",
-                            value: "\(Int(conditions.wind?.speed ?? 0)) mph",
-                            color: windColor(conditions.wind?.speed ?? 0)
+                            value: "\(conditions.wind?.speed ?? 0) mph",
+                            color: windColor(Double(conditions.wind?.speed ?? 0))
                         )
-
-                        if let visibility = conditions.visibility {
-                            SafetyInfoRow(
-                                icon: "eye",
-                                title: "Visibility",
-                                value: visibility,
-                                color: .blue
-                            )
-                        }
                     }
                     .padding(.spacingM)
                     .background(Color(.secondarySystemBackground))
@@ -201,33 +247,6 @@ struct SafetyInfoRow: View {
 
             Spacer()
         }
-    }
-}
-
-struct WebcamCard: View {
-    let webcam: Webcam
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            Text(webcam.name)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-
-            if let url = URL(string: webcam.url) {
-                Link(destination: url) {
-                    HStack {
-                        Text("View Live")
-                        Spacer()
-                        Image(systemName: "arrow.up.right")
-                    }
-                    .font(.caption)
-                    .foregroundColor(.blue)
-                }
-            }
-        }
-        .padding(.spacingM)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(.cornerRadiusCard)
     }
 }
 

@@ -76,14 +76,14 @@ struct LocationView: View {
                             // Snow Depth Section
                             SnowDepthSection(
                                 viewModel: viewModel,
-                                onNavigateToHistory: { navigateToDetailView(.history) }
+                                onNavigateToHistory: { navigateToDetailView(.conditions) }
                             )
                             .transition(.move(edge: .top).combined(with: .opacity))
 
                             // Weather Conditions Section
                             WeatherConditionsSection(
                                 viewModel: viewModel,
-                                onNavigateToForecast: { navigateToDetailView(.forecast) }
+                                onNavigateToForecast: { navigateToDetailView(.conditions) }
                             )
                             .transition(.move(edge: .top).combined(with: .opacity))
 

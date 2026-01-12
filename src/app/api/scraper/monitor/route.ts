@@ -19,66 +19,98 @@ export async function GET() {
       connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
     });
 
-    // Get overall stats (last 7 days)
-    const statsResult = await db.sql`
-      SELECT
-        COUNT(*) as total_runs,
-        AVG(successful_count) as avg_successful,
-        AVG(failed_count) as avg_failed,
-        AVG(duration_ms) as avg_duration_ms
-      FROM scraper_runs
-      WHERE started_at >= NOW() - INTERVAL '7 days'
-        AND status = 'completed'
-    `;
+    // Get overall stats (last 7 days) - with error handling
+    let statsResult;
+    let stats: any = {};
+    let avgSuccessful = 0;
+    let avgFailed = 0;
+    let successRate = 0;
+    let totalRuns = 0;
+    let avgDurationMs = 0;
 
-    const stats = statsResult.rows[0];
-    const avgSuccessful = parseFloat(stats?.avg_successful || '0');
-    const avgFailed = parseFloat(stats?.avg_failed || '0');
-    const successRate =
-      avgSuccessful + avgFailed > 0
-        ? (avgSuccessful / (avgSuccessful + avgFailed)) * 100
-        : 0;
+    try {
+      statsResult = await db.sql`
+        SELECT
+          COUNT(*) as total_runs,
+          AVG(successful_count) as avg_successful,
+          AVG(failed_count) as avg_failed,
+          AVG(duration_ms) as avg_duration_ms
+        FROM scraper_runs
+        WHERE started_at >= NOW() - INTERVAL '7 days'
+          AND status = 'completed'
+      `;
 
-    // Get last 5 runs
-    const recentRunsResult = await db.sql`
-      SELECT
-        run_id,
-        successful_count,
-        failed_count,
-        total_mountains,
-        duration_ms,
-        started_at,
-        completed_at,
-        status
-      FROM scraper_runs
-      ORDER BY started_at DESC
-      LIMIT 5
-    `;
+      stats = statsResult.rows[0] || {};
+      avgSuccessful = parseFloat(stats?.avg_successful || '0');
+      avgFailed = parseFloat(stats?.avg_failed || '0');
+      totalRuns = parseInt(stats?.total_runs || '0');
+      avgDurationMs = parseFloat(stats?.avg_duration_ms || '0');
+      successRate =
+        avgSuccessful + avgFailed > 0
+          ? (avgSuccessful / (avgSuccessful + avgFailed)) * 100
+          : 0;
+    } catch (error) {
+      console.error('[Monitor] Error fetching stats:', error);
+    }
 
-    // Get recent failures (last 24 hours)
-    const recentFailuresResult = await db.sql`
-      SELECT
-        mountain_id,
-        error_message,
-        failed_at,
-        source_url
-      FROM scraper_failures
-      WHERE failed_at >= NOW() - INTERVAL '24 hours'
-      ORDER BY failed_at DESC
-      LIMIT 10
-    `;
+    // Get last 5 runs - with error handling
+    let recentRunsResult;
+    try {
+      recentRunsResult = await db.sql`
+        SELECT
+          run_id,
+          successful_count,
+          failed_count,
+          total_mountains,
+          duration_ms,
+          started_at,
+          completed_at,
+          status
+        FROM scraper_runs
+        ORDER BY started_at DESC
+        LIMIT 5
+      `;
+    } catch (error) {
+      console.error('[Monitor] Error fetching recent runs:', error);
+      recentRunsResult = { rows: [] };
+    }
 
-    // Get failure counts by mountain (last 7 days)
-    const failuresByMountainResult = await db.sql`
-      SELECT
-        mountain_id,
-        COUNT(*) as failure_count,
-        MAX(failed_at) as last_failure
-      FROM scraper_failures
-      WHERE failed_at >= NOW() - INTERVAL '7 days'
-      GROUP BY mountain_id
-      ORDER BY failure_count DESC
-    `;
+    // Get recent failures (last 24 hours) - with error handling
+    let recentFailuresResult;
+    try {
+      recentFailuresResult = await db.sql`
+        SELECT
+          mountain_id,
+          error_message,
+          failed_at,
+          source_url
+        FROM scraper_failures
+        WHERE failed_at >= NOW() - INTERVAL '24 hours'
+        ORDER BY failed_at DESC
+        LIMIT 10
+      `;
+    } catch (error) {
+      console.error('[Monitor] Error fetching recent failures (table may not exist yet):', error);
+      recentFailuresResult = { rows: [] };
+    }
+
+    // Get failure counts by mountain (last 7 days) - with error handling
+    let failuresByMountainResult;
+    try {
+      failuresByMountainResult = await db.sql`
+        SELECT
+          mountain_id,
+          COUNT(*) as failure_count,
+          MAX(failed_at) as last_failure
+        FROM scraper_failures
+        WHERE failed_at >= NOW() - INTERVAL '7 days'
+        GROUP BY mountain_id
+        ORDER BY failure_count DESC
+      `;
+    } catch (error) {
+      console.error('[Monitor] Error fetching failures by mountain (table may not exist yet):', error);
+      failuresByMountainResult = { rows: [] };
+    }
 
     // Determine health status
     const isHealthy = successRate >= 80;
@@ -125,10 +157,10 @@ export async function GET() {
       })),
       stats: {
         last7Days: {
-          totalRuns: parseInt(stats?.total_runs || '0'),
+          totalRuns,
           avgSuccessful: Math.round(avgSuccessful * 100) / 100,
           avgFailed: Math.round(avgFailed * 100) / 100,
-          avgDurationMs: Math.round(parseFloat(stats?.avg_duration_ms || '0')),
+          avgDurationMs: Math.round(avgDurationMs),
         },
       },
       alerts: {

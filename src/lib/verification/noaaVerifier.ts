@@ -260,6 +260,28 @@ export async function verifyNOAAEndpoint(
   }
 
   if (!mountain.noaa) {
+    // Canadian mountains don't have NOAA config - this is expected
+    // NOAA Weather.gov only covers U.S. territory
+    if (mountain.region === 'canada') {
+      return {
+        source: `${mountainId}-noaa-${endpoint}`,
+        type: 'noaa',
+        mountainId,
+        mountainName: mountain.name,
+        endpoint,
+        stationId: 'n/a',
+        status: 'success',
+        timestamp: new Date().toISOString(),
+        dataFound: true,
+        dataQuality: 'excellent',
+        sampleData: {
+          note: 'NOAA Weather.gov is U.S.-only - not applicable for Canadian mountains',
+          region: mountain.region,
+        },
+        recommendations: [],
+      };
+    }
+
     return {
       source: `${mountainId}-noaa-${endpoint}`,
       type: 'noaa',

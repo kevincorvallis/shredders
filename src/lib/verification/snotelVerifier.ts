@@ -163,6 +163,7 @@ function validateSNOTELData(
   snowWaterEquivalent?: number;
   dataRecency?: string;
   stale?: boolean;
+  hoursSinceUpdate?: number;
   error?: string;
 } {
   try {
@@ -236,6 +237,7 @@ function validateSNOTELData(
       snowWaterEquivalent,
       dataRecency: mostRecentDate.toISOString(),
       stale: isStale,
+      hoursSinceUpdate,
     };
   } catch (error: any) {
     return { valid: false, error: error.message };
@@ -311,8 +313,10 @@ export async function verifySNOTEL(
       };
     }
 
-    // Validate data
-    const validation = validateSNOTELData(data, config.staleDataThreshold);
+    // Validate data using SNOTEL-specific threshold
+    // SNOTEL stations report daily, so we use a longer threshold (96 hours by default)
+    const snotelThreshold = config.snotelStaleDataThreshold ?? config.staleDataThreshold;
+    const validation = validateSNOTELData(data, snotelThreshold);
 
     if (!validation.valid) {
       return {
@@ -334,8 +338,30 @@ export async function verifySNOTEL(
       };
     }
 
-    // Determine status
-    const status: VerificationStatus = validation.stale ? 'warning' : 'success';
+    // Graduated quality grading based on data age
+    // SNOTEL stations report daily, so we have more lenient thresholds
+    const hoursSinceUpdate = validation.hoursSinceUpdate ?? 0;
+    let dataQuality: 'excellent' | 'good' | 'fair' | 'poor';
+    let status: VerificationStatus;
+    let recommendations: string[] = [];
+
+    if (hoursSinceUpdate < 24) {
+      dataQuality = 'excellent';
+      status = 'success';
+    } else if (hoursSinceUpdate < 48) {
+      dataQuality = 'good';
+      status = 'success';
+    } else if (hoursSinceUpdate < 96) {
+      dataQuality = 'fair';
+      status = 'success'; // Still acceptable for daily reporting
+    } else {
+      dataQuality = 'poor';
+      status = 'warning';
+      recommendations = [
+        'Data is >4 days old - station may be offline or experiencing issues',
+        'Check SNOTEL station status manually at https://wcc.sc.egov.usda.gov',
+      ];
+    }
 
     return {
       source: `${mountainId}-snotel`,
@@ -348,7 +374,7 @@ export async function verifySNOTEL(
       responseTime,
       httpStatus,
       dataFound: true,
-      dataQuality: validation.stale ? 'fair' : 'excellent',
+      dataQuality,
       snowDepth: validation.snowDepth,
       snowWaterEquivalent: validation.snowWaterEquivalent,
       dataRecency: validation.dataRecency,
@@ -356,13 +382,9 @@ export async function verifySNOTEL(
       sampleData: {
         url,
         stationName: snotelConfig.stationName,
+        hoursSinceUpdate,
       },
-      recommendations: validation.stale
-        ? [
-            'Data is stale - station may be offline or experiencing issues',
-            'Check SNOTEL station status manually',
-          ]
-        : [],
+      recommendations,
     };
   } catch (error: any) {
     const { category, message } = categorizeError(error);

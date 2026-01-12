@@ -4,7 +4,7 @@ struct ContentView: View {
     @Environment(AuthService.self) private var authService
     @Binding var deepLinkMountainId: String?
     @State private var selectedMountain: Mountain? = nil
-    @State private var mountainsViewModel = MountainSelectionViewModel()
+    @StateObject private var mountainsViewModel = MountainSelectionViewModel()
 
     var body: some View {
         TabView {
@@ -56,6 +56,9 @@ struct ContentView: View {
                         }
                     }
             }
+        }
+        .task {
+            await mountainsViewModel.loadMountains()
         }
     }
 }
