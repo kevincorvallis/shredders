@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import { sql } from '@vercel/postgres';
 
 /**
  * Get recent scraper failures for debugging
@@ -11,15 +11,11 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '7');
     const mountainId = searchParams.get('mountainId');
 
-    const db = createClient({
-      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-    });
-
     let result;
     try {
       if (mountainId) {
         // Get failures for specific mountain
-        result = await db.sql`
+        result = await sql`
           SELECT
             f.id,
             f.run_id,
@@ -39,7 +35,7 @@ export async function GET(request: NextRequest) {
         `;
       } else {
         // Get all recent failures
-        result = await db.sql`
+        result = await sql`
           SELECT
             f.id,
             f.run_id,

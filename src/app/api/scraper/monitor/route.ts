@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import { sql } from '@vercel/postgres';
 
 /**
  * Comprehensive scraper monitoring endpoint
@@ -15,10 +15,6 @@ import { createClient } from '@vercel/postgres';
  */
 export async function GET() {
   try {
-    const db = createClient({
-      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-    });
-
     // Get overall stats (last 7 days) - with error handling
     let statsResult;
     let stats: any = {};
@@ -29,7 +25,7 @@ export async function GET() {
     let avgDurationMs = 0;
 
     try {
-      statsResult = await db.sql`
+      statsResult = await sql`
         SELECT
           COUNT(*) as total_runs,
           AVG(successful_count) as avg_successful,
@@ -56,7 +52,7 @@ export async function GET() {
     // Get last 5 runs - with error handling
     let recentRunsResult;
     try {
-      recentRunsResult = await db.sql`
+      recentRunsResult = await sql`
         SELECT
           run_id,
           successful_count,
@@ -78,7 +74,7 @@ export async function GET() {
     // Get recent failures (last 24 hours) - with error handling
     let recentFailuresResult;
     try {
-      recentFailuresResult = await db.sql`
+      recentFailuresResult = await sql`
         SELECT
           mountain_id,
           error_message,
@@ -97,7 +93,7 @@ export async function GET() {
     // Get failure counts by mountain (last 7 days) - with error handling
     let failuresByMountainResult;
     try {
-      failuresByMountainResult = await db.sql`
+      failuresByMountainResult = await sql`
         SELECT
           mountain_id,
           COUNT(*) as failure_count,

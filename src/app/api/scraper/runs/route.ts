@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import { sql } from '@vercel/postgres';
 
 /**
  * Get scraper run history
@@ -10,14 +10,10 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
 
-    const db = createClient({
-      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-    });
-
     // Get recent runs - with error handling
     let runsResult;
     try {
-      runsResult = await db.sql`
+      runsResult = await sql`
         SELECT
           run_id,
           total_mountains,
@@ -50,7 +46,7 @@ export async function GET(request: NextRequest) {
     let avgDurationMs = 0;
 
     try {
-      statsResult = await db.sql`
+      statsResult = await sql`
         SELECT
           COUNT(*) as total_runs,
           AVG(successful_count) as avg_successful,
