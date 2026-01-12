@@ -5,6 +5,10 @@ struct ArrivalTimeCard: View {
     @State private var showAlternatives = false
     @State private var showTips = false
 
+    private var confidenceColor: Color {
+        Color.forConfidenceLevel(arrivalTime.confidence.displayName)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -43,7 +47,7 @@ struct ArrivalTimeCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: .cornerRadiusHero)
-                .strokeBorder(confidenceColor.opacity(.opacityBold), lineWidth: 2)
+                .strokeBorder(confidenceColor.opacity(0.3), lineWidth: 2)
         )
     }
 

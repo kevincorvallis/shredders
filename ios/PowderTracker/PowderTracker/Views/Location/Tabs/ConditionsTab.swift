@@ -57,17 +57,6 @@ struct ConditionsTab: View {
 
     private var historyContent: some View {
         VStack(spacing: .spacingL) {
-            // Snow depth chart
-            if let snowDepthData = viewModel.snowDepthData, !snowDepthData.isEmpty {
-                VStack(alignment: .leading, spacing: .spacingM) {
-                    Text("Snow Depth History")
-                        .sectionHeader()
-
-                    SnowDepthChart(data: snowDepthData)
-                        .frame(height: 250)
-                }
-            }
-
             // Historical data summary
             if let conditions = viewModel.locationData?.conditions {
                 VStack(alignment: .leading, spacing: .spacingM) {
@@ -108,7 +97,7 @@ struct ConditionsTab: View {
 // MARK: - Forecast Section (reused from ForecastTab)
 
 struct ForecastSection: View {
-    let forecast: [ForecastPeriod]
+    let forecast: [ForecastDay]
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spacingM) {
@@ -123,7 +112,7 @@ struct ForecastSection: View {
 }
 
 struct ForecastRow: View {
-    let period: ForecastPeriod
+    let period: ForecastDay
 
     var body: some View {
         HStack(spacing: .spacingM) {
@@ -140,19 +129,19 @@ struct ForecastRow: View {
             .frame(width: 80, alignment: .leading)
 
             // Weather icon
-            Image(systemName: weatherIcon(for: period.weather))
+            Image(systemName: weatherIcon(for: period.conditions))
                 .font(.title3)
-                .foregroundColor(weatherColor(for: period.weather))
+                .foregroundColor(weatherColor(for: period.conditions))
                 .frame(width: 40)
 
             Spacer()
 
             // Snow
-            if let snow = period.snowfall, snow > 0 {
+            if period.snowfall > 0 {
                 HStack(spacing: .spacingXS) {
                     Image(systemName: "snowflake")
                         .font(.caption)
-                    Text("\(Int(snow))\"")
+                    Text("\(period.snowfall)\"")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                 }
@@ -162,12 +151,12 @@ struct ForecastRow: View {
 
             // Temperature range
             HStack(spacing: .spacingXS) {
-                Text("\(Int(period.tempLow))°")
+                Text("\(period.low)°")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Text("/")
                     .foregroundStyle(.secondary)
-                Text("\(Int(period.tempHigh))°")
+                Text("\(period.high)°")
                     .font(.subheadline)
                     .fontWeight(.semibold)
             }

@@ -32,7 +32,7 @@ struct LocationView: View {
                     // At a Glance summary card
                     AtAGlanceCard(
                         viewModel: viewModel,
-                        onNavigateToLifts: { navigateToDetailView(.lifts) }
+                        onNavigateToLifts: { navigateToDetailView(.mountain) }
                     )
                     .padding(.horizontal)
 

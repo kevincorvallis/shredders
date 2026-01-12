@@ -48,9 +48,6 @@ struct AlertsView: View {
             .task(id: selectedMountainId) {
                 await loadAlerts()
             }
-            .task {
-                await mountainsViewModel.loadData()
-            }
             .sheet(isPresented: $showMountainPicker) {
                 mountainPickerSheet
             }
