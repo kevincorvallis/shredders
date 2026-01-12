@@ -57,9 +57,6 @@ struct ContentView: View {
                     }
             }
         }
-        .task {
-            await mountainsViewModel.loadData()
-        }
     }
 }
 

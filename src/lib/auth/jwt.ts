@@ -5,7 +5,7 @@
  * Inspired by IWBH backend auth structure, adapted for Next.js
  */
 
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
 import { jwtConfig, appConfig } from '@/lib/config';
 
@@ -61,6 +61,10 @@ export function generateAccessToken(
   const config = getJWTConfig();
   const { issuer, audience } = getIssuerAudience();
 
+  const options: SignOptions = {
+    expiresIn: config.accessTokenExpiry as any,
+  };
+
   return jwt.sign(
     {
       ...payload,
@@ -70,7 +74,7 @@ export function generateAccessToken(
       aud: audience,
     },
     config.accessTokenSecret,
-    { expiresIn: config.accessTokenExpiry }
+    options
   );
 }
 
@@ -90,6 +94,10 @@ export function generateRefreshToken(
   // Otherwise inherit the token family from parent
   const tokenFamily = payload.tokenFamily || randomUUID();
 
+  const signOptions: SignOptions = {
+    expiresIn: config.refreshTokenExpiry as any,
+  };
+
   return jwt.sign(
     {
       ...payload,
@@ -101,7 +109,7 @@ export function generateRefreshToken(
       parentJti: options?.parentJti, // Track parent for rotation
     },
     config.refreshTokenSecret,
-    { expiresIn: config.refreshTokenExpiry }
+    signOptions
   );
 }
 

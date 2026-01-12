@@ -31,6 +31,7 @@
 		1CF1C8C4055394EDE6B5C447 /* MountainConditionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DA187DF47BCE728766FC51E /* MountainConditionsCard.swift */; };
 		1CFA02C3772FB9C8D419918F /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F162EDAA02ACD2245C3CF18 /* LoginView.swift */; };
 		1D62606A05B88A57F2A10CE0 /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
+		1E767F11EB82CC4C6D411224 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */; };
 		1EE06960A5D65554E0ADE960 /* SocialTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E6F54FE24423C6E969168B /* SocialTab.swift */; };
 		1F21632AB47AD6048D008BFC /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
 		1F7D018AE4D1BB599AECC4D7 /* LiftLinePredictor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28656095089954A5933744CC /* LiftLinePredictor.swift */; };
@@ -341,6 +342,7 @@
 		BF8B3799318D3423388D899A /* Comment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comment.swift; sourceTree = "<group>"; };
 		BFF0F625BFCC655885CABA4D /* SnowDepthSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowDepthSection.swift; sourceTree = "<group>"; };
 		BFF6C823233438A205E0D04D /* MountainTimelineCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainTimelineCard.swift; sourceTree = "<group>"; };
+		C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		C18BCFFF27743BFACB908F15 /* NowTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowTabView.swift; sourceTree = "<group>"; };
 		C33520EA9C7031B61A59F2D4 /* CheckInCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInCardView.swift; sourceTree = "<group>"; };
 		C528BC7B8C59EABA2DBA9F58 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
@@ -487,6 +489,7 @@
 			isa = PBXGroup;
 			children = (
 				262A21D5236C2FA91D4D15BE /* ChatViewModel.swift */,
+				C0B3967CAABA13A59C0A12BB /* DashboardViewModel.swift */,
 				04359DE47F38AAA25B08299F /* ForecastViewModel.swift */,
 				0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */,
 				529AE072A26E7446B309D8A9 /* HomeViewModel.swift */,

@@ -75,16 +75,16 @@ const envSchema = z.object({
   // Feature Flags
   ENABLE_TOKEN_ROTATION: z
     .string()
-    .transform((val) => val === 'true')
-    .default('true'),
+    .default('true')
+    .transform((val) => val === 'true'),
   ENABLE_MFA: z
     .string()
-    .transform((val) => val === 'true')
-    .default('false'),
+    .default('false')
+    .transform((val) => val === 'true'),
   ENABLE_SESSION_TRACKING: z
     .string()
-    .transform((val) => val === 'true')
-    .default('true'),
+    .default('true')
+    .transform((val) => val === 'true'),
 
   // Rate Limiting Configuration
   RATE_LIMIT_LOGIN: z.string().optional().default('5'),
@@ -107,7 +107,7 @@ function validateEnv(): Config {
     return envSchema.parse(process.env);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const missingVars = error.errors
+      const missingVars = error.issues
         .map((err) => {
           const path = err.path.join('.');
           const message = err.message;

@@ -3,7 +3,7 @@
  * Used across all test files for consistent, realistic test data
  */
 
-import type { MountainConfig } from '@shredders/shared/mountains';
+import type { MountainConfig } from '@shredders/shared';
 
 /**
  * Generate a mock mountain configuration
@@ -40,7 +40,7 @@ export const mockMountain = (overrides?: Partial<MountainConfig>): MountainConfi
   ],
   color: '#1E88E5',
   website: 'https://www.mtbaker.us',
-  logo: null,
+  logo: undefined,
   passType: 'independent',
   ...overrides,
 });

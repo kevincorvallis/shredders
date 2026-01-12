@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { beforeAll, afterAll, vi } from 'vitest';
 
 /**
  * Create a mock NextRequest for testing API routes
@@ -37,7 +38,7 @@ export const createMockRequest = (
     (requestInit.headers as Record<string, string>)['Content-Type'] = 'application/json';
   }
 
-  return new NextRequest(fullUrl, requestInit);
+  return new NextRequest(fullUrl, requestInit as any);
 };
 
 /**

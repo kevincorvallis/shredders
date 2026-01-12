@@ -7,6 +7,9 @@
  * - Bot protection issues (Cloudflare, Incapsula)
  * - Invalid or outdated CSS selectors
  * - Dynamic content requiring JavaScript
+ *
+ * UPDATED: Now uses actual scraper implementations (HTMLScraper) instead of
+ * manually testing selectors. This ensures verification matches production behavior.
  */
 
 import * as cheerio from 'cheerio';
@@ -18,6 +21,7 @@ import type {
 } from './types';
 import { scraperConfigs } from '../scraper/configs';
 import type { ScraperConfig } from '../scraper/types';
+import { HTMLScraper } from '../scraper/HTMLScraper';
 
 // ============================================================================
 // Helper Functions
@@ -196,6 +200,11 @@ function testSelectors(
   }[] = [];
 
   for (const [field, selector] of Object.entries(selectors)) {
+    // Skip RegExp patterns - they're for text extraction, not CSS selection
+    if (typeof selector !== 'string') {
+      continue;
+    }
+
     const elements = $(selector);
     const found = elements.length > 0;
     let value: string | undefined;
@@ -262,18 +271,71 @@ export async function verifyScraper(
     };
   }
 
-  const targetUrl = scraperConfig.dataUrl || scraperConfig.url;
+  const startTime = Date.now();
 
   try {
-    // Fetch the page
-    const { html, status: httpStatus, responseTime } = await fetchWithRetry(
-      targetUrl,
-      config
-    );
+    // Use the actual HTMLScraper implementation
+    // This ensures verification matches production behavior including OnTheSnow JSON parser
+    const scraper = new HTMLScraper(scraperConfig);
+    const result = await scraper.scrape();
 
-    // Check for bot protection or errors
-    if (httpStatus !== 200) {
-      const { category, message } = categorizeError(null, html, httpStatus);
+    const responseTime = Date.now() - startTime;
+
+    if (result.success && result.data) {
+      // Scraper successfully extracted data
+      const data = result.data;
+
+      // Assess data quality based on extracted fields
+      const hasLifts = data.liftsTotal > 0;
+      const hasRuns = data.runsTotal > 0;
+      const hasStatus = data.isOpen !== undefined;
+
+      let dataQuality: 'excellent' | 'good' | 'fair' | 'poor';
+      if (hasLifts && hasRuns && hasStatus) {
+        dataQuality = 'excellent';
+      } else if ((hasLifts || hasRuns) && hasStatus) {
+        dataQuality = 'good';
+      } else if (hasLifts || hasRuns) {
+        dataQuality = 'fair';
+      } else {
+        dataQuality = 'poor';
+      }
+
+      const status: VerificationStatus =
+        dataQuality === 'excellent' || dataQuality === 'good' ? 'success' : 'warning';
+
+      return {
+        source: mountainId,
+        type: 'scraper',
+        mountainId,
+        mountainName: scraperConfig.name,
+        status,
+        timestamp: new Date().toISOString(),
+        responseTime,
+        httpStatus: 200,
+        dataFound: true,
+        dataQuality,
+        sampleData: {
+          liftsOpen: data.liftsOpen,
+          liftsTotal: data.liftsTotal,
+          runsOpen: data.runsOpen,
+          runsTotal: data.runsTotal,
+          isOpen: data.isOpen,
+          url: scraperConfig.dataUrl || scraperConfig.url,
+        },
+        recommendations:
+          dataQuality === 'fair' || dataQuality === 'poor'
+            ? ['Some data fields are missing', 'Review scraper configuration']
+            : [],
+      };
+    } else {
+      // Scraper failed
+      const { category, message } = categorizeError(
+        new Error(result.error || 'Scraper failed'),
+        undefined,
+        undefined
+      );
+
       return {
         source: mountainId,
         type: 'scraper',
@@ -282,76 +344,13 @@ export async function verifyScraper(
         status: 'error',
         timestamp: new Date().toISOString(),
         responseTime,
-        httpStatus,
         errorCategory: category,
-        errorMessage: message,
+        errorMessage: result.error || 'Scraper failed without error message',
         recommendations: getRecommendations(category, scraperConfig),
       };
     }
-
-    // Load HTML into Cheerio
-    const $ = cheerio.load(html);
-
-    // Test selectors
-    const selectorResults = testSelectors($, scraperConfig.selectors);
-    const dataQuality = assessDataQuality(selectorResults);
-
-    // Check if any selectors found data
-    const dataFound = selectorResults.some((r) => r.found);
-
-    if (!dataFound) {
-      return {
-        source: mountainId,
-        type: 'scraper',
-        mountainId,
-        mountainName: scraperConfig.name,
-        status: 'error',
-        timestamp: new Date().toISOString(),
-        responseTime,
-        httpStatus,
-        errorCategory: 'invalid_selector',
-        errorMessage: 'No selectors found matching elements on page',
-        selectorsFound: selectorResults,
-        recommendations: [
-          'Inspect the page HTML to update selectors',
-          'Check if the site has been redesigned',
-          'Consider switching to API-based scraping if available',
-        ],
-      };
-    }
-
-    // Success or warning based on data quality
-    const status: VerificationStatus =
-      dataQuality === 'excellent' || dataQuality === 'good'
-        ? 'success'
-        : 'warning';
-
-    return {
-      source: mountainId,
-      type: 'scraper',
-      mountainId,
-      mountainName: scraperConfig.name,
-      status,
-      timestamp: new Date().toISOString(),
-      responseTime,
-      httpStatus,
-      dataFound: true,
-      dataQuality,
-      selectorsFound: selectorResults,
-      sampleData: {
-        type: scraperConfig.type,
-        enabled: scraperConfig.enabled,
-        url: targetUrl,
-      },
-      recommendations:
-        dataQuality === 'fair' || dataQuality === 'poor'
-          ? [
-              'Some selectors need updating',
-              'Review and update missing selectors',
-            ]
-          : [],
-    };
   } catch (error: any) {
+    const responseTime = Date.now() - startTime;
     const { category, message } = categorizeError(error);
 
     return {
@@ -361,6 +360,7 @@ export async function verifyScraper(
       mountainName: scraperConfig.name,
       status: 'error',
       timestamp: new Date().toISOString(),
+      responseTime,
       errorCategory: category,
       errorMessage: message,
       recommendations: getRecommendations(category, scraperConfig),
