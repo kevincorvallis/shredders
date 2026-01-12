@@ -39,6 +39,10 @@ export interface ScraperConfig {
     acresOpen?: string;
     status?: string;
     message?: string;
+
+    // Regex patterns for text-based extraction (e.g., OnTheSnow)
+    liftsPattern?: RegExp;
+    runsPattern?: RegExp;
   };
   apiConfig?: {
     // Configuration for API-based scraping

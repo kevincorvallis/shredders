@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getYearOverYearComparison } from '@/lib/apis/snotel';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 
 /**
  * Snow depth guidelines by elevation range

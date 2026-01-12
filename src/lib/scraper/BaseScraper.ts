@@ -22,7 +22,7 @@ export abstract class BaseScraper {
   protected async fetchWithTimeout(
     url: string,
     options: RequestInit = {},
-    timeout = 10000
+    timeout = 30000  // Increased from 10000 to handle sequential scraping
   ): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);

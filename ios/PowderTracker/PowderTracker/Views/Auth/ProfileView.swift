@@ -32,10 +32,15 @@ struct ProfileView: View {
                                 Text(profile.displayName ?? profile.username)
                                     .font(.title2)
                                     .fontWeight(.bold)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.8)
+                                    .multilineTextAlignment(.center)
 
                                 Text("@\(profile.username)")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
                             }
 
                             if let bio = profile.bio {
@@ -43,6 +48,7 @@ struct ProfileView: View {
                                     .font(.body)
                                     .foregroundStyle(.secondary)
                                     .multilineTextAlignment(.center)
+                                    .lineLimit(3)
                                     .padding(.horizontal)
                             }
 
@@ -55,6 +61,8 @@ struct ProfileView: View {
                                     Text("Photos")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.8)
                                 }
 
                                 VStack(spacing: 4) {
@@ -64,6 +72,8 @@ struct ProfileView: View {
                                     Text("Check-ins")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.8)
                                 }
 
                                 VStack(spacing: 4) {
@@ -73,6 +83,8 @@ struct ProfileView: View {
                                     Text("Comments")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.8)
                                 }
                             }
                             .padding()
@@ -114,10 +126,14 @@ struct ProfileView: View {
                                 Text("No photos yet")
                                     .font(.headline)
                                     .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.9)
                                 Text("Upload your first photo from a webcam or mountain page")
                                     .font(.subheadline)
                                     .foregroundStyle(.tertiary)
                                     .multilineTextAlignment(.center)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.horizontal)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 80)
@@ -136,11 +152,14 @@ struct ProfileView: View {
                         Text("Sign in to view your profile")
                             .font(.title3)
                             .fontWeight(.semibold)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.9)
 
                         Text("Create an account to track your photos, check-ins, and activity")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                             .padding(.horizontal)
 
                         Button {
@@ -165,7 +184,7 @@ struct ProfileView: View {
                 ProfileSettingsView()
             }
             .sheet(isPresented: $showingLogin) {
-                LoginView()
+                UnifiedAuthView()
             }
         }
     }

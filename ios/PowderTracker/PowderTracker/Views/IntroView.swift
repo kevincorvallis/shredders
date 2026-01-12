@@ -318,10 +318,10 @@ struct IntroView: View {
             pulseScale = 1.2
         }
 
-        // Auto dismiss after 3.5 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) { [self] in
+        // Auto dismiss after 1.0 second (Apple design principle: get out of the way quickly)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [self] in
             guard showIntro else { return }
-            withAnimation(.easeOut(duration: 0.5)) {
+            withAnimation(.easeOut(duration: 0.3)) {
                 showIntro = false
             }
         }

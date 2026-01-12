@@ -7,6 +7,8 @@ struct SignInWithAppleButton: View {
     @Environment(\.dismiss) private var dismiss
     @State private var currentNonce: String?
     @State private var errorMessage: String?
+    @State private var isCheckingAvailability = true
+    @State private var isAvailable = true
 
     // Detect if running on simulator
     #if targetEnvironment(simulator)
@@ -17,36 +19,77 @@ struct SignInWithAppleButton: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            SignInWithAppleButtonView(
-                onRequest: { request in
-                    let nonce = randomNonceString()
-                    currentNonce = nonce
-                    request.requestedScopes = [.fullName, .email]
-                    request.nonce = sha256(nonce)
-                },
-                onCompletion: { result in
-                    Task {
-                        await handleSignInWithApple(result: result)
+            if isCheckingAvailability {
+                ProgressView()
+                    .frame(height: 50)
+            } else if !isAvailable {
+                VStack(spacing: 8) {
+                    Button {
+                        // Fallback message
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                            Text("Sign in with Apple Unavailable")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.8)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.gray.opacity(0.3))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .padding(.horizontal, 4)
                     }
+                    .disabled(true)
+
+                    Text("Please sign in to iCloud in Settings → [Your Name] to use Sign in with Apple")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal)
                 }
-            )
-            .frame(height: 50)
-            .cornerRadius(10)
+            } else {
+                SignInWithAppleButtonView(
+                    onRequest: { request in
+                        let nonce = randomNonceString()
+                        currentNonce = nonce
+                        request.requestedScopes = [.fullName, .email]
+                        request.nonce = sha256(nonce)
+                    },
+                    onCompletion: { result in
+                        Task {
+                            await handleSignInWithApple(result: result)
+                        }
+                    }
+                )
+                .frame(height: 50)
+                .cornerRadius(10)
 
-            if isSimulator {
-                Text("⚠️ Sign in with Apple may not work on simulator. Use a physical device or email/password.")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
+                if isSimulator {
+                    Text("⚠️ Sign in with Apple may not work on simulator. Use a physical device or email/password.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal)
+                }
 
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .padding(.top, 4)
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .padding(.top, 4)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal)
+                }
             }
+        }
+        .task {
+            await checkSignInWithAppleAvailability()
         }
     }
 
@@ -75,14 +118,35 @@ struct SignInWithAppleButton: View {
                     // User cancelled, don't show error
                     break
                 case .unknown:
-                    errorMessage = "Please sign in to iCloud in Settings to use Sign in with Apple"
+                    // Check for specific underlying error details
+                    let nsError = error as NSError
+                    if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        print("Underlying error: \(underlyingError)")
+                    }
+
+                    // Provide more helpful error message
+                    if isSimulator {
+                        errorMessage = "Sign in with Apple doesn't work reliably on simulator. Please use email/password or test on a physical device."
+                    } else {
+                        errorMessage = "Unable to sign in with Apple. This usually means:\n• You're not signed into iCloud (Settings → [Your Name])\n• Network connectivity issues\n\nPlease try email/password instead."
+                    }
                 case .notHandled:
-                    errorMessage = "Sign in with Apple is not configured yet. Please use email/password."
-                default:
-                    errorMessage = "Apple Sign In failed. Try email/password instead."
+                    errorMessage = "Sign in with Apple is not configured. Please use email/password."
+                case .invalidResponse:
+                    errorMessage = "Received invalid response from Apple. Please try again or use email/password."
+                case .notInteractive:
+                    errorMessage = "Sign in requires user interaction. Please try again."
+                case .failed:
+                    errorMessage = "Sign in with Apple failed. Please check your internet connection and try again."
+                case .matchedExcludedCredential, .credentialImport, .credentialExport,
+                     .preferSignInWithApple, .deviceNotConfiguredForPasskeyCreation:
+                    // Handle newer error cases
+                    errorMessage = "Sign in with Apple is not available. Please use email/password instead."
+                @unknown default:
+                    errorMessage = "An unexpected error occurred. Please use email/password instead.\nError: \(authError.localizedDescription)"
                 }
             } else {
-                errorMessage = "Apple Sign In failed. Try email/password instead."
+                errorMessage = "Sign in with Apple failed: \(error.localizedDescription)\n\nPlease use email/password instead."
             }
         }
     }
@@ -128,6 +192,43 @@ struct SignInWithAppleButton: View {
         }.joined()
 
         return hashString
+    }
+
+    // MARK: - Availability Check
+
+    private func checkSignInWithAppleAvailability() async {
+        isCheckingAvailability = true
+
+        // Check if Sign in with Apple is available
+        let provider = ASAuthorizationAppleIDProvider()
+
+        do {
+            // Try to get credential state for a dummy user ID
+            // This will fail gracefully if iCloud is not signed in
+            let state = try await provider.credentialState(forUserID: "test")
+
+            // If we can query credential state, Sign in with Apple is available
+            isAvailable = true
+            print("Sign in with Apple is available. Credential state: \(state.rawValue)")
+        } catch let error as NSError {
+            // If we get an error, it likely means iCloud is not signed in
+            // or Sign in with Apple is not available
+            print("Sign in with Apple availability check failed: \(error)")
+
+            // Check error code to determine if it's an iCloud issue
+            if error.domain == "com.apple.AuthenticationServices.AuthorizationError" {
+                isAvailable = false
+            } else {
+                // Unknown error, assume available and let user try
+                isAvailable = true
+            }
+        } catch {
+            print("Unexpected error checking Sign in with Apple: \(error)")
+            // On unexpected error, assume available
+            isAvailable = true
+        }
+
+        isCheckingAvailability = false
     }
 }
 

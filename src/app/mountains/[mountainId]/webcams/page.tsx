@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 import { Shield, Home, History, Camera, ArrowLeft, RefreshCw, ExternalLink } from 'lucide-react';
 
 interface Webcam {

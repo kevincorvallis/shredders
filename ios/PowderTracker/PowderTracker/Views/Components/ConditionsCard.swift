@@ -4,10 +4,10 @@ struct ConditionsCard: View {
     let conditions: Conditions
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: .spacingM) {
             HStack {
                 Text("Current Conditions")
-                    .font(.headline)
+                    .sectionHeader()
                 Spacer()
                 Text(conditions.lastUpdatedString)
                     .font(.caption)
@@ -17,7 +17,7 @@ struct ConditionsCard: View {
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible())
-            ], spacing: 16) {
+            ], spacing: .spacingM) {
                 ConditionItem(icon: "ruler", title: "Snow Depth", value: "\(conditions.snowDepth)\"")
                 ConditionItem(icon: "snowflake", title: "24hr Snow", value: "\(conditions.snowfall24h)\"")
                 ConditionItem(icon: "thermometer.snowflake", title: "Summit", value: "\(conditions.temperature.summit)°F")
@@ -28,10 +28,10 @@ struct ConditionsCard: View {
                 ConditionItem(icon: "calendar", title: "7 Day Snow", value: "\(conditions.snowfall7d)\"")
             }
         }
-        .padding()
+        .padding(.spacingM)
         .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+        .cornerRadius(.cornerRadiusCard)
+        .cardShadow()
     }
 }
 
@@ -41,19 +41,18 @@ struct ConditionItem: View {
     let value: String
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: .spacingM) {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundColor(.blue)
                 .frame(width: 28)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: .spacingXS) {
                 Text(title)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Text(value)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+                    .metric()
             }
 
             Spacer()

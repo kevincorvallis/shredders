@@ -63,7 +63,7 @@ struct PushNotificationSetupView: View {
                         Label("Push notifications are enabled", systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
 
-                        if let deviceToken = pushManager.deviceToken {
+                        if pushManager.deviceToken != nil {
                             Text("Device registered")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)

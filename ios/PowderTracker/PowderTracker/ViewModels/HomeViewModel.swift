@@ -9,6 +9,10 @@ class HomeViewModel: ObservableObject {
     @Published var error: String?
     @Published var lastRefreshDate: Date?
 
+    // Enhanced data for homepage redesign
+    @Published var arrivalTimes: [String: ArrivalTimeRecommendation] = [:]
+    @Published var parkingPredictions: [String: ParkingPredictionResponse] = [:]
+
     private let apiClient = APIClient.shared
     private let favoritesManager = FavoritesManager.shared
 
@@ -75,5 +79,274 @@ class HomeViewModel: ObservableObject {
     /// Check if a mountain has live lift status data
     func hasLiveData(for mountainId: String) -> Bool {
         mountainData[mountainId]?.conditions.liftStatus != nil
+    }
+
+    // MARK: - Enhanced Data Loading
+
+    /// Load arrival times and parking predictions for favorites
+    func loadEnhancedData() async {
+        await withTaskGroup(of: Void.self) { group in
+            // Load arrival times
+            for mountainId in favoritesManager.favoriteIds {
+                group.addTask {
+                    do {
+                        let arrivalTime = try await self.apiClient.fetchArrivalTime(for: mountainId)
+                        await MainActor.run {
+                            self.arrivalTimes[mountainId] = arrivalTime
+                        }
+                    } catch {
+                        print("Failed to load arrival time for \(mountainId): \(error)")
+                    }
+                }
+
+                // Load parking predictions
+                group.addTask {
+                    do {
+                        let parking = try await self.apiClient.fetchParkingPrediction(for: mountainId)
+                        await MainActor.run {
+                            self.parkingPredictions[mountainId] = parking
+                        }
+                    } catch {
+                        print("Failed to load parking prediction for \(mountainId): \(error)")
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Smart Helpers
+
+    /// Get mountains that need to leave soon (within 60 minutes of optimal arrival)
+    func getLeaveNowMountains() -> [(mountain: Mountain, arrivalTime: ArrivalTimeRecommendation)] {
+        let now = Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+
+        return arrivalTimes.compactMap { (mountainId, arrival) -> (Mountain, ArrivalTimeRecommendation)? in
+            guard let mountain = mountains.first(where: { $0.id == mountainId }),
+                  let optimalTime = formatter.date(from: arrival.arrivalWindow.optimal) else {
+                return nil
+            }
+
+            let timeUntilArrival = optimalTime.timeIntervalSince(now)
+            // If optimal arrival is within next 15-60 minutes, show "Leave Now"
+            if timeUntilArrival > 15 * 60 && timeUntilArrival < 60 * 60 {
+                return (mountain, arrival)
+            }
+            return nil
+        }.sorted { $0.arrivalTime.confidence.rawValue < $1.arrivalTime.confidence.rawValue }
+    }
+
+    /// Get the mountain with the best powder score today
+    func getBestPowderToday() -> (mountain: Mountain, score: MountainPowderScore, data: MountainBatchedResponse)? {
+        let favoriteMountainIds = Set(favoritesManager.favoriteIds)
+
+        return mountainData
+            .filter { favoriteMountainIds.contains($0.key) }
+            .compactMap { (id, data) -> (Mountain, MountainPowderScore, MountainBatchedResponse)? in
+                guard let mountain = mountains.first(where: { $0.id == id }) else { return nil }
+                return (mountain, data.powderScore, data)
+            }
+            .max { $0.1.score < $1.1.score }
+    }
+
+    /// Get all active weather alerts across favorites
+    func getActiveAlerts() -> [WeatherAlert] {
+        let favoriteMountainIds = Set(favoritesManager.favoriteIds)
+        return mountainData
+            .filter { favoriteMountainIds.contains($0.key) }
+            .flatMap { $0.value.alerts }
+    }
+
+    /// Generate smart suggestion based on conditions
+    func generateSmartSuggestion() -> String? {
+        let favoriteMountainIds = Set(favoritesManager.favoriteIds)
+
+        // Score each mountain on multiple factors
+        let scores = mountainData
+            .filter { favoriteMountainIds.contains($0.key) }
+            .compactMap { (id, data) -> (mountain: Mountain, score: Double, data: MountainBatchedResponse)? in
+                guard let mountain = mountains.first(where: { $0.id == id }),
+                      let status = data.status,
+                      status.isOpen else {
+                    return nil
+                }
+
+                var totalScore: Double = 0
+
+                // Powder score (40% weight)
+                totalScore += data.powderScore.score * 0.4
+
+                // Parking ease (30% weight) - inverse of difficulty
+                if let parking = parkingPredictions[id] {
+                    let parkingScore: Double
+                    switch parking.difficulty {
+                    case .easy: parkingScore = 10.0
+                    case .moderate: parkingScore = 7.0
+                    case .challenging: parkingScore = 4.0
+                    case .veryDifficult: parkingScore = 1.0
+                    }
+                    totalScore += parkingScore * 0.3
+                }
+
+                // Crowd level (20% weight) - inverse of crowds
+                if let tripAdvice = data.tripAdvice {
+                    let crowdScore: Double
+                    switch tripAdvice.crowd {
+                    case .low: crowdScore = 10.0
+                    case .medium: crowdScore = 6.0
+                    case .high: crowdScore = 2.0
+                    }
+                    totalScore += crowdScore * 0.2
+                }
+
+                // Lift status (10% weight)
+                if let liftStatus = data.conditions.liftStatus {
+                    let liftsOpenPct = Double(liftStatus.liftsOpen) / Double(liftStatus.liftsTotal)
+                    totalScore += liftsOpenPct * 10 * 0.1
+                }
+
+                return (mountain, totalScore, data)
+            }
+            .sorted { $0.score > $1.score }
+
+        // If top score differs significantly from user's #1 favorite, suggest it
+        guard scores.count > 1,
+              let topMountain = scores.first,
+              let userFirstFavoriteId = favoritesManager.favoriteIds.first,
+              topMountain.mountain.id != userFirstFavoriteId else {
+            return nil
+        }
+
+        // Build suggestion with 1-2 key differentiators
+        var suggestion = "Consider \(topMountain.mountain.shortName)"
+
+        var reasons: [String] = []
+
+        // Add powder reason
+        if topMountain.data.powderScore.score >= 8.0 {
+            let snow24h = topMountain.data.conditions.snowfall24h
+            reasons.append("\(Int(snow24h))\" fresh")
+        }
+
+        // Add parking reason
+        if let parking = parkingPredictions[topMountain.mountain.id],
+           parking.difficulty == ParkingDifficulty.easy || parking.difficulty == ParkingDifficulty.moderate {
+            reasons.append("easy parking")
+        }
+
+        // Add crowd reason
+        if let tripAdvice = topMountain.data.tripAdvice,
+           tripAdvice.crowd == RiskLevel.low {
+            reasons.append("minimal crowds")
+        }
+
+        if !reasons.isEmpty {
+            suggestion += " - " + reasons.prefix(2).joined(separator: ", ")
+        }
+
+        return suggestion
+    }
+
+    /// Get favorite mountains with their data
+    func getFavoriteMountains() -> [(mountain: Mountain, data: MountainBatchedResponse)] {
+        favoritesManager.favoriteIds.compactMap { id in
+            guard let mountain = mountains.first(where: { $0.id == id }),
+                  let data = mountainData[id] else {
+                return nil
+            }
+            return (mountain, data)
+        }
+    }
+
+    // MARK: - Trend Calculation
+
+    /// Calculate snow trend for a mountain based on recent snowfall
+    func getSnowTrend(for mountainId: String) -> TrendIndicator {
+        guard let data = mountainData[mountainId] else { return .stable }
+
+        let snowfall24h = data.conditions.snowfall24h
+        let snowfall48h = data.conditions.snowfall48h
+
+        // Calculate previous 24h snowfall (48h total - most recent 24h)
+        let previous24h = snowfall48h - snowfall24h
+        let diff = snowfall24h - previous24h
+
+        // Thresholds for trend classification
+        if diff > 2 {
+            return .improving
+        } else if diff < -2 {
+            return .declining
+        } else {
+            return .stable
+        }
+    }
+
+    /// Get comparison text for "Why Best?" section
+    func getComparisonToBest(mountainId: String, bestMountainId: String) -> String? {
+        guard mountainId != bestMountainId,
+              let mountain = mountainData[mountainId],
+              let best = mountainData[bestMountainId] else {
+            return nil
+        }
+
+        let diff = best.conditions.snowfall24h - mountain.conditions.snowfall24h
+
+        if diff > 0 {
+            if let bestMountain = mountains.first(where: { $0.id == bestMountainId }) {
+                return "+\(diff)\" more than \(bestMountain.shortName)"
+            }
+        }
+
+        return nil
+    }
+
+    /// Generate "Why Best?" reasons for the top powder mountain
+    func getWhyBestReasons(for mountainId: String) -> [String] {
+        guard let data = mountainData[mountainId],
+              let mountain = mountains.first(where: { $0.id == mountainId }) else {
+            return []
+        }
+
+        var reasons: [String] = []
+
+        // Reason 1: Fresh snow
+        let snow24h = data.conditions.snowfall24h
+        if snow24h >= 6 {
+            reasons.append("\(snow24h)\" fresh snow in 24h")
+        }
+
+        // Reason 2: Crowd level
+        if let tripAdvice = data.tripAdvice {
+            switch tripAdvice.crowd {
+            case .low:
+                let dayOfWeek = Calendar.current.component(.weekday, from: Date())
+                let dayName = dayOfWeek == 2 ? "Monday" : dayOfWeek == 3 ? "Tuesday" : dayOfWeek == 4 ? "Wednesday" : dayOfWeek == 5 ? "Thursday" : dayOfWeek == 6 ? "Friday" : ""
+                if !dayName.isEmpty {
+                    reasons.append("Light crowds expected (\(dayName))")
+                }
+            default:
+                break
+            }
+        }
+
+        // Reason 3: Comparison to other favorites (if this is the best)
+        if let best = getBestPowderToday(), best.mountain.id == mountainId {
+            // Find the second-best mountain
+            let sorted = mountainData
+                .filter { favoritesManager.favoriteIds.contains($0.key) }
+                .filter { $0.key != mountainId }
+                .sorted { $0.value.powderScore.score > $1.value.powderScore.score }
+
+            if let secondBest = sorted.first,
+               let secondBestMountain = mountains.first(where: { $0.id == secondBest.key }) {
+                let diff = snow24h - secondBest.value.conditions.snowfall24h
+                if diff > 0 {
+                    reasons.append("+\(diff)\" more than \(secondBestMountain.shortName)")
+                }
+            }
+        }
+
+        return Array(reasons.prefix(3))
     }
 }

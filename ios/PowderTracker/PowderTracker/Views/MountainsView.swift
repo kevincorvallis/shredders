@@ -11,10 +11,10 @@ struct MountainsView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: .spacingL) {
                     // Quick stats dashboard
                     quickStatsDashboard
-                        .padding(.horizontal)
+                        .padding(.horizontal, .spacingL)
 
                     searchAndFiltersSection
 
@@ -23,7 +23,7 @@ struct MountainsView: View {
 
                     mountainsGridSection
                 }
-                .padding(.vertical)
+                .padding(.vertical, .spacingS)
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Mountains")
@@ -60,7 +60,9 @@ struct MountainsView: View {
                     mountain: bestMountain,
                     conditions: viewModel.getConditions(for: bestMountain),
                     powderScore: viewModel.getScore(for: bestMountain).map { Int($0) },
-                    arrivalTime: nil // Will load dynamically
+                    arrivalTime: nil, // Will load dynamically
+                    parking: nil,
+                    viewModel: nil
                 )
             }
             .buttonStyle(.plain)
@@ -77,11 +79,11 @@ struct MountainsView: View {
     }
 
     private var searchAndFiltersSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: .spacingM) {
             searchBar
             filterChipsRow
         }
-        .padding(.horizontal)
+        .padding(.horizontal, .spacingL)
     }
 
     private var searchBar: some View {
@@ -169,7 +171,7 @@ struct MountainsView: View {
         case .epic:
             return ("ticket.fill", "No Epic Pass mountains found", "Stevens Pass and Whistler Blackcomb honor Epic Pass")
         case .ikon:
-            return ("star.square.fill", "No Ikon Pass mountains found", "Crystal, Snoqualmie, Bachelor, and Schweitzer honor Ikon Pass")
+            return ("star.square.fill", "No Ikon Pass mountains found", "Crystal, Snoqualmie, Bachelor, Schweitzer, Sun Valley, Revelstoke, RED, Cypress, Panorama, and Sun Peaks honor Ikon Pass")
         case .favorites:
             return ("star.fill", "No favorites yet", "Tap the star icon on any mountain to add it to your favorites")
         case .freshPowder:

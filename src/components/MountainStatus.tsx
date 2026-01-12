@@ -1,4 +1,4 @@
-import { type MountainStatus as MountainStatusType } from '@/data/mountains';
+import { type MountainStatus as MountainStatusType } from '@shredders/shared';
 
 interface MountainStatusProps {
   status?: MountainStatusType;

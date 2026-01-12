@@ -32,15 +32,14 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'stevens',
     name: 'Stevens Pass',
     url: 'https://www.stevenspass.com',
-    dataUrl: 'https://www.stevenspass.com/the-mountain/mountain-conditions.aspx',
-    type: 'dynamic', // Uses JavaScript to load data
-    enabled: false, // Temporarily disabled for testing (timeout issue)
+    dataUrl: 'https://www.onthesnow.com/washington/stevens-pass-resort/skireport',  // OnTheSnow fallback
+    type: 'html',
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.header__weather__lifts_open',
-      runsOpen: '.header__weather__runs_open',
-      percentOpen: '.header__weather__percent_open',
-      acresOpen: '.header__weather__acres_open',
-      status: '.header__weather__status',
+      // OnTheSnow uses "X/Y open" format which parseRatio() handles
+      liftsOpen: '[data-testid="lifts-status"], .lift-status, .lifts',
+      runsOpen: '[data-testid="trails-status"], .trail-status, .trails',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -48,16 +47,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'crystal',
     name: 'Crystal Mountain',
     url: 'https://www.crystalmountainresort.com',
-    dataUrl: 'https://www.crystalmountainresort.com/the-mountain/mountain-report/',
-    type: 'dynamic',  // Uses Puppeteer to bypass Incapsula bot protection
-    enabled: false,  // Disabled: Puppeteer/Chromium not working on Vercel Hobby tier
+    dataUrl: 'https://www.onthesnow.com/washington/crystal-mountain-wa/skireport',  // OnTheSnow fallback (no Puppeteer needed)
+    type: 'html',  // Changed from 'dynamic' - using OnTheSnow instead
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      // These will be tested/refined with Puppeteer
-      liftsOpen: '[class*="lift"][class*="open"], .lift-status.open',
-      runsOpen: '[class*="run"][class*="open"], .trail-status.open',
-      percentOpen: '[class*="percent"]',
-      status: '[class*="status"], h1, h2',
-      message: '[class*="conditions"], [class*="message"]',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -65,15 +61,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'snoqualmie',
     name: 'Summit at Snoqualmie',
     url: 'https://www.summitatsnoqualmie.com',
-    dataUrl: 'https://www.summitatsnoqualmie.com/mountain-report',
-    type: 'dynamic',  // Uses Next.js client-side rendering - requires Puppeteer
-    enabled: false,  // Disabled: Puppeteer/Chromium not working on Vercel Hobby tier
+    dataUrl: 'https://www.onthesnow.com/washington/the-summit-at-snoqualmie/skireport',  // OnTheSnow fallback
+    type: 'html',  // Changed from 'dynamic' - using OnTheSnow instead
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      // Will extract from dynamically loaded content
-      liftsOpen: '[aria-label*="Lift Status"], .lift-status',
-      runsOpen: '[aria-label*="Trail Status"], .trail-status',
-      status: 'h1, h2, [class*="status"]',
-      message: '[class*="daily-report"], [class*="conditions"]',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -81,13 +75,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'whitepass',
     name: 'White Pass',
     url: 'https://skiwhitepass.com',
-    dataUrl: 'https://skiwhitepass.com/mountain-report/',
+    dataUrl: 'https://www.onthesnow.com/washington/white-pass/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lifts-operating',
-      runsOpen: '.runs-open',
-      status: '.mountain-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -96,14 +90,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'meadows',
     name: 'Mt. Hood Meadows',
     url: 'https://www.skihood.com',
-    dataUrl: 'https://www.skihood.com/the-mountain/mountain-report',
+    dataUrl: 'https://www.onthesnow.com/oregon/mt-hood-meadows/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lift-status',
-      runsOpen: '.terrain-open',
-      percentOpen: '.percent-terrain-open',
-      status: '.operating-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -111,13 +104,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'timberline',
     name: 'Timberline Lodge',
     url: 'https://www.timberlinelodge.com',
-    dataUrl: 'https://www.timberlinelodge.com/conditions',
+    dataUrl: 'https://www.onthesnow.com/oregon/timberline-lodge/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lifts-open',
-      runsOpen: '.runs-open',
-      status: '.mountain-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -125,14 +118,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'bachelor',
     name: 'Mt. Bachelor',
     url: 'https://www.mtbachelor.com',
-    dataUrl: 'https://www.mtbachelor.com/the-mountain/conditions-weather/',
+    dataUrl: 'https://www.onthesnow.com/oregon/mt-bachelor/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Temporarily disabled for testing (timeout issue)
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lift-status-count',
-      runsOpen: '.run-count',
-      acresOpen: '.acres-open',
-      status: '.operating-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -141,13 +133,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'missionridge',
     name: 'Mission Ridge',
     url: 'https://www.missionridge.com',
-    dataUrl: 'https://www.missionridge.com/mountain-report',
+    dataUrl: 'https://www.onthesnow.com/washington/mission-ridge/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lifts-open',
-      runsOpen: '.runs-open',
-      status: '.resort-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -155,13 +147,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'fortynine',
     name: '49 Degrees North',
     url: 'https://www.ski49n.com',
-    dataUrl: 'https://www.ski49n.com/conditions',
+    dataUrl: 'https://www.onthesnow.com/washington/49-degrees-north/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lift-count',
-      runsOpen: '.run-count',
-      status: '.mountain-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -170,14 +162,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'schweitzer',
     name: 'Schweitzer Mountain',
     url: 'https://www.schweitzer.com',
-    dataUrl: 'https://www.schweitzer.com/the-mountain/mountain-report/',
+    dataUrl: 'https://www.onthesnow.com/idaho/schweitzer/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lifts-operating',
-      runsOpen: '.trails-open',
-      percentOpen: '.terrain-open-percent',
-      status: '.operating-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -185,13 +176,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'lookout',
     name: 'Lookout Pass',
     url: 'https://www.skilookout.com',
-    dataUrl: 'https://www.skilookout.com/conditions',
+    dataUrl: 'https://www.onthesnow.com/idaho/lookout-pass-ski-area/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lift-status',
-      runsOpen: '.run-count',
-      status: '.mountain-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -200,13 +191,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'ashland',
     name: 'Mt. Ashland',
     url: 'https://www.mtashland.com',
-    dataUrl: 'https://www.mtashland.com/conditions',
+    dataUrl: 'https://www.onthesnow.com/oregon/mount-ashland/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lifts-open',
-      runsOpen: '.runs-open',
-      status: '.operating-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -214,13 +205,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'willamette',
     name: 'Willamette Pass',
     url: 'https://www.willamettepass.com',
-    dataUrl: 'https://www.willamettepass.com/conditions',
+    dataUrl: 'https://www.onthesnow.com/oregon/willamette-pass/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lift-count',
-      runsOpen: '.run-count',
-      status: '.resort-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 
@@ -228,13 +219,13 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     id: 'hoodoo',
     name: 'Hoodoo Ski Area',
     url: 'https://www.skihoodoo.com',
-    dataUrl: 'https://www.skihoodoo.com/mountain-report',
+    dataUrl: 'https://www.onthesnow.com/oregon/hoodoo-ski-area/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: false, // Disabled to reduce scraper timeout
+    enabled: true,  // Enabled with OnTheSnow fallback
     selectors: {
-      liftsOpen: '.lifts-operating',
-      runsOpen: '.runs-open',
-      status: '.mountain-status',
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
     },
   },
 };

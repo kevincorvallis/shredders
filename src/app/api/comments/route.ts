@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getDualAuthUser } from '@/lib/auth';
 
 /**
  * GET /api/comments
@@ -84,6 +85,8 @@ export async function GET(request: Request) {
  * POST /api/comments
  *
  * Create a new comment
+ * Supports both JWT bearer tokens and Supabase session authentication
+ *
  * Body:
  *   - content: Comment text (required, max 2000 chars)
  *   - mountainId: Mountain ID (optional)
@@ -92,13 +95,13 @@ export async function GET(request: Request) {
  *   - checkInId: Check-in ID (optional)
  *   - parentCommentId: Parent comment ID for nested replies (optional)
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Check authentication (supports both JWT and Supabase session)
+    const authUser = await getDualAuthUser(request);
+    if (!authUser) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
@@ -151,7 +154,7 @@ export async function POST(request: Request) {
     const { data: comment, error: insertError } = await supabase
       .from('comments')
       .insert({
-        user_id: user.id,
+        user_id: authUser.userId,
         content: content.trim(),
         mountain_id: mountainId || null,
         webcam_id: webcamId || null,

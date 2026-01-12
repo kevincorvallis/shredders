@@ -1,0 +1,7 @@
+packages:
+  # Apps
+  - 'apps/*'
+  # Shared packages
+  - 'packages/*'
+  # Web app (current root, will migrate later)
+  - '.'

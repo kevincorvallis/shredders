@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllMountains, getMountainsByRegion } from '@/data/mountains';
+import { getAllMountains, getMountainsByRegion } from '@shredders/shared';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

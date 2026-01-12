@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { getAllMountains } from '@/data/mountains';
+import { getAllMountains } from '@shredders/shared';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://shredders.vercel.app';

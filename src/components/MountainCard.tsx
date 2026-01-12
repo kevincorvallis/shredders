@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { type MountainConfig } from '@/data/mountains';
+import { type MountainConfig } from '@shredders/shared';
 import { prefetchMountainData } from '@/lib/hooks/useMountainData';
 import { MountainStatus } from './MountainStatus';
 

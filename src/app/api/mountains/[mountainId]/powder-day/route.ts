@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 import { computePowderDayPlan } from '@/lib/calculations/powder-day-planner';
 
 export async function GET(

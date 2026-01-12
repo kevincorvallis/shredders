@@ -46,26 +46,13 @@ struct WeatherSummarySection: View {
 
                     // Temperature by elevation (UNIQUE FEATURE!)
                     if let tempByElev = conditions.temperatureByElevation {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "mountain.2.fill")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("Temperature by Elevation")
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                            }
-
-                            HStack(spacing: 12) {
-                                TempGradientBar(
-                                    base: tempByElev.base,
-                                    mid: tempByElev.mid,
-                                    summit: tempByElev.summit,
-                                    baseElevation: baseElevation,
-                                    summitElevation: summitElevation
-                                )
-                            }
-                        }
+                        MountainTemperatureProfile(
+                            baseTemp: tempByElev.base,
+                            midTemp: tempByElev.mid,
+                            summitTemp: tempByElev.summit,
+                            baseElevation: baseElevation,
+                            summitElevation: summitElevation
+                        )
                         .padding(.vertical, 8)
                     }
 
@@ -97,7 +84,7 @@ struct WeatherSummarySection: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
     }
 
     private var weatherIcon: String {

@@ -52,7 +52,7 @@ struct MountainMapView: View {
                             Section {
                                 ForEach(viewModel.washingtonMountains) { mountain in
                                     NavigationLink {
-                                        MountainDetailView(mountainId: mountain.id, mountainName: mountain.name)
+                                        LocationView(mountain: mountain)
                                     } label: {
                                         MountainRow(
                                             mountain: mountain,
@@ -75,7 +75,7 @@ struct MountainMapView: View {
                             Section {
                                 ForEach(viewModel.oregonMountains) { mountain in
                                     NavigationLink {
-                                        MountainDetailView(mountainId: mountain.id, mountainName: mountain.name)
+                                        LocationView(mountain: mountain)
                                     } label: {
                                         MountainRow(
                                             mountain: mountain,
@@ -98,7 +98,7 @@ struct MountainMapView: View {
                             Section {
                                 ForEach(viewModel.idahoMountains) { mountain in
                                     NavigationLink {
-                                        MountainDetailView(mountainId: mountain.id, mountainName: mountain.name)
+                                        LocationView(mountain: mountain)
                                     } label: {
                                         MountainRow(
                                             mountain: mountain,

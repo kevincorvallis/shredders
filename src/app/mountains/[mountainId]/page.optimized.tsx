@@ -3,7 +3,7 @@
 import { use, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 import { Shield, Home, History, Camera, RefreshCw } from 'lucide-react';
 import { MountainSelector } from '@/components/MountainSelector';
 import { useMountain } from '@/context/MountainContext';

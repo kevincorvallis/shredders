@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 import { computeTripAdvice, isHolidayWindow, isWeekend } from '@/lib/calculations/trip-advice';
 
 export async function GET(

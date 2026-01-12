@@ -8,7 +8,7 @@ struct MountainCardRow: View {
     var onFavoriteToggle: (() -> Void)? = nil
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: .spacingM) {
             // Logo
             MountainLogoView(
                 logoUrl: mountain.logo,
@@ -17,53 +17,50 @@ struct MountainCardRow: View {
             )
 
             // Info column
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: .spacingS) {
                 // Name + Region
-                HStack(spacing: 8) {
+                HStack(spacing: .spacingS) {
                     Text(mountain.shortName)
                         .font(.headline)
                         .foregroundColor(.primary)
 
                     Text(mountain.region.uppercased())
-                        .font(.caption2)
-                        .fontWeight(.medium)
+                        .badge()
                         .foregroundColor(.secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, .spacingS)
+                        .padding(.vertical, .spacingXS)
                         .background(Color.secondary.opacity(0.15))
-                        .cornerRadius(4)
+                        .cornerRadius(.cornerRadiusMicro)
                 }
 
                 // Lift Status Badge or Static Badge
                 if let liftStatus = conditions?.liftStatus {
                     LiftStatusBadge(liftStatus: liftStatus)
                 } else {
-                    HStack(spacing: 4) {
+                    HStack(spacing: .spacingXS) {
                         Circle()
                             .fill(Color.orange)
                             .frame(width: 6, height: 6)
                         Text("STATIC")
-                            .font(.caption2)
-                            .fontWeight(.semibold)
+                            .badge()
                             .foregroundColor(.orange)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, .spacingS)
+                    .padding(.vertical, .spacingXS)
                     .background(Color.orange.opacity(0.1))
-                    .cornerRadius(8)
+                    .cornerRadius(.cornerRadiusButton)
                 }
 
                 // Snowfall
                 if let conditions = conditions {
                     if conditions.snowfall24h > 0 || conditions.snowfall48h > 0 {
-                        HStack(spacing: 4) {
+                        HStack(spacing: .spacingXS) {
                             Image(systemName: "snowflake")
                                 .font(.caption)
                                 .foregroundColor(.blue)
 
                             Text("\(conditions.snowfall24h)\" / \(conditions.snowfall48h)\"")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
+                                .metric()
                                 .foregroundColor(.primary)
 
                             Text("24h / 48h")
@@ -71,7 +68,7 @@ struct MountainCardRow: View {
                                 .foregroundColor(.secondary)
                         }
                     } else {
-                        HStack(spacing: 4) {
+                        HStack(spacing: .spacingXS) {
                             Image(systemName: "snowflake")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
@@ -82,7 +79,7 @@ struct MountainCardRow: View {
                     }
                 } else {
                     // Loading state
-                    HStack(spacing: 4) {
+                    HStack(spacing: .spacingXS) {
                         ProgressView()
                             .scaleEffect(0.7)
                         Text("Loading...")
@@ -134,13 +131,15 @@ struct MountainCardRow: View {
                 }
             }
         }
-        .padding(12)
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .standardCard()
     }
 
     private func scoreColor(_ score: Double) -> Color {
+        Color.statusColor(for: score, greenThreshold: 7, yellowThreshold: 5)
+    }
+
+    // Deprecated - keeping for backwards compatibility
+    private func scoreColorOld(_ score: Double) -> Color {
         switch score {
         case 7...10:
             return .green

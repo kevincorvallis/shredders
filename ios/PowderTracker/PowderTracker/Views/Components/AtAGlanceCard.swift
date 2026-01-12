@@ -3,6 +3,7 @@ import SwiftUI
 /// Compact hero card showing the most important information at a glance
 struct AtAGlanceCard: View {
     @ObservedObject var viewModel: LocationViewModel
+    var onNavigateToLifts: (() -> Void)?
     @State private var expandedSection: ExpandableSection? = nil
 
     enum ExpandableSection {
@@ -52,7 +53,7 @@ struct AtAGlanceCard: View {
                     section: .lifts
                 )
             }
-            .frame(height: 120)
+            .frame(minHeight: 120)
 
             // Expanded details
             if let section = expandedSection {
@@ -62,28 +63,27 @@ struct AtAGlanceCard: View {
             }
         }
         .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.1), radius: 12, x: 0, y: 4)
+        .cornerRadius(.cornerRadiusHero)
+        .heroShadow()
     }
 
     // MARK: - Powder Score Header
     private var powderScoreHeader: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: .spacingM) {
             // Score badge
             ZStack {
                 Circle()
-                    .fill(powderScoreColor.opacity(0.2))
+                    .fill(powderScoreColor.opacity(.opacityMedium))
                     .frame(width: 50, height: 50)
 
                 Text("\(viewModel.powderScore ?? 0)")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .heroNumber()
                     .foregroundColor(powderScoreColor)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: .spacingXS) {
                 Text(powderScoreLabel)
-                    .font(.title3)
-                    .fontWeight(.semibold)
+                    .cardTitle()
                     .foregroundColor(powderScoreColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.9)
@@ -98,7 +98,7 @@ struct AtAGlanceCard: View {
 
             // Timestamp
             if let lastUpdated = viewModel.lastUpdated {
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: .spacingXS) {
                     Text("Updated")
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -159,8 +159,11 @@ struct AtAGlanceCard: View {
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
-                .background(color.opacity(0.15))
-                .cornerRadius(8)
+                .background(
+                    Color(.tertiarySystemFill)
+                        .overlay(color.opacity(.opacitySubtle))
+                )
+                .cornerRadius(.cornerRadiusButton)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
@@ -192,22 +195,22 @@ struct AtAGlanceCard: View {
                 .foregroundColor(.primary)
 
             HStack(spacing: 16) {
-                DetailMetric(
+                MetricView(
+                    icon: "mountain.2.fill",
                     label: "Base Depth",
                     value: "\(Int(viewModel.currentSnowDepth ?? 0))\"",
-                    icon: "mountain.2.fill",
                     color: .blue
                 )
-                DetailMetric(
+                MetricView(
+                    icon: "snowflake",
                     label: "24h Snow",
                     value: "\(Int(viewModel.snowDepth24h ?? 0))\"",
-                    icon: "snowflake",
                     color: .blue
                 )
-                DetailMetric(
+                MetricView(
+                    icon: "snowflake",
                     label: "48h Snow",
                     value: "\(Int(viewModel.snowDepth48h ?? 0))\"",
-                    icon: "snowflake",
                     color: .blue.opacity(0.7)
                 )
             }
@@ -231,23 +234,23 @@ struct AtAGlanceCard: View {
                 .foregroundColor(.primary)
 
             HStack(spacing: 16) {
-                DetailMetric(
+                MetricView(
+                    icon: "thermometer",
                     label: "Temperature",
                     value: "\(Int(viewModel.temperature ?? 0))°F",
-                    icon: "thermometer",
                     color: weatherColor
                 )
-                DetailMetric(
+                MetricView(
+                    icon: "wind",
                     label: "Wind Speed",
                     value: "\(Int(viewModel.windSpeed ?? 0)) mph",
-                    icon: "wind",
                     color: windColor
                 )
                 if let wind = viewModel.locationData?.conditions.wind {
-                    DetailMetric(
+                    MetricView(
+                        icon: "location.north.fill",
                         label: "Direction",
                         value: wind.direction,
-                        icon: "location.north.fill",
                         color: .gray
                     )
                 }
@@ -273,22 +276,22 @@ struct AtAGlanceCard: View {
 
             if let liftStatus = viewModel.locationData?.conditions.liftStatus {
                 HStack(spacing: 16) {
-                    DetailMetric(
+                    MetricView(
+                        icon: "cablecar.fill",
                         label: "Lifts Open",
                         value: "\(liftStatus.liftsOpen)/\(liftStatus.liftsTotal)",
-                        icon: "cablecar.fill",
                         color: liftColor
                     )
-                    DetailMetric(
+                    MetricView(
+                        icon: "figure.skiing.downhill",
                         label: "Runs Open",
                         value: "\(liftStatus.runsOpen)/\(liftStatus.runsTotal)",
-                        icon: "figure.skiing.downhill",
                         color: liftColor
                     )
-                    DetailMetric(
+                    MetricView(
+                        icon: "percent",
                         label: "Percent",
                         value: "\(liftStatus.percentOpen)%",
-                        icon: "percent",
                         color: liftColor
                     )
                 }
@@ -302,6 +305,25 @@ struct AtAGlanceCard: View {
                             .foregroundColor(.secondary)
                     }
                 }
+            }
+
+            // Navigate to Lifts Tab Button
+            if onNavigateToLifts != nil {
+                Button {
+                    onNavigateToLifts?()
+                } label: {
+                    HStack {
+                        Text("View Lift Map & Details")
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Image(systemName: "arrow.right")
+                    }
+                    .foregroundColor(.blue)
+                    .padding()
+                    .background(Color.blue.opacity(.opacityLight))
+                    .cornerRadius(.cornerRadiusButton)
+                }
+                .padding(.top, 4)
             }
         }
     }
@@ -415,35 +437,6 @@ struct AtAGlanceCard: View {
             return "cloud.rain.fill"
         }
         return "cloud.sun.fill"
-    }
-}
-
-// MARK: - Detail Metric Component
-struct DetailMetric: View {
-    let label: String
-    let value: String
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(color)
-
-            Text(value)
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
-
-            Text(label)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(Color(.tertiarySystemBackground))
-        .cornerRadius(10)
     }
 }
 

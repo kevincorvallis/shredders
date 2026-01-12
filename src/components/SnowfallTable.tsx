@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getAllMountains, type MountainConfig } from '@/data/mountains';
+import { getAllMountains, type MountainConfig } from '@shredders/shared';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';

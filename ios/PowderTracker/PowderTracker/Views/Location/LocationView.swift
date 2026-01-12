@@ -4,13 +4,8 @@ struct LocationView: View {
     let mountain: Mountain
     @StateObject private var viewModel: LocationViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var viewMode: ViewMode = .glance
     @State private var showingDetailedSections = false
-
-    enum ViewMode {
-        case glance  // At a Glance card
-        case radial  // Radial dashboard
-    }
+    @State private var navigateToTab: TabbedLocationView.Tab? = nil
 
     init(mountain: Mountain) {
         self.mountain = mountain
@@ -34,19 +29,11 @@ struct LocationView: View {
                     .padding()
                 } else if viewModel.locationData != nil {
 
-                    // View mode toggle
-                    viewModeToggle
-                        .padding(.horizontal)
-
-                    // Main visualization (toggleable)
-                    Group {
-                        switch viewMode {
-                        case .glance:
-                            AtAGlanceCard(viewModel: viewModel)
-                        case .radial:
-                            RadialDashboard(viewModel: viewModel)
-                        }
-                    }
+                    // At a Glance summary card
+                    AtAGlanceCard(
+                        viewModel: viewModel,
+                        onNavigateToLifts: { navigateToDetailView(.lifts) }
+                    )
                     .padding(.horizontal)
 
                     // Lift Line Predictor (AI-powered)
@@ -87,12 +74,18 @@ struct LocationView: View {
                     if showingDetailedSections {
                         VStack(spacing: 16) {
                             // Snow Depth Section
-                            SnowDepthSection(viewModel: viewModel)
-                                .transition(.move(edge: .top).combined(with: .opacity))
+                            SnowDepthSection(
+                                viewModel: viewModel,
+                                onNavigateToHistory: { navigateToDetailView(.history) }
+                            )
+                            .transition(.move(edge: .top).combined(with: .opacity))
 
                             // Weather Conditions Section
-                            WeatherConditionsSection(viewModel: viewModel)
-                                .transition(.move(edge: .top).combined(with: .opacity))
+                            WeatherConditionsSection(
+                                viewModel: viewModel,
+                                onNavigateToForecast: { navigateToDetailView(.forecast) }
+                            )
+                            .transition(.move(edge: .top).combined(with: .opacity))
 
                             // Map Section with Lift Lines
                             if let mountainDetail = viewModel.locationData?.mountain {
@@ -106,8 +99,11 @@ struct LocationView: View {
 
                             // Road Conditions Section (only if has data)
                             if viewModel.hasRoadData {
-                                RoadConditionsSection(viewModel: viewModel)
-                                    .transition(.move(edge: .top).combined(with: .opacity))
+                                RoadConditionsSection(
+                                    viewModel: viewModel,
+                                    onNavigateToTravel: { navigateToDetailView(.travel) }
+                                )
+                                .transition(.move(edge: .top).combined(with: .opacity))
                             }
                         }
                         .padding(.horizontal)
@@ -129,36 +125,15 @@ struct LocationView: View {
         .refreshable {
             await viewModel.fetchData()
         }
+        .navigationDestination(item: $navigateToTab) { tab in
+            TabbedLocationView(mountain: mountain, initialTab: tab)
+        }
     }
 
-    // MARK: - View Mode Toggle
+    // MARK: - Navigation Helper
 
-    private var viewModeToggle: some View {
-        HStack(spacing: 12) {
-            ForEach([ViewMode.glance, ViewMode.radial], id: \.self) { mode in
-                Button {
-                    withAnimation(.spring(response: 0.3)) {
-                        viewMode = mode
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: mode == .glance ? "square.grid.2x2.fill" : "circle.grid.cross.fill")
-                            .font(.caption)
-                        Text(mode == .glance ? "At a Glance" : "Radial View")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundColor(viewMode == mode ? .white : .blue)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        Capsule()
-                            .fill(viewMode == mode ? Color.blue : Color.blue.opacity(0.1))
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-        }
+    private func navigateToDetailView(_ tab: TabbedLocationView.Tab) {
+        navigateToTab = tab
     }
 }
 

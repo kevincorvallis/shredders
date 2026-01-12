@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct AlertsView: View {
-    @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
+    @State private var selectedMountainId: String = "baker"
     @State private var alerts: [WeatherAlert] = []
     @State private var mountainName: String = ""
     @State private var isLoading = true
     @State private var error: String?
+    @State private var showMountainPicker = false
+    @State private var mountainsViewModel = MountainSelectionViewModel()
 
     var body: some View {
         NavigationStack {
@@ -26,11 +28,70 @@ struct AlertsView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Weather Alerts")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showMountainPicker = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(mountainName.isEmpty ? "Select Mountain" : mountainName)
+                                .font(.subheadline)
+                            Image(systemName: "chevron.down")
+                                .font(.caption)
+                        }
+                    }
+                }
+            }
             .refreshable {
                 await loadAlerts()
             }
             .task(id: selectedMountainId) {
                 await loadAlerts()
+            }
+            .task {
+                await mountainsViewModel.loadData()
+            }
+            .sheet(isPresented: $showMountainPicker) {
+                mountainPickerSheet
+            }
+        }
+    }
+
+    private var mountainPickerSheet: some View {
+        NavigationStack {
+            List(mountainsViewModel.mountains) { mountain in
+                Button {
+                    selectedMountainId = mountain.id
+                    mountainName = mountain.shortName
+                    showMountainPicker = false
+                } label: {
+                    HStack {
+                        MountainLogoView(
+                            logoUrl: mountain.logo,
+                            color: mountain.color,
+                            size: 32
+                        )
+
+                        Text(mountain.name)
+                            .foregroundColor(.primary)
+
+                        Spacer()
+
+                        if mountain.id == selectedMountainId {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Select Mountain")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        showMountainPicker = false
+                    }
+                }
             }
         }
     }

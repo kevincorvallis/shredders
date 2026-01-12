@@ -45,21 +45,18 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes (will need auth)
+  // Protected web pages (will need auth)
+  // Note: API routes handle their own auth internally with dual auth support (JWT + Supabase)
   const protectedPaths = [
     '/profile',
     '/settings',
-    '/api/photos',
-    '/api/comments',
-    '/api/check-ins',
-    '/api/likes',
   ];
 
   const isProtectedPath = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
 
-  // Redirect to login if accessing protected route without auth
+  // Redirect to login if accessing protected web page without auth
   if (isProtectedPath && !user) {
     const redirectUrl = new URL('/auth/login', request.url);
     redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);

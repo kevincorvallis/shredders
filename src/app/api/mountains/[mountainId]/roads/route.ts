@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 import { findRelevantWsdotPasses, getWsdotMountainPassConditions } from '@/lib/apis/wsdot';
 
 export async function GET(

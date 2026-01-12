@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 import { getCurrentConditions } from '@/lib/apis/snotel';
 import { getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
 import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';

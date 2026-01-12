@@ -5,15 +5,17 @@ struct BestPowderTodayCard: View {
     let conditions: MountainConditions?
     let powderScore: Int?
     let arrivalTime: ArrivalTimeRecommendation?
+    let parking: ParkingPredictionResponse?
+    let viewModel: HomeViewModel?
+    @State private var scoreAnimationAmount: CGFloat = 1.0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: .spacingXS) {
                     Text("BEST POWDER TODAY")
-                        .font(.caption)
-                        .fontWeight(.bold)
+                        .badge()
                         .foregroundColor(.white.opacity(0.9))
                         .tracking(1)
 
@@ -21,6 +23,8 @@ struct BestPowderTodayCard: View {
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
                 }
 
                 Spacer()
@@ -28,11 +32,20 @@ struct BestPowderTodayCard: View {
                 // Powder score
                 if let score = powderScore {
                     ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.2))
-                            .frame(width: 60, height: 60)
+                        // Pulsing ring for epic scores
+                        if score >= 8 {
+                            Circle()
+                                .stroke(Color.white.opacity(0.4), lineWidth: 2)
+                                .frame(width: .iconHero + 10, height: .iconHero + 10)
+                                .scaleEffect(scoreAnimationAmount)
+                                .opacity(2 - scoreAnimationAmount)
+                        }
 
-                        VStack(spacing: 2) {
+                        Circle()
+                            .fill(Color.white.opacity(.opacityLight))
+                            .frame(width: .iconHero, height: .iconHero)
+
+                        VStack(spacing: .spacingXS) {
                             Text("\(score)")
                                 .font(.system(size: 28, weight: .bold, design: .rounded))
                                 .foregroundColor(.white)
@@ -42,9 +55,16 @@ struct BestPowderTodayCard: View {
                                 .foregroundColor(.white.opacity(0.8))
                         }
                     }
+                    .onAppear {
+                        if score >= 8 {
+                            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                                scoreAnimationAmount = 1.3
+                            }
+                        }
+                    }
                 }
             }
-            .padding()
+            .padding(.spacingL)
             .background(
                 LinearGradient(
                     colors: [
@@ -92,6 +112,50 @@ struct BestPowderTodayCard: View {
             }
             .background(Color(.secondarySystemBackground))
 
+            // Why Best? Section
+            let reasons = viewModel?.getWhyBestReasons(for: mountain.id) ?? []
+            if !reasons.isEmpty {
+                VStack(alignment: .leading, spacing: .spacingS) {
+                    Text("Why Best?")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+
+                    ForEach(Array(reasons.enumerated()), id: \.offset) { index, reason in
+                        HStack(alignment: .top, spacing: .spacingS) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.green)
+
+                            Text(reason)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // Parking badge (if available)
+                    if let parking = parking {
+                        HStack(spacing: 6) {
+                            Image(systemName: "parkingsign.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(parkingColor(for: parking.difficulty))
+
+                            Text("\(parking.difficulty.displayName) Parking")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(parkingColor(for: parking.difficulty))
+                        }
+                        .padding(.horizontal, .spacingS)
+                        .padding(.vertical, .spacingXS)
+                        .background(parkingColor(for: parking.difficulty).opacity(.opacitySubtle))
+                        .cornerRadius(.cornerRadiusButton)
+                    }
+                }
+                .padding(.horizontal, .spacingL)
+                .padding(.vertical, .spacingM)
+                .background(Color(.systemBackground))
+            }
+
             // CTA button
             HStack {
                 Image(systemName: "arrow.right.circle.fill")
@@ -107,12 +171,18 @@ struct BestPowderTodayCard: View {
                     .foregroundStyle(.secondary)
             }
             .foregroundColor(.primary)
-            .padding()
+            .padding(.spacingL)
             .background(Color(.tertiarySystemBackground))
         }
         .background(Color(.systemBackground))
-        .cornerRadius(20)
-        .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 6)
+        .cornerRadius(.cornerRadiusHero)
+        .heroShadow()
+    }
+
+    // MARK: - Helpers
+
+    private func parkingColor(for difficulty: ParkingDifficulty) -> Color {
+        Color.forParkingDifficulty(difficulty.displayName)
     }
 }
 
@@ -122,20 +192,23 @@ struct StatPill: View {
     let label: String
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: .spacingS) {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundColor(.blue)
 
             Text(value)
-                .font(.headline)
-                .fontWeight(.bold)
+                .metric()
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
 
             Text(label)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, .spacingM)
     }
 }

@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getDualAuthUser } from '@/lib/auth';
 
 /**
  * GET /api/check-ins
@@ -73,6 +74,8 @@ export async function GET(request: Request) {
  * POST /api/check-ins
  *
  * Create a new check-in
+ * Supports both JWT bearer tokens and Supabase session authentication
+ *
  * Body:
  *   - mountainId: Mountain ID (required)
  *   - checkInTime: ISO timestamp (default: now)
@@ -84,13 +87,13 @@ export async function GET(request: Request) {
  *   - weatherConditions: Weather object (optional)
  *   - isPublic: Make check-in public (default: true)
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Check authentication (supports both JWT and Supabase session)
+    const authUser = await getDualAuthUser(request);
+    if (!authUser) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
@@ -138,7 +141,7 @@ export async function POST(request: Request) {
     const { data: checkIn, error: insertError } = await supabase
       .from('check_ins')
       .insert({
-        user_id: user.id,
+        user_id: authUser.userId,
         mountain_id: mountainId,
         check_in_time: checkInTime || new Date().toISOString(),
         check_out_time: checkOutTime || null,

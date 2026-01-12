@@ -64,7 +64,7 @@ struct MountainConditionsCard: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+        .shadow(color: Color(.label).opacity(0.1), radius: 8, x: 0, y: 2)
     }
 
     private var lastUpdatedString: String {
@@ -93,49 +93,29 @@ struct MountainConditionsCard: View {
     @ViewBuilder
     private func temperatureSection(_ tempByElevation: MountainConditions.TemperatureByElevation) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Temperature by Elevation")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
-
-                Spacer()
-
-                if mountainDetail != nil {
+            if mountainDetail != nil {
+                HStack {
+                    Spacer()
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
 
-            HStack(spacing: 16) {
-                ElevationTempView(
-                    label: "Base",
-                    temp: tempByElevation.base,
-                    icon: "arrow.down.to.line",
-                    elevation: baseElevation
-                )
-                Spacer()
-                ElevationTempView(
-                    label: "Mid",
-                    temp: tempByElevation.mid,
-                    icon: "minus",
-                    elevation: midElevation
-                )
-                Spacer()
-                ElevationTempView(
-                    label: "Summit",
-                    temp: tempByElevation.summit,
-                    icon: "arrow.up.to.line",
-                    elevation: summitElevation
-                )
-            }
+            // New creative mountain profile visualization
+            MountainTemperatureProfile(
+                baseTemp: tempByElevation.base,
+                midTemp: tempByElevation.mid,
+                summitTemp: tempByElevation.summit,
+                baseElevation: baseElevation,
+                summitElevation: summitElevation
+            )
 
             if mountainDetail != nil {
-                Text("Tap to see temperature map")
+                Text("Tap to see interactive temperature map")
                     .font(.caption2)
                     .foregroundColor(.blue)
-                    .padding(.top, 4)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
     }

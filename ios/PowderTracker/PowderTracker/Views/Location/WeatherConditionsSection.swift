@@ -2,15 +2,25 @@ import SwiftUI
 
 struct WeatherConditionsSection: View {
     @ObservedObject var viewModel: LocationViewModel
+    var onNavigateToForecast: (() -> Void)?
+    @State private var isExpanded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Section Header
+            // Section Header (Tappable)
             HStack {
                 Image(systemName: "cloud.sun.fill")
                     .foregroundColor(.orange)
                 Text("Current Conditions")
                     .font(.headline)
+                Spacer()
+                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                    .foregroundColor(.secondary)
+                    .imageScale(.large)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                handleTap()
             }
 
             // Powder Score (if available)
@@ -45,11 +55,85 @@ struct WeatherConditionsSection: View {
                     WeatherDescriptionCard(description: description)
                 }
             }
+
+            // Expanded Content
+            if isExpanded {
+                VStack(spacing: 12) {
+                    // Temperature by Elevation (if available)
+                    if let tempData = viewModel.locationData?.conditions.temperatureByElevation,
+                       let mountainDetail = viewModel.locationData?.mountain {
+                        NavigationLink(destination: TemperatureElevationMapView(
+                            mountain: mountainDetail,
+                            temperatureData: tempData
+                        )) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Temperature by Elevation")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    HStack(spacing: 12) {
+                                        Text("Base: \(tempData.base)°F")
+                                            .font(.caption)
+                                        Text("Mid: \(tempData.mid)°F")
+                                            .font(.caption)
+                                        Text("Summit: \(tempData.summit)°F")
+                                            .font(.caption)
+                                    }
+                                    .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // Navigate to Forecast Button
+                    if onNavigateToForecast != nil {
+                        Button {
+                            onNavigateToForecast?()
+                        } label: {
+                            HStack {
+                                Text("View 7-Day Forecast")
+                                    .fontWeight(.semibold)
+                                Spacer()
+                                Image(systemName: "arrow.right")
+                            }
+                            .foregroundColor(.blue)
+                            .padding()
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(8)
+                        }
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+
+    // MARK: - Tap Handler
+
+    private func handleTap() {
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+
+        withAnimation(.spring(response: 0.3)) {
+            if isExpanded {
+                // Second tap: Navigate to Forecast tab
+                onNavigateToForecast?()
+            } else {
+                // First tap: Expand inline
+                isExpanded = true
+            }
+        }
     }
 
     private func temperatureColor(_ temp: Double) -> Color {

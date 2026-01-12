@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MountainMap } from '@/components/MountainMapLoader';
 import { MountainCard, MountainCardSkeleton } from '@/components/MountainCard';
-import { getAllMountains, getMountainsSortedByDistance, type MountainConfig } from '@/data/mountains';
+import { getAllMountains, getMountainsSortedByDistance, type MountainConfig } from '@shredders/shared';
 
 interface MountainWithData extends MountainConfig {
   powderScore?: number;

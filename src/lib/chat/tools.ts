@@ -1,6 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { getAllMountains, getMountain, type MountainConfig } from '@/data/mountains';
+import { getAllMountains, getMountain, type MountainConfig } from '@shredders/shared';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://shredders-bay.vercel.app';
 

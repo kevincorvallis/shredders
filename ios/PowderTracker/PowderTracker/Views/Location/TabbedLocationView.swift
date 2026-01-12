@@ -2,52 +2,46 @@ import SwiftUI
 
 struct TabbedLocationView: View {
     let mountain: Mountain
+    let initialTab: Tab?
     @StateObject private var viewModel: LocationViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedTab: Tab = .overview
+    @State private var selectedTab: Tab
 
     enum Tab: String, CaseIterable, Identifiable {
         case overview = "Overview"
-        case forecast = "Forecast"
-        case history = "History"
+        case conditions = "Conditions"
         case travel = "Travel"
-        case safety = "Safety"
-        case webcams = "Webcams"
+        case mountain = "Mountain"
         case social = "Social"
-        case lifts = "Lifts"
 
         var id: String { rawValue }
 
         var icon: String {
             switch self {
             case .overview: return "gauge.with.dots.needle.bottom.50percent"
-            case .forecast: return "cloud.sun.fill"
-            case .history: return "chart.line.uptrend.xyaxis"
+            case .conditions: return "cloud.sun.fill"
             case .travel: return "car.fill"
-            case .safety: return "exclamationmark.triangle.fill"
-            case .webcams: return "video.fill"
+            case .mountain: return "mountain.2.fill"
             case .social: return "person.3.fill"
-            case .lifts: return "cablecar.fill"
             }
         }
 
         var color: Color {
             switch self {
             case .overview: return .blue
-            case .forecast: return .orange
-            case .history: return .purple
+            case .conditions: return .orange
             case .travel: return .green
-            case .safety: return .red
-            case .webcams: return .cyan
+            case .mountain: return .purple
             case .social: return .pink
-            case .lifts: return .indigo
             }
         }
     }
 
-    init(mountain: Mountain) {
+    init(mountain: Mountain, initialTab: Tab? = nil) {
         self.mountain = mountain
+        self.initialTab = initialTab
         _viewModel = StateObject(wrappedValue: LocationViewModel(mountain: mountain))
+        _selectedTab = State(initialValue: initialTab ?? .overview)
     }
 
     var body: some View {
@@ -133,20 +127,14 @@ struct TabbedLocationView: View {
             switch selectedTab {
             case .overview:
                 OverviewTab(viewModel: viewModel, mountain: mountain, selectedTab: $selectedTab)
-            case .forecast:
-                ForecastTab(viewModel: viewModel, mountain: mountain)
-            case .history:
-                HistoryTab(viewModel: viewModel, mountain: mountain)
+            case .conditions:
+                ConditionsTab(viewModel: viewModel, mountain: mountain)
             case .travel:
                 TravelTab(viewModel: viewModel, mountain: mountain)
-            case .safety:
-                SafetyTab(viewModel: viewModel, mountain: mountain)
-            case .webcams:
-                WebcamsTab(viewModel: viewModel, mountain: mountain)
+            case .mountain:
+                MountainTab(viewModel: viewModel, mountain: mountain)
             case .social:
                 SocialTab(viewModel: viewModel, mountain: mountain)
-            case .lifts:
-                LiftsTab(viewModel: viewModel, mountain: mountain)
             }
         }
     }

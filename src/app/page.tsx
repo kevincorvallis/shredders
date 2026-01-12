@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MountainMap } from '@/components/MountainMapLoader';
 import { Intro } from '@/components/Intro';
 import { SnowfallTable } from '@/components/SnowfallTable';
-import { getAllMountains, getMountainsByRegion, type MountainConfig } from '@/data/mountains';
+import { getAllMountains, getMountainsByRegion, type MountainConfig } from '@shredders/shared';
 import { getPowderScoreStyle } from '@/lib/design-tokens';
 import { prefetchMountainData } from '@/lib/hooks/useMountainData';
 import {

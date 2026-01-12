@@ -44,6 +44,31 @@ struct LocationMapSection: View {
                     }
                 }
 
+                // Lift name labels
+                if let lifts = liftData?.features {
+                    ForEach(lifts) { lift in
+                        if let midpoint = lift.midpointCoordinate {
+                            Annotation(
+                                lift.properties.name,
+                                coordinate: midpoint,
+                                anchor: .center
+                            ) {
+                                Text(lift.properties.name)
+                                    .font(.caption2)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 3)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .fill(liftColor(for: lift.properties.type).opacity(0.9))
+                                            .shadow(color: Color(.label).opacity(0.3), radius: 2, x: 0, y: 1)
+                                    )
+                            }
+                        }
+                    }
+                }
+
                 // Mountain annotation
                 Annotation(
                     mountainDetail.name,
@@ -125,7 +150,7 @@ struct LocationMapSection: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
     }
 
     private func formatCoordinate(_ lat: Double, _ lng: Double) -> String {

@@ -82,7 +82,7 @@ struct NavigationCard: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+        .shadow(color: Color(.label).opacity(0.08), radius: 8, x: 0, y: 4)
         .alert("Opening Maps", isPresented: $showingDirectionsAlert) {
             Button("OK", role: .cancel) { }
         } message: {

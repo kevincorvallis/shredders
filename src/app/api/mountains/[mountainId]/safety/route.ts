@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 import { getExtendedConditions, getExtendedHistory } from '@/lib/apis/snotel';
 import { getExtendedCurrentWeather, getRecentWindData } from '@/lib/apis/noaa';
 import {

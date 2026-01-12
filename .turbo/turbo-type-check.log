@@ -1,0 +1,87 @@
+
+> shredders-monorepo@0.1.0 type-check /Users/kevin/Downloads/shredders
+> turbo run type-check
+
+• turbo 2.7.3
+• Packages in scope: @shredders/shared, lambda-scraper, shredders-monorepo
+• Running type-check in 3 packages
+• Remote caching disabled
+@shredders/shared:type-check: cache hit, replaying logs 34c518e62bf540fb
+@shredders/shared:type-check: 
+@shredders/shared:type-check: > @shredders/shared@0.1.0 type-check /Users/kevin/Downloads/shredders/packages/shared
+@shredders/shared:type-check: > tsc --noEmit
+@shredders/shared:type-check: 
+shredders-monorepo:type-check: cache miss, executing 19608bc0b9361d95
+shredders-monorepo:type-check: 
+shredders-monorepo:type-check: > shredders-monorepo@0.1.0 type-check /Users/kevin/Downloads/shredders
+shredders-monorepo:type-check: > turbo run type-check
+shredders-monorepo:type-check: 
+shredders-monorepo:type-check: • turbo 2.7.3
+shredders-monorepo:type-check: • Packages in scope: @shredders/shared, lambda-scraper, shredders-monorepo
+shredders-monorepo:type-check: • Running type-check in 3 packages
+shredders-monorepo:type-check: • Remote caching disabled
+shredders-monorepo:type-check: @shredders/shared:type-check: cache hit, replaying logs 34c518e62bf540fb
+shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: @shredders/shared:type-check: > @shredders/shared@0.1.0 type-check /Users/kevin/Downloads/shredders/packages/shared
+shredders-monorepo:type-check: @shredders/shared:type-check: > tsc --noEmit
+shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: cache miss, executing 19608bc0b9361d95
+shredders-monorepo:type-check: shredders-monorepo:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: > shredders-monorepo@0.1.0 type-check /Users/kevin/Downloads/shredders
+shredders-monorepo:type-check: shredders-monorepo:type-check: > turbo run type-check
+shredders-monorepo:type-check: shredders-monorepo:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: • turbo 2.7.3
+shredders-monorepo:type-check: shredders-monorepo:type-check: • Packages in scope: @shredders/shared, lambda-scraper, shredders-monorepo
+shredders-monorepo:type-check: shredders-monorepo:type-check: • Running type-check in 3 packages
+shredders-monorepo:type-check: shredders-monorepo:type-check: • Remote caching disabled
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: cache miss, executing d7422747073579ca
+shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: cache hit, replaying logs 968f51020e2eba1e
+shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: > @shredders/shared@0.1.0 type-check /Users/kevin/Downloads/shredders/packages/shared
+shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: > tsc --noEmit
+shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: > shredders-monorepo@0.1.0 type-check /Users/kevin/Downloads/shredders
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: > turbo run type-check
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • turbo 2.7.3
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • Packages in scope: @shredders/shared, lambda-scraper, shredders-monorepo
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • Running type-check in 3 packages
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • Remote caching disabled
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: cache hit, replaying logs 34c518e62bf540fb
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: > @shredders/shared@0.1.0 type-check /Users/kevin/Downloads/shredders/packages/shared
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: > tsc --noEmit
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: cache miss, executing 19608bc0b9361d95
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: > shredders-monorepo@0.1.0 type-check /Users/kevin/Downloads/shredders
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: > turbo run type-check
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • turbo 2.7.3
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • Packages in scope: @shredders/shared, lambda-scraper, shredders-monorepo
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • Running type-check in 3 packages
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • Remote caching disabled
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: cache hit, replaying logs 34c518e62bf540fb
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: > @shredders/shared@0.1.0 type-check /Users/kevin/Downloads/shredders/packages/shared
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: > tsc --noEmit
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: cache miss, executing 19608bc0b9361d95
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: > shredders-monorepo@0.1.0 type-check /Users/kevin/Downloads/shredders
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: > turbo run type-check
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-checshreshredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • turbo 2.7.3
+dders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • Packages in scope: @shredders/shared, lambda-scraper, shredders-monorepo
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • Running type-check in 3 packages
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: • Remote caching disabled
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: cache hit, replaying logs 34c518e62bf540fb
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: > @shredders/shared@0.1.0 type-check /Users/kevin/Downloads/shredders/packages/shared
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: > tsc --noEmit
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: @shredders/shared:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: cache miss, executing 19608bc0b9361d95
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: 
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: > shredders-monorepo@0.1.0 type-check /Users/kevin/Downloads/shredders
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: > turbo run type-check
+shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: shredders-monorepo:type-check: 

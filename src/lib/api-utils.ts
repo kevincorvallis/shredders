@@ -32,28 +32,109 @@ export function apiSuccess<T>(data: T, status: number = 200) {
  */
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
+export interface RateLimitConfig {
+  limit: number; // Max requests allowed
+  windowMs: number; // Time window in milliseconds
+}
+
+export interface RateLimitResult {
+  success: boolean;
+  remaining: number;
+  resetTime?: number; // When the limit resets
+  retryAfter?: number; // Seconds until retry (when rate limited)
+}
+
+/**
+ * Rate limit configurations for different endpoints
+ */
+export const RATE_LIMITS = {
+  login: { limit: 5, windowMs: 5 * 60 * 1000 }, // 5 attempts per 5 minutes
+  signup: { limit: 3, windowMs: 60 * 60 * 1000 }, // 3 attempts per hour
+  refresh: { limit: 10, windowMs: 60 * 1000 }, // 10 attempts per minute
+  passwordReset: { limit: 3, windowMs: 60 * 60 * 1000 }, // 3 attempts per hour
+  default: { limit: 60, windowMs: 60 * 1000 }, // 60 requests per minute
+};
+
+/**
+ * Enhanced rate limiter with composite key support
+ *
+ * @param identifier - Unique identifier (can be composite like "ip:email")
+ * @param config - Rate limit configuration or preset name
+ * @returns Rate limit result with success/failure and metadata
+ *
+ * @example
+ * // Using preset
+ * const result = rateLimitEnhanced('user@example.com', 'login');
+ *
+ * // Using composite key
+ * const result = rateLimitEnhanced(`${ip}:${email}`, { limit: 5, windowMs: 300000 });
+ *
+ * // Check result
+ * if (!result.success) {
+ *   return NextResponse.json(
+ *     { error: 'Too many attempts', retryAfter: result.retryAfter },
+ *     { status: 429, headers: { 'Retry-After': result.retryAfter!.toString() } }
+ *   );
+ * }
+ */
+export function rateLimitEnhanced(
+  identifier: string,
+  config: keyof typeof RATE_LIMITS | RateLimitConfig = 'default'
+): RateLimitResult {
+  const { limit, windowMs } = typeof config === 'string' ? RATE_LIMITS[config] : config;
+
+  const now = Date.now();
+  const record = rateLimitMap.get(identifier);
+
+  if (!record || now > record.resetTime) {
+    const resetTime = now + windowMs;
+    rateLimitMap.set(identifier, {
+      count: 1,
+      resetTime,
+    });
+    return {
+      success: true,
+      remaining: limit - 1,
+      resetTime,
+    };
+  }
+
+  if (record.count >= limit) {
+    const retryAfter = Math.ceil((record.resetTime - now) / 1000);
+    return {
+      success: false,
+      remaining: 0,
+      resetTime: record.resetTime,
+      retryAfter,
+    };
+  }
+
+  record.count++;
+  return {
+    success: true,
+    remaining: limit - record.count,
+    resetTime: record.resetTime,
+  };
+}
+
+/**
+ * Legacy rate limiter (kept for backward compatibility)
+ */
 export function rateLimit(
   identifier: string,
   limit: number = 60,
   windowMs: number = 60000
 ): { success: boolean; remaining: number } {
-  const now = Date.now();
-  const record = rateLimitMap.get(identifier);
+  const result = rateLimitEnhanced(identifier, { limit, windowMs });
+  return { success: result.success, remaining: result.remaining };
+}
 
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(identifier, {
-      count: 1,
-      resetTime: now + windowMs,
-    });
-    return { success: true, remaining: limit - 1 };
-  }
-
-  if (record.count >= limit) {
-    return { success: false, remaining: 0 };
-  }
-
-  record.count++;
-  return { success: true, remaining: limit - record.count };
+/**
+ * Create a composite rate limit key
+ * Useful for limiting by IP + email, IP + user ID, etc.
+ */
+export function createRateLimitKey(...parts: (string | undefined)[]): string {
+  return parts.filter(Boolean).join(':');
 }
 
 /**

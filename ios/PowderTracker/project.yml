@@ -15,6 +15,18 @@ packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift
     version: 2.18.0
+  Nuke:
+    url: https://github.com/kean/Nuke
+    from: 12.7.0
+  SwiftUIShimmer:
+    url: https://github.com/markiv/SwiftUI-Shimmer
+    from: 1.5.0
+  ConfettiSwiftUI:
+    url: https://github.com/simibac/ConfettiSwiftUI
+    from: 1.1.0
+  TelemetryDeck:
+    url: https://github.com/TelemetryDeck/SwiftSDK
+    from: 2.3.0
 
 targets:
   PowderTracker:
@@ -22,6 +34,8 @@ targets:
     platform: iOS
     sources:
       - PowderTracker
+    entitlements:
+      path: PowderTracker/PowderTracker.entitlements
     settings:
       base:
         INFOPLIST_GENERATION_MODE: GeneratedFile
@@ -32,8 +46,9 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_CFBundleDisplayName: "PowderTracker"
+        CODE_SIGN_ENTITLEMENTS: PowderTracker/PowderTracker.entitlements
     dependencies:
       - target: PowderTrackerWidgetExtension
         embed: true
@@ -44,6 +59,19 @@ targets:
           - PostgREST
           - Storage
           - Realtime
+      - package: Nuke
+        products:
+          - Nuke
+          - NukeUI
+      - package: SwiftUIShimmer
+        products:
+          - Shimmer
+      - package: ConfettiSwiftUI
+        products:
+          - ConfettiSwiftUI
+      - package: TelemetryDeck
+        products:
+          - TelemetryDeck
 
   PowderTrackerWidgetExtension:
     type: app-extension

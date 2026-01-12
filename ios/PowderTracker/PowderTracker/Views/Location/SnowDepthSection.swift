@@ -3,15 +3,25 @@ import Charts
 
 struct SnowDepthSection: View {
     @ObservedObject var viewModel: LocationViewModel
+    var onNavigateToHistory: (() -> Void)?
+    @State private var isExpanded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Section Header
+            // Section Header (Tappable)
             HStack {
                 Image(systemName: "snowflake")
                     .foregroundColor(.blue)
                 Text("Snow Depth")
                     .font(.headline)
+                Spacer()
+                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                    .foregroundColor(.secondary)
+                    .imageScale(.large)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                handleTap()
             }
 
             // Current Depth
@@ -114,8 +124,8 @@ struct SnowDepthSection: View {
                 }
             }
 
-            // Historical Chart
-            if !viewModel.historicalSnowData.isEmpty {
+            // Historical Chart (Expanded Content)
+            if isExpanded && !viewModel.historicalSnowData.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Depth Trend")
                         .font(.subheadline)
@@ -173,6 +183,26 @@ struct SnowDepthSection: View {
                     .frame(height: 200)
                 }
                 .padding(.top, 8)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+
+                // Navigate to History Button
+                if onNavigateToHistory != nil {
+                    Button {
+                        onNavigateToHistory?()
+                    } label: {
+                        HStack {
+                            Text("View Full Snow History")
+                                .fontWeight(.semibold)
+                            Spacer()
+                            Image(systemName: "arrow.right")
+                        }
+                        .foregroundColor(.blue)
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    .transition(.opacity)
+                }
             }
 
             // Last Updated
@@ -185,7 +215,24 @@ struct SnowDepthSection: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+
+    // MARK: - Tap Handler
+
+    private func handleTap() {
+        let impact = UIImpactFeedbackGenerator(style: .light)
+        impact.impactOccurred()
+
+        withAnimation(.spring(response: 0.3)) {
+            if isExpanded {
+                // Second tap: Navigate to History tab
+                onNavigateToHistory?()
+            } else {
+                // First tap: Expand inline
+                isExpanded = true
+            }
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMountain } from '@/data/mountains';
+import { getMountain } from '@shredders/shared';
 import { getHourlyForecast, type NOAAGridConfig } from '@/lib/apis/noaa';
 
 export async function GET(

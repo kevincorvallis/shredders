@@ -1,4 +1,6 @@
 import SwiftUI
+import Nuke
+import NukeUI
 
 struct WebcamsSection: View {
     @ObservedObject var viewModel: LocationViewModel
@@ -68,13 +70,9 @@ struct LocationRoadWebcamCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Webcam Image
-            AsyncImage(url: URL(string: webcam.url)) { phase in
-                switch phase {
-                case .empty:
-                    ProgressView()
-                        .frame(width: 250, height: 180)
-                case .success(let image):
+            // Webcam Image with Nuke caching
+            LazyImage(url: URL(string: webcam.url)) { state in
+                if let image = state.image {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -84,7 +82,7 @@ struct LocationRoadWebcamCard: View {
                         .onTapGesture {
                             isImageExpanded = true
                         }
-                case .failure:
+                } else if state.error != nil {
                     ZStack {
                         Color(.systemGray5)
                         VStack {
@@ -98,10 +96,13 @@ struct LocationRoadWebcamCard: View {
                     }
                     .frame(width: 250, height: 180)
                     .cornerRadius(8)
-                @unknown default:
-                    EmptyView()
+                } else {
+                    ProgressView()
+                        .frame(width: 250, height: 180)
                 }
             }
+            .processors([ImageProcessors.Resize(width: 250)])
+            .priority(.high)
 
             // Webcam Info
             VStack(alignment: .leading, spacing: 4) {
@@ -140,15 +141,12 @@ struct WebcamExpandedView: View {
     var body: some View {
         NavigationView {
             VStack {
-                AsyncImage(url: URL(string: webcam.url)) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                    case .success(let image):
+                LazyImage(url: URL(string: webcam.url)) { state in
+                    if let image = state.image {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                    case .failure:
+                    } else if state.error != nil {
                         VStack {
                             Image(systemName: "exclamationmark.camera")
                                 .font(.largeTitle)
@@ -156,11 +154,12 @@ struct WebcamExpandedView: View {
                             Text("Failed to load image")
                                 .foregroundColor(.secondary)
                         }
-                    @unknown default:
-                        EmptyView()
+                    } else {
+                        ProgressView()
                     }
                 }
-
+                .priority(.high)
+    
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -212,13 +211,9 @@ struct LocationResortWebcamCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Webcam Image
-            AsyncImage(url: URL(string: webcam.url)) { phase in
-                switch phase {
-                case .empty:
-                    ProgressView()
-                        .frame(width: 250, height: 180)
-                case .success(let image):
+            // Webcam Image with Nuke caching
+            LazyImage(url: URL(string: webcam.url)) { state in
+                if let image = state.image {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -228,7 +223,7 @@ struct LocationResortWebcamCard: View {
                         .onTapGesture {
                             isImageExpanded = true
                         }
-                case .failure:
+                } else if state.error != nil {
                     ZStack {
                         Color(.systemGray5)
                         VStack {
@@ -242,10 +237,13 @@ struct LocationResortWebcamCard: View {
                     }
                     .frame(width: 250, height: 180)
                     .cornerRadius(8)
-                @unknown default:
-                    EmptyView()
+                } else {
+                    ProgressView()
+                        .frame(width: 250, height: 180)
                 }
             }
+            .processors([ImageProcessors.Resize(width: 250)])
+            .priority(.high)
 
             // Webcam Info
             VStack(alignment: .leading, spacing: 4) {
@@ -270,15 +268,12 @@ struct ResortWebcamExpandedView: View {
     var body: some View {
         NavigationView {
             VStack {
-                AsyncImage(url: URL(string: webcam.url)) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                    case .success(let image):
+                LazyImage(url: URL(string: webcam.url)) { state in
+                    if let image = state.image {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                    case .failure:
+                    } else if state.error != nil {
                         VStack {
                             Image(systemName: "exclamationmark.camera")
                                 .font(.largeTitle)
@@ -286,11 +281,12 @@ struct ResortWebcamExpandedView: View {
                             Text("Failed to load image")
                                 .foregroundColor(.secondary)
                         }
-                    @unknown default:
-                        EmptyView()
+                    } else {
+                        ProgressView()
                     }
                 }
-
+                .priority(.high)
+    
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 8) {

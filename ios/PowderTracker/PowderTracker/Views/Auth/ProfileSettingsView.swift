@@ -6,28 +6,20 @@ struct ProfileSettingsView: View {
 
     @State private var displayName = ""
     @State private var bio = ""
-    @State private var showingSignOut = false
+    @State private var showingAccountSettings = false
     @State private var saveMessage: String?
     @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Profile") {
-                    TextField("Email", text: .constant(authService.currentUser?.email ?? ""))
-                        .disabled(true)
-                        .foregroundStyle(.secondary)
-
-                    TextField("Username", text: .constant(authService.userProfile?.username ?? ""))
-                        .disabled(true)
-                        .foregroundStyle(.secondary)
-
+                Section {
                     TextField("Display Name", text: $displayName)
                         .textContentType(.name)
 
                     ZStack(alignment: .topLeading) {
                         if bio.isEmpty {
-                            Text("Bio")
+                            Text("Bio (Optional)")
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal, 4)
                                 .padding(.vertical, 8)
@@ -35,6 +27,12 @@ struct ProfileSettingsView: View {
                         TextEditor(text: $bio)
                             .frame(minHeight: 100)
                     }
+                } header: {
+                    Text("Profile")
+                } footer: {
+                    Text("Your display name and bio are visible to other users")
+                        .font(.caption)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Section {
@@ -71,26 +69,29 @@ struct ProfileSettingsView: View {
                     }
                 }
 
-                Section("Account") {
-                    if let profile = authService.userProfile {
-                        LabeledContent("Joined", value: profile.createdAt.formatted(date: .abbreviated, time: .omitted))
-                        if let lastLogin = profile.lastLoginAt {
-                            LabeledContent("Last Login", value: lastLogin.formatted(date: .abbreviated, time: .omitted))
-                        }
-                    }
-
-                    Button(role: .destructive) {
-                        showingSignOut = true
+                // Link to Account Settings
+                Section {
+                    Button {
+                        showingAccountSettings = true
                     } label: {
-                        Text("Sign Out")
+                        HStack {
+                            Label("Account Settings", systemImage: "person.crop.circle")
+                                .foregroundStyle(.primary)
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle("Edit Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("Done") {
                         dismiss()
                     }
                 }
@@ -101,14 +102,8 @@ struct ProfileSettingsView: View {
                     bio = profile.bio ?? ""
                 }
             }
-            .confirmationDialog("Sign Out", isPresented: $showingSignOut) {
-                Button("Sign Out", role: .destructive) {
-                    Task {
-                        await signOut()
-                    }
-                }
-            } message: {
-                Text("Are you sure you want to sign out?")
+            .sheet(isPresented: $showingAccountSettings) {
+                AccountSettingsView()
             }
         }
     }
@@ -124,15 +119,6 @@ struct ProfileSettingsView: View {
                 homeMountainId: nil
             )
             saveMessage = "Profile updated successfully"
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private func signOut() async {
-        do {
-            try await authService.signOut()
-            dismiss()
         } catch {
             errorMessage = error.localizedDescription
         }

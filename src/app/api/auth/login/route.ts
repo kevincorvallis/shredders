@@ -2,51 +2,110 @@
  * POST /api/auth/login
  *
  * Sign in with email and password
+ * Includes JWT token generation, rate limiting, validation, and audit logging
  */
 
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import {
+  authenticateUser,
+  loginSchema,
+  validateRequest,
+  logLoginSuccess,
+  logLoginFailure,
+  logRateLimitExceeded,
+} from '@/lib/auth';
+import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
+import { Errors, handleError } from '@/lib/errors';
+import { createSession } from '@/lib/auth/session-manager';
+import { decodeToken } from '@/lib/auth/jwt';
 
 export async function POST(request: Request) {
-  try {
-    const { email, password } = await request.json();
+  const startTime = Date.now();
+  let email: string | undefined;
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+  try {
+    // Parse request body
+    const body = await request.json();
+
+    // Validate input with Zod
+    const validation = validateRequest(loginSchema, body);
+    if (!validation.success) {
+      throw Errors.validationFailed(validation.errors);
     }
 
-    const supabase = await createClient();
+    const { email: validatedEmail, password } = validation.data;
+    email = validatedEmail;
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    // Rate limiting: IP + email composite key (5 attempts per 5 minutes)
+    const headersList = await headers();
+    const ipAddress =
+      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      headersList.get('x-real-ip') ||
+      'unknown';
+
+    const rateLimitKey = createRateLimitKey(ipAddress, email);
+    const rateLimit = rateLimitEnhanced(rateLimitKey, 'login');
+
+    if (!rateLimit.success) {
+      // Log rate limit exceeded
+      await logRateLimitExceeded('login', undefined, {
+        email,
+        ipAddress,
+        attemptsRemaining: rateLimit.remaining,
+      });
+
+      throw Errors.tooManyLoginAttempts(rateLimit.retryAfter!);
+    }
+
+    // Authenticate user and generate JWT tokens
+    const result = await authenticateUser(email, password);
+
+    // Decode refresh token to get JTI and token family
+    const refreshPayload = decodeToken(result.tokens.refreshToken);
+    if (!refreshPayload) {
+      throw new Error('Failed to decode refresh token');
+    }
+
+    // Create session tracking
+    await createSession({
+      userId: result.user.id,
+      refreshTokenJti: refreshPayload.jti,
+      tokenFamily: refreshPayload.tokenFamily || refreshPayload.jti,
+      expiresAt: new Date((refreshPayload.exp || 0) * 1000),
     });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
-    }
-
-    // Update last login time
-    if (data.user) {
-      await supabase
-        .from('users')
-        .update({ last_login_at: new Date().toISOString() })
-        .eq('auth_user_id', data.user.id);
-    }
+    // Log successful login
+    await logLoginSuccess(result.user.id, {
+      email,
+      ipAddress,
+      loginDuration: Date.now() - startTime,
+    });
 
     return NextResponse.json({
-      user: data.user,
-      session: data.session,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+      },
+      accessToken: result.tokens.accessToken,
+      refreshToken: result.tokens.refreshToken,
       message: 'Logged in successfully',
     });
   } catch (error: any) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+    // Log failed login attempt
+    if (email) {
+      await logLoginFailure(email, error.message || 'Authentication failed', {
+        errorType: error.constructor.name,
+        loginDuration: Date.now() - startTime,
+      });
+    }
+
+    // For authentication failures, return generic error to prevent user enumeration
+    if (error.message?.includes('Invalid credentials') || error.message?.includes('User not found')) {
+      return handleError(Errors.invalidCredentials(), { userId: undefined, endpoint: 'login' });
+    }
+
+    // Handle all other errors with standard error handler
+    return handleError(error, { userId: undefined, endpoint: 'login' });
   }
 }

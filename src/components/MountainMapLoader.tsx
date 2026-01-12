@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { getAllMountains, type MountainConfig, calculateDistance } from '@/data/mountains';
+import { getAllMountains, type MountainConfig, calculateDistance } from '@shredders/shared';
 
 // Dynamic import for Leaflet to avoid SSR issues
 const LeafletMap = dynamic(() => import('./LeafletMap'), {

@@ -1,4 +1,6 @@
 import SwiftUI
+import Nuke
+import NukeUI
 
 struct WebcamsView: View {
     var mountainId: String? = nil  // Optional parameter from parent
@@ -181,20 +183,13 @@ struct WebcamCard: View {
                     .foregroundColor(.secondary)
             }
 
-            AsyncImage(url: URL(string: webcam.url)) { phase in
-                switch phase {
-                case .empty:
-                    ZStack {
-                        Color(.secondarySystemBackground)
-                        ProgressView()
-                    }
-                    .aspectRatio(16/9, contentMode: .fit)
-                case .success(let image):
+            LazyImage(url: URL(string: webcam.url)) { state in
+                if let image = state.image {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .cornerRadius(8)
-                case .failure(_):
+                } else if state.error != nil {
                     ZStack {
                         Color(.secondarySystemBackground)
                         VStack(spacing: 8) {
@@ -207,10 +202,16 @@ struct WebcamCard: View {
                         }
                     }
                     .aspectRatio(16/9, contentMode: .fit)
-                @unknown default:
-                    EmptyView()
+                } else {
+                    ZStack {
+                        Color(.secondarySystemBackground)
+                        ProgressView()
+                    }
+                    .aspectRatio(16/9, contentMode: .fit)
                 }
             }
+            .processors([ImageProcessors.Resize(width: 800)])
+            .priority(.high)
             .id(refreshID)
 
             Text("Tap to view fullscreen")
@@ -257,20 +258,13 @@ struct RoadWebcamCard: View {
                     .foregroundColor(.secondary)
             }
 
-            AsyncImage(url: URL(string: webcam.url)) { phase in
-                switch phase {
-                case .empty:
-                    ZStack {
-                        Color(.secondarySystemBackground)
-                        ProgressView()
-                    }
-                    .aspectRatio(16/9, contentMode: .fit)
-                case .success(let image):
+            LazyImage(url: URL(string: webcam.url)) { state in
+                if let image = state.image {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .cornerRadius(8)
-                case .failure(_):
+                } else if state.error != nil {
                     ZStack {
                         Color(.secondarySystemBackground)
                         VStack(spacing: 8) {
@@ -283,10 +277,16 @@ struct RoadWebcamCard: View {
                         }
                     }
                     .aspectRatio(16/9, contentMode: .fit)
-                @unknown default:
-                    EmptyView()
+                } else {
+                    ZStack {
+                        Color(.secondarySystemBackground)
+                        ProgressView()
+                    }
+                    .aspectRatio(16/9, contentMode: .fit)
                 }
             }
+            .processors([ImageProcessors.Resize(width: 800)])
+            .priority(.high)
             .id(refreshID)
 
             Text("Tap to view fullscreen")
@@ -346,17 +346,12 @@ struct WebcamFullScreen: View {
 
                 Spacer()
 
-                AsyncImage(url: URL(string: webcam.url)) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .tint(.white)
-                    case .success(let image):
+                LazyImage(url: URL(string: webcam.url)) { state in
+                    if let image = state.image {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                    case .failure(_):
+                    } else if state.error != nil {
                         VStack(spacing: 12) {
                             Image(systemName: "video.slash")
                                 .font(.largeTitle)
@@ -364,11 +359,14 @@ struct WebcamFullScreen: View {
                             Text("Unable to load webcam")
                                 .foregroundColor(.gray)
                         }
-                    @unknown default:
-                        EmptyView()
+                    } else {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .tint(.white)
                     }
                 }
-                .id(currentRefreshID)
+                .priority(.high)
+                    .id(currentRefreshID)
 
                 Spacer()
             }

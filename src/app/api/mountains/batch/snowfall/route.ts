@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllMountains } from '@/data/mountains';
+import { getAllMountains } from '@shredders/shared';
 import { withCache } from '@/lib/cache';
 import { getForecast, type NOAAGridConfig } from '@/lib/apis/noaa';
 import { getHistoricalData } from '@/lib/apis/snotel';

@@ -1,20 +1,33 @@
 import SwiftUI
 
-/// OpenSnow-style Favorites view - List of mountains with snow timelines
+/// Enhanced Homepage with time-based tabs and smart alerts
 struct HomeView: View {
-    @StateObject private var viewModel = FavoritesViewModel()
+    @StateObject private var viewModel = HomeViewModel()
     @StateObject private var favoritesManager = FavoritesManager.shared
-    @State private var selectedFilter: SnowFilter = .snowSummary
+    @StateObject private var scrollSync = TimelineScrollSync()
+    @State private var selectedTab: HomeTab = .today
     @State private var showingManageFavorites = false
-    @StateObject private var scrollSync = TimelineScrollSync() // Synchronized horizontal scrolling
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                filterTabs
-                favoritesListView
+                // Tab Picker
+                tabPicker
+
+                // Smart Alerts Banner (if any)
+                SmartAlertsBanner(
+                    leaveNowMountains: viewModel.getLeaveNowMountains(),
+                    weatherAlerts: viewModel.getActiveAlerts()
+                )
+
+                // Tab Content
+                ScrollView {
+                    tabContent
+                        .padding(.vertical, .spacingS)
+                }
+                .background(Color(.systemGroupedBackground))
             }
-            .navigationTitle("Favorites")
+            .navigationTitle("Home")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -26,10 +39,10 @@ struct HomeView: View {
                 }
             }
             .refreshable {
-                await viewModel.refresh()
+                await refreshData()
             }
             .task {
-                await viewModel.loadData()
+                await loadData()
             }
             .sheet(isPresented: $showingManageFavorites) {
                 FavoritesManagementSheet()
@@ -37,130 +50,60 @@ struct HomeView: View {
         }
     }
 
-    private var favoritesListView: some View {
-        ScrollView {
-            LazyVStack(spacing: 4) {
-                if favoritesManager.favoriteIds.isEmpty {
-                    emptyState
-                        .transition(.scale.combined(with: .opacity))
-                } else if viewModel.isLoading && viewModel.mountainData.isEmpty {
-                    loadingSkeletons
-                } else {
-                    mountainCardsList
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: viewModel.mountainData.count)
-            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: favoritesManager.favoriteIds)
-        }
-        .background(Color(.systemGroupedBackground))
-    }
-
-    private var loadingSkeletons: some View {
-        ForEach(0..<3, id: \.self) { _ in
-            SkeletonMountainCard()
-                .transition(.scale.combined(with: .opacity))
-        }
-    }
-
-    private var mountainCardsList: some View {
-        ForEach(favoritesManager.favoriteIds, id: \.self) { mountainId in
-            if let mountain = viewModel.mountains.first(where: { $0.id == mountainId }) {
-                mountainCardRow(for: mountain, mountainId: mountainId)
+    private var tabPicker: some View {
+        Picker("View", selection: $selectedTab) {
+            ForEach(HomeTab.allCases) { tab in
+                Label(tab.rawValue, systemImage: tab.icon)
+                    .tag(tab)
             }
         }
-    }
-
-    private func mountainCardRow(for mountain: Mountain, mountainId: String) -> some View {
-        Group {
-            if let data = viewModel.mountainData[mountainId] {
-                NavigationLink {
-                    MountainDetailView(mountainId: mountainId, mountainName: mountain.name)
-                } label: {
-                    MountainTimelineCard(
-                        mountain: mountain,
-                        conditions: data.conditions,
-                        powderScore: data.powderScore,
-                        forecast: data.forecast,
-                        filterMode: selectedFilter,
-                        scrollSync: scrollSync
-                    )
-                }
-                .buttonStyle(ScaleButtonStyle())
-                .transition(.asymmetric(
-                    insertion: .scale(scale: 0.9).combined(with: .opacity),
-                    removal: .scale(scale: 0.95).combined(with: .opacity)
-                ))
-            } else {
-                SkeletonMountainCard()
-                    .transition(.scale.combined(with: .opacity))
-            }
-        }
-    }
-
-    private var filterTabs: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(SnowFilter.allCases, id: \.self) { filter in
-                    Button {
-                        let impactMed = UIImpactFeedbackGenerator(style: .light)
-                        impactMed.impactOccurred()
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            selectedFilter = filter
-                        }
-                    } label: {
-                        Text(filter.rawValue)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(selectedFilter == filter ? .white : .primary)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 7)
-                            .background(selectedFilter == filter ? Color.blue : Color(.secondarySystemBackground))
-                            .cornerRadius(16)
-                            .scaleEffect(selectedFilter == filter ? 1.0 : 0.96)
-                    }
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedFilter)
-                }
-            }
-            .padding(.horizontal, 12)
-        }
-        .padding(.vertical, 8)
+        .pickerStyle(.segmented)
+        .padding(.spacingL)
         .background(Color(.systemBackground))
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "star.slash")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-
-            Text("No Favorites Yet")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            Text("Add mountains to track conditions and snowfall")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-
-            Button {
-                showingManageFavorites = true
-            } label: {
-                Text("Add Favorites")
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.blue)
-                    .cornerRadius(10)
-            }
+    @ViewBuilder
+    private var tabContent: some View {
+        switch selectedTab {
+        case .now:
+            NowTabView(viewModel: viewModel)
+        case .today:
+            TodayTabView(viewModel: viewModel)
+        case .thisWeek:
+            ThisWeekTabView(viewModel: viewModel)
         }
-        .padding(.top, 80)
+    }
+
+    private func loadData() async {
+        await viewModel.loadData()
+        await viewModel.loadEnhancedData()
+    }
+
+    private func refreshData() async {
+        await viewModel.refresh()
+        await viewModel.loadEnhancedData()
     }
 }
 
-// MARK: - Snow Filter Enum
+// MARK: - Home Tab Enum
+
+enum HomeTab: String, CaseIterable, Identifiable {
+    case now = "Now"
+    case today = "Today"
+    case thisWeek = "This Week"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .now: return "bolt.fill"
+        case .today: return "sun.max.fill"
+        case .thisWeek: return "calendar"
+        }
+    }
+}
+
+// MARK: - Snow Filter Enum (used in Today tab)
 
 enum SnowFilter: String, CaseIterable {
     case weather = "Weather"
@@ -327,89 +270,6 @@ struct MountainSelectorHeader: View {
             .cornerRadius(12)
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Quick Actions Grid
-
-struct QuickActionsGrid: View {
-    let mountainId: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Quick Actions")
-                .font(.headline)
-                .padding(.horizontal, 4)
-
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 12) {
-                NavigationLink {
-                    ForecastView()
-                } label: {
-                    QuickActionCard(
-                        icon: "calendar",
-                        title: "7-Day Forecast",
-                        color: .blue
-                    )
-                }
-
-                NavigationLink {
-                    WebcamsView()
-                } label: {
-                    QuickActionCard(
-                        icon: "video.fill",
-                        title: "Webcams",
-                        color: .purple
-                    )
-                }
-
-                NavigationLink {
-                    HistoryChartView()
-                } label: {
-                    QuickActionCard(
-                        icon: "chart.line.uptrend.xyaxis",
-                        title: "Snow History",
-                        color: .green
-                    )
-                }
-
-                NavigationLink {
-                    MountainDetailView(mountainId: mountainId, mountainName: "")
-                } label: {
-                    QuickActionCard(
-                        icon: "info.circle.fill",
-                        title: "Full Details",
-                        color: .orange
-                    )
-                }
-            }
-        }
-    }
-}
-
-struct QuickActionCard: View {
-    let icon: String
-    let title: String
-    let color: Color
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title)
-                .foregroundColor(color)
-
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
     }
 }
 

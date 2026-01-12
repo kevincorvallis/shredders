@@ -1,24 +1,27 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getDualAuthUser } from '@/lib/auth';
 
 /**
  * GET /api/likes
  *
  * Check if user has liked a specific target
+ * Supports both JWT bearer tokens and Supabase session authentication
+ *
  * Query params:
  *   - photoId: Photo ID
  *   - commentId: Comment ID
  *   - checkInId: Check-in ID
  *   - webcamId: Webcam ID
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Check authentication (supports both JWT and Supabase session)
+    const authUser = await getDualAuthUser(request);
+    if (!authUser) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
@@ -42,7 +45,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from('likes')
       .select('id')
-      .eq('user_id', user.id);
+      .eq('user_id', authUser.userId);
 
     if (photoId) query = query.eq('photo_id', photoId);
     if (commentId) query = query.eq('comment_id', commentId);
@@ -74,19 +77,21 @@ export async function GET(request: Request) {
  *
  * Toggle a like on a target (photo, comment, check-in, or webcam)
  * If like exists, it will be removed. If not, it will be created.
+ * Supports both JWT bearer tokens and Supabase session authentication
+ *
  * Body:
  *   - photoId: Photo ID (optional)
  *   - commentId: Comment ID (optional)
  *   - checkInId: Check-in ID (optional)
  *   - webcamId: Webcam ID (optional)
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Check authentication (supports both JWT and Supabase session)
+    const authUser = await getDualAuthUser(request);
+    if (!authUser) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
@@ -108,7 +113,7 @@ export async function POST(request: Request) {
     let checkQuery = supabase
       .from('likes')
       .select('id')
-      .eq('user_id', user.id);
+      .eq('user_id', authUser.userId);
 
     if (photoId) checkQuery = checkQuery.eq('photo_id', photoId);
     if (commentId) checkQuery = checkQuery.eq('comment_id', commentId);
@@ -150,7 +155,7 @@ export async function POST(request: Request) {
     const { data: newLike, error: insertError } = await supabase
       .from('likes')
       .insert({
-        user_id: user.id,
+        user_id: authUser.userId,
         photo_id: photoId || null,
         comment_id: commentId || null,
         check_in_id: checkInId || null,
@@ -185,20 +190,22 @@ export async function POST(request: Request) {
  * DELETE /api/likes
  *
  * Remove a like from a target
+ * Supports both JWT bearer tokens and Supabase session authentication
+ *
  * Query params:
  *   - photoId: Photo ID
  *   - commentId: Comment ID
  *   - checkInId: Check-in ID
  *   - webcamId: Webcam ID
  */
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Check authentication (supports both JWT and Supabase session)
+    const authUser = await getDualAuthUser(request);
+    if (!authUser) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
@@ -222,7 +229,7 @@ export async function DELETE(request: Request) {
     let deleteQuery = supabase
       .from('likes')
       .delete()
-      .eq('user_id', user.id);
+      .eq('user_id', authUser.userId);
 
     if (photoId) deleteQuery = deleteQuery.eq('photo_id', photoId);
     if (commentId) deleteQuery = deleteQuery.eq('comment_id', commentId);

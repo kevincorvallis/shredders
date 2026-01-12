@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { getAllMountains, type MountainConfig } from '@/data/mountains';
+import { getAllMountains, type MountainConfig } from '@shredders/shared';
 
 interface MountainSelectorProps {
   selectedId: string;

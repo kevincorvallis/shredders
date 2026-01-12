@@ -12,7 +12,7 @@ struct ArrivalTimeCard: View {
 
             Divider()
 
-            VStack(spacing: 16) {
+            VStack(spacing: .spacingL) {
                 // Main recommendation
                 recommendedTimeSection
 
@@ -38,19 +38,19 @@ struct ArrivalTimeCard: View {
             .padding()
         }
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: .cornerRadiusHero)
                 .fill(Color(.secondarySystemBackground))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(confidenceColor.opacity(0.3), lineWidth: 2)
+            RoundedRectangle(cornerRadius: .cornerRadiusHero)
+                .strokeBorder(confidenceColor.opacity(.opacityBold), lineWidth: 2)
         )
     }
 
     // MARK: - Header
 
     private var header: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: .spacingM) {
             Image(systemName: "clock.fill")
                 .font(.title2)
                 .foregroundColor(.blue)
@@ -68,19 +68,11 @@ struct ArrivalTimeCard: View {
             Spacer()
 
             // Confidence badge
-            HStack(spacing: 4) {
-                Image(systemName: arrivalTime.confidence.icon)
-                    .font(.caption)
-                Text(arrivalTime.confidence.displayName)
-                    .font(.caption)
-                    .fontWeight(.medium)
-            }
-            .foregroundColor(confidenceColor)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                Capsule()
-                    .fill(confidenceColor.opacity(0.15))
+            ConfidenceIndicator(
+                confidence: arrivalTime.confidence.displayName,
+                style: .badge,
+                showIcon: true,
+                showText: true
             )
         }
         .padding()
@@ -90,7 +82,7 @@ struct ArrivalTimeCard: View {
     // MARK: - Recommended Time
 
     private var recommendedTimeSection: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: .spacingS) {
             Text("Arrive By")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
@@ -110,10 +102,10 @@ struct ArrivalTimeCard: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, .spacingM)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.blue.opacity(0.08))
+            RoundedRectangle(cornerRadius: .cornerRadiusCard)
+                .fill(Color.blue.opacity(.opacitySubtle))
         )
     }
 
@@ -148,7 +140,7 @@ struct ArrivalTimeCard: View {
             )
         }
         .background(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: .cornerRadiusCard)
                 .fill(Color(.tertiarySystemBackground))
         )
     }
@@ -156,7 +148,7 @@ struct ArrivalTimeCard: View {
     // MARK: - Factors Grid
 
     private var factorsGrid: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: .spacingM) {
             Text("Factors")
                 .font(.subheadline)
                 .fontWeight(.semibold)
@@ -165,7 +157,7 @@ struct ArrivalTimeCard: View {
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible())
-            ], spacing: 12) {
+            ], spacing: .spacingM) {
                 FactorPill(
                     icon: arrivalTime.factors.expectedCrowdLevel.icon,
                     label: "Crowds",
@@ -207,15 +199,15 @@ struct ArrivalTimeCard: View {
     // MARK: - Reasoning
 
     private var reasoningSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: .spacingM) {
             Text("Why This Time?")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundStyle(.secondary)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: .spacingS) {
                 ForEach(Array(arrivalTime.reasoning.enumerated()), id: \.offset) { index, reason in
-                    HStack(alignment: .top, spacing: 8) {
+                    HStack(alignment: .top, spacing: .spacingS) {
                         Image(systemName: "\(index + 1).circle.fill")
                             .font(.caption)
                             .foregroundColor(.blue)
@@ -233,42 +225,15 @@ struct ArrivalTimeCard: View {
     // MARK: - Alternatives
 
     private var alternativesToggle: some View {
-        VStack(spacing: 12) {
-            Button(action: {
-                withAnimation(.spring(response: 0.3)) {
-                    showAlternatives.toggle()
-                }
-            }) {
-                HStack {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(.subheadline)
-
-                    Text("Alternative Times")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-
-                    Spacer()
-
-                    Image(systemName: showAlternatives ? "chevron.up" : "chevron.down")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .foregroundColor(.blue)
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.blue.opacity(0.1))
-                )
-            }
-            .buttonStyle(.plain)
-
-            if showAlternatives {
-                VStack(spacing: 10) {
-                    ForEach(arrivalTime.alternatives) { alt in
-                        AlternativeTimeRow(alternative: alt)
-                    }
-                }
-                .transition(.move(edge: .top).combined(with: .opacity))
+        ExpandableSection(
+            title: "Alternative Times",
+            icon: "arrow.triangle.2.circlepath",
+            count: nil,
+            color: .blue,
+            isExpanded: $showAlternatives
+        ) {
+            ForEach(arrivalTime.alternatives) { alt in
+                AlternativeTimeRow(alternative: alt)
             }
         }
     }
@@ -276,64 +241,27 @@ struct ArrivalTimeCard: View {
     // MARK: - Tips
 
     private var tipsToggle: some View {
-        VStack(spacing: 12) {
-            Button(action: {
-                withAnimation(.spring(response: 0.3)) {
-                    showTips.toggle()
-                }
-            }) {
-                HStack {
-                    Image(systemName: "lightbulb.fill")
-                        .font(.subheadline)
-
-                    Text("Pro Tips (\(arrivalTime.tips.count))")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-
-                    Spacer()
-
-                    Image(systemName: showTips ? "chevron.up" : "chevron.down")
+        ExpandableSection(
+            title: "Pro Tips",
+            icon: "lightbulb.fill",
+            count: arrivalTime.tips.count,
+            color: .orange,
+            isExpanded: $showTips
+        ) {
+            ForEach(Array(arrivalTime.tips.enumerated()), id: \.offset) { index, tip in
+                HStack(alignment: .top, spacing: .spacingS) {
+                    Image(systemName: "checkmark.circle.fill")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .foregroundColor(.orange)
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.orange.opacity(0.1))
-                )
-            }
-            .buttonStyle(.plain)
+                        .foregroundColor(.orange)
 
-            if showTips {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(Array(arrivalTime.tips.enumerated()), id: \.offset) { index, tip in
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.caption)
-                                .foregroundColor(.orange)
-
-                            Text(tip)
-                                .font(.subheadline)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
+                    Text(tip)
+                        .font(.subheadline)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(.top, 4)
-                .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
     }
 
-    // MARK: - Helpers
-
-    private var confidenceColor: Color {
-        switch arrivalTime.confidence {
-        case .high: return .green
-        case .medium: return .orange
-        case .low: return .red
-        }
-    }
 }
 
 // MARK: - Supporting Views
@@ -344,7 +272,7 @@ struct TimeWindowPill: View {
     let color: Color
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: .spacingXS) {
             Text(label)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -356,7 +284,7 @@ struct TimeWindowPill: View {
                 .foregroundColor(color)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, .spacingS)
     }
 }
 
@@ -368,7 +296,7 @@ struct FactorPill: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            HStack(spacing: 4) {
+            HStack(spacing: .spacingXS) {
                 Image(systemName: icon)
                     .font(.caption)
                 Text(label)
@@ -383,9 +311,9 @@ struct FactorPill: View {
                 .foregroundColor(color)
         }
         .frame(maxWidth: .infinity)
-        .padding(10)
+        .padding(.spacingS)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: .cornerRadiusButton)
                 .fill(Color(.tertiarySystemBackground))
         )
     }
@@ -415,11 +343,11 @@ struct AlternativeTimeRow: View {
             Text(alternative.tradeoff)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .padding(.leading, 24)
+                .padding(.leading, .spacingXXL)
         }
-        .padding(12)
+        .padding(.spacingM)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: .cornerRadiusButton)
                 .fill(Color(.tertiarySystemBackground))
         )
     }

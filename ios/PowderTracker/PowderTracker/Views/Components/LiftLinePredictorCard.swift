@@ -23,29 +23,27 @@ struct LiftLinePredictorCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: .spacingL) {
             // Header
             HStack {
                 Label("Lift Line Forecast", systemImage: "clock.fill")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+                    .sectionHeader()
 
                 Spacer()
 
                 // AI badge
-                HStack(spacing: 4) {
+                HStack(spacing: .spacingXS) {
                     Image(systemName: "brain.head.profile")
                         .font(.caption2)
                     Text("AI PREDICTED")
-                        .font(.caption2)
-                        .fontWeight(.bold)
+                        .badge()
                 }
                 .foregroundColor(.purple)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, .spacingS)
+                .padding(.vertical, .spacingXS)
                 .background(
                     Capsule()
-                        .fill(Color.purple.opacity(0.1))
+                        .fill(Color.purple.opacity(.opacitySubtle))
                 )
             }
 
@@ -78,22 +76,19 @@ struct LiftLinePredictorCard: View {
             }
             .buttonStyle(.plain)
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .standardCard()
     }
 
     // MARK: - Overall Busyness View
 
     private var overallBusynessView: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: .spacingL) {
             // Icon
             Image(systemName: prediction.overall.icon)
                 .font(.system(size: 40))
                 .foregroundColor(colorForBusyness(prediction.overall))
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: .spacingXS) {
                 Text(prediction.overall.rawValue)
                     .font(.title2)
                     .fontWeight(.bold)
@@ -113,9 +108,9 @@ struct LiftLinePredictorCard: View {
             // Busyness meter
             busynessMeter
         }
-        .padding()
-        .background(colorForBusyness(prediction.overall).opacity(0.1))
-        .cornerRadius(12)
+        .padding(.spacingM)
+        .background(colorForBusyness(prediction.overall).opacity(.opacitySubtle))
+        .cornerRadius(.cornerRadiusCard)
     }
 
     private var busynessMeter: some View {
@@ -156,7 +151,7 @@ struct LiftLinePredictorCard: View {
         let now = Date()
         let isWeekend = calendar.component(.weekday, from: now) == 1 || calendar.component(.weekday, from: now) == 7
 
-        return HStack(spacing: 8) {
+        return HStack(spacing: .spacingS) {
             Image(systemName: "info.circle.fill")
                 .foregroundColor(.blue)
                 .font(.caption)
@@ -174,7 +169,7 @@ struct LiftLinePredictorCard: View {
     // MARK: - Lift Predictions View
 
     private var liftPredictionsView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: .spacingM) {
             Text("Lift-by-Lift Breakdown")
                 .font(.subheadline)
                 .fontWeight(.semibold)
@@ -188,15 +183,15 @@ struct LiftLinePredictorCard: View {
             Text("Predictions based on current conditions, time, and typical patterns. Actual wait times may vary.")
                 .font(.caption2)
                 .foregroundColor(.secondary)
-                .padding(.top, 8)
+                .padding(.top, .spacingS)
         }
     }
 
     private func liftPredictionRow(_ prediction: LiftLinePredictor.LiftPrediction) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: .spacingS) {
             HStack {
                 // Lift name
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: .spacingXS) {
                     Text(prediction.liftName)
                         .font(.subheadline)
                         .fontWeight(.medium)
@@ -210,26 +205,24 @@ struct LiftLinePredictorCard: View {
                 Spacer()
 
                 // Wait time and status
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: .spacingXS) {
                     Text(LiftLinePredictor.estimatedWaitTime(busyness: prediction.busyness))
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                        .metric()
                         .foregroundColor(colorForBusyness(prediction.busyness))
 
-                    HStack(spacing: 4) {
+                    HStack(spacing: .spacingXS) {
                         Circle()
                             .fill(colorForBusyness(prediction.busyness))
-                            .frame(width: 6, height: 6)
+                            .frame(width: .statusDotSize, height: .statusDotSize)
                         Text(prediction.busyness.rawValue)
-                            .font(.caption2)
-                            .fontWeight(.semibold)
+                            .badge()
                             .foregroundColor(colorForBusyness(prediction.busyness))
                     }
                 }
             }
 
             // Confidence indicator
-            HStack(spacing: 4) {
+            HStack(spacing: .spacingXS) {
                 Text("Confidence:")
                     .font(.caption2)
                     .foregroundColor(.secondary)
@@ -254,9 +247,9 @@ struct LiftLinePredictorCard: View {
                     .frame(width: 35, alignment: .trailing)
             }
         }
-        .padding(12)
+        .padding(.spacingM)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(10)
+        .cornerRadius(.cornerRadiusCard)
     }
 
     // MARK: - Helper Methods

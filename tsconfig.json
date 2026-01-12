@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shredders/shared": ["./packages/shared/src/index.ts"],
+      "@shredders/shared/*": ["./packages/shared/src/*"]
     }
   },
   "include": [

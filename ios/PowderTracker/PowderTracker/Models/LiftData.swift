@@ -59,6 +59,15 @@ extension LiftFeature {
         }
     }
 
+    /// Calculate the midpoint coordinate of the lift for label placement
+    var midpointCoordinate: CLLocationCoordinate2D? {
+        let coords = mapCoordinates
+        guard !coords.isEmpty else { return nil }
+
+        let midIndex = coords.count / 2
+        return coords[midIndex]
+    }
+
     /// Human-readable lift type
     var displayType: String {
         switch properties.type {
