@@ -27,7 +27,7 @@ const weatherIcons: Record<ForecastDay['icon'], string> = {
 
 export function ForecastTimeline({ forecast }: ForecastTimelineProps) {
   const chartData = forecast.map((day) => ({
-    name: day.date.toLocaleDateString('en-US', { weekday: 'short' }),
+    name: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
     snowfall: day.snowfall,
     high: day.high,
     low: day.low,
@@ -100,7 +100,7 @@ export function ForecastTimeline({ forecast }: ForecastTimelineProps) {
             }`}
           >
             <p className="text-xs text-gray-500">
-              {day.date.toLocaleDateString('en-US', { weekday: 'short' })}
+              {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
             </p>
             <p className="text-2xl my-1">{weatherIcons[day.icon]}</p>
             <p className="text-sm font-semibold text-gray-900">

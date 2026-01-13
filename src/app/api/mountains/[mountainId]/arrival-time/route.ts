@@ -40,7 +40,7 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const { mountainId } = resolvedParams;
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://shredders-bay.vercel.app';
 
     // Fetch all relevant data in parallel
     const [
