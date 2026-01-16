@@ -1,7 +1,7 @@
 import { HTMLScraper } from './HTMLScraper';
 import { APIScraper } from './APIScraper';
 import { PuppeteerScraper } from './PuppeteerScraper';
-import { getEnabledConfigs, getScraperConfig } from './configs';
+import { getEnabledConfigs, getScraperConfig, getConfigsByBatch } from './configs';
 import type { BaseScraper } from './BaseScraper';
 import type { ScraperResult, ScraperConfig } from './types';
 
@@ -108,6 +108,54 @@ export class ScraperOrchestrator {
 
     console.log(
       `[ScraperOrchestrator] Completed: ${successCount}/${results.size} successful (${duration}ms)`
+    );
+
+    return results;
+  }
+
+  /**
+   * Scrape mountains by batch number
+   * Used for distributed scraping to avoid Vercel function timeouts
+   */
+  async scrapeBatch(batch: 1 | 2 | 3): Promise<Map<string, ScraperResult>> {
+    const configs = getConfigsByBatch(batch);
+    console.log(`[ScraperOrchestrator] Starting batch ${batch} scrape of ${configs.length} mountains...`);
+    const startTime = Date.now();
+
+    const results = new Map<string, ScraperResult>();
+
+    // Ensure scrapers exist for batch configs
+    for (const config of configs) {
+      if (!this.scrapers.has(config.id)) {
+        const scraper = this.createScraper(config);
+        if (scraper) {
+          this.scrapers.set(config.id, scraper);
+        }
+      }
+    }
+
+    // Scrape batch mountains in parallel
+    const promises = configs.map(async (config) => {
+      const result = await this.scrapeMountain(config.id);
+      return { mountainId: config.id, result };
+    });
+
+    const settled = await Promise.allSettled(promises);
+
+    // Collect results
+    for (const item of settled) {
+      if (item.status === 'fulfilled') {
+        results.set(item.value.mountainId, item.value.result);
+      } else {
+        console.error(`[ScraperOrchestrator] Batch ${batch} scraping failed:`, item.reason);
+      }
+    }
+
+    const duration = Date.now() - startTime;
+    const successCount = Array.from(results.values()).filter((r) => r.success).length;
+
+    console.log(
+      `[ScraperOrchestrator] Batch ${batch} completed: ${successCount}/${results.size} successful (${duration}ms)`
     );
 
     return results;

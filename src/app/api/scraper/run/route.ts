@@ -1,27 +1,51 @@
 import { NextResponse } from 'next/server';
 import { scraperOrchestrator } from '@/lib/scraper/ScraperOrchestrator';
 import { scraperStorage } from '@/lib/scraper/storage-postgres';
-import { getScraperConfig } from '@/lib/scraper/configs';
+import { getScraperConfig, getConfigsByBatch } from '@/lib/scraper/configs';
 import { sendScraperAlert } from '@/lib/alerts/scraper-alerts';
 
 /**
  * Manual trigger endpoint to run the scraper
- * GET /api/scraper/run
+ * GET /api/scraper/run          - Run all scrapers (may timeout on Vercel)
+ * GET /api/scraper/run?batch=1  - Run batch 1 only (5 mountains)
+ * GET /api/scraper/run?batch=2  - Run batch 2 only (5 mountains)
+ * GET /api/scraper/run?batch=3  - Run batch 3 only (5 mountains)
  *
- * In production, you'd protect this with authentication
+ * Batched scraping is recommended for Vercel to avoid function timeouts.
+ * Each batch should complete in under 30 seconds.
  */
-export async function GET() {
+export async function GET(request: Request) {
   let runId: string | undefined;
 
   try {
+    const { searchParams } = new URL(request.url);
+    const batchParam = searchParams.get('batch');
+    const batch = batchParam ? (parseInt(batchParam, 10) as 1 | 2 | 3) : null;
+
+    // Validate batch parameter
+    if (batch !== null && ![1, 2, 3].includes(batch)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid batch parameter. Must be 1, 2, or 3.' },
+        { status: 400 }
+      );
+    }
+
     const startTime = Date.now();
 
-    // START database tracking
-    runId = await scraperStorage.startRun(15, 'manual');
-    console.log(`[API] Started scraper run: ${runId}`);
+    // Determine how many mountains we're scraping
+    const mountainCount = batch
+      ? getConfigsByBatch(batch).length
+      : 15; // All mountains
 
-    // Run all scrapers
-    const results = await scraperOrchestrator.scrapeAll();
+    // START database tracking
+    const triggeredBy = batch ? `cron-batch-${batch}` : 'manual';
+    runId = await scraperStorage.startRun(mountainCount, triggeredBy);
+    console.log(`[API] Started scraper run: ${runId} (batch: ${batch || 'all'})`);
+
+    // Run scrapers (batch or all)
+    const results = batch
+      ? await scraperOrchestrator.scrapeBatch(batch)
+      : await scraperOrchestrator.scrapeAll();
 
     // Extract successful results
     const successfulData = Array.from(results.values())
@@ -66,11 +90,12 @@ export async function GET() {
       });
     }
 
-    console.log(`[API] Scrape completed: ${successCount}/${totalCount} successful in ${duration}ms`);
+    console.log(`[API] Scrape completed: ${successCount}/${totalCount} successful in ${duration}ms (batch: ${batch || 'all'})`);
 
     return NextResponse.json({
       success: true,
       message: `Scraped ${successCount}/${totalCount} mountains`,
+      batch: batch || 'all',
       duration,
       results: {
         total: totalCount,

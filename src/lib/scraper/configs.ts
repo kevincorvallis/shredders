@@ -12,7 +12,7 @@ import type { ScraperConfig } from './types';
  */
 
 export const scraperConfigs: Record<string, ScraperConfig> = {
-  // Washington - Cascades
+  // Washington - Cascades (Batch 1)
   baker: {
     id: 'baker',
     name: 'Mt. Baker',
@@ -20,6 +20,7 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     dataUrl: 'https://www.mtbaker.us/snow-report/',
     type: 'html',
     enabled: true,
+    batch: 1,
     selectors: {
       // Mt. Baker uses status classes on lift table cells
       liftsOpen: '.table-lifts .status-icon.status-open',  // Count all open lifts
@@ -34,7 +35,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.stevenspass.com',
     dataUrl: 'https://www.onthesnow.com/washington/stevens-pass-resort/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 1,
     selectors: {
       // OnTheSnow uses "X/Y open" format which parseRatio() handles
       liftsOpen: '[data-testid="lifts-status"], .lift-status, .lifts',
@@ -48,8 +50,9 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     name: 'Crystal Mountain',
     url: 'https://www.crystalmountainresort.com',
     dataUrl: 'https://www.onthesnow.com/washington/crystal-mountain-wa/skireport',  // OnTheSnow fallback (no Puppeteer needed)
-    type: 'html',  // Changed from 'dynamic' - using OnTheSnow instead
-    enabled: true,  // Enabled with OnTheSnow fallback
+    type: 'html',
+    enabled: true,
+    batch: 1,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -62,8 +65,9 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     name: 'Summit at Snoqualmie',
     url: 'https://www.summitatsnoqualmie.com',
     dataUrl: 'https://www.onthesnow.com/washington/the-summit-at-snoqualmie/skireport',  // OnTheSnow fallback
-    type: 'html',  // Changed from 'dynamic' - using OnTheSnow instead
-    enabled: true,  // Enabled with OnTheSnow fallback
+    type: 'html',
+    enabled: true,
+    batch: 1,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -77,7 +81,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://skiwhitepass.com',
     dataUrl: 'https://www.onthesnow.com/washington/white-pass/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 1,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -85,14 +90,15 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     },
   },
 
-  // Oregon
+  // Oregon (Batch 2)
   meadows: {
     id: 'meadows',
     name: 'Mt. Hood Meadows',
     url: 'https://www.skihood.com',
     dataUrl: 'https://www.onthesnow.com/oregon/mt-hood-meadows/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 2,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -106,7 +112,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.timberlinelodge.com',
     dataUrl: 'https://www.onthesnow.com/oregon/timberline-lodge/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 2,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -120,7 +127,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.mtbachelor.com',
     dataUrl: 'https://www.onthesnow.com/oregon/mt-bachelor/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 2,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -128,14 +136,15 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     },
   },
 
-  // Washington - Eastern
+  // Washington - Eastern (Batch 2)
   missionridge: {
     id: 'missionridge',
     name: 'Mission Ridge',
     url: 'https://www.missionridge.com',
     dataUrl: 'https://www.onthesnow.com/washington/mission-ridge/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 2,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -149,7 +158,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.ski49n.com',
     dataUrl: 'https://www.onthesnow.com/washington/49-degrees-north/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 2,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -157,14 +167,15 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     },
   },
 
-  // Idaho
+  // Idaho (Batch 3)
   schweitzer: {
     id: 'schweitzer',
     name: 'Schweitzer Mountain',
     url: 'https://www.schweitzer.com',
     dataUrl: 'https://www.onthesnow.com/idaho/schweitzer/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 3,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -178,7 +189,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.skilookout.com',
     dataUrl: 'https://www.onthesnow.com/idaho/lookout-pass-ski-area/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 3,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -186,14 +198,15 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     },
   },
 
-  // Oregon - Southern
+  // Oregon - Southern (Batch 3)
   ashland: {
     id: 'ashland',
     name: 'Mt. Ashland',
     url: 'https://www.mtashland.com',
     dataUrl: 'https://www.onthesnow.com/oregon/mount-ashland/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 3,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -207,7 +220,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.willamettepass.com',
     dataUrl: 'https://www.onthesnow.com/oregon/willamette-pass/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 3,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -221,7 +235,8 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
     url: 'https://www.skihoodoo.com',
     dataUrl: 'https://www.onthesnow.com/oregon/hoodoo-ski-area/skireport',  // OnTheSnow fallback
     type: 'html',
-    enabled: true,  // Enabled with OnTheSnow fallback
+    enabled: true,
+    batch: 3,
     selectors: {
       liftsOpen: '[data-testid="lifts-status"], .lift-status',
       runsOpen: '[data-testid="trails-status"], .trail-status',
@@ -251,4 +266,27 @@ export function getConfigsByType(type: 'html' | 'api' | 'dynamic'): ScraperConfi
   return Object.values(scraperConfigs).filter(
     (config) => config.type === type && config.enabled
   );
+}
+
+/**
+ * Get scraper configs by batch number
+ * Used for distributed scraping to avoid Vercel function timeouts
+ */
+export function getConfigsByBatch(batch: 1 | 2 | 3): ScraperConfig[] {
+  return Object.values(scraperConfigs).filter(
+    (config) => config.enabled && config.batch === batch
+  );
+}
+
+/**
+ * Get all batch numbers that have enabled configs
+ */
+export function getAvailableBatches(): (1 | 2 | 3)[] {
+  const batches = new Set<1 | 2 | 3>();
+  for (const config of Object.values(scraperConfigs)) {
+    if (config.enabled && config.batch) {
+      batches.add(config.batch);
+    }
+  }
+  return Array.from(batches).sort();
 }

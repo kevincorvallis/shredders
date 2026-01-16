@@ -29,6 +29,7 @@ export interface ScraperConfig {
   dataUrl?: string; // URL to scrape (if different from url)
   type: 'html' | 'api' | 'dynamic'; // Scraping method
   enabled: boolean;
+  batch?: 1 | 2 | 3; // Batch number for distributed scraping (to avoid timeouts)
   selectors?: {
     // CSS selectors for HTML scraping
     liftsOpen?: string;
