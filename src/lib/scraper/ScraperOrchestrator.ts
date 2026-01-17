@@ -71,7 +71,7 @@ export class ScraperOrchestrator {
    * Scrape a single mountain
    */
   async scrapeMountain(mountainId: string): Promise<ScraperResult> {
-    let scraper = this.scrapers.get(mountainId);
+    let scraper: BaseScraper | null | undefined = this.scrapers.get(mountainId);
 
     // If scraper doesn't exist, check if it's a dynamic type that needs async creation
     if (!scraper) {
