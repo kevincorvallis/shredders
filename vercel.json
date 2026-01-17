@@ -8,19 +8,5 @@
     "src/app/api/scraper/**/*.ts": {
       "maxDuration": 60
     }
-  },
-  "crons": [
-    {
-      "path": "/api/scraper/run?batch=1",
-      "schedule": "0 6,18 * * *"
-    },
-    {
-      "path": "/api/scraper/run?batch=2",
-      "schedule": "2 6,18 * * *"
-    },
-    {
-      "path": "/api/scraper/run?batch=3",
-      "schedule": "4 6,18 * * *"
-    }
-  ]
+  }
 }
