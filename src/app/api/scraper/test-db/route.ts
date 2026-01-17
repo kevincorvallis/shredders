@@ -1,41 +1,41 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
- * Test endpoint to verify database connection
+ * Test endpoint to verify database connection using Supabase
  */
 export async function GET() {
   const start = Date.now();
 
   try {
-    const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+    // Use Supabase client instead of @vercel/postgres
+    const supabase = createAdminClient();
 
-    // Check if connection string exists
-    if (!connectionString) {
+    // Simple query to test connection
+    const { data, error } = await supabase
+      .from('scraper_runs')
+      .select('count')
+      .limit(1);
+
+    if (error) {
       return NextResponse.json({
         success: false,
         duration: Date.now() - start,
-        error: 'No POSTGRES_URL or DATABASE_URL environment variable set',
-        envKeys: Object.keys(process.env).filter(k => k.includes('POSTGRES') || k.includes('DATABASE')),
+        error: error.message,
+        code: error.code,
       }, { status: 500 });
     }
-
-    // Try to create client and run simple query
-    const db = createClient({ connectionString });
-    const result = await db.sql`SELECT 1 as test`;
 
     return NextResponse.json({
       success: true,
       duration: Date.now() - start,
-      result: result.rows[0],
-      message: 'Database connection successful',
-      connectionStringPrefix: connectionString.substring(0, 30) + '...',
+      message: 'Supabase connection successful',
+      tableExists: true,
     });
   } catch (error) {
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3) : undefined,
       duration: Date.now() - start,
     }, { status: 500 });
   }
