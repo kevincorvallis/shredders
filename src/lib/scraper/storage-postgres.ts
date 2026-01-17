@@ -1,17 +1,21 @@
-import { createClient } from '@vercel/postgres';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { ScrapedMountainStatus } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { getMountain } from '@shredders/shared';
 
 /**
  * PostgreSQL storage for scraped mountain data
- * Uses Vercel Postgres (or any PostgreSQL database with DATABASE_URL)
+ * Uses Supabase client for database operations
  */
 class PostgresScraperStorage {
   private runId: string = '';
-  private db = createClient({
-    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL
-  });
+
+  /**
+   * Get Supabase admin client (created fresh each time to avoid stale connections)
+   */
+  private getClient() {
+    return createAdminClient();
+  }
 
   /**
    * Helper to map database row to ScrapedMountainStatus
@@ -50,19 +54,15 @@ class PostgresScraperStorage {
     this.runId = `run-${Date.now()}-${uuidv4().slice(0, 8)}`;
 
     try {
-      await this.db.sql`
-        INSERT INTO scraper_runs (
-          run_id,
-          total_mountains,
-          triggered_by,
-          status
-        ) VALUES (
-          ${this.runId},
-          ${totalMountains},
-          ${triggeredBy},
-          'running'
-        )
-      `;
+      const supabase = this.getClient();
+      const { error } = await supabase.from('scraper_runs').insert({
+        run_id: this.runId,
+        total_mountains: totalMountains,
+        triggered_by: triggeredBy,
+        status: 'running',
+      });
+
+      if (error) throw error;
       console.log(`[Storage] Started scraper run: ${this.runId}`);
       return this.runId;
     } catch (error) {
@@ -78,16 +78,19 @@ class PostgresScraperStorage {
     if (!this.runId) return;
 
     try {
-      await this.db.sql`
-        UPDATE scraper_runs
-        SET
-          successful_count = ${successful},
-          failed_count = ${failed},
-          duration_ms = ${durationMs},
-          status = 'completed',
-          completed_at = NOW()
-        WHERE run_id = ${this.runId}
-      `;
+      const supabase = this.getClient();
+      const { error } = await supabase
+        .from('scraper_runs')
+        .update({
+          successful_count: successful,
+          failed_count: failed,
+          duration_ms: durationMs,
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('run_id', this.runId);
+
+      if (error) throw error;
       console.log(`[Storage] Completed run ${this.runId}: ${successful}/${successful + failed} successful`);
     } catch (error) {
       console.error('[Storage] Failed to complete run:', error);
@@ -101,14 +104,17 @@ class PostgresScraperStorage {
     if (!this.runId) return;
 
     try {
-      await this.db.sql`
-        UPDATE scraper_runs
-        SET
-          status = 'failed',
-          error_message = ${errorMessage},
-          completed_at = NOW()
-        WHERE run_id = ${this.runId}
-      `;
+      const supabase = this.getClient();
+      const { error } = await supabase
+        .from('scraper_runs')
+        .update({
+          status: 'failed',
+          error_message: errorMessage,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('run_id', this.runId);
+
+      if (error) throw error;
       console.error(`[Storage] Failed run ${this.runId}: ${errorMessage}`);
     } catch (error) {
       console.error('[Storage] Failed to mark run as failed:', error);
@@ -117,47 +123,33 @@ class PostgresScraperStorage {
 
   /**
    * Save scraped mountain data
+   * Uses insert instead of upsert to avoid needing unique constraint
    */
   async save(data: ScrapedMountainStatus): Promise<void> {
     try {
-      await this.db.sql`
-        INSERT INTO mountain_status (
-          mountain_id,
-          is_open,
-          percent_open,
-          lifts_open,
-          lifts_total,
-          runs_open,
-          runs_total,
-          message,
-          conditions_message,
-          source_url,
-          scraped_at
-        ) VALUES (
-          ${data.mountainId},
-          ${data.isOpen},
-          ${data.percentOpen || null},
-          ${data.liftsOpen},
-          ${data.liftsTotal},
-          ${data.runsOpen},
-          ${data.runsTotal},
-          ${data.message || null},
-          ${data.message || null},
-          ${data.source},
-          ${data.lastUpdated}
-        )
-        ON CONFLICT (mountain_id, scraped_at)
-        DO UPDATE SET
-          is_open = EXCLUDED.is_open,
-          percent_open = EXCLUDED.percent_open,
-          lifts_open = EXCLUDED.lifts_open,
-          lifts_total = EXCLUDED.lifts_total,
-          runs_open = EXCLUDED.runs_open,
-          runs_total = EXCLUDED.runs_total,
-          message = EXCLUDED.message,
-          conditions_message = EXCLUDED.conditions_message,
-          source_url = EXCLUDED.source_url
-      `;
+      const supabase = this.getClient();
+      const { error } = await supabase.from('mountain_status').insert({
+        mountain_id: data.mountainId,
+        is_open: data.isOpen,
+        percent_open: data.percentOpen || null,
+        lifts_open: data.liftsOpen,
+        lifts_total: data.liftsTotal,
+        runs_open: data.runsOpen,
+        runs_total: data.runsTotal,
+        message: data.message || null,
+        conditions_message: data.message || null,
+        source_url: data.source,
+        scraped_at: data.lastUpdated,
+      });
+
+      if (error) {
+        // Ignore duplicate key errors (23505) - data already exists
+        if (error.code === '23505') {
+          console.log(`[Storage] Duplicate entry for ${data.mountainId}, skipping`);
+          return;
+        }
+        throw error;
+      }
       console.log(`[Storage] Saved status for ${data.mountainId}`);
     } catch (error) {
       console.error(`[Storage] Failed to save ${data.mountainId}:`, error);
@@ -166,44 +158,59 @@ class PostgresScraperStorage {
   }
 
   /**
-   * Save multiple scraped data in a transaction
+   * Save multiple scraped data in a batch
+   * Uses individual inserts to handle duplicates gracefully
    */
   async saveMany(dataArray: ScrapedMountainStatus[]): Promise<void> {
     if (dataArray.length === 0) return;
 
-    try {
-      // Use Promise.all to insert all in parallel (PostgreSQL handles this well)
-      await Promise.all(dataArray.map((data) => this.save(data)));
-      console.log(`[Storage] Saved ${dataArray.length} mountain statuses`);
-    } catch (error) {
-      console.error('[Storage] Failed to save multiple:', error);
-      throw error;
+    let savedCount = 0;
+    let skippedCount = 0;
+
+    // Use Promise.allSettled to insert all records, handling duplicates gracefully
+    const results = await Promise.allSettled(
+      dataArray.map((data) => this.save(data))
+    );
+
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        savedCount++;
+      } else {
+        skippedCount++;
+        console.error('[Storage] Failed to save:', result.reason);
+      }
     }
+
+    console.log(`[Storage] Saved ${savedCount}/${dataArray.length} mountain statuses (${skippedCount} failed)`);
   }
 
   /**
    * Save scraper failure details
+   * Silently fails if scraper_failures table doesn't exist
    */
   async saveFail(mountainId: string, error: string, url: string): Promise<void> {
     try {
-      await this.db.sql`
-        INSERT INTO scraper_failures (
-          run_id,
-          mountain_id,
-          error_message,
-          source_url,
-          failed_at
-        ) VALUES (
-          ${this.runId},
-          ${mountainId},
-          ${error},
-          ${url},
-          NOW()
-        )
-      `;
+      const supabase = this.getClient();
+      const { error: insertError } = await supabase.from('scraper_failures').insert({
+        run_id: this.runId,
+        mountain_id: mountainId,
+        error_message: error,
+        source_url: url,
+        failed_at: new Date().toISOString(),
+      });
+
+      if (insertError) {
+        // Silently skip if table doesn't exist
+        if (insertError.message?.includes('scraper_failures')) {
+          console.log(`[Storage] scraper_failures table not found, skipping failure log for ${mountainId}`);
+          return;
+        }
+        throw insertError;
+      }
       console.log(`[Storage] Logged failure for ${mountainId}: ${error}`);
-    } catch (error) {
-      console.error(`[Storage] Failed to log failure for ${mountainId}:`, error);
+    } catch (err) {
+      // Silently log but don't throw - failure logging is optional
+      console.warn(`[Storage] Could not log failure for ${mountainId}:`, err);
     }
   }
 
@@ -212,27 +219,21 @@ class PostgresScraperStorage {
    */
   async get(mountainId: string): Promise<ScrapedMountainStatus | null> {
     try {
-      const result = await this.db.sql`
-        SELECT
-          mountain_id,
-          is_open,
-          percent_open,
-          lifts_open,
-          lifts_total,
-          runs_open,
-          runs_total,
-          message,
-          source_url,
-          scraped_at
-        FROM mountain_status
-        WHERE mountain_id = ${mountainId}
-        ORDER BY scraped_at DESC
-        LIMIT 1
-      `;
+      const supabase = this.getClient();
+      const { data, error } = await supabase
+        .from('mountain_status')
+        .select('*')
+        .eq('mountain_id', mountainId)
+        .order('scraped_at', { ascending: false })
+        .limit(1)
+        .single();
 
-      if (result.rows.length === 0) return null;
+      if (error) {
+        if (error.code === 'PGRST116') return null; // No rows found
+        throw error;
+      }
 
-      return this.mapRowToStatus(result.rows[0]);
+      return this.mapRowToStatus(data);
     } catch (error) {
       console.error(`[Storage] Failed to get ${mountainId}:`, error);
       return null;
@@ -241,26 +242,42 @@ class PostgresScraperStorage {
 
   /**
    * Get all latest statuses
+   * Uses a subquery approach instead of relying on view
    */
   async getAll(): Promise<ScrapedMountainStatus[]> {
     try {
-      const result = await this.db.sql`
-        SELECT
-          mountain_id,
-          is_open,
-          percent_open,
-          lifts_open,
-          lifts_total,
-          runs_open,
-          runs_total,
-          message,
-          source_url,
-          scraped_at
-        FROM latest_mountain_status
-        ORDER BY mountain_id
-      `;
+      const supabase = this.getClient();
 
-      return result.rows.map((row) => this.mapRowToStatus(row));
+      // First try the view if it exists
+      const { data: viewData, error: viewError } = await supabase
+        .from('latest_mountain_status')
+        .select('*')
+        .order('mountain_id');
+
+      if (!viewError && viewData) {
+        return viewData.map((row) => this.mapRowToStatus(row));
+      }
+
+      // Fallback: Get all unique mountain_ids, then get latest for each
+      console.log('[Storage] View not available, using fallback query');
+
+      // Get all records ordered by scraped_at desc, then dedupe in code
+      const { data, error } = await supabase
+        .from('mountain_status')
+        .select('*')
+        .order('scraped_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Dedupe by mountain_id (keep first = most recent)
+      const seen = new Set<string>();
+      const latest = (data || []).filter((row) => {
+        if (seen.has(row.mountain_id)) return false;
+        seen.add(row.mountain_id);
+        return true;
+      });
+
+      return latest.map((row) => this.mapRowToStatus(row));
     } catch (error) {
       console.error('[Storage] Failed to get all:', error);
       return [];
@@ -272,25 +289,19 @@ class PostgresScraperStorage {
    */
   async getHistory(mountainId: string, days = 30): Promise<ScrapedMountainStatus[]> {
     try {
-      const result = await this.db.sql`
-        SELECT
-          mountain_id,
-          is_open,
-          percent_open,
-          lifts_open,
-          lifts_total,
-          runs_open,
-          runs_total,
-          message,
-          source_url,
-          scraped_at
-        FROM mountain_status
-        WHERE mountain_id = ${mountainId}
-          AND scraped_at >= NOW() - INTERVAL '${days} days'
-        ORDER BY scraped_at DESC
-      `;
+      const supabase = this.getClient();
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
 
-      return result.rows.map((row) => this.mapRowToStatus(row));
+      const { data, error } = await supabase
+        .from('mountain_status')
+        .select('*')
+        .eq('mountain_id', mountainId)
+        .gte('scraped_at', cutoffDate.toISOString())
+        .order('scraped_at', { ascending: false });
+
+      if (error) throw error;
+      return (data || []).map((row) => this.mapRowToStatus(row));
     } catch (error) {
       console.error(`[Storage] Failed to get history for ${mountainId}:`, error);
       return [];
@@ -302,34 +313,55 @@ class PostgresScraperStorage {
    */
   async getStats() {
     try {
-      const mountainsResult = await this.db.sql`
-        SELECT COUNT(DISTINCT mountain_id) as total_mountains
-        FROM mountain_status
-      `;
+      const supabase = this.getClient();
 
-      const historyResult = await this.db.sql`
-        SELECT COUNT(*) as total_history
-        FROM mountain_status
-      `;
+      // Get distinct mountain count
+      const { count: mountainCount, error: mountainsError } = await supabase
+        .from('mountain_status')
+        .select('mountain_id', { count: 'exact', head: true });
 
-      const recentRunsResult = await this.db.sql`
-        SELECT
-          COUNT(*) as total_runs,
-          AVG(successful_count) as avg_successful,
-          AVG(failed_count) as avg_failed,
-          AVG(duration_ms) as avg_duration_ms
-        FROM scraper_runs
-        WHERE started_at >= NOW() - INTERVAL '7 days'
-      `;
+      if (mountainsError) throw mountainsError;
+
+      // Get total history count
+      const { count: historyCount, error: historyError } = await supabase
+        .from('mountain_status')
+        .select('*', { count: 'exact', head: true });
+
+      if (historyError) throw historyError;
+
+      // Get recent runs stats
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - 7);
+
+      const { data: recentRuns, error: runsError } = await supabase
+        .from('scraper_runs')
+        .select('successful_count, failed_count, duration_ms')
+        .gte('started_at', cutoffDate.toISOString());
+
+      if (runsError) throw runsError;
+
+      const totalRuns = recentRuns?.length || 0;
+      const avgSuccessful =
+        totalRuns > 0
+          ? recentRuns.reduce((sum, r) => sum + (r.successful_count || 0), 0) / totalRuns
+          : 0;
+      const avgFailed =
+        totalRuns > 0
+          ? recentRuns.reduce((sum, r) => sum + (r.failed_count || 0), 0) / totalRuns
+          : 0;
+      const avgDurationMs =
+        totalRuns > 0
+          ? recentRuns.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / totalRuns
+          : 0;
 
       return {
-        totalMountains: parseInt(mountainsResult.rows[0]?.total_mountains || '0'),
-        totalHistoryEntries: parseInt(historyResult.rows[0]?.total_history || '0'),
+        totalMountains: mountainCount || 0,
+        totalHistoryEntries: historyCount || 0,
         recentRuns: {
-          totalRuns: parseInt(recentRunsResult.rows[0]?.total_runs || '0'),
-          avgSuccessful: parseFloat(recentRunsResult.rows[0]?.avg_successful || '0'),
-          avgFailed: parseFloat(recentRunsResult.rows[0]?.avg_failed || '0'),
-          avgDurationMs: parseFloat(recentRunsResult.rows[0]?.avg_duration_ms || '0'),
+          totalRuns,
+          avgSuccessful,
+          avgFailed,
+          avgDurationMs,
         },
       };
     } catch (error) {
@@ -352,10 +384,18 @@ class PostgresScraperStorage {
    */
   async cleanup(): Promise<number> {
     try {
-      const result = await this.db.sql`
-        SELECT cleanup_old_mountain_status() as deleted_count
-      `;
-      const deletedCount = result.rows[0]?.deleted_count || 0;
+      const supabase = this.getClient();
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - 90);
+
+      const { data, error } = await supabase
+        .from('mountain_status')
+        .delete()
+        .lt('scraped_at', cutoffDate.toISOString())
+        .select('id');
+
+      if (error) throw error;
+      const deletedCount = data?.length || 0;
       console.log(`[Storage] Cleaned up ${deletedCount} old records`);
       return deletedCount;
     } catch (error) {
