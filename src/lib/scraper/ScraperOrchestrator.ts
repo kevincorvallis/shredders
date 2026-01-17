@@ -1,6 +1,6 @@
 import { HTMLScraper } from './HTMLScraper';
 import { APIScraper } from './APIScraper';
-import { PuppeteerScraper } from './PuppeteerScraper';
+// PuppeteerScraper is dynamically imported to avoid loading chromium on every request
 import { getEnabledConfigs, getScraperConfig, getConfigsByBatch } from './configs';
 import type { BaseScraper } from './BaseScraper';
 import type { ScraperResult, ScraperConfig } from './types';
@@ -34,6 +34,7 @@ export class ScraperOrchestrator {
 
   /**
    * Create appropriate scraper based on config type
+   * Note: PuppeteerScraper is dynamically imported to avoid loading chromium when not needed
    */
   private createScraper(config: ScraperConfig): BaseScraper | null {
     switch (config.type) {
@@ -42,11 +43,11 @@ export class ScraperOrchestrator {
       case 'api':
         return new APIScraper(config);
       case 'dynamic':
-        // Use Puppeteer for dynamic/JavaScript-heavy sites
-        console.log(
-          `[ScraperOrchestrator] Using Puppeteer scraper for ${config.id}`
+        // Puppeteer scrapers are created asynchronously via createScraperAsync
+        console.warn(
+          `[ScraperOrchestrator] Dynamic scraper ${config.id} requires async creation - skipping sync init`
         );
-        return new PuppeteerScraper(config);
+        return null;
       default:
         console.error(`[ScraperOrchestrator] Unknown scraper type for ${config.id}`);
         return null;
@@ -54,10 +55,34 @@ export class ScraperOrchestrator {
   }
 
   /**
+   * Create scraper asynchronously (for dynamic/Puppeteer scrapers)
+   * This avoids loading chromium on every request
+   */
+  private async createScraperAsync(config: ScraperConfig): Promise<BaseScraper | null> {
+    if (config.type === 'dynamic') {
+      console.log(`[ScraperOrchestrator] Dynamically loading Puppeteer scraper for ${config.id}`);
+      const { PuppeteerScraper } = await import('./PuppeteerScraper');
+      return new PuppeteerScraper(config);
+    }
+    return this.createScraper(config);
+  }
+
+  /**
    * Scrape a single mountain
    */
   async scrapeMountain(mountainId: string): Promise<ScraperResult> {
-    const scraper = this.scrapers.get(mountainId);
+    let scraper = this.scrapers.get(mountainId);
+
+    // If scraper doesn't exist, check if it's a dynamic type that needs async creation
+    if (!scraper) {
+      const config = getScraperConfig(mountainId);
+      if (config && config.type === 'dynamic') {
+        scraper = await this.createScraperAsync(config);
+        if (scraper) {
+          this.scrapers.set(mountainId, scraper);
+        }
+      }
+    }
 
     if (!scraper) {
       return {
