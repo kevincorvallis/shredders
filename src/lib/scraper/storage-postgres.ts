@@ -123,12 +123,46 @@ class PostgresScraperStorage {
 
   /**
    * Save scraped mountain data
-   * Uses insert instead of upsert to avoid needing unique constraint
+   * Uses upsert with unique constraint for efficient updates
    */
   async save(data: ScrapedMountainStatus): Promise<void> {
     try {
       const supabase = this.getClient();
-      const { error } = await supabase.from('mountain_status').insert({
+      const { error } = await supabase.from('mountain_status').upsert(
+        {
+          mountain_id: data.mountainId,
+          is_open: data.isOpen,
+          percent_open: data.percentOpen || null,
+          lifts_open: data.liftsOpen,
+          lifts_total: data.liftsTotal,
+          runs_open: data.runsOpen,
+          runs_total: data.runsTotal,
+          message: data.message || null,
+          conditions_message: data.message || null,
+          source_url: data.source,
+          scraped_at: data.lastUpdated,
+        },
+        { onConflict: 'mountain_id,scraped_at' }
+      );
+
+      if (error) throw error;
+      console.log(`[Storage] Saved status for ${data.mountainId}`);
+    } catch (error) {
+      console.error(`[Storage] Failed to save ${data.mountainId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save multiple scraped data in a batch
+   * Uses batch upsert for efficient updates
+   */
+  async saveMany(dataArray: ScrapedMountainStatus[]): Promise<void> {
+    if (dataArray.length === 0) return;
+
+    try {
+      const supabase = this.getClient();
+      const records = dataArray.map((data) => ({
         mountain_id: data.mountainId,
         is_open: data.isOpen,
         percent_open: data.percentOpen || null,
@@ -140,48 +174,18 @@ class PostgresScraperStorage {
         conditions_message: data.message || null,
         source_url: data.source,
         scraped_at: data.lastUpdated,
-      });
+      }));
 
-      if (error) {
-        // Ignore duplicate key errors (23505) - data already exists
-        if (error.code === '23505') {
-          console.log(`[Storage] Duplicate entry for ${data.mountainId}, skipping`);
-          return;
-        }
-        throw error;
-      }
-      console.log(`[Storage] Saved status for ${data.mountainId}`);
+      const { error } = await supabase
+        .from('mountain_status')
+        .upsert(records, { onConflict: 'mountain_id,scraped_at' });
+
+      if (error) throw error;
+      console.log(`[Storage] Saved ${dataArray.length} mountain statuses`);
     } catch (error) {
-      console.error(`[Storage] Failed to save ${data.mountainId}:`, error);
+      console.error('[Storage] Failed to save batch:', error);
       throw error;
     }
-  }
-
-  /**
-   * Save multiple scraped data in a batch
-   * Uses individual inserts to handle duplicates gracefully
-   */
-  async saveMany(dataArray: ScrapedMountainStatus[]): Promise<void> {
-    if (dataArray.length === 0) return;
-
-    let savedCount = 0;
-    let skippedCount = 0;
-
-    // Use Promise.allSettled to insert all records, handling duplicates gracefully
-    const results = await Promise.allSettled(
-      dataArray.map((data) => this.save(data))
-    );
-
-    for (const result of results) {
-      if (result.status === 'fulfilled') {
-        savedCount++;
-      } else {
-        skippedCount++;
-        console.error('[Storage] Failed to save:', result.reason);
-      }
-    }
-
-    console.log(`[Storage] Saved ${savedCount}/${dataArray.length} mountain statuses (${skippedCount} failed)`);
   }
 
   /**
@@ -242,42 +246,18 @@ class PostgresScraperStorage {
 
   /**
    * Get all latest statuses
-   * Uses a subquery approach instead of relying on view
+   * Uses the optimized latest_mountain_status view
    */
   async getAll(): Promise<ScrapedMountainStatus[]> {
     try {
       const supabase = this.getClient();
-
-      // First try the view if it exists
-      const { data: viewData, error: viewError } = await supabase
+      const { data, error } = await supabase
         .from('latest_mountain_status')
         .select('*')
         .order('mountain_id');
 
-      if (!viewError && viewData) {
-        return viewData.map((row) => this.mapRowToStatus(row));
-      }
-
-      // Fallback: Get all unique mountain_ids, then get latest for each
-      console.log('[Storage] View not available, using fallback query');
-
-      // Get all records ordered by scraped_at desc, then dedupe in code
-      const { data, error } = await supabase
-        .from('mountain_status')
-        .select('*')
-        .order('scraped_at', { ascending: false });
-
       if (error) throw error;
-
-      // Dedupe by mountain_id (keep first = most recent)
-      const seen = new Set<string>();
-      const latest = (data || []).filter((row) => {
-        if (seen.has(row.mountain_id)) return false;
-        seen.add(row.mountain_id);
-        return true;
-      });
-
-      return latest.map((row) => this.mapRowToStatus(row));
+      return (data || []).map((row) => this.mapRowToStatus(row));
     } catch (error) {
       console.error('[Storage] Failed to get all:', error);
       return [];
