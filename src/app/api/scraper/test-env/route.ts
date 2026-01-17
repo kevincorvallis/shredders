@@ -14,7 +14,10 @@ export async function GET() {
     envKeys,
     hasPostgresUrl: !!process.env.POSTGRES_URL,
     hasDatabaseUrl: !!process.env.DATABASE_URL,
+    hasSupabaseServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasSupabaseAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     postgresUrlPrefix: process.env.POSTGRES_URL?.substring(0, 40) || null,
-    databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 40) || null,
+    supabaseUrlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 40) || null,
   });
 }
