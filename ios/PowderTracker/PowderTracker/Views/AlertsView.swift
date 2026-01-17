@@ -27,7 +27,7 @@ struct AlertsView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Weather Alerts")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {

@@ -180,6 +180,7 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingSettings) {
                 ProfileSettingsView()
             }

@@ -14,64 +14,40 @@ struct TodayTabView: View {
     @State private var showAllFavorites = false
 
     var body: some View {
-        LazyVStack(spacing: .spacingL) {
+        LazyVStack(spacing: .spacingM) {
             if favoritesManager.favoriteIds.isEmpty {
                 emptyState
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
             } else {
-                // Section 1: Best Powder Today (Hero)
-                if let best = viewModel.getBestPowderToday() {
-                    bestPowderHeroSection(best: best)
-                        .opacity(isVisible ? 1 : 0)
-                        .offset(y: isVisible ? 0 : 20)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: isVisible)
-                }
-
-                // Section 2: Quick Comparison Grid
+                // Section 1: Quick Comparison Grid
                 yourFavoritesSection
+                    .opacity(isVisible ? 1 : 0)
+                    .offset(y: isVisible ? 0 : 20)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: isVisible)
+
+                // Section 2: 7-Day Snow Forecast Chart
+                forecastChartSection
                     .opacity(isVisible ? 1 : 0)
                     .offset(y: isVisible ? 0 : 20)
                     .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: isVisible)
 
-                // Section 3: 7-Day Snow Forecast Chart
-                forecastChartSection
-                    .opacity(isVisible ? 1 : 0)
-                    .offset(y: isVisible ? 0 : 20)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: isVisible)
-
-                // Section 4: Mountain Details (Expandable)
+                // Section 3: Mountain Details (Expandable)
                 mountainDetailsSection
                     .opacity(isVisible ? 1 : 0)
                     .offset(y: isVisible ? 0 : 20)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.4), value: isVisible)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: isVisible)
             }
         }
-        .padding(.spacingL)
+        .padding(.horizontal, .spacingL)
+        .padding(.top, .spacingS)
+        .padding(.bottom, .spacingL)
         .onAppear {
             isVisible = true
         }
     }
 
-    private func bestPowderHeroSection(best: (mountain: Mountain, score: MountainPowderScore, data: MountainBatchedResponse)) -> some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            Text("Best Powder Today")
-                .sectionHeader()
-                .padding(.horizontal, .spacingXS)
-
-            BestPowderTodayCard(
-                mountain: best.mountain,
-                conditions: best.data.conditions,
-                powderScore: Int(best.score.score),
-                arrivalTime: viewModel.arrivalTimes[best.mountain.id],
-                parking: viewModel.parkingPredictions[best.mountain.id],
-                viewModel: viewModel
-            )
-            .accessibilityLabel("Best powder today: \(best.mountain.name) with a score of \(Int(best.score.score)) out of 10")
-        }
-    }
-
     private var yourFavoritesSection: some View {
-        VStack(alignment: .leading, spacing: .spacingM) {
+        VStack(alignment: .leading, spacing: .spacingS) {
             Text("Quick Comparison")
                 .sectionHeader()
                 .padding(.horizontal, .spacingXS)
@@ -94,7 +70,7 @@ struct TodayTabView: View {
     }
 
     private var forecastChartSection: some View {
-        VStack(alignment: .leading, spacing: .spacingM) {
+        VStack(alignment: .leading, spacing: .spacingS) {
             let favoritesWithForecast = favoritesManager.favoriteIds.compactMap { mountainId -> (Mountain, [ForecastDay])? in
                 guard let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
                       let data = viewModel.mountainData[mountainId] else {
@@ -112,7 +88,7 @@ struct TodayTabView: View {
     }
 
     private var mountainDetailsSection: some View {
-        VStack(alignment: .leading, spacing: .spacingM) {
+        VStack(alignment: .leading, spacing: .spacingS) {
             Text("All Favorites")
                 .sectionHeader()
                 .padding(.horizontal, .spacingXS)

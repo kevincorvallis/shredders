@@ -13,9 +13,7 @@ struct LocationView: View {
     }
 
     var body: some View {
-        let _ = print("📱 LocationView: isLoading=\(viewModel.isLoading), error=\(viewModel.error ?? "nil"), locationData=\(viewModel.locationData != nil ? "NOT nil" : "nil")")
-
-        return ScrollView {
+        ScrollView {
             VStack(spacing: 16) {
                 if viewModel.isLoading {
                     ProgressView("Loading conditions...")
@@ -118,7 +116,7 @@ struct LocationView: View {
         }
         .background(Color(.systemGroupedBackground))
         .navigationTitle(mountain.name)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             await viewModel.fetchData()
         }

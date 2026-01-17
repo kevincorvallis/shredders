@@ -7,16 +7,23 @@ struct MountainsView: View {
     @State private var sortBy: SortOption = .distance
     @State private var filterPass: PassFilter = .all
     @State private var searchText = ""
+    @State private var isMapExpanded = false
+    @State private var isInitialLoad = true
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: .spacingL) {
-                    // Quick stats dashboard
-                    quickStatsDashboard
-                        .padding(.horizontal, .spacingL)
-
                     searchAndFiltersSection
+
+                    // Map section
+                    MapSectionView(
+                        mountains: filteredMountains,
+                        scores: mountainScores,
+                        isExpanded: $isMapExpanded,
+                        onMountainSelected: navigateToMountain
+                    )
+                    .padding(.horizontal, .spacingL)
 
                     // Best powder today card
                     bestPowderTodaySection
@@ -27,25 +34,27 @@ struct MountainsView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Mountains")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        withAnimation(.spring(response: 0.3)) {
+                            isMapExpanded.toggle()
+                        }
+                    } label: {
+                        Image(systemName: isMapExpanded ? "map.fill" : "map")
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
             .refreshable {
                 await viewModel.loadMountains()
             }
             .task {
                 await viewModel.loadMountains()
+                isInitialLoad = false
             }
         }
-    }
-
-    // MARK: - Quick Stats Dashboard
-
-    private var quickStatsDashboard: some View {
-        QuickStatsDashboard(
-            mountains: viewModel.mountains,
-            conditionsMap: viewModel.mountainConditions,
-            scoresMap: viewModel.mountainScores.mapValues { Int($0) },
-            alertsMap: [:] // Will be populated when alerts are loaded
-        )
     }
 
     // MARK: - Best Powder Today
@@ -103,14 +112,14 @@ struct MountainsView: View {
                 }
             }
         }
-        .padding(12)
+        .padding(.spacingM)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
     }
 
     private var filterChipsRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+            HStack(spacing: .spacingM) {
                 sortMenu
 
                 ForEach(PassFilter.allCases, id: \.self) { passFilter in
@@ -152,14 +161,22 @@ struct MountainsView: View {
 
     private var mountainsGridSection: some View {
         Group {
-            if filteredMountains.isEmpty {
+            if viewModel.isLoading && isInitialLoad {
+                // Show skeletons during initial load
+                LazyVStack(spacing: .spacingM) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        ListItemSkeleton(height: 200)
+                    }
+                }
+                .padding(.horizontal, .spacingL)
+            } else if filteredMountains.isEmpty {
                 let state = emptyStateMessage
-                EmptyStateView(
+                CardEmptyStateView(
                     icon: state.icon,
-                    message: state.message,
-                    description: state.description
+                    title: state.message,
+                    message: state.description
                 )
-                .padding(.top, 60)
+                .padding(.top, .spacingXXL * 2.5)
             } else {
                 mountainsGrid
             }
@@ -255,7 +272,9 @@ struct MountainsView: View {
         if !searchText.isEmpty {
             mountains = mountains.filter {
                 $0.name.localizedCaseInsensitiveContains(searchText) ||
-                $0.shortName.localizedCaseInsensitiveContains(searchText)
+                $0.shortName.localizedCaseInsensitiveContains(searchText) ||
+                $0.region.localizedCaseInsensitiveContains(searchText) ||
+                ($0.passType?.rawValue ?? "").localizedCaseInsensitiveContains(searchText)
             }
         }
 
@@ -283,12 +302,26 @@ struct MountainsView: View {
         return mountains
     }
 
+    private var mountainScores: [String: Double] {
+        return Dictionary(uniqueKeysWithValues:
+            filteredMountains.compactMap { mountain in
+                guard let score = viewModel.getScore(for: mountain) else { return nil }
+                return (mountain.id, score)
+            }
+        )
+    }
+
     private func toggleFavorite(_ mountainId: String) {
         if favoritesManager.isFavorite(mountainId) {
             favoritesManager.remove(mountainId)
         } else {
             _ = favoritesManager.add(mountainId)
         }
+    }
+
+    private func navigateToMountain(_ mountain: Mountain) {
+        // Navigation is handled automatically via NavigationStack
+        // This method exists for future enhancements (e.g., analytics, camera animation)
     }
 }
 
@@ -355,7 +388,7 @@ struct MountainGridCard: View {
                 Spacer()
 
                 // Stats row
-                HStack(spacing: 12) {
+                HStack(spacing: .spacingM) {
                     // Powder score
                     if let score = score {
                         HStack(spacing: 4) {
@@ -385,7 +418,7 @@ struct MountainGridCard: View {
                     }
                 }
             }
-            .padding(12)
+            .padding(.spacingM)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 200)
@@ -426,31 +459,6 @@ struct FilterChip: View {
     }
 }
 
-// MARK: - Empty State
-
-struct EmptyStateView: View {
-    let icon: String
-    let message: String
-    let description: String
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-
-            Text(message)
-                .font(.title3)
-                .fontWeight(.semibold)
-
-            Text(description)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-    }
-}
 
 // MARK: - Sort and Filter Options
 

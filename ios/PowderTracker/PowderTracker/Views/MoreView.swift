@@ -67,6 +67,7 @@ struct MoreView: View {
                 }
             }
             .navigationTitle("More")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

@@ -109,7 +109,7 @@ struct AtAGlanceCard: View {
                 }
             }
         }
-        .padding()
+        .padding(.spacingM)
     }
 
     // MARK: - Glance Section
@@ -184,7 +184,7 @@ struct AtAGlanceCard: View {
                 liftsExpandedDetails
             }
         }
-        .padding()
+        .padding(.spacingM)
         .background(Color(.secondarySystemBackground))
     }
 

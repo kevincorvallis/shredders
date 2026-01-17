@@ -69,7 +69,7 @@ struct UnifiedAuthView: View {
                 toggleModeSection
             }
             .navigationTitle(isSignupMode ? "Create Account" : "Sign In")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

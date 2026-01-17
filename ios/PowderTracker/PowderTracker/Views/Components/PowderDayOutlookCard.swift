@@ -27,7 +27,7 @@ struct PowderDayOutlookCard: View {
 
                 Spacer()
             }
-            .padding()
+            .padding(.spacingM)
             .background(Color(.tertiarySystemBackground))
 
             if let plan = plan {
@@ -38,14 +38,14 @@ struct PowderDayOutlookCard: View {
                             .frame(maxWidth: .infinity)
                     }
                 }
-                .padding()
+                .padding(.spacingM)
             } else {
                 // No data available
                 Text("Forecast unavailable")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
-                    .padding()
+                    .padding(.spacingM)
             }
         }
         .background(Color(.secondarySystemBackground))

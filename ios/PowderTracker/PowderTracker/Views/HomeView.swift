@@ -5,7 +5,7 @@ struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @StateObject private var favoritesManager = FavoritesManager.shared
     @StateObject private var scrollSync = TimelineScrollSync()
-    @State private var selectedTab: HomeTab = .today
+    @State private var selectedTab: HomeTab = .forecast
     @State private var showingManageFavorites = false
 
     var body: some View {
@@ -20,15 +20,18 @@ struct HomeView: View {
                     weatherAlerts: viewModel.getActiveAlerts()
                 )
 
-                // Tab Content
-                ScrollView {
-                    tabContent
-                        .padding(.vertical, .spacingS)
+                // Tab Content with floating Leave Now banner
+                FloatingLeaveNowContainer(
+                    leaveNowMountain: viewModel.getLeaveNowMountains().first
+                ) {
+                    ScrollView {
+                        tabContent
+                    }
+                    .background(Color(.systemGroupedBackground))
                 }
-                .background(Color(.systemGroupedBackground))
             }
             .navigationTitle("Home")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -58,19 +61,20 @@ struct HomeView: View {
             }
         }
         .pickerStyle(.segmented)
-        .padding(.spacingL)
+        .padding(.horizontal, .spacingL)
+        .padding(.vertical, .spacingS)
         .background(Color(.systemBackground))
     }
 
     @ViewBuilder
     private var tabContent: some View {
         switch selectedTab {
-        case .now:
-            NowTabView(viewModel: viewModel)
-        case .today:
-            TodayTabView(viewModel: viewModel)
-        case .thisWeek:
-            ThisWeekTabView(viewModel: viewModel)
+        case .forecast:
+            ForecastTabView(viewModel: viewModel)
+        case .conditions:
+            ConditionsTabView(viewModel: viewModel)
+        case .favorites:
+            FavoritesTabView(viewModel: viewModel)
         }
     }
 
@@ -88,17 +92,17 @@ struct HomeView: View {
 // MARK: - Home Tab Enum
 
 enum HomeTab: String, CaseIterable, Identifiable {
-    case now = "Now"
-    case today = "Today"
-    case thisWeek = "This Week"
+    case forecast = "Forecast"
+    case conditions = "Conditions"
+    case favorites = "Favorites"
 
     var id: String { rawValue }
 
     var icon: String {
         switch self {
-        case .now: return "bolt.fill"
-        case .today: return "sun.max.fill"
-        case .thisWeek: return "calendar"
+        case .forecast: return "calendar"
+        case .conditions: return "bolt.fill"
+        case .favorites: return "star.fill"
         }
     }
 }
@@ -130,7 +134,7 @@ class FavoritesViewModel: ObservableObject {
             let response = try await apiClient.fetchMountains()
             mountains = response.mountains
         } catch {
-            print("Failed to load mountains: \(error)")
+            // Mountains list failed to load
         }
 
         // Load data for each favorite
@@ -147,7 +151,6 @@ class FavoritesViewModel: ObservableObject {
                         let data = try await self.apiClient.fetchMountainData(for: mountainId)
                         return (mountainId, data)
                     } catch {
-                        print("Failed to load \(mountainId): \(error)")
                         return (mountainId, nil)
                     }
                 }

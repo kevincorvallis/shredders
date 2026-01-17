@@ -9,12 +9,12 @@ struct ComparisonGrid: View {
 
     // 2-column grid layout
     private let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
+        GridItem(.flexible(), spacing: .spacingM),
+        GridItem(.flexible(), spacing: .spacingM)
     ]
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 16) {
+        LazyVGrid(columns: columns, spacing: .spacingM) {
             ForEach(favorites, id: \.mountain.id) { favorite in
                 NavigationLink {
                     LocationView(mountain: favorite.mountain)

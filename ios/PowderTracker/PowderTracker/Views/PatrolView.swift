@@ -46,6 +46,7 @@ struct PatrolView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Patrol Dashboard")
+            .navigationBarTitleDisplayMode(.inline)
             .refreshable {
                 await loadData()
             }

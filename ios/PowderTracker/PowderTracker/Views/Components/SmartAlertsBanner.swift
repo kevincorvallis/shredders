@@ -36,7 +36,7 @@ struct SmartAlertsBanner: View {
                 }
                 .padding(.horizontal, .spacingL)
             }
-            .frame(height: 100)
+            .frame(height: 80)
             .transition(.move(edge: .top).combined(with: .opacity))
         }
     }

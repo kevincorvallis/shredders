@@ -5,16 +5,19 @@ import Charts
 /// Uses Swift Charts with multi-line visualization
 struct SnowForecastChart: View {
     let favorites: [(mountain: Mountain, forecast: [ForecastDay])]
+    var showHeader: Bool = false
 
     // Chart height
     private let chartHeight: CGFloat = 200
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header
-            Text("7-Day Snow Forecast")
-                .font(.headline)
-                .fontWeight(.semibold)
+            // Header (optional - parent views may provide their own)
+            if showHeader {
+                Text("7-Day Snow Forecast")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
 
             if favorites.isEmpty {
                 emptyState
@@ -27,13 +30,16 @@ struct SnowForecastChart: View {
     private var chart: some View {
         Chart {
             ForEach(favorites, id: \.mountain.id) { favorite in
-                // Get first 7 days of forecast
+                // Get first 7 days of forecast with valid dates
                 let sevenDayForecast = Array(favorite.forecast.prefix(7))
 
                 ForEach(Array(sevenDayForecast.enumerated()), id: \.offset) { index, day in
+                    // Convert date string to Date, fallback to index-based date
+                    let chartDate = parseDate(day.date) ?? Calendar.current.date(byAdding: .day, value: index, to: Date())!
+
                     // Line mark for trend
                     LineMark(
-                        x: .value("Day", day.date),
+                        x: .value("Day", chartDate),
                         y: .value("Snow", day.snowfall)
                     )
                     .foregroundStyle(by: .value("Mountain", favorite.mountain.shortName))
@@ -42,7 +48,7 @@ struct SnowForecastChart: View {
 
                     // Area fill below line
                     AreaMark(
-                        x: .value("Day", day.date),
+                        x: .value("Day", chartDate),
                         y: .value("Snow", day.snowfall)
                     )
                     .foregroundStyle(
@@ -75,7 +81,9 @@ struct SnowForecastChart: View {
         }
         .chartYAxis {
             AxisMarks(position: .leading) { value in
-                if let snowfall = value.as(Int.self) {
+                // Try Double first (in case data comes as Double), then Int
+                let snowfall: Int? = value.as(Int.self) ?? value.as(Double.self).map { Int($0) }
+                if let snowfall = snowfall {
                     AxisGridLine()
                     AxisTick()
                     AxisValueLabel {
@@ -101,6 +109,14 @@ struct SnowForecastChart: View {
                 }
             }
         }
+    }
+
+    /// Parse date string (YYYY-MM-DD format) to Date
+    private func parseDate(_ dateString: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone.current
+        return formatter.date(from: dateString)
     }
 
     private var emptyState: some View {

@@ -25,7 +25,6 @@ class HomeViewModel: ObservableObject {
             mountains = response.mountains
         } catch {
             self.error = error.localizedDescription
-            print("Failed to load mountains: \(error)")
         }
     }
 
@@ -41,7 +40,6 @@ class HomeViewModel: ObservableObject {
                         let data = try await self.apiClient.fetchMountainData(for: mountainId)
                         return (mountainId, data)
                     } catch {
-                        print("Failed to load data for \(mountainId): \(error)")
                         return (mountainId, nil)
                     }
                 }
@@ -81,6 +79,28 @@ class HomeViewModel: ObservableObject {
         mountainData[mountainId]?.conditions.liftStatus != nil
     }
 
+    /// Get all favorite mountains with their complete data
+    func getFavoritesWithData() -> [(mountain: Mountain, data: MountainBatchedResponse)] {
+        return favoritesManager.favoriteIds.compactMap { mountainId in
+            guard let mountain = mountains.first(where: { $0.id == mountainId }),
+                  let data = mountainData[mountainId] else {
+                return nil
+            }
+            return (mountain, data)
+        }
+    }
+
+    /// Get all favorite mountains with their forecast data
+    func getFavoritesWithForecast() -> [(mountain: Mountain, forecast: [ForecastDay])] {
+        return favoritesManager.favoriteIds.compactMap { mountainId in
+            guard let mountain = mountains.first(where: { $0.id == mountainId }),
+                  let data = mountainData[mountainId] else {
+                return nil
+            }
+            return (mountain, data.forecast)
+        }
+    }
+
     // MARK: - Enhanced Data Loading
 
     /// Load arrival times and parking predictions for favorites
@@ -95,7 +115,7 @@ class HomeViewModel: ObservableObject {
                             self.arrivalTimes[mountainId] = arrivalTime
                         }
                     } catch {
-                        print("Failed to load arrival time for \(mountainId): \(error)")
+                        // Arrival time is optional, silently fail
                     }
                 }
 
@@ -107,7 +127,7 @@ class HomeViewModel: ObservableObject {
                             self.parkingPredictions[mountainId] = parking
                         }
                     } catch {
-                        print("Failed to load parking prediction for \(mountainId): \(error)")
+                        // Parking prediction is optional, silently fail
                     }
                 }
             }

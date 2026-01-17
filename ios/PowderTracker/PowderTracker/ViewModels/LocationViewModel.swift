@@ -15,7 +15,6 @@ class LocationViewModel: ObservableObject {
     }
 
     func fetchData() async {
-        print("🔄 LocationViewModel: Starting to fetch data for \(mountain.id)")
         isLoading = true
         error = nil
 
@@ -27,14 +26,12 @@ class LocationViewModel: ObservableObject {
 
             // Check if task was cancelled
             guard !Task.isCancelled else {
-                print("⚠️ LocationViewModel: Task was cancelled")
                 isLoading = false
                 return
             }
 
             locationData = data
             isLoading = false
-            print("✅ LocationViewModel: Successfully fetched data, locationData is \(locationData != nil ? "NOT nil" : "nil")")
 
             // Fetch lift data and snow comparison (don't block on errors)
             await fetchLiftData()
@@ -42,7 +39,6 @@ class LocationViewModel: ObservableObject {
         } catch {
             // Ignore cancellation errors
             if (error as NSError).code == NSURLErrorCancelled {
-                print("⚠️ LocationViewModel: Request was cancelled, will retry...")
                 // Retry once after a delay
                 try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
                 if !Task.isCancelled {
@@ -53,7 +49,6 @@ class LocationViewModel: ObservableObject {
 
             self.error = error.localizedDescription
             isLoading = false
-            print("❌ LocationViewModel: Error fetching data: \(error.localizedDescription)")
         }
     }
 
@@ -65,8 +60,7 @@ class LocationViewModel: ObservableObject {
             let lifts = try JSONDecoder().decode(LiftGeoJSON.self, from: data)
             liftData = lifts
         } catch {
-            print("Failed to fetch lift data: \(error.localizedDescription)")
-            // Don't set error - lift data is optional
+            // Lift data is optional, silently fail
         }
     }
 
@@ -75,34 +69,10 @@ class LocationViewModel: ObservableObject {
 
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-
-            // Debug: Print raw JSON response
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("📦 Raw JSON response: \(jsonString)")
-            }
-
             let comparison = try JSONDecoder().decode(SnowComparisonResponse.self, from: data)
             snowComparison = comparison
-            print("✅ LocationViewModel: Fetched snow comparison - current: \(comparison.comparison.current?.snowDepth ?? 0)\", last year: \(comparison.comparison.lastYear?.snowDepth ?? 0)\"")
-        } catch let DecodingError.keyNotFound(key, context) {
-            print("❌ Missing key: \(key.stringValue)")
-            print("   Context: \(context.debugDescription)")
-            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
-        } catch let DecodingError.typeMismatch(type, context) {
-            print("❌ Type mismatch for type: \(type)")
-            print("   Context: \(context.debugDescription)")
-            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
-        } catch let DecodingError.valueNotFound(type, context) {
-            print("❌ Value not found for type: \(type)")
-            print("   Context: \(context.debugDescription)")
-            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
-        } catch let DecodingError.dataCorrupted(context) {
-            print("❌ Data corrupted")
-            print("   Context: \(context.debugDescription)")
-            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
         } catch {
-            print("❌ Unknown decoding error: \(error)")
-            print("   Localized: \(error.localizedDescription)")
+            // Snow comparison is optional, silently fail
         }
     }
 
