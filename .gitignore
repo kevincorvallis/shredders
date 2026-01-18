@@ -57,3 +57,6 @@ ios/PowderTracker/DerivedData/
 # Ski lift data
 data/ski-lifts/*.osm
 data/ski-lifts/*.osm.gz
+
+# Generated verification reports (large files)
+verification-reports/*.json
