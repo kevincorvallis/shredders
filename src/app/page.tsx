@@ -11,7 +11,7 @@ import { Intro } from '@/components/Intro';
 import { SnowfallTable } from '@/components/SnowfallTable';
 import { getAllMountains, getMountainsByRegion, type MountainConfig } from '@shredders/shared';
 import { getPowderScoreStyle } from '@/lib/design-tokens';
-import { prefetchMountainData } from '@/lib/hooks/useMountainData';
+import { prefetchMountainData } from '@/hooks/useMountainData';
 import {
   Mountain,
   Snowflake,
