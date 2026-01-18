@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
  * Comprehensive scraper monitoring endpoint
@@ -15,9 +15,9 @@ import { sql } from '@vercel/postgres';
  */
 export async function GET() {
   try {
+    const supabase = createAdminClient();
+
     // Get overall stats (last 7 days) - with error handling
-    let statsResult;
-    let stats: any = {};
     let avgSuccessful = 0;
     let avgFailed = 0;
     let successRate = 0;
@@ -25,87 +25,94 @@ export async function GET() {
     let avgDurationMs = 0;
 
     try {
-      statsResult = await sql`
-        SELECT
-          COUNT(*) as total_runs,
-          AVG(successful_count) as avg_successful,
-          AVG(failed_count) as avg_failed,
-          AVG(duration_ms) as avg_duration_ms
-        FROM scraper_runs
-        WHERE started_at >= NOW() - INTERVAL '7 days'
-          AND status = 'completed'
-      `;
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      stats = statsResult.rows[0] || {};
-      avgSuccessful = parseFloat(stats?.avg_successful || '0');
-      avgFailed = parseFloat(stats?.avg_failed || '0');
-      totalRuns = parseInt(stats?.total_runs || '0');
-      avgDurationMs = parseFloat(stats?.avg_duration_ms || '0');
-      successRate =
-        avgSuccessful + avgFailed > 0
+      const { data: statsData, error } = await supabase
+        .from('scraper_runs')
+        .select('successful_count, failed_count, duration_ms')
+        .eq('status', 'completed')
+        .gte('started_at', sevenDaysAgo.toISOString());
+
+      if (error) throw error;
+
+      const stats = statsData || [];
+      totalRuns = stats.length;
+      if (totalRuns > 0) {
+        avgSuccessful = stats.reduce((sum, r) => sum + (r.successful_count || 0), 0) / totalRuns;
+        avgFailed = stats.reduce((sum, r) => sum + (r.failed_count || 0), 0) / totalRuns;
+        avgDurationMs = stats.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / totalRuns;
+        successRate = avgSuccessful + avgFailed > 0
           ? (avgSuccessful / (avgSuccessful + avgFailed)) * 100
           : 0;
+      }
     } catch (error) {
       console.error('[Monitor] Error fetching stats:', error);
     }
 
     // Get last 5 runs - with error handling
-    let recentRunsResult;
+    let recentRuns: any[] = [];
     try {
-      recentRunsResult = await sql`
-        SELECT
-          run_id,
-          successful_count,
-          failed_count,
-          total_mountains,
-          duration_ms,
-          started_at,
-          completed_at,
-          status
-        FROM scraper_runs
-        ORDER BY started_at DESC
-        LIMIT 5
-      `;
+      const { data, error } = await supabase
+        .from('scraper_runs')
+        .select('run_id, successful_count, failed_count, total_mountains, duration_ms, started_at, completed_at, status')
+        .order('started_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      recentRuns = data || [];
     } catch (error) {
       console.error('[Monitor] Error fetching recent runs:', error);
-      recentRunsResult = { rows: [] };
     }
 
     // Get recent failures (last 24 hours) - with error handling
-    let recentFailuresResult;
+    let recentFailures: any[] = [];
     try {
-      recentFailuresResult = await sql`
-        SELECT
-          mountain_id,
-          error_message,
-          failed_at,
-          source_url
-        FROM scraper_failures
-        WHERE failed_at >= NOW() - INTERVAL '24 hours'
-        ORDER BY failed_at DESC
-        LIMIT 10
-      `;
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+      const { data, error } = await supabase
+        .from('scraper_failures')
+        .select('mountain_id, error_message, failed_at, source_url')
+        .gte('failed_at', oneDayAgo.toISOString())
+        .order('failed_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      recentFailures = data || [];
     } catch (error) {
       console.error('[Monitor] Error fetching recent failures (table may not exist yet):', error);
-      recentFailuresResult = { rows: [] };
     }
 
     // Get failure counts by mountain (last 7 days) - with error handling
-    let failuresByMountainResult;
+    let failuresByMountain: any[] = [];
     try {
-      failuresByMountainResult = await sql`
-        SELECT
-          mountain_id,
-          COUNT(*) as failure_count,
-          MAX(failed_at) as last_failure
-        FROM scraper_failures
-        WHERE failed_at >= NOW() - INTERVAL '7 days'
-        GROUP BY mountain_id
-        ORDER BY failure_count DESC
-      `;
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { data, error } = await supabase
+        .from('scraper_failures')
+        .select('mountain_id, failed_at')
+        .gte('failed_at', sevenDaysAgo.toISOString());
+
+      if (error) throw error;
+
+      // Group by mountain_id and count
+      const grouped: Record<string, { count: number; lastFailure: string }> = {};
+      for (const row of data || []) {
+        if (!grouped[row.mountain_id]) {
+          grouped[row.mountain_id] = { count: 0, lastFailure: row.failed_at };
+        }
+        grouped[row.mountain_id].count++;
+        if (row.failed_at > grouped[row.mountain_id].lastFailure) {
+          grouped[row.mountain_id].lastFailure = row.failed_at;
+        }
+      }
+      failuresByMountain = Object.entries(grouped)
+        .map(([id, info]) => ({ mountainId: id, failureCount: info.count, lastFailure: info.lastFailure }))
+        .sort((a, b) => b.failureCount - a.failureCount);
     } catch (error) {
       console.error('[Monitor] Error fetching failures by mountain (table may not exist yet):', error);
-      failuresByMountainResult = { rows: [] };
     }
 
     // Determine health status
@@ -124,7 +131,7 @@ export async function GET() {
           ? 'Performance degraded - monitoring'
           : 'Multiple failures detected',
       },
-      recentRuns: recentRunsResult.rows.map((row) => ({
+      recentRuns: recentRuns.map((row) => ({
         runId: row.run_id,
         successful: row.successful_count,
         failed: row.failed_count,
@@ -140,17 +147,13 @@ export async function GET() {
               ) / 100
             : 0,
       })),
-      recentFailures: recentFailuresResult.rows.map((row) => ({
+      recentFailures: recentFailures.map((row) => ({
         mountainId: row.mountain_id,
         error: row.error_message,
         sourceUrl: row.source_url,
         failedAt: row.failed_at,
       })),
-      failuresByMountain: failuresByMountainResult.rows.map((row) => ({
-        mountainId: row.mountain_id,
-        failureCount: parseInt(row.failure_count || '0'),
-        lastFailure: row.last_failure,
-      })),
+      failuresByMountain: failuresByMountain,
       stats: {
         last7Days: {
           totalRuns,

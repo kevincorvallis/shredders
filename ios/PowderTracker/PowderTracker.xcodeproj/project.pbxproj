@@ -3,18 +3,10 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2C0F2CC3FA7E48B0BE3FE380 /* MountainMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51772AAE818F4918B5D9F93B /* MountainMarker.swift */; };
-		1A63FED6399D4408AAF05C61 /* MapSectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4CB7BE75DFD4FF68B4B051C /* MapSectionView.swift */; };
-		65393837653765642D623437662D346236392D396530382D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33393262323132642D633136312D343237392D613030632D /* EmptyStateView.swift */; };
-		33383037633435332D636666332D343862322D613862612D /* CardEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62383862333261662D653736392D343161302D386538362D /* CardEmptyStateView.swift */; };
-		64323632336430642D633765632D343238382D626262632D /* SectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65313666643065342D366535312D343733302D386131312D /* SectionHeaderView.swift */; };
-		30333437396134382D353163662D343433362D383533612D /* ForecastTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64643632323666652D633938632D343134632D383661642D /* ForecastTabView.swift */; };
-		39356465376530652D626663662D346334302D393366382D /* ConditionsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66366364323163322D396534362D346666642D616531642D /* ConditionsTabView.swift */; };
-		31313063323933332D383566322D343061612D626131642D /* FavoritesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61383837373666332D383465382D343131342D623364652D /* FavoritesTabView.swift */; };
 		02D9CE2DF4A3EB4899971BF1 /* LiftsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07BF540F4EE15A6577D7E3B1 /* LiftsTab.swift */; };
 		030F5B74F5BF29320F6B352B /* SafetyTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BB4D6DD0E6679DB9E7D922B /* SafetyTab.swift */; };
 		062B45B4B9AC1078F41D1620 /* OpenSnowStyleSnowfallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C27CECD6A64ACBF25AA7373 /* OpenSnowStyleSnowfallView.swift */; };
@@ -38,9 +30,9 @@
 		161CA67EFABDEDEC412B83BB /* LiftTileOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DCEADC22BB7E6F31592048 /* LiftTileOverlay.swift */; };
 		1817542B922682CE8A54DD94 /* CheckIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D299B1D39333165A08C14F /* CheckIn.swift */; };
 		188055DD5CB1635C242814E3 /* ArrivalParkingRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA3D6B878BB6E7883BAF40D /* ArrivalParkingRow.swift */; };
+		1A63FED6399D4408AAF05C61 /* MapSectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4CB7BE75DFD4FF68B4B051C /* MapSectionView.swift */; };
 		1BB74A1DB2954231554BD554 /* Comment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8B3799318D3423388D899A /* Comment.swift */; };
 		1CF1C8C4055394EDE6B5C447 /* MountainConditionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DA187DF47BCE728766FC51E /* MountainConditionsCard.swift */; };
-		1CFA02C3772FB9C8D419918F /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F162EDAA02ACD2245C3CF18 /* LoginView.swift */; };
 		1D62606A05B88A57F2A10CE0 /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
 		1EE06960A5D65554E0ADE960 /* SocialTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E6F54FE24423C6E969168B /* SocialTab.swift */; };
 		1F21632AB47AD6048D008BFC /* HistoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */; };
@@ -52,9 +44,14 @@
 		2802CA27363D0FF5B674DA63 /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 44660F934632EF2FF6ACA89B /* ConfettiSwiftUI */; };
 		280C04C56EF9B646BFCFFCBE /* ThisWeekTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E82418275E97C08608C8CD4 /* ThisWeekTabView.swift */; };
 		2AC892B8509218854883454D /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFC382E938407BE5D634B24 /* NukeUI */; };
+		2C0F2CC3FA7E48B0BE3FE380 /* MountainMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51772AAE818F4918B5D9F93B /* MountainMarker.swift */; };
 		2D3E603A8AE77090B45FA99A /* PowderTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE287ADBB463D75154EBFA7 /* PowderTrackerApp.swift */; };
 		2F21742B0CA9620510CD2AE9 /* PowderTrackerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B614E89436D820C4FB326E8D /* PowderTrackerWidget.swift */; };
+		30333437396134382D353163662D343433362D383533612D /* ForecastTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64643632323666652D633938632D343134632D383661642D /* ForecastTabView.swift */; };
+		31313063323933332D383566322D343061612D626131642D /* FavoritesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61383837373666332D383465382D343131342D623364652D /* FavoritesTabView.swift */; };
 		315D0FED5B4F36BC187885DC /* FavoriteMountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8459281B4BA766CC855CA0D9 /* FavoriteMountain.swift */; };
+		32EF6978DB804D81382C89B4 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F544331DAD9B02386007DDA0 /* KeychainHelper.swift */; };
+		33383037633435332D636666332D343862322D613862612D /* CardEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62383862333261662D653736392D343161302D386538362D /* CardEmptyStateView.swift */; };
 		33BA99DCA163558C6EDE70F3 /* Conditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E66CAE21D58028E82BB124F /* Conditions.swift */; };
 		33BFD10C6D8F1DC6BB10EEF6 /* Comment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8B3799318D3423388D899A /* Comment.swift */; };
 		360C1C2A45E2A09E634BEC03 /* LiveStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3339D19C87268F60088FB5A2 /* LiveStatusCard.swift */; };
@@ -62,12 +59,16 @@
 		37EF014A6B4954D34E76A7E6 /* SnowDepthChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09D79F661133B42636813CB /* SnowDepthChart.swift */; };
 		38C023FA3888956EAB9C3C4C /* Mountain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A37340F3AB0D4B44C537773 /* Mountain.swift */; };
 		38D68720F36F048C712C5A58 /* LocationMapSectionTiled.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB016DB2D5D0CBFFC91314E /* LocationMapSectionTiled.swift */; };
+		39356465376530652D626663662D346334302D393366382D /* ConditionsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66366364323163322D396534362D346666642D616531642D /* ConditionsTabView.swift */; };
 		398504C5276890D56564A5E1 /* WeatherConditionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BD80757BC2871988A555974 /* WeatherConditionsSection.swift */; };
 		3BBD856C05F4F2FA7299702A /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = D76C8ED270D73411373DC992 /* TelemetryDeck */; };
 		3D9D59B7EB7BE4F6EA59146A /* CheckInFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF1EAEA7F838517C4BA69F27 /* CheckInFormView.swift */; };
 		3E553D186BC1783912E87281 /* HistoryTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = E732B5665BB17B4C9E4650A3 /* HistoryTab.swift */; };
 		3F7A502E3D39AE0DC2EE2C0B /* AlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122BD5A6414F54F4ABE9B75B /* AlertSettingsView.swift */; };
 		4090DFC8B600241321BED402 /* SnowComparison.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEB120E85B3EEC506AF1399 /* SnowComparison.swift */; };
+		4090DFC8B600241321BED403 /* SafetyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEB120E85B3EEC506AF139A /* SafetyModels.swift */; };
+		4090DFC8B600241321BED404 /* SnowComparisonCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEB120E85B3EEC506AF139B /* SnowComparisonCard.swift */; };
+		4090DFC8B600241321BED405 /* SafetySummaryBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEB120E85B3EEC506AF139C /* SafetySummaryBanner.swift */; };
 		43AAAA650FA68D7848A1D0CE /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887CD4C6E9EFA848C710D78D /* User.swift */; };
 		43C1BA8991863F144BA3FE31 /* ComparisonGridCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8100D1334F90976CEFA7414E /* ComparisonGridCard.swift */; };
 		44140B393808A2236DA3E5A2 /* LeaveNowCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2790FFDEC1A0E2CFB8EEEB4 /* LeaveNowCard.swift */; };
@@ -80,7 +81,6 @@
 		4E1641794FD3249B322D4287 /* WeatherSummarySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE80755401A861C5905500E /* WeatherSummarySection.swift */; };
 		505CD80D63BD3E51F005F216 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 262A21D5236C2FA91D4D15BE /* ChatViewModel.swift */; };
 		5391D70C174426EEFDA790D6 /* DashboardSkeleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06FC102854B0EBE7C4A3E06B /* DashboardSkeleton.swift */; };
-		548913E420CBCE80CACE5363 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910D57F36FBD1E519587AB3A /* SignupView.swift */; };
 		54DB6F12EB8759941BCBEE81 /* Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC79F51F14255414960B7126 /* Photo.swift */; };
 		56170A67E9AA0DD87A3CC942 /* LocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA69E512B10197DD3844E27B /* LocationView.swift */; };
 		5692ABAD4292923C75BCADD5 /* MetricView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FFDE59B372CA0DC5F00DF1C /* MetricView.swift */; };
@@ -91,12 +91,15 @@
 		5A18DD1C82877CFE114B2852 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22899CFF2589BF56026F6C79 /* APIClient.swift */; };
 		5B1424277E5B707597968402 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47098E4516447E841833E217 /* AppConfig.swift */; };
 		5BF2F271091A84E7A71D1139 /* SunData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5499777B004477F2D1D9C54 /* SunData.swift */; };
+		5DE28671946E0D90484C1A73 /* ChangePasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D696F2253327A58DF7C43832 /* ChangePasswordView.swift */; };
 		5F0C5A8D516C6C7DF41E4499 /* TiledMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA0371BA7ADFF1EDDFECAB7 /* TiledMapView.swift */; };
 		5FD9AB9B92C5E1B6FB6545AA /* ForecastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5DBA53149931BA130994B0 /* ForecastView.swift */; };
 		601ADFBD714E2AD5D3226387 /* RoadConditionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5663FB1EDB0EE5EB3E821B5 /* RoadConditionsSection.swift */; };
 		6047A3FAFB718823959042FA /* LiftData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCCAE9BA654D3D06756BB11 /* LiftData.swift */; };
 		622F1F80FE8805FD2FEB42CA /* PatrolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF69C67679CEF2F265DC270 /* PatrolView.swift */; };
 		63950BD16F5D082D52BB7AC0 /* TravelTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CD031FDFC5D9AACA373D0D /* TravelTab.swift */; };
+		64323632336430642D633765632D343238382D626262632D /* SectionHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65313666643065342D366535312D343733302D386131312D /* SectionHeaderView.swift */; };
+		65393837653765642D623437662D346236392D396530382D /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33393262323132642D633136312D343237392D613030632D /* EmptyStateView.swift */; };
 		65BFA2B73C0440625D91BC67 /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87288DA9E099263C2EB77783 /* MediumWidgetView.swift */; };
 		65CB71E5CA2617F4EA492635 /* PhotoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC2520A016FF13192D4D5EB /* PhotoService.swift */; };
 		681B526EB35A80E66402604D /* NowTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18BCFFF27743BFACB908F15 /* NowTabView.swift */; };
@@ -163,6 +166,7 @@
 		C0E46DF4B61E8F1E4C17BB34 /* MountainCardRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF76A7A8DB2A6201EB10F332 /* MountainCardRow.swift */; };
 		C2A29A0D96FF04C26A3774AF /* NavigateButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A869ACDDD5341BB208CB7B /* NavigateButton.swift */; };
 		C2DA509E5B294D8B8A8DB87F /* TabbedLocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F19FE1F59F9796F4717E6A9 /* TabbedLocationView.swift */; };
+		C3250229A673FE97BB64EC94 /* BiometricAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFA0983271CF0644AA24FB60 /* BiometricAuthService.swift */; };
 		C44D5CCFFADE094858452487 /* MountainMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1553DC46450DCEDE1C88CCB /* MountainMapView.swift */; };
 		C4E1435B1D56AE17AA59B222 /* SmartAlertsBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41F12DEC4621D5BFF6BE700 /* SmartAlertsBanner.swift */; };
 		C74DA7539E5D7B9C4C45B8B3 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C89D64282F6DE19B90A062 /* Date+Extensions.swift */; };
@@ -192,6 +196,7 @@
 		EAFDA5E50174A59AC1DB7048 /* SignInWithAppleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FA362EABC0FF07EAE55B9 /* SignInWithAppleButton.swift */; };
 		EB838DAE32EE17C88FCE15F1 /* PushNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65B85D6E19BD297B9CBFFDE /* PushNotificationManager.swift */; };
 		ECD77A0B9D5E10086C8546F0 /* ForecastDayRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */; };
+		ED067DCC20BE42D6E92AC81D /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9824E6338E1E30A861BC857F /* ForgotPasswordView.swift */; };
 		EEDA01515005586916AC03B6 /* ForecastTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A6F0D0C75446124BD3A439 /* ForecastTab.swift */; };
 		EF0F49076C32CD74AB5815F8 /* PowderDayOutlookCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A099B314D7A659E723A9F83C /* PowderDayOutlookCard.swift */; };
 		F05341407C4FFC94662C01C6 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 31BEB1F846D7528B30CE3D8A /* Nuke */; };
@@ -234,14 +239,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		51772AAE818F4918B5D9F93B /* MountainMarker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainMarker.swift; sourceTree = "<group>"; };
-		F4CB7BE75DFD4FF68B4B051C /* MapSectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapSectionView.swift; sourceTree = "<group>"; };
-		33393262323132642D633136312D343237392D613030632D /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
-		62383862333261662D653736392D343161302D386538362D /* CardEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEmptyStateView.swift; sourceTree = "<group>"; };
-		65313666643065342D366535312D343733302D386131312D /* SectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeaderView.swift; sourceTree = "<group>"; };
-		64643632323666652D633938632D343134632D383661642D /* ForecastTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastTabView.swift; sourceTree = "<group>"; };
-		66366364323163322D396534362D346666642D616531642D /* ConditionsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionsTabView.swift; sourceTree = "<group>"; };
-		61383837373666332D383465382D343131342D623364652D /* FavoritesTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesTabView.swift; sourceTree = "<group>"; };
 		013EF204A2C423B3A82322CD /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
 		01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryData.swift; sourceTree = "<group>"; };
 		01FC72C486A24966EC54ABAE /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
@@ -268,16 +265,17 @@
 		22899CFF2589BF56026F6C79 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		262A21D5236C2FA91D4D15BE /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		28656095089954A5933744CC /* LiftLinePredictor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftLinePredictor.swift; sourceTree = "<group>"; };
-		2C3344474FC96D3D980D15E9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		2C3344474FC96D3D980D15E9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2DA3D6B878BB6E7883BAF40D /* ArrivalParkingRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrivalParkingRow.swift; sourceTree = "<group>"; };
 		2EA2D549693178C75402481A /* TodayTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayTabView.swift; sourceTree = "<group>"; };
 		2EF3E2D8E24956BF69F0A62E /* PowderTrackerWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerWidgetBundle.swift; sourceTree = "<group>"; };
+		33393262323132642D633136312D343237392D613030632D /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		3339D19C87268F60088FB5A2 /* LiveStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveStatusCard.swift; sourceTree = "<group>"; };
 		36D299B1D39333165A08C14F /* CheckIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckIn.swift; sourceTree = "<group>"; };
 		389943A61C30684C01F477B7 /* MountainTemperatureProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainTemperatureProfile.swift; sourceTree = "<group>"; };
 		3AE287ADBB463D75154EBFA7 /* PowderTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderTrackerApp.swift; sourceTree = "<group>"; };
 		3BB4D6DD0E6679DB9E7D922B /* SafetyTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyTab.swift; sourceTree = "<group>"; };
-		3D0B5B03BA2A647054B565D7 /* PowderTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PowderTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D0B5B03BA2A647054B565D7 /* PowderTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PowderTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3E9FD81F0B4A96BC26DBF2E9 /* TemperatureElevationMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureElevationMapView.swift; sourceTree = "<group>"; };
 		3EA0371BA7ADFF1EDDFECAB7 /* TiledMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledMapView.swift; sourceTree = "<group>"; };
 		3FFDE59B372CA0DC5F00DF1C /* MetricView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricView.swift; sourceTree = "<group>"; };
@@ -294,13 +292,22 @@
 		4F19FE1F59F9796F4717E6A9 /* TabbedLocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabbedLocationView.swift; sourceTree = "<group>"; };
 		4F42690B312118CCC3712822 /* Forecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Forecast.swift; sourceTree = "<group>"; };
 		50A334E4A4AAB2ADFBF1DBB4 /* ParkingPrediction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkingPrediction.swift; sourceTree = "<group>"; };
+		51772AAE818F4918B5D9F93B /* MountainMarker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainMarker.swift; sourceTree = "<group>"; };
 		529AE072A26E7446B309D8A9 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		5D191EFA0C190B3434D1A449 /* PowderScoreGauge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderScoreGauge.swift; sourceTree = "<group>"; };
 		5DEB120E85B3EEC506AF1399 /* SnowComparison.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowComparison.swift; sourceTree = "<group>"; };
+		5DEB120E85B3EEC506AF139A /* SafetyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyModels.swift; sourceTree = "<group>"; };
+		5DEB120E85B3EEC506AF139B /* SnowComparisonCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowComparisonCard.swift; sourceTree = "<group>"; };
+		5DEB120E85B3EEC506AF139C /* SafetySummaryBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetySummaryBanner.swift; sourceTree = "<group>"; };
+		61383837373666332D383465382D343131342D623364652D /* FavoritesTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesTabView.swift; sourceTree = "<group>"; };
 		6182FD94747D0564A2D1F4EF /* OverviewTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewTab.swift; sourceTree = "<group>"; };
 		621F222D5C8E9B5E1A24EAB5 /* RoadsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadsCard.swift; sourceTree = "<group>"; };
+		62383862333261662D653736392D343161302D386538362D /* CardEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEmptyStateView.swift; sourceTree = "<group>"; };
+		64643632323666652D633938632D343134632D383661642D /* ForecastTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastTabView.swift; sourceTree = "<group>"; };
+		65313666643065342D366535312D343733302D386131312D /* SectionHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeaderView.swift; sourceTree = "<group>"; };
 		655660B700EA5371AA209F0D /* MountainSelectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainSelectionViewModel.swift; sourceTree = "<group>"; };
 		65E0616F45B880757A20A4EB /* AlertSubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSubscriptionService.swift; sourceTree = "<group>"; };
+		66366364323163322D396534362D346666642D616531642D /* ConditionsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionsTabView.swift; sourceTree = "<group>"; };
 		6843B6F4EA6B85F3B4DC8597 /* MountainResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainResponses.swift; sourceTree = "<group>"; };
 		6BCCAE9BA654D3D06756BB11 /* LiftData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftData.swift; sourceTree = "<group>"; };
 		6CE80755401A861C5905500E /* WeatherSummarySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherSummarySection.swift; sourceTree = "<group>"; };
@@ -314,7 +321,6 @@
 		7EA736B63341B3D7FA70C139 /* AlertSubscription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSubscription.swift; sourceTree = "<group>"; };
 		7EB5ED3D95CC9C92F22AB4DF /* ProfileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsView.swift; sourceTree = "<group>"; };
 		7EC593399532721F9AF032F0 /* SnowForecastChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowForecastChart.swift; sourceTree = "<group>"; };
-		7F162EDAA02ACD2245C3CF18 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7FA10BBBE1E69D7C0AD20792 /* ConditionsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionsTab.swift; sourceTree = "<group>"; };
 		8100D1334F90976CEFA7414E /* ComparisonGridCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComparisonGridCard.swift; sourceTree = "<group>"; };
 		83407ACB1ED0EF93AE010A85 /* MountainStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainStatusView.swift; sourceTree = "<group>"; };
@@ -332,10 +338,10 @@
 		8D46F3CEF9A9AB5A0CFE4DEE /* LikeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LikeService.swift; sourceTree = "<group>"; };
 		8E0C1523DD9DA812E847045A /* ComparisonGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComparisonGrid.swift; sourceTree = "<group>"; };
 		8F3D4B993D0D8A0F114EAC38 /* ArrivalTimeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrivalTimeCard.swift; sourceTree = "<group>"; };
-		910D57F36FBD1E519587AB3A /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		91DF633F5B9C586A93281C8B /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		970845EE6816620883B97BBF /* CommentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentListView.swift; sourceTree = "<group>"; };
 		97805E2839D2052591B3B6B7 /* PushNotificationSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationSetupView.swift; sourceTree = "<group>"; };
+		9824E6338E1E30A861BC857F /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
 		98A6F0D0C75446124BD3A439 /* ForecastTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastTab.swift; sourceTree = "<group>"; };
 		9C99BBDF11000479A8EFC01F /* ForecastSkeleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastSkeleton.swift; sourceTree = "<group>"; };
 		9CF7C6E64D4144939E87720D /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -366,7 +372,7 @@
 		B82FA362EABC0FF07EAE55B9 /* SignInWithAppleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInWithAppleButton.swift; sourceTree = "<group>"; };
 		BA69E512B10197DD3844E27B /* LocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationView.swift; sourceTree = "<group>"; };
 		BAECBC5CD31B116B74BE837A /* PowderTrackerWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PowderTrackerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		BB7037C03FDAA35E92A477BD /* HomeView.swift.old */ = {isa = PBXFileReference; path = HomeView.swift.old; sourceTree = "<group>"; };
+		BB7037C03FDAA35E92A477BD /* HomeView.swift.old */ = {isa = PBXFileReference; lastKnownFileType = text; path = HomeView.swift.old; sourceTree = "<group>"; };
 		BBF69C67679CEF2F265DC270 /* PatrolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatrolView.swift; sourceTree = "<group>"; };
 		BD846885C6FECA0864DF9FBE /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorView.swift; sourceTree = "<group>"; };
 		BE94660DDA20DBD2211E2245 /* MountainPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainPickerView.swift; sourceTree = "<group>"; };
@@ -379,11 +385,13 @@
 		C5499777B004477F2D1D9C54 /* SunData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SunData.swift; sourceTree = "<group>"; };
 		CC2E94B6E9A8A6943688239E /* FavoritesManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesManagementView.swift; sourceTree = "<group>"; };
 		CF1EAEA7F838517C4BA69F27 /* CheckInFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInFormView.swift; sourceTree = "<group>"; };
+		CFA0983271CF0644AA24FB60 /* BiometricAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthService.swift; sourceTree = "<group>"; };
 		CFF0F98B22E5EC2A1BBC1318 /* ArrivalTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrivalTime.swift; sourceTree = "<group>"; };
 		D09D79F661133B42636813CB /* SnowDepthChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowDepthChart.swift; sourceTree = "<group>"; };
 		D0F50B6814086684149726D2 /* MountainsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainsView.swift; sourceTree = "<group>"; };
 		D52A162BCA69EBC0FAC5D685 /* PowderTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PowderTracker.entitlements; sourceTree = "<group>"; };
 		D67A89DE19CD0228C55904A1 /* NavigationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationCard.swift; sourceTree = "<group>"; };
+		D696F2253327A58DF7C43832 /* ChangePasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePasswordView.swift; sourceTree = "<group>"; };
 		D734D6FCB779808A1F9C76D7 /* MountainLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainLogoView.swift; sourceTree = "<group>"; };
 		D7C89D64282F6DE19B90A062 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		D8708FAF142B3D7735BF24C1 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
@@ -404,6 +412,8 @@
 		F31E02C0D6233A1882478E17 /* QuickStatsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickStatsRow.swift; sourceTree = "<group>"; };
 		F31E02C0D6233A1882478E18 /* HorizontalPowderOutlook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorizontalPowderOutlook.swift; sourceTree = "<group>"; };
 		F31E02C0D6233A1882478E19 /* FloatingLeaveNowBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingLeaveNowBanner.swift; sourceTree = "<group>"; };
+		F4CB7BE75DFD4FF68B4B051C /* MapSectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapSectionView.swift; sourceTree = "<group>"; };
+		F544331DAD9B02386007DDA0 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		FB690059FB550B67B1D97817 /* TripPlanning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlanning.swift; sourceTree = "<group>"; };
 		FCB016DB2D5D0CBFFC91314E /* LocationMapSectionTiled.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMapSectionTiled.swift; sourceTree = "<group>"; };
 		FF76A7A8DB2A6201EB10F332 /* MountainCardRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainCardRow.swift; sourceTree = "<group>"; };
@@ -500,12 +510,12 @@
 			isa = PBXGroup;
 			children = (
 				49E4418A36D2C2F24739A573 /* AccountSettingsView.swift */,
-				7F162EDAA02ACD2245C3CF18 /* LoginView.swift */,
 				7EB5ED3D95CC9C92F22AB4DF /* ProfileSettingsView.swift */,
 				91DF633F5B9C586A93281C8B /* ProfileView.swift */,
 				B82FA362EABC0FF07EAE55B9 /* SignInWithAppleButton.swift */,
-				910D57F36FBD1E519587AB3A /* SignupView.swift */,
 				8642083A77F5020B08F3F777 /* UnifiedAuthView.swift */,
+				D696F2253327A58DF7C43832 /* ChangePasswordView.swift */,
+				9824E6338E1E30A861BC857F /* ForgotPasswordView.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -593,6 +603,8 @@
 				2157D2D009AB7E7771B8E03B /* LocationManager.swift */,
 				DFC2520A016FF13192D4D5EB /* PhotoService.swift */,
 				A65B85D6E19BD297B9CBFFDE /* PushNotificationManager.swift */,
+				F544331DAD9B02386007DDA0 /* KeychainHelper.swift */,
+				CFA0983271CF0644AA24FB60 /* BiometricAuthService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -646,7 +658,9 @@
 				F31E02C0D6233A1882478E18 /* HorizontalPowderOutlook.swift */,
 				F31E02C0D6233A1882478E19 /* FloatingLeaveNowBanner.swift */,
 				621F222D5C8E9B5E1A24EAB5 /* RoadsCard.swift */,
+				5DEB120E85B3EEC506AF139C /* SafetySummaryBanner.swift */,
 				E41F12DEC4621D5BFF6BE700 /* SmartAlertsBanner.swift */,
+				5DEB120E85B3EEC506AF139B /* SnowComparisonCard.swift */,
 				D09D79F661133B42636813CB /* SnowDepthChart.swift */,
 				DC3F056B936355A99172B5F0 /* SnowfallTableView.swift */,
 				7EC593399532721F9AF032F0 /* SnowForecastChart.swift */,
@@ -698,13 +712,13 @@
 				50A334E4A4AAB2ADFBF1DBB4 /* ParkingPrediction.swift */,
 				AC79F51F14255414960B7126 /* Photo.swift */,
 				0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */,
+				5DEB120E85B3EEC506AF139A /* SafetyModels.swift */,
 				5DEB120E85B3EEC506AF1399 /* SnowComparison.swift */,
 				C5499777B004477F2D1D9C54 /* SunData.swift */,
 				FB690059FB550B67B1D97817 /* TripPlanning.swift */,
 				887CD4C6E9EFA848C710D78D /* User.swift */,
 				ADF5DB6D86B16DE941572D61 /* ViewDataModels.swift */,
 			);
-			name = Models;
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -823,8 +837,6 @@
 			dependencies = (
 			);
 			name = PowderTrackerWidgetExtension;
-			packageProductDependencies = (
-			);
 			productName = PowderTrackerWidgetExtension;
 			productReference = BAECBC5CD31B116B74BE837A /* PowderTrackerWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -838,9 +850,6 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
-					02607EFEC5D2DF4971EC1BC4 = {
-						DevelopmentTeam = "";
-					};
 					0C6BAF70D4851347CCECE096 = {
 						DevelopmentTeam = "";
 					};
@@ -863,7 +872,7 @@
 				1845C983B4F5E3BA47F199BB /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
 				EC21C0B96BA1B6692BABF0CA /* XCRemoteSwiftPackageReference "SwiftSDK" */,
 			);
-			preferredProjectObjectVersion = 77;
+			productRefGroup = 4A65A98FA6EF4688E03B10E3 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -967,7 +976,6 @@
 				38D68720F36F048C712C5A58 /* LocationMapSectionTiled.swift in Sources */,
 				56170A67E9AA0DD87A3CC942 /* LocationView.swift in Sources */,
 				B72B7E8D27563C249D79B873 /* LocationViewModel.swift in Sources */,
-				1CFA02C3772FB9C8D419918F /* LoginView.swift in Sources */,
 				5692ABAD4292923C75BCADD5 /* MetricView.swift in Sources */,
 				65393837653765642D623437662D346236392D396530382D /* EmptyStateView.swift in Sources */,
 				33383037633435332D636666332D343862322D613862612D /* CardEmptyStateView.swift in Sources */,
@@ -1019,10 +1027,12 @@
 				8BF7EAFC78F6B5523D2C9B68 /* RoadsCard.swift in Sources */,
 				030F5B74F5BF29320F6B352B /* SafetyTab.swift in Sources */,
 				EAFDA5E50174A59AC1DB7048 /* SignInWithAppleButton.swift in Sources */,
-				548913E420CBCE80CACE5363 /* SignupView.swift in Sources */,
 				DEE092CB13EC9F13724B0196 /* SkeletonView.swift in Sources */,
 				C4E1435B1D56AE17AA59B222 /* SmartAlertsBanner.swift in Sources */,
 				4090DFC8B600241321BED402 /* SnowComparison.swift in Sources */,
+				4090DFC8B600241321BED403 /* SafetyModels.swift in Sources */,
+				4090DFC8B600241321BED404 /* SnowComparisonCard.swift in Sources */,
+				4090DFC8B600241321BED405 /* SafetySummaryBanner.swift in Sources */,
 				37EF014A6B4954D34E76A7E6 /* SnowDepthChart.swift in Sources */,
 				74995F32B0710C369B1B28E9 /* SnowDepthSection.swift in Sources */,
 				7BD45D30F287656F2C3670A3 /* SnowForecastChart.swift in Sources */,
@@ -1053,6 +1063,10 @@
 				DA3CE4DC2A9688E81FE1CF01 /* WebcamsSection.swift in Sources */,
 				BD6F1903C9528679C2CBAE1F /* WebcamsTab.swift in Sources */,
 				B40821D03E1127C38548D58A /* WebcamsView.swift in Sources */,
+				32EF6978DB804D81382C89B4 /* KeychainHelper.swift in Sources */,
+				C3250229A673FE97BB64EC94 /* BiometricAuthService.swift in Sources */,
+				5DE28671946E0D90484C1A73 /* ChangePasswordView.swift in Sources */,
+				ED067DCC20BE42D6E92AC81D /* ForgotPasswordView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1123,6 +1137,7 @@
 				CODE_SIGN_ENTITLEMENTS = PowderTracker/PowderTracker.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4F8Q446767;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PowderTracker/Info.plist;
 				INFOPLIST_GENERATION_MODE = GeneratedFile;
@@ -1288,6 +1303,7 @@
 				CODE_SIGN_ENTITLEMENTS = PowderTracker/PowderTracker.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4F8Q446767;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PowderTracker/Info.plist;
 				INFOPLIST_GENERATION_MODE = GeneratedFile;

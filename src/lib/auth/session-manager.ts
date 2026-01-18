@@ -221,7 +221,7 @@ export async function getUserSessions(userId: string, currentJti?: string): Prom
     return [];
   }
 
-  return (data || []).map((row: any) => ({
+  return (data || []).map((row) => ({
     id: row.id,
     userId: row.user_id,
     refreshTokenJti: row.refresh_token_jti,
@@ -441,7 +441,7 @@ export async function detectSuspiciousSessions(
     return [];
   }
 
-  return data.map((row: any) => ({
+  return data.map((row: { session_id: string; ip_address: string; country: string; created_at: string; suspicious_reason: string }) => ({
     sessionId: row.session_id,
     ipAddress: row.ip_address,
     country: row.country,

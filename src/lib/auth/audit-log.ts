@@ -272,7 +272,17 @@ export async function logRateLimitExceeded(
 export async function getUserAuditLogs(
   userId: string,
   limit: number = 50
-): Promise<any[]> {
+): Promise<Array<{
+  id: string;
+  user_id: string | null;
+  event_type: AuditEventType;
+  success: boolean;
+  ip_address: string | null;
+  user_agent: string | null;
+  event_data: Record<string, unknown> | null;
+  error_message: string | null;
+  created_at: string;
+}>> {
   try {
     const supabase = await createClient();
 

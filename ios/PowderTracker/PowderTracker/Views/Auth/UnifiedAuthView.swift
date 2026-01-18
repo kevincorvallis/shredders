@@ -16,6 +16,7 @@ struct UnifiedAuthView: View {
     @State private var isSignupMode = false
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var showForgotPassword = false
 
     // Focus management
     @FocusState private var focusedField: Field?
@@ -159,18 +160,39 @@ struct UnifiedAuthView: View {
                 .onSubmit {
                     handleSubmit()
                 }
+
+            // Password requirements (only for signup)
+            if isSignupMode && !password.isEmpty {
+                passwordRequirementsView
+            }
         } header: {
             Text("Email & Password")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         } footer: {
-            if isSignupMode {
-                Text("Password must be at least 8 characters")
+            if isSignupMode && password.isEmpty {
+                Text("Password must contain: 12+ characters, uppercase, lowercase, number, and special character")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    private var passwordRequirementsView: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(zip(PasswordRequirement.all.indices, PasswordRequirement.all)), id: \.0) { index, requirement in
+                HStack(spacing: 8) {
+                    Image(systemName: passwordRequirementsMet[index] ? "checkmark.circle.fill" : "circle")
+                        .font(.caption)
+                        .foregroundStyle(passwordRequirementsMet[index] ? .green : .secondary)
+                    Text(requirement.description)
+                        .font(.caption)
+                        .foregroundStyle(passwordRequirementsMet[index] ? .primary : .secondary)
+                }
+            }
+        }
+        .padding(.vertical, 4)
     }
 
     private var actionSection: some View {
@@ -191,6 +213,25 @@ struct UnifiedAuthView: View {
                 }
             }
             .disabled(!isFormValid || isLoading)
+
+            // Forgot Password link (only in login mode)
+            if !isSignupMode {
+                Button {
+                    showForgotPassword = true
+                } label: {
+                    HStack {
+                        Spacer()
+                        Text("Forgot Password?")
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                        Spacer()
+                    }
+                }
+                .buttonStyle(.plain)
+                .sheet(isPresented: $showForgotPassword) {
+                    ForgotPasswordView()
+                }
+            }
         }
         .listRowBackground(isFormValid ? Color.blue : Color.gray.opacity(0.3))
         .foregroundColor(.white)
@@ -221,13 +262,37 @@ struct UnifiedAuthView: View {
         .listRowBackground(Color.clear)
     }
 
+    // MARK: - Password Validation
+
+    /// Password requirement: 12+ chars, uppercase, lowercase, number, special char
+    private struct PasswordRequirement: Sendable {
+        let description: String
+        let isMet: @Sendable (String) -> Bool
+
+		static let all: [PasswordRequirement] = [
+            PasswordRequirement(description: "At least 12 characters") { $0.count >= 12 },
+            PasswordRequirement(description: "One uppercase letter") { $0.contains(where: { $0.isUppercase }) },
+            PasswordRequirement(description: "One lowercase letter") { $0.contains(where: { $0.isLowercase }) },
+            PasswordRequirement(description: "One number") { $0.contains(where: { $0.isNumber }) },
+            PasswordRequirement(description: "One special character") { $0.contains(where: { "!@#$%^&*()_+-=[]{}|;':\",./<>?".contains($0) }) }
+        ]
+    }
+
+    private var passwordRequirementsMet: [Bool] {
+        PasswordRequirement.all.map { $0.isMet(password) }
+    }
+
+    private var isPasswordValid: Bool {
+        passwordRequirementsMet.allSatisfy { $0 }
+    }
+
     // MARK: - Validation
 
     private var isFormValid: Bool {
         !email.isEmpty &&
         email.contains("@") &&
         !password.isEmpty &&
-        (isSignupMode ? password.count >= 8 : true)
+        (isSignupMode ? isPasswordValid : true)
     }
 
     // MARK: - Actions
@@ -243,18 +308,32 @@ struct UnifiedAuthView: View {
                 if isSignupMode {
                     // Generate username from email (part before @)
                     let username = email.components(separatedBy: "@").first ?? "user"
-                    try await authService.signUp(
+                    // Use backend API for signup
+                    try await authService.signUpViaBackend(
                         email: email,
                         password: password,
                         username: username,
                         displayName: displayName.isEmpty ? nil : displayName
                     )
                 } else {
-                    try await authService.signIn(email: email, password: password)
+                    // Use backend API for login
+                    try await authService.signInViaBackend(email: email, password: password)
                 }
 
                 await MainActor.run {
                     dismiss()
+                }
+            } catch let authError as AuthError {
+                await MainActor.run {
+                    switch authError {
+                    case .emailNotVerified:
+                        errorMessage = "Please check your email and verify your account before signing in."
+                    case .invalidCredentials:
+                        errorMessage = "Invalid email or password. Please try again."
+                    default:
+                        errorMessage = authError.localizedDescription
+                    }
+                    isLoading = false
                 }
             } catch {
                 await MainActor.run {

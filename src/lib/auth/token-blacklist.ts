@@ -93,21 +93,80 @@ export async function isBlacklisted(jti: string): Promise<boolean> {
  *
  * @param userId - User ID
  * @param reason - Reason for revocation
+ * @returns Number of sessions revoked
  */
 export async function revokeAllUserTokens(
   userId: string,
   reason?: string
-): Promise<void> {
+): Promise<number> {
   try {
     const supabase = await createClient();
+    const revokeReason = reason || 'All tokens revoked';
+    const now = new Date().toISOString();
 
-    // This requires tracking active tokens in a sessions table
-    // For now, we'll just add a marker to indicate user needs re-auth
-    // TODO: Implement when session tracking is added in Sprint 2
+    // 1. Get all active sessions for this user
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('user_sessions')
+      .select('id, refresh_token_jti, expires_at')
+      .eq('user_id', userId)
+      .is('revoked_at', null)
+      .gt('expires_at', now);
 
-    console.log(`Revoke all tokens for user ${userId}: ${reason || 'No reason provided'}`);
+    if (sessionsError) {
+      console.error('Error fetching user sessions:', sessionsError);
+      throw new Error('Failed to fetch user sessions');
+    }
+
+    if (!sessions || sessions.length === 0) {
+      console.log(`No active sessions found for user ${userId}`);
+      return 0;
+    }
+
+    // 2. Blacklist all refresh tokens from active sessions
+    const blacklistPromises = sessions.map((session) =>
+      addToBlacklist({
+        jti: session.refresh_token_jti,
+        userId,
+        expiresAt: new Date(session.expires_at),
+        tokenType: 'refresh',
+        reason: revokeReason,
+      })
+    );
+
+    await Promise.all(blacklistPromises);
+
+    // 3. Mark all sessions as revoked
+    const { error: revokeError } = await supabase
+      .from('user_sessions')
+      .update({
+        revoked_at: now,
+        revoke_reason: revokeReason,
+      })
+      .eq('user_id', userId)
+      .is('revoked_at', null);
+
+    if (revokeError) {
+      console.error('Error revoking sessions:', revokeError);
+      throw new Error('Failed to revoke sessions');
+    }
+
+    // 4. Invalidate all token rotations for this user
+    const { error: rotationError } = await supabase
+      .from('token_rotations')
+      .delete()
+      .eq('user_id', userId)
+      .gt('expires_at', now);
+
+    if (rotationError) {
+      console.error('Error clearing token rotations:', rotationError);
+      // Don't throw - this is non-critical
+    }
+
+    console.log(`Revoked ${sessions.length} sessions for user ${userId}: ${revokeReason}`);
+    return sessions.length;
   } catch (error) {
     console.error('Error revoking all user tokens:', error);
+    return 0;
   }
 }
 

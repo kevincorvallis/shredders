@@ -7,6 +7,7 @@ class LocationViewModel: ObservableObject {
     @Published var locationData: MountainBatchedResponse?
     @Published var liftData: LiftGeoJSON?
     @Published var snowComparison: SnowComparisonResponse?
+    @Published var safetyData: SafetyData?
 
     let mountain: Mountain
 
@@ -33,9 +34,10 @@ class LocationViewModel: ObservableObject {
             locationData = data
             isLoading = false
 
-            // Fetch lift data and snow comparison (don't block on errors)
+            // Fetch lift data, snow comparison, and safety data (don't block on errors)
             await fetchLiftData()
             await fetchSnowComparison()
+            await fetchSafetyData()
         } catch {
             // Ignore cancellation errors
             if (error as NSError).code == NSURLErrorCancelled {
@@ -73,6 +75,15 @@ class LocationViewModel: ObservableObject {
             snowComparison = comparison
         } catch {
             // Snow comparison is optional, silently fail
+        }
+    }
+
+    func fetchSafetyData() async {
+        do {
+            let safety = try await APIClient.shared.fetchSafety(for: mountain.id)
+            safetyData = safety
+        } catch {
+            // Safety data is optional, silently fail
         }
     }
 

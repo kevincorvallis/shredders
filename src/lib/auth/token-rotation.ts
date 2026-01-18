@@ -126,7 +126,7 @@ export async function getTokenFamily(
     return [];
   }
 
-  return (data || []).map((row: any) => ({
+  return (data || []).map((row) => ({
     jti: row.jti,
     userId: row.user_id,
     tokenFamily: row.token_family,

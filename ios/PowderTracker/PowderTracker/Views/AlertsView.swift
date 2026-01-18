@@ -1,15 +1,89 @@
 import SwiftUI
 
 struct AlertsView: View {
+    // Optional mountainId for embedding in mountain detail views
+    // When provided, shows alerts for that mountain only without picker
+    let mountainId: String?
+    let mountainName: String?
+
     @State private var selectedMountainId: String = "baker"
     @State private var alerts: [WeatherAlert] = []
-    @State private var mountainName: String = ""
+    @State private var displayMountainName: String = ""
     @State private var isLoading = true
     @State private var error: String?
     @State private var showMountainPicker = false
     @State private var mountainsViewModel = MountainSelectionViewModel()
 
+    // Computed property to determine if we're in embedded mode (single mountain)
+    private var isEmbedded: Bool {
+        mountainId != nil
+    }
+
+    // Convenience initializer for standalone use (no mountainId filter)
+    init() {
+        self.mountainId = nil
+        self.mountainName = nil
+    }
+
+    // Initializer for embedded use within a mountain detail view
+    init(mountainId: String, mountainName: String) {
+        self.mountainId = mountainId
+        self.mountainName = mountainName
+    }
+
     var body: some View {
+        // When embedded, show content directly without NavigationStack
+        if isEmbedded {
+            embeddedContent
+        } else {
+            standaloneContent
+        }
+    }
+
+    // Content for embedded use (within mountain detail view)
+    private var embeddedContent: some View {
+        Group {
+            if isLoading {
+                ProgressView("Loading alerts...")
+                    .frame(maxWidth: .infinity, minHeight: 100)
+            } else if let error = error {
+                VStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.title2)
+                        .foregroundColor(.orange)
+                    Text("Unable to load alerts")
+                        .font(.subheadline)
+                    Button("Retry") {
+                        Task { await loadAlerts() }
+                    }
+                    .font(.caption)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+            } else if alerts.isEmpty {
+                embeddedEmptyState
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(alerts) { alert in
+                        AlertCard(alert: alert)
+                    }
+                }
+            }
+        }
+        .task {
+            // Initialize with provided mountainId
+            if let id = mountainId {
+                selectedMountainId = id
+            }
+            if let name = mountainName {
+                displayMountainName = name
+            }
+            await loadAlerts()
+        }
+    }
+
+    // Content for standalone use (as a full screen view)
+    private var standaloneContent: some View {
         NavigationStack {
             Group {
                 if isLoading {
@@ -34,7 +108,7 @@ struct AlertsView: View {
                         showMountainPicker = true
                     } label: {
                         HStack(spacing: 4) {
-                            Text(mountainName.isEmpty ? "Select Mountain" : mountainName)
+                            Text(displayMountainName.isEmpty ? "Select Mountain" : displayMountainName)
                                 .font(.subheadline)
                             Image(systemName: "chevron.down")
                                 .font(.caption)
@@ -54,12 +128,36 @@ struct AlertsView: View {
         }
     }
 
+    // Compact empty state for embedded mode
+    private var embeddedEmptyState: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.shield.fill")
+                .font(.title2)
+                .foregroundColor(.green)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("No Active Alerts")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+
+                Text("Conditions are safe")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+
     private var mountainPickerSheet: some View {
         NavigationStack {
             List(mountainsViewModel.mountains) { mountain in
                 Button {
                     selectedMountainId = mountain.id
-                    mountainName = mountain.shortName
+                    displayMountainName = mountain.shortName
                     showMountainPicker = false
                 } label: {
                     HStack {
@@ -103,7 +201,7 @@ struct AlertsView: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("There are no weather alerts for \(mountainName).")
+            Text("There are no weather alerts for \(displayMountainName).")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -143,7 +241,7 @@ struct AlertsView: View {
             let (data, _) = try await URLSession.shared.data(from: url)
             let response = try JSONDecoder().decode(WeatherAlertsResponse.self, from: data)
 
-            mountainName = response.mountain.name
+            displayMountainName = response.mountain.name
             alerts = response.alerts
         } catch {
             self.error = "Unable to load weather alerts. Please try again."

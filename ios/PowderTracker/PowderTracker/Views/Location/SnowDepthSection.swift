@@ -181,6 +181,7 @@ struct SnowDepthSection: View {
                         }
                     }
                     .frame(height: 200)
+                    .frame(minWidth: 100) // Prevent 0x0 CAMetalLayer error
                 }
                 .padding(.top, 8)
                 .transition(.opacity.combined(with: .move(edge: .top)))

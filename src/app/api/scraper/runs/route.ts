@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
  * Get scraper run history
@@ -7,36 +7,26 @@ import { sql } from '@vercel/postgres';
  */
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createAdminClient();
     const searchParams = request.nextUrl.searchParams;
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
 
     // Get recent runs - with error handling
-    let runsResult;
+    let runs: any[] = [];
     try {
-      runsResult = await sql`
-        SELECT
-          run_id,
-          total_mountains,
-          successful_count,
-          failed_count,
-          duration_ms,
-          status,
-          triggered_by,
-          started_at,
-          completed_at,
-          error_message
-        FROM scraper_runs
-        ORDER BY started_at DESC
-        LIMIT ${limit}
-      `;
+      const { data, error } = await supabase
+        .from('scraper_runs')
+        .select('run_id, total_mountains, successful_count, failed_count, duration_ms, status, triggered_by, started_at, completed_at, error_message')
+        .order('started_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      runs = data || [];
     } catch (error) {
       console.error('[Runs] Error fetching runs:', error);
-      runsResult = { rows: [] };
     }
 
     // Get overall stats - with error handling
-    let statsResult;
-    let stats: any = {};
     let totalRuns = 0;
     let avgSuccessful = 0;
     let avgFailed = 0;
@@ -46,35 +36,34 @@ export async function GET(request: NextRequest) {
     let avgDurationMs = 0;
 
     try {
-      statsResult = await sql`
-        SELECT
-          COUNT(*) as total_runs,
-          AVG(successful_count) as avg_successful,
-          AVG(failed_count) as avg_failed,
-          AVG(duration_ms) as avg_duration_ms,
-          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_runs,
-          SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_runs
-        FROM scraper_runs
-        WHERE started_at >= NOW() - INTERVAL '30 days'
-      `;
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      stats = statsResult.rows[0] || {};
-      totalRuns = parseInt(stats?.total_runs || '0');
-      avgSuccessful = parseFloat(stats?.avg_successful || '0');
-      avgFailed = parseFloat(stats?.avg_failed || '0');
-      completedRuns = parseInt(stats?.completed_runs || '0');
-      failedRuns = parseInt(stats?.failed_runs || '0');
-      avgDurationMs = parseFloat(stats?.avg_duration_ms || '0');
-      successRate =
-        avgSuccessful + avgFailed > 0
+      const { data: statsData, error } = await supabase
+        .from('scraper_runs')
+        .select('successful_count, failed_count, duration_ms, status')
+        .gte('started_at', thirtyDaysAgo.toISOString());
+
+      if (error) throw error;
+
+      const stats = statsData || [];
+      totalRuns = stats.length;
+      if (totalRuns > 0) {
+        avgSuccessful = stats.reduce((sum, r) => sum + (r.successful_count || 0), 0) / totalRuns;
+        avgFailed = stats.reduce((sum, r) => sum + (r.failed_count || 0), 0) / totalRuns;
+        avgDurationMs = stats.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / totalRuns;
+        completedRuns = stats.filter(r => r.status === 'completed').length;
+        failedRuns = stats.filter(r => r.status === 'failed').length;
+        successRate = avgSuccessful + avgFailed > 0
           ? (avgSuccessful / (avgSuccessful + avgFailed)) * 100
           : 0;
+      }
     } catch (error) {
       console.error('[Runs] Error fetching stats:', error);
     }
 
     return NextResponse.json({
-      runs: runsResult.rows.map((row) => ({
+      runs: runs.map((row) => ({
         runId: row.run_id,
         totalMountains: row.total_mountains,
         successful: row.successful_count,

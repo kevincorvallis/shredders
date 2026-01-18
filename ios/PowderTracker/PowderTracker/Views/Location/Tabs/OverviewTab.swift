@@ -12,11 +12,21 @@ struct OverviewTab: View {
                 PowderScoreCard(score: score)
             }
 
+            // Safety Summary Banner
+            if let safetyData = viewModel.safetyData {
+                SafetySummaryBanner(safetyData: safetyData)
+            }
+
             // Quick Arrival Time Banner
             QuickArrivalTimeBanner(mountain: mountain, selectedTab: $selectedTab)
 
             // At-a-Glance Metrics
             AtAGlanceCard(viewModel: viewModel)
+
+            // Snow Comparison Card (Year-over-Year)
+            if let snowComparison = viewModel.snowComparison {
+                SnowComparisonCard(comparison: snowComparison)
+            }
 
             // Quick Stats Grid
             QuickStatsGrid(viewModel: viewModel)

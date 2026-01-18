@@ -300,3 +300,299 @@ export function calculateRainRiskScore(
     description: `${freezingLevelFeet.toLocaleString()}' - Snow above ${freezingLevelFeet.toLocaleString()}'`,
   };
 }
+
+// ============================================================
+// Extended Forecast Support (10-16 days)
+// ============================================================
+
+const EXTENDED_FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
+
+export interface ExtendedDailyForecast {
+  date: string;
+  snowfallSum: number; // inches
+  precipitationSum: number; // inches
+  highTemp: number; // fahrenheit
+  lowTemp: number; // fahrenheit
+  windSpeedMax: number; // mph
+  windGustMax: number; // mph
+  windDirection: number; // degrees
+  precipProbability: number; // 0-100
+  weatherCode: number;
+  sunrise?: string;
+  sunset?: string;
+}
+
+export interface ExtendedOutlook {
+  days: ExtendedDailyForecast[];
+  patterns: WeatherPattern[];
+  generatedAt: string;
+}
+
+export interface WeatherPattern {
+  type: 'storm_cycle' | 'high_pressure' | 'cold_pattern' | 'warm_pattern' | 'transition' | 'neutral';
+  startDate: string;
+  endDate: string;
+  description: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+/**
+ * Get extended 16-day forecast from Open-Meteo
+ */
+export async function getExtendedForecast(
+  lat: number,
+  lng: number,
+  days: number = 16
+): Promise<ExtendedDailyForecast[]> {
+  const params = {
+    latitude: lat.toString(),
+    longitude: lng.toString(),
+    daily: [
+      'snowfall_sum',
+      'precipitation_sum',
+      'temperature_2m_max',
+      'temperature_2m_min',
+      'wind_speed_10m_max',
+      'wind_gusts_10m_max',
+      'wind_direction_10m_dominant',
+      'precipitation_probability_max',
+      'weather_code',
+      'sunrise',
+      'sunset',
+    ].join(','),
+    timezone: 'America/Los_Angeles',
+    forecast_days: Math.min(days, 16).toString(),
+  };
+
+  const url = new URL(EXTENDED_FORECAST_URL);
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Open-Meteo API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (!data.daily?.time) {
+    return [];
+  }
+
+  return data.daily.time.map((date: string, i: number) => ({
+    date,
+    snowfallSum: cmToInches(data.daily.snowfall_sum?.[i] || 0),
+    precipitationSum: mmToInches(data.daily.precipitation_sum?.[i] || 0),
+    highTemp: celsiusToFahrenheit(data.daily.temperature_2m_max?.[i] || 0),
+    lowTemp: celsiusToFahrenheit(data.daily.temperature_2m_min?.[i] || 0),
+    windSpeedMax: Math.round((data.daily.wind_speed_10m_max?.[i] || 0) * 0.621371), // km/h to mph
+    windGustMax: Math.round((data.daily.wind_gusts_10m_max?.[i] || 0) * 0.621371),
+    windDirection: data.daily.wind_direction_10m_dominant?.[i] || 0,
+    precipProbability: data.daily.precipitation_probability_max?.[i] || 0,
+    weatherCode: data.daily.weather_code?.[i] || 0,
+    sunrise: data.daily.sunrise?.[i],
+    sunset: data.daily.sunset?.[i],
+  }));
+}
+
+// ============================================================
+// Multi-Model Support (GFS, ECMWF, etc.)
+// ============================================================
+
+const ENSEMBLE_URL = 'https://ensemble-api.open-meteo.com/v1/ensemble';
+
+export type ModelSource = 'gfs' | 'ecmwf' | 'icon' | 'gem';
+
+export interface ModelForecast {
+  model: ModelSource;
+  date: string;
+  snowfallSum: number; // inches
+  precipitationSum: number; // inches
+  highTemp: number; // fahrenheit
+  lowTemp: number; // fahrenheit
+}
+
+export interface MultiModelData {
+  models: Record<ModelSource, ModelForecast[]>;
+  agreement: ModelAgreement[];
+  generatedAt: string;
+}
+
+export interface ModelAgreement {
+  date: string;
+  snowfallRange: { min: number; max: number; spread: number };
+  precipRange: { min: number; max: number; spread: number };
+  tempRange: { min: number; max: number; spread: number };
+  confidence: 'high' | 'medium' | 'low';
+  confidencePercent: number;
+}
+
+/**
+ * Fetch forecast from a specific model ensemble
+ */
+async function fetchModelForecast(
+  lat: number,
+  lng: number,
+  model: ModelSource,
+  days: number = 7
+): Promise<ModelForecast[]> {
+  // Map model names to Open-Meteo ensemble model names
+  const modelMap: Record<ModelSource, string> = {
+    gfs: 'gfs_seamless',
+    ecmwf: 'ecmwf_ifs04',
+    icon: 'icon_seamless',
+    gem: 'gem_global',
+  };
+
+  const params = {
+    latitude: lat.toString(),
+    longitude: lng.toString(),
+    daily: 'snowfall_sum,precipitation_sum,temperature_2m_max,temperature_2m_min',
+    timezone: 'America/Los_Angeles',
+    forecast_days: Math.min(days, 16).toString(),
+    models: modelMap[model],
+  };
+
+  const url = new URL(ENSEMBLE_URL);
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
+
+  try {
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      console.warn(`Model ${model} fetch failed: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+
+    if (!data.daily?.time) {
+      return [];
+    }
+
+    return data.daily.time.map((date: string, i: number) => ({
+      model,
+      date,
+      snowfallSum: cmToInches(data.daily.snowfall_sum?.[i] || 0),
+      precipitationSum: mmToInches(data.daily.precipitation_sum?.[i] || 0),
+      highTemp: celsiusToFahrenheit(data.daily.temperature_2m_max?.[i] || 0),
+      lowTemp: celsiusToFahrenheit(data.daily.temperature_2m_min?.[i] || 0),
+    }));
+  } catch (error) {
+    console.warn(`Model ${model} fetch error:`, error);
+    return [];
+  }
+}
+
+/**
+ * Get multi-model forecast data for comparison
+ */
+export async function getMultiModelForecast(
+  lat: number,
+  lng: number,
+  days: number = 7
+): Promise<MultiModelData> {
+  const models: ModelSource[] = ['gfs', 'ecmwf', 'icon', 'gem'];
+
+  // Fetch all models in parallel
+  const results = await Promise.all(
+    models.map(model => fetchModelForecast(lat, lng, model, days))
+  );
+
+  const modelData: Record<ModelSource, ModelForecast[]> = {
+    gfs: results[0] || [],
+    ecmwf: results[1] || [],
+    icon: results[2] || [],
+    gem: results[3] || [],
+  };
+
+  // Calculate agreement across models
+  const agreement = calculateModelAgreement(modelData, days);
+
+  return {
+    models: modelData,
+    agreement,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Calculate model agreement/divergence for each day
+ */
+function calculateModelAgreement(
+  models: Record<ModelSource, ModelForecast[]>,
+  days: number
+): ModelAgreement[] {
+  const agreement: ModelAgreement[] = [];
+
+  for (let i = 0; i < days; i++) {
+    const snowValues: number[] = [];
+    const precipValues: number[] = [];
+    const tempValues: number[] = [];
+    let date = '';
+
+    for (const modelForecasts of Object.values(models)) {
+      if (modelForecasts[i]) {
+        date = modelForecasts[i].date;
+        snowValues.push(modelForecasts[i].snowfallSum);
+        precipValues.push(modelForecasts[i].precipitationSum);
+        tempValues.push(modelForecasts[i].highTemp);
+      }
+    }
+
+    if (snowValues.length === 0) continue;
+
+    const snowRange = {
+      min: Math.min(...snowValues),
+      max: Math.max(...snowValues),
+      spread: Math.max(...snowValues) - Math.min(...snowValues),
+    };
+
+    const precipRange = {
+      min: Math.min(...precipValues),
+      max: Math.max(...precipValues),
+      spread: Math.max(...precipValues) - Math.min(...precipValues),
+    };
+
+    const tempRange = {
+      min: Math.min(...tempValues),
+      max: Math.max(...tempValues),
+      spread: Math.max(...tempValues) - Math.min(...tempValues),
+    };
+
+    // Calculate confidence based on spread
+    // Snowfall spread: <2" = high, 2-5" = medium, >5" = low
+    // Temp spread: <5°F = high, 5-10°F = medium, >10°F = low
+    let confidenceScore = 100;
+
+    // Penalize for snowfall divergence
+    if (snowRange.spread > 5) confidenceScore -= 30;
+    else if (snowRange.spread > 2) confidenceScore -= 15;
+
+    // Penalize for temperature divergence
+    if (tempRange.spread > 10) confidenceScore -= 25;
+    else if (tempRange.spread > 5) confidenceScore -= 10;
+
+    // Penalize for days further out
+    confidenceScore -= i * 5;
+
+    confidenceScore = Math.max(20, Math.min(100, confidenceScore));
+
+    const confidence: 'high' | 'medium' | 'low' =
+      confidenceScore >= 70 ? 'high' :
+      confidenceScore >= 45 ? 'medium' : 'low';
+
+    agreement.push({
+      date,
+      snowfallRange: snowRange,
+      precipRange,
+      tempRange,
+      confidence,
+      confidencePercent: confidenceScore,
+    });
+  }
+
+  return agreement;
+}

@@ -149,54 +149,9 @@ struct MountainMapView: View {
     }
 }
 
-// MARK: - Mountain Marker
-struct MountainMarker: View {
-    let mountain: Mountain
-    let score: Double?
-    let isSelected: Bool
-
-    var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                Circle()
-                    .fill(scoreColor)
-                    .frame(width: isSelected ? 44 : 36, height: isSelected ? 44 : 36)
-                    .shadow(color: isSelected ? .white.opacity(0.5) : .clear, radius: 8)
-
-                Text(score != nil ? String(format: "%.0f", score!) : "?")
-                    .font(.system(size: isSelected ? 16 : 14, weight: .bold))
-                    .foregroundColor(.white)
-            }
-
-            // Triangle pointer
-            Triangle()
-                .fill(scoreColor)
-                .frame(width: 12, height: 8)
-        }
-    }
-
-    var scoreColor: Color {
-        guard let score = score else {
-            return Color(hex: mountain.color) ?? .gray
-        }
-        if score >= 7 { return .green }
-        if score >= 5 { return .yellow }
-        return .red
-    }
-}
-
-struct Triangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.closeSubpath()
-        return path
-    }
-}
-
 // MARK: - Mountain Row
+// Note: MountainMarker and Triangle components are now shared
+// See Views/Components/MountainMarker.swift
 struct MountainRow: View {
     let mountain: Mountain
     let score: Double?

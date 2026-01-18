@@ -20,15 +20,17 @@ struct ContentView: View {
                     Label("Mountains", systemImage: "mountain.2.fill")
                 }
 
-            AlertsView()
+            MountainMapView()
                 .tabItem {
-                    Label("Alerts", systemImage: "exclamationmark.triangle.fill")
+                    Label("Map", systemImage: "map.fill")
                 }
 
-            ProfileView()
-                .tabItem {
-                    Label("Profile", systemImage: "person.circle.fill")
-                }
+            // MARK: - Profile tab temporarily disabled for App Store release
+            // TODO: Re-enable once Sign in with Apple is configured in Supabase
+            // ProfileView()
+            //     .tabItem {
+            //         Label("Profile", systemImage: "person.circle.fill")
+            //     }
 
             MoreView()
                 .tabItem {

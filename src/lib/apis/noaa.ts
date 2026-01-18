@@ -188,10 +188,10 @@ export async function getForecast(
     }
   }
 
-  // Return sorted array, limited to 7 days
+  // Return sorted array (NOAA provides up to 14 periods = 7 days)
+  // We no longer artificially limit - return all available data
   return Array.from(dailyForecasts.values())
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, 7);
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export async function getCurrentWeather(

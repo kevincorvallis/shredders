@@ -27,7 +27,7 @@ export async function GET(
     const { mountainId } = await params;
 
     // Validate mountain ID
-    const validMountains = ['baker', 'stevens', 'crystal', 'snoqualmie', 'whitepass', 'missionridge', '49north', 'lookout'];
+    const validMountains = ['baker', 'stevens', 'crystal', 'snoqualmie', 'whitepass', 'missionridge', 'fortynine', 'lookout'];
     if (!validMountains.includes(mountainId)) {
       return NextResponse.json(
         { error: `Invalid mountain ID: ${mountainId}` },

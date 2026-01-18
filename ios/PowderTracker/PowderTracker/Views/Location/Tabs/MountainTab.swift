@@ -146,39 +146,18 @@ struct MountainTab: View {
 
     private var safetyContent: some View {
         VStack(spacing: .spacingL) {
-            // Weather alerts
-            if let alerts = viewModel.locationData?.alerts, !alerts.isEmpty {
-                VStack(alignment: .leading, spacing: .spacingM) {
-                    Text("Active Alerts")
-                        .sectionHeader()
+            // Weather alerts - using embedded AlertsView for full alert functionality
+            VStack(alignment: .leading, spacing: .spacingM) {
+                Text("Weather Alerts")
+                    .sectionHeader()
 
-                    ForEach(alerts) { alert in
-                        AlertCard(alert: alert)
-                    }
-                }
-            } else {
-                VStack(spacing: .spacingM) {
-                    Image(systemName: "checkmark.shield.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.green)
-
-                    Text("No Active Alerts")
-                        .font(.headline)
-
-                    Text("Conditions are safe")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.spacingXL)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(.cornerRadiusCard)
+                AlertsView(mountainId: mountain.id, mountainName: mountain.name)
             }
 
-            // Avalanche conditions (if available)
+            // Safety conditions from current data
             if let conditions = viewModel.locationData?.conditions {
                 VStack(alignment: .leading, spacing: .spacingM) {
-                    Text("Safety Information")
+                    Text("Current Conditions")
                         .sectionHeader()
 
                     VStack(spacing: .spacingM) {
@@ -200,6 +179,37 @@ struct MountainTab: View {
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(.cornerRadiusCard)
                 }
+            }
+
+            // Link to Patrol View for detailed safety info
+            NavigationLink {
+                PatrolView()
+            } label: {
+                HStack {
+                    Image(systemName: "person.badge.shield.checkmark")
+                        .font(.title3)
+                        .foregroundColor(.blue)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Ski Patrol Information")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+
+                        Text("View detailed safety information")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.spacingM)
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(.cornerRadiusCard)
             }
         }
     }

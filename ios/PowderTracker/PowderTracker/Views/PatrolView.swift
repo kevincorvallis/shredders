@@ -3,7 +3,7 @@ import SwiftUI
 struct PatrolView: View {
     var mountainId: String? = nil  // Optional parameter from parent
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
-    @State private var safetyData: SafetyResponse?
+    @State private var safetyData: SafetyData?
     @State private var isLoading = true
     @State private var error: String?
 
@@ -61,13 +61,7 @@ struct PatrolView: View {
         error = nil
 
         do {
-            guard let url = URL(string: "\(AppConfig.apiBaseURL)/mountains/\(effectiveMountainId)/safety") else {
-                self.error = "Unable to load safety data. Please try again."
-                isLoading = false
-                return
-            }
-            let (data, _) = try await URLSession.shared.data(from: url)
-            safetyData = try JSONDecoder().decode(SafetyResponse.self, from: data)
+            safetyData = try await APIClient.shared.fetchSafety(for: effectiveMountainId)
         } catch {
             self.error = "Unable to load safety data. Please check your connection."
         }
@@ -76,51 +70,9 @@ struct PatrolView: View {
     }
 }
 
-// MARK: - Safety Response Model
-struct SafetyResponse: Codable {
-    let mountain: MountainInfo
-    let assessment: Assessment
-    let weather: ExtendedWeather
-    let hazards: Hazards?
-
-    struct Assessment: Codable {
-        let level: String
-        let description: String
-        let recommendations: [String]
-    }
-
-    struct ExtendedWeather: Codable {
-        let temperature: Int?
-        let feelsLike: Int?
-        let humidity: Int?
-        let visibility: Double?
-        let pressure: Double?
-        let uvIndex: Int?
-        let wind: WindData?
-    }
-
-    struct WindData: Codable {
-        let speed: Int
-        let gust: Int?
-        let direction: String
-    }
-
-    struct Hazards: Codable {
-        let avalanche: HazardLevel?
-        let treeWells: HazardLevel?
-        let icy: HazardLevel?
-        let crowded: HazardLevel?
-
-        struct HazardLevel: Codable {
-            let level: String
-            let description: String?
-        }
-    }
-}
-
 // MARK: - Safety Assessment Card
 struct SafetyAssessmentCard: View {
-    let data: SafetyResponse
+    let data: SafetyData
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -180,7 +132,7 @@ struct SafetyAssessmentCard: View {
 
 // MARK: - Extended Weather Card
 struct ExtendedWeatherCard: View {
-    let data: SafetyResponse
+    let data: SafetyData
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -237,7 +189,7 @@ struct WeatherMetric: View {
 
 // MARK: - Visibility Card
 struct VisibilityCard: View {
-    let data: SafetyResponse
+    let data: SafetyData
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -290,7 +242,7 @@ struct VisibilityCard: View {
 
 // MARK: - Wind Assessment Card
 struct WindAssessmentCard: View {
-    let data: SafetyResponse
+    let data: SafetyData
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -369,7 +321,7 @@ struct WindAssessmentCard: View {
 
 // MARK: - Hazard Matrix Card
 struct HazardMatrixCard: View {
-    let hazards: SafetyResponse.Hazards
+    let hazards: SafetyHazards
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

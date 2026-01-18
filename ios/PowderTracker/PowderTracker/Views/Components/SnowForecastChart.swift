@@ -66,6 +66,7 @@ struct SnowForecastChart: View {
             }
         }
         .frame(height: chartHeight)
+        .frame(minWidth: 100) // Prevent 0x0 CAMetalLayer error
         .chartXAxis {
             AxisMarks(values: .stride(by: .day)) { value in
                 if let date = value.as(Date.self) {
