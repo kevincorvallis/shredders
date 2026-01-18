@@ -6,25 +6,32 @@ struct ComparisonGrid: View {
     let favorites: [(mountain: Mountain, data: MountainBatchedResponse)]
     let bestMountainId: String?
     @ObservedObject var viewModel: HomeViewModel
+    var onWebcamTap: ((Mountain) -> Void)? = nil
 
-    // 2-column grid layout
+    // 2-column grid layout with tighter spacing
     private let columns = [
-        GridItem(.flexible(), spacing: .spacingM),
-        GridItem(.flexible(), spacing: .spacingM)
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10)
     ]
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: .spacingM) {
+        LazyVGrid(columns: columns, spacing: 10) {
             ForEach(favorites, id: \.mountain.id) { favorite in
                 NavigationLink {
-                    LocationView(mountain: favorite.mountain)
+                    MountainDetailView(mountain: favorite.mountain)
                 } label: {
                     ComparisonGridCard(
                         mountain: favorite.mountain,
                         conditions: favorite.data.conditions,
                         powderScore: favorite.data.powderScore,
                         trend: viewModel.getSnowTrend(for: favorite.mountain.id),
-                        isBest: favorite.mountain.id == bestMountainId
+                        isBest: favorite.mountain.id == bestMountainId,
+                        webcamCount: favorite.data.mountain.webcams.count,
+                        alertCount: favorite.data.alerts.count,
+                        crowdLevel: favorite.data.tripAdvice?.crowd,
+                        onWebcamTap: {
+                            onWebcamTap?(favorite.mountain)
+                        }
                     )
                 }
                 .buttonStyle(.plain)

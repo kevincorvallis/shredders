@@ -7,40 +7,36 @@ struct ForecastTabView: View {
     @StateObject private var favoritesManager = FavoritesManager.shared
 
     var body: some View {
-        LazyVStack(spacing: .spacingM) {
-            // Section 1: Hero Chart (no container card, full emphasis)
+        LazyVStack(spacing: 12) {
+            // Section 1: Hero Chart
             heroChartSection
-                .transition(.move(edge: .top).combined(with: .opacity))
 
-            // Section 2: Quick Stats Row (summary below chart)
+            // Section 2: Quick Stats Row
             quickStatsSection
-                .transition(.opacity)
 
             // Section 3: Your Mountains (comparison grid)
             comparisonGridSection
-                .transition(.move(edge: .top).combined(with: .opacity))
 
-            // Section 4: 3-Day Powder Outlook (horizontal scroll)
+            // Section 4: 3-Day Outlook (horizontal scroll)
             powderOutlookSection
-                .transition(.move(edge: .top).combined(with: .opacity))
         }
-        .padding(.horizontal, .spacingL)
-        .padding(.top, .spacingS)
-        .padding(.bottom, .spacingL)
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 16)
     }
 
     // MARK: - Hero Chart Section
 
     private var heroChartSection: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
+        VStack(alignment: .leading, spacing: 8) {
             let favoritesWithForecast = viewModel.getFavoritesWithForecast()
 
             if !favoritesWithForecast.isEmpty {
                 // Chart without header - it IS the hero
                 SnowForecastChart(favorites: favoritesWithForecast)
-                    .padding(.spacingM)
+                    .padding(12)
                     .background(Color(.secondarySystemBackground))
-                    .cornerRadius(.cornerRadiusCard)
+                    .cornerRadius(10)
                     .accessibilityLabel("7-day snow forecast chart for your favorite mountains")
             } else {
                 emptyForecastState
@@ -114,7 +110,7 @@ struct ForecastTabView: View {
     // MARK: - Comparison Grid Section
 
     private var comparisonGridSection: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
+        VStack(alignment: .leading, spacing: 8) {
             SectionHeaderView(title: "Your Mountains")
 
             let favoritesWithData = viewModel.getFavoritesWithData()
@@ -134,26 +130,20 @@ struct ForecastTabView: View {
     // MARK: - Powder Outlook Section (Horizontal)
 
     private var powderOutlookSection: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
+        VStack(alignment: .leading, spacing: 8) {
             SectionHeaderView(title: "3-Day Outlook")
 
-            let mountainsWithPlans = favoritesManager.favoriteIds.compactMap { mountainId -> (mountain: Mountain, plan: PowderDayPlanResponse?)? in
-                guard let mountain = viewModel.mountains.first(where: { $0.id == mountainId }) else {
+            // Use forecast data directly instead of powder day plans
+            let mountainsWithForecast = favoritesManager.favoriteIds.compactMap { mountainId -> (mountain: Mountain, forecast: [ForecastDay])? in
+                guard let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
+                      let data = viewModel.mountainData[mountainId],
+                      !data.forecast.isEmpty else {
                     return nil
                 }
-                let plan = viewModel.mountainData[mountainId]?.powderDay
-                return (mountain, plan)
+                return (mountain, data.forecast)
             }
 
-            if !mountainsWithPlans.isEmpty {
-                HorizontalPowderOutlook(mountains: mountainsWithPlans)
-            } else {
-                CardEmptyStateView(
-                    icon: "calendar.badge.clock",
-                    title: "No Outlook Data",
-                    message: "Add mountains to see 3-day powder outlook"
-                )
-            }
+            HorizontalPowderOutlook(mountains: mountainsWithForecast)
         }
     }
 

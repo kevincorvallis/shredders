@@ -4,6 +4,7 @@ import MapKit
 struct MountainMapView: View {
     @StateObject private var viewModel = MountainSelectionViewModel()
     @StateObject private var locationManager = LocationManager.shared
+    @StateObject private var overlayState = MapOverlayState()
     @AppStorage("selectedMountainId") private var persistedMountainId = "baker"
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -12,38 +13,60 @@ struct MountainMapView: View {
         )
     )
     @State private var selectedMountainId: String?
+    @State private var showingOverlaySheet = false
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Map
-                Map(position: $cameraPosition, selection: $selectedMountainId) {
-                    // User location
-                    UserAnnotation()
+                // Map with overlay support
+                ZStack(alignment: .bottomLeading) {
+                    Map(position: $cameraPosition, selection: $selectedMountainId) {
+                        // User location
+                        UserAnnotation()
 
-                    // Mountain markers
-                    ForEach(viewModel.mountains) { mountain in
-                        Annotation(
-                            mountain.shortName,
-                            coordinate: mountain.location.coordinate,
-                            anchor: .bottom
-                        ) {
-                            MountainMarker(
-                                mountain: mountain,
-                                score: viewModel.getScore(for: mountain),
-                                isSelected: selectedMountainId == mountain.id
-                            )
+                        // Mountain markers
+                        ForEach(viewModel.mountains) { mountain in
+                            Annotation(
+                                mountain.shortName,
+                                coordinate: mountain.location.coordinate,
+                                anchor: .bottom
+                            ) {
+                                MountainMarker(
+                                    mountain: mountain,
+                                    score: viewModel.getScore(for: mountain),
+                                    isSelected: selectedMountainId == mountain.id
+                                )
+                            }
+                            .tag(mountain.id)
                         }
-                        .tag(mountain.id)
+                    }
+                    .mapStyle(.standard(elevation: .realistic))
+                    .mapControls {
+                        MapUserLocationButton()
+                        MapCompass()
+                        MapScaleView()
+                    }
+
+                    // Legend overlay (when overlay is active)
+                    if let overlay = overlayState.activeOverlay {
+                        MapLegendView(overlay: overlay)
+                            .padding(.spacingM)
                     }
                 }
-                .mapStyle(.standard(elevation: .realistic))
-                .mapControls {
-                    MapUserLocationButton()
-                    MapCompass()
-                    MapScaleView()
+                .frame(height: UIScreen.main.bounds.height * 0.40)
+
+                // Overlay picker bar
+                OverlayPickerBar(
+                    overlayState: overlayState,
+                    onMoreTap: { showingOverlaySheet = true }
+                )
+
+                // Time scrubber (for time-based overlays)
+                if let overlay = overlayState.activeOverlay, overlay.isTimeBased {
+                    MapTimeScrubber(overlayState: overlayState)
+                        .padding(.horizontal, .spacingM)
+                        .padding(.vertical, .spacingS)
                 }
-                .frame(height: UIScreen.main.bounds.height * 0.45)
 
                 // Mountain list
                 ScrollView {
@@ -52,7 +75,7 @@ struct MountainMapView: View {
                             Section {
                                 ForEach(viewModel.washingtonMountains) { mountain in
                                     NavigationLink {
-                                        LocationView(mountain: mountain)
+                                        MountainDetailView(mountain: mountain)
                                     } label: {
                                         MountainRow(
                                             mountain: mountain,
@@ -75,7 +98,7 @@ struct MountainMapView: View {
                             Section {
                                 ForEach(viewModel.oregonMountains) { mountain in
                                     NavigationLink {
-                                        LocationView(mountain: mountain)
+                                        MountainDetailView(mountain: mountain)
                                     } label: {
                                         MountainRow(
                                             mountain: mountain,
@@ -98,7 +121,7 @@ struct MountainMapView: View {
                             Section {
                                 ForEach(viewModel.idahoMountains) { mountain in
                                     NavigationLink {
-                                        LocationView(mountain: mountain)
+                                        MountainDetailView(mountain: mountain)
                                     } label: {
                                         MountainRow(
                                             mountain: mountain,
@@ -131,6 +154,10 @@ struct MountainMapView: View {
                 if let id = newId, let mountain = viewModel.mountains.first(where: { $0.id == id }) {
                     viewModel.selectMountain(mountain)
                 }
+            }
+            .sheet(isPresented: $showingOverlaySheet) {
+                OverlayPickerSheet(overlayState: overlayState)
+                    .presentationDetents([.medium, .large])
             }
         }
     }

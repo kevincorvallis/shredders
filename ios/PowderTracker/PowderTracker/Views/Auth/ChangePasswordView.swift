@@ -17,7 +17,7 @@ struct ChangePasswordView: View {
         let description: String
         let isMet: @Sendable (String) -> Bool
 
-        nonisolated(unsafe) static let all: [PasswordRequirement] = [
+        static let all: [PasswordRequirement] = [
             PasswordRequirement(description: "At least 12 characters") { $0.count >= 12 },
             PasswordRequirement(description: "One uppercase letter") { $0.contains(where: { $0.isUppercase }) },
             PasswordRequirement(description: "One lowercase letter") { $0.contains(where: { $0.isLowercase }) },

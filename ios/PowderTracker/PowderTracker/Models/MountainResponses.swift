@@ -280,3 +280,39 @@ extension MountainPowderScore {
         dataAvailable: DataAvailability(snotel: true, noaa: true)
     )
 }
+
+extension MountainBatchedResponse {
+    static let mock = MountainBatchedResponse(
+        mountain: MountainDetail(
+            id: "baker",
+            name: "Mt. Baker",
+            shortName: "Baker",
+            location: MountainLocation(lat: 48.857, lng: -121.669),
+            elevation: MountainElevation(base: 3500, summit: 5089),
+            region: "washington",
+            snotel: MountainDetail.SnotelInfo(stationId: "909", stationName: "Wells Creek"),
+            noaa: MountainDetail.NOAAInfo(gridOffice: "SEW", gridX: 150, gridY: 75),
+            webcams: [
+                MountainDetail.Webcam(id: "1", name: "Base Lodge", url: "https://example.com/cam1.jpg", refreshUrl: nil),
+                MountainDetail.Webcam(id: "2", name: "Summit", url: "https://example.com/cam2.jpg", refreshUrl: nil)
+            ],
+            roadWebcams: nil,
+            color: "#3b82f6",
+            website: "https://www.mtbaker.us",
+            logo: "/logos/baker.svg",
+            status: MountainStatus(isOpen: true, percentOpen: 85, liftsOpen: "8/10", runsOpen: "70/82", message: "Great conditions!", lastUpdated: nil),
+            passType: .independent
+        ),
+        conditions: .mock,
+        powderScore: .mock,
+        forecast: ForecastDay.mockWeek,
+        sunData: .mock,
+        roads: nil,
+        tripAdvice: .mock,
+        powderDay: nil,
+        alerts: [],
+        weatherGovLinks: nil,
+        status: MountainStatus(isOpen: true, percentOpen: 85, liftsOpen: "8/10", runsOpen: "70/82", message: "Great conditions!", lastUpdated: nil),
+        cachedAt: ISO8601DateFormatter().string(from: Date())
+    )
+}

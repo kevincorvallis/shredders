@@ -46,7 +46,7 @@ struct AlertsView: View {
             if isLoading {
                 ProgressView("Loading alerts...")
                     .frame(maxWidth: .infinity, minHeight: 100)
-            } else if let error = error {
+            } else if error != nil {
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.title2)

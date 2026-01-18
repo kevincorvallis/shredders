@@ -1,224 +1,175 @@
 import SwiftUI
 
 /// Compact card for comparison grid showing key mountain metrics
-/// Designed for 2-column grid layout with visual hierarchy emphasizing powder score
+/// Redesigned for density - more info in less space
 struct ComparisonGridCard: View {
     let mountain: Mountain
     let conditions: MountainConditions?
     let powderScore: MountainPowderScore?
     let trend: TrendIndicator
-    let isBest: Bool // Highlight the best powder mountain
+    let isBest: Bool
 
-    // Color coding based on powder score
+    // Enhanced properties (Phase 2.1)
+    var webcamCount: Int = 0
+    var alertCount: Int = 0
+    var crowdLevel: RiskLevel? = nil
+    var onWebcamTap: (() -> Void)? = nil
+
     private var scoreColor: Color {
         guard let score = powderScore?.score else { return .gray }
-
-        if score >= 7.0 {
-            return .green
-        } else if score >= 5.0 {
-            return .yellow
-        } else {
-            return .red
-        }
-    }
-
-    // Background gradient based on powder score
-    private var backgroundGradient: LinearGradient {
-        guard let score = powderScore?.score else {
-            return LinearGradient(
-                colors: [Color(.systemGray6), Color(.systemGray5)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        if score >= 7.0 {
-            // Green gradient for excellent powder
-            return LinearGradient(
-                colors: [Color.green.opacity(0.1), Color.green.opacity(0.05)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        } else if score >= 5.0 {
-            // Yellow gradient for good powder
-            return LinearGradient(
-                colors: [Color.yellow.opacity(0.1), Color.yellow.opacity(0.05)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        } else {
-            // Red/gray gradient for fair powder
-            return LinearGradient(
-                colors: [Color.red.opacity(0.08), Color(.systemGray6)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
+        if score >= 7.0 { return .green }
+        else if score >= 5.0 { return .yellow }
+        else { return .red }
     }
 
     var body: some View {
-        ZStack {
-            // Background gradient
-            RoundedRectangle(cornerRadius: .cornerRadiusCard)
-                .fill(backgroundGradient)
+        VStack(spacing: 0) {
+            // Header with mountain name and score
+            HStack(spacing: 6) {
+                MountainLogoView(
+                    logoUrl: mountain.logo,
+                    color: mountain.color,
+                    size: 24
+                )
 
-            // Glassmorphic overlay
-            RoundedRectangle(cornerRadius: .cornerRadiusCard)
-                .fill(.ultraThinMaterial)
-
-            // Best powder glow
-            if isBest {
-                RoundedRectangle(cornerRadius: .cornerRadiusCard)
-                    .stroke(scoreColor, lineWidth: 2)
-                    .shadow(color: scoreColor.opacity(0.5), radius: 8)
-            }
-
-            // Card content
-            VStack(spacing: .spacingS) {
-                // Header: Mountain name + badge
-                HStack(spacing: .spacingXS) {
-                    Text(mountain.shortName)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Spacer()
-
-                    // Live/Static badge
-                    if let conditions = conditions {
-                        HStack(spacing: .spacingXS / 2) {
-                            if conditions.dataSources.isLive {
-                                Circle()
-                                    .fill(Color.white)
-                                    .frame(width: 5, height: 5)
-                            }
-                            Text(conditions.dataSources.isLive ? "LIVE" : "STATIC")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, .spacingS)
-                        .padding(.vertical, .spacingXS / 2)
-                        .background(
-                            Capsule()
-                                .fill(conditions.dataSources.isLive ? Color.green : Color.orange)
-                                .shadow(color: conditions.dataSources.isLive ? Color.green.opacity(0.4) : Color.orange.opacity(0.4), radius: 4)
-                        )
-                    }
-                }
-                .padding(.horizontal, .spacingM)
-                .padding(.top, .spacingM)
-
-                // Powder Score (Hero metric)
-                VStack(spacing: .spacingXS) {
-                    if let score = powderScore?.score {
-                        Text(String(format: "%.1f", score))
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
-                            .foregroundColor(scoreColor)
-
-                        Text("/10")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("--")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
-                            .foregroundColor(.gray)
-
-                        Text("No Score")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(.vertical, .spacingXS)
-
-                // Snowfall 24h/48h
-                HStack(spacing: .spacingXS) {
-                    let snow24h = conditions?.snowfall24h ?? 0
-                    let snow48h = conditions?.snowfall48h ?? 0
-
-                    Text("\(snow24h)\"")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(snow24h >= 6 ? .blue : .primary)
-
-                    Text("/")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.secondary)
-
-                    Text("\(snow48h)\"")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(snow48h >= 12 ? .blue : .primary)
-                }
-
-                // Trend indicator
-                HStack(spacing: .spacingXS) {
-                    Image(systemName: trend.iconName)
-                        .font(.caption)
-                        .foregroundColor(trend.color)
-
-                    Text(trend.label)
-                        .font(.caption)
-                        .foregroundColor(trend.color)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
+                Text(mountain.shortName)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
 
                 Spacer()
 
-                // Bottom row: Lift status + Temperature
-                HStack(spacing: .spacingM) {
-                    // Lift status
-                    if let liftStatus = conditions?.liftStatus {
-                        HStack(spacing: .spacingXS) {
-                            Image(systemName: "cablecar.fill")
-                                .font(.caption)
+                // Alert count badge (if alerts > 0)
+                if alertCount > 0 {
+                    CompactAlertBadge(alertCount: alertCount)
+                }
 
-                            Text("\(liftStatus.percentOpen)%")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
+                // Webcam quick-view button
+                if webcamCount > 0 {
+                    Button {
+                        onWebcamTap?()
+                    } label: {
+                        Image(systemName: "video.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                            .frame(width: 24, height: 24)
+                            .background(
+                                Circle()
+                                    .fill(Color(.tertiarySystemFill))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                // Powder Score Badge
+                if let score = powderScore?.score {
+                    Text(String(format: "%.1f", score))
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule().fill(scoreColor)
+                        )
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(Color(.tertiarySystemBackground))
+
+            // Main stats area
+            VStack(spacing: 8) {
+                // Snow stats row
+                HStack(spacing: 0) {
+                    // 24h Snow
+                    statColumn(
+                        value: "\(Int(conditions?.snowfall24h ?? 0))\"",
+                        label: "24h",
+                        highlight: (conditions?.snowfall24h ?? 0) >= 6
+                    )
+
+                    Divider().frame(height: 30)
+
+                    // 48h Snow
+                    statColumn(
+                        value: "\(Int(conditions?.snowfall48h ?? 0))\"",
+                        label: "48h",
+                        highlight: (conditions?.snowfall48h ?? 0) >= 12
+                    )
+
+                    Divider().frame(height: 30)
+
+                    // Base Depth
+                    statColumn(
+                        value: "\(Int(conditions?.snowDepth ?? 0))\"",
+                        label: "Base",
+                        highlight: false
+                    )
+                }
+
+                // Secondary stats row
+                HStack(spacing: 12) {
+                    // Temperature
+                    if let temp = conditions?.temperature {
+                        HStack(spacing: 3) {
+                            Image(systemName: "thermometer.medium")
+                                .font(.system(size: 10))
+                            Text("\(temp)°F")
+                                .font(.caption2)
                         }
-                        .foregroundColor(.primary)
+                        .foregroundColor(.secondary)
+                    }
+
+                    // Lifts
+                    if let liftStatus = conditions?.liftStatus {
+                        HStack(spacing: 3) {
+                            Image(systemName: "cablecar.fill")
+                                .font(.system(size: 10))
+                            Text("\(liftStatus.liftsOpen)/\(liftStatus.liftsTotal)")
+                                .font(.caption2)
+                        }
+                        .foregroundColor(liftStatus.liftsOpen > 0 ? .green : .secondary)
+                    }
+
+                    // Crowd indicator pill
+                    if let crowd = crowdLevel {
+                        CrowdIndicatorPill(level: crowd)
                     }
 
                     Spacer()
 
-                    // Temperature
-                    if let temp = conditions?.temperature {
-                        HStack(spacing: .spacingXS) {
-                            Image(systemName: "thermometer.medium")
-                                .font(.caption)
-
-                            Text("\(temp)°")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                        }
-                        .foregroundColor(.primary)
+                    // Trend
+                    HStack(spacing: 2) {
+                        Image(systemName: trend.iconName)
+                            .font(.system(size: 9))
+                        Text(trend.shortLabel)
+                            .font(.caption2)
                     }
+                    .foregroundColor(trend.color)
                 }
-                .padding(.horizontal, .spacingM)
-                .padding(.bottom, .spacingM)
+                .padding(.horizontal, 4)
             }
+            .padding(10)
         }
-        .frame(width: 165, height: 220)
-        .cornerRadius(.cornerRadiusHero)
-        .shadow(color: .black.opacity(isBest ? 0.15 : 0.08), radius: isBest ? 12 : 6)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityDescription)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(isBest ? scoreColor : Color.clear, lineWidth: 2)
+        )
     }
 
-    private var accessibilityDescription: String {
-        let scoreText = powderScore.map { String(format: "%.1f out of 10", $0.score) } ?? "No score"
-        let snow24h = conditions?.snowfall24h ?? 0
-        let snow48h = conditions?.snowfall48h ?? 0
-        let trendText = "\(trend.label) conditions"
-        let bestText = isBest ? "Best powder today" : ""
-
-        return "\(mountain.shortName). Powder score: \(scoreText). \(snow24h) inches in 24 hours, \(snow48h) inches in 48 hours. \(trendText). \(bestText)"
+    private func statColumn(value: String, label: String, highlight: Bool) -> some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(highlight ? .blue : .primary)
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -245,12 +196,65 @@ enum TrendIndicator {
         }
     }
 
+    var shortLabel: String {
+        switch self {
+        case .improving: return "Up"
+        case .stable: return "Flat"
+        case .declining: return "Down"
+        }
+    }
+
     var color: Color {
         switch self {
         case .improving: return .green
         case .stable: return .gray
         case .declining: return .orange
         }
+    }
+}
+
+// MARK: - Crowd Indicator Pill
+
+struct CrowdIndicatorPill: View {
+    let level: RiskLevel
+
+    private var displayText: String {
+        switch level {
+        case .low: return "Quiet"
+        case .medium: return "Mod"
+        case .high: return "Busy"
+        }
+    }
+
+    private var backgroundColor: Color {
+        switch level {
+        case .low: return .green
+        case .medium: return .yellow
+        case .high: return .red
+        }
+    }
+
+    private var textColor: Color {
+        switch level {
+        case .medium: return .black
+        case .low, .high: return .white
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "person.2.fill")
+                .font(.system(size: 9))
+            Text(displayText)
+                .font(.system(size: 9, weight: .semibold))
+        }
+        .foregroundColor(textColor)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(
+            Capsule()
+                .fill(backgroundColor)
+        )
     }
 }
 
@@ -264,7 +268,6 @@ extension MountainConditions {
 
 extension MountainConditions.DataSources {
     var isLive: Bool {
-        // Consider it live if it has real-time lift status
         snotel != nil || liftStatus != nil
     }
 }
@@ -272,7 +275,7 @@ extension MountainConditions.DataSources {
 // MARK: - Preview
 
 #Preview {
-    HStack(spacing: 16) {
+    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
         ComparisonGridCard(
             mountain: Mountain(
                 id: "baker",
@@ -321,9 +324,9 @@ extension MountainConditions.DataSources {
             conditions: nil,
             powderScore: MountainPowderScore(
                 mountain: MountainInfo(id: "crystal", name: "Crystal Mountain", shortName: "Crystal"),
-                score: 7.2,
+                score: 6.2,
                 factors: [],
-                verdict: "Great conditions",
+                verdict: "Good conditions",
                 conditions: nil,
                 dataAvailable: nil
             ),

@@ -5,13 +5,14 @@ struct ContentView: View {
     @Binding var deepLinkMountainId: String?
     @State private var selectedMountain: Mountain? = nil
     @StateObject private var mountainsViewModel = MountainSelectionViewModel()
+    @StateObject private var homeViewModel = HomeViewModel()
 
     var body: some View {
         TabView {
-            // OpenSnow-style Home with horizontal forecast timeline
-            HomeView()
+            // New Today view - primary landing screen
+            TodayView(viewModel: homeViewModel)
                 .tabItem {
-                    Label("Home", systemImage: "house.fill")
+                    Label("Today", systemImage: "sun.snow.fill")
                 }
 
             // Redesigned Mountains grid view
@@ -25,16 +26,10 @@ struct ContentView: View {
                     Label("Map", systemImage: "map.fill")
                 }
 
-            // MARK: - Profile tab temporarily disabled for App Store release
-            // TODO: Re-enable once Sign in with Apple is configured in Supabase
-            // ProfileView()
-            //     .tabItem {
-            //         Label("Profile", systemImage: "person.circle.fill")
-            //     }
-
-            MoreView()
+            // Profile tab - re-enabled
+            ProfileView()
                 .tabItem {
-                    Label("More", systemImage: "ellipsis.circle.fill")
+                    Label("Profile", systemImage: "person.circle.fill")
                 }
         }
         .onChange(of: deepLinkMountainId) { oldValue, newValue in
@@ -49,7 +44,7 @@ struct ContentView: View {
         }
         .sheet(item: $selectedMountain) { mountain in
             NavigationStack {
-                LocationView(mountain: mountain)
+                MountainDetailView(mountain: mountain)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button("Done") {

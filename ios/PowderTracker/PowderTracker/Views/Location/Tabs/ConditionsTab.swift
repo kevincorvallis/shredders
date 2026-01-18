@@ -74,14 +74,14 @@ struct ConditionsTab: View {
                         MetricView(
                             icon: "snowflake",
                             label: "48h",
-                            value: "\(Int(conditions.snowfall48h ?? 0))\"",
+                            value: "\(conditions.snowfall48h)\"",
                             color: .blue.opacity(0.8)
                         )
 
                         MetricView(
                             icon: "snowflake",
                             label: "7 days",
-                            value: "\(Int(conditions.snowfall7d ?? 0))\"",
+                            value: "\(conditions.snowfall7d)\"",
                             color: .blue.opacity(0.6)
                         )
                     }

@@ -324,7 +324,7 @@ class HomeViewModel: ObservableObject {
     /// Generate "Why Best?" reasons for the top powder mountain
     func getWhyBestReasons(for mountainId: String) -> [String] {
         guard let data = mountainData[mountainId],
-              let mountain = mountains.first(where: { $0.id == mountainId }) else {
+              mountains.first(where: { $0.id == mountainId }) != nil else {
             return []
         }
 
@@ -369,4 +369,68 @@ class HomeViewModel: ObservableObject {
 
         return Array(reasons.prefix(3))
     }
+
+    // MARK: - Webcam Helpers
+
+    /// Get all webcams from favorite mountains for the webcam strip
+    func getAllFavoriteWebcams() -> [(mountain: Mountain, webcam: MountainDetail.Webcam)] {
+        var webcams: [(mountain: Mountain, webcam: MountainDetail.Webcam)] = []
+
+        for mountainId in favoritesManager.favoriteIds {
+            guard let mountain = mountains.first(where: { $0.id == mountainId }),
+                  let data = mountainData[mountainId] else {
+                continue
+            }
+
+            // Add the first webcam from each mountain (or first 2 if many favorites)
+            let webcamsToAdd = favoritesManager.favoriteIds.count <= 3 ? 2 : 1
+            for webcam in data.mountain.webcams.prefix(webcamsToAdd) {
+                webcams.append((mountain, webcam))
+            }
+        }
+
+        return webcams
+    }
+
+    /// Get pick reasons for TodaysPickCard
+    func getPickReasons(for mountainId: String) -> [PickReason] {
+        guard let data = mountainData[mountainId] else { return [] }
+
+        var reasons: [PickReason] = []
+
+        // Fresh snow reason
+        let snow24h = data.conditions.snowfall24h
+        if snow24h >= 6 {
+            reasons.append(PickReason(
+                icon: "snowflake",
+                text: "\(snow24h)\" fresh snow"
+            ))
+        }
+
+        // Crowd reason
+        if let tripAdvice = data.tripAdvice, tripAdvice.crowd == .low {
+            reasons.append(PickReason(
+                icon: "person.2.fill",
+                text: "Low crowds today"
+            ))
+        }
+
+        // Powder score reason
+        if data.powderScore.score >= 7.5 {
+            reasons.append(PickReason(
+                icon: "star.fill",
+                text: "Excellent conditions"
+            ))
+        }
+
+        return Array(reasons.prefix(3))
+    }
+}
+
+// MARK: - Pick Reason Model
+
+struct PickReason: Identifiable {
+    let id = UUID()
+    let icon: String
+    let text: String
 }

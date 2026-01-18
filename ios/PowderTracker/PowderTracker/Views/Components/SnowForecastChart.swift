@@ -6,18 +6,34 @@ import Charts
 struct SnowForecastChart: View {
     let favorites: [(mountain: Mountain, forecast: [ForecastDay])]
     var showHeader: Bool = false
+    var onDayTap: ((Mountain, ForecastDay) -> Void)? = nil
 
-    // Chart height
-    private let chartHeight: CGFloat = 200
+    // Chart height - compact for homepage
+    private let chartHeight: CGFloat = 160
+
+    // Range toggle state
+    @State private var selectedRange: ForecastRange = .sevenDays
+    @State private var selectedDataPoint: (mountain: Mountain, day: ForecastDay)? = nil
+    @State private var showingHourlySheet: Bool = false
+
+    enum ForecastRange: String, CaseIterable {
+        case threeDays = "3D"
+        case sevenDays = "7D"
+        case fifteenDays = "15D"
+
+        var days: Int {
+            switch self {
+            case .threeDays: return 3
+            case .sevenDays: return 7
+            case .fifteenDays: return 15
+            }
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header (optional - parent views may provide their own)
-            if showHeader {
-                Text("7-Day Snow Forecast")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-            }
+            // Header with range toggle
+            headerWithToggle
 
             if favorites.isEmpty {
                 emptyState
@@ -25,15 +41,47 @@ struct SnowForecastChart: View {
                 chart
             }
         }
+        .sheet(isPresented: $showingHourlySheet) {
+            if let selected = selectedDataPoint {
+                HourlyBreakdownSheet(
+                    mountain: selected.mountain,
+                    day: selected.day,
+                    isPresented: $showingHourlySheet
+                )
+            }
+        }
+    }
+
+    // MARK: - Header with Range Toggle
+
+    private var headerWithToggle: some View {
+        HStack {
+            if showHeader {
+                Text("Snow Forecast")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+
+            Spacer()
+
+            // Range toggle picker
+            Picker("Range", selection: $selectedRange) {
+                ForEach(ForecastRange.allCases, id: \.self) { range in
+                    Text(range.rawValue).tag(range)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 140)
+        }
     }
 
     private var chart: some View {
         Chart {
             ForEach(favorites, id: \.mountain.id) { favorite in
-                // Get first 7 days of forecast with valid dates
-                let sevenDayForecast = Array(favorite.forecast.prefix(7))
+                // Get forecast based on selected range
+                let forecastDays = Array(favorite.forecast.prefix(selectedRange.days))
 
-                ForEach(Array(sevenDayForecast.enumerated()), id: \.offset) { index, day in
+                ForEach(Array(forecastDays.enumerated()), id: \.offset) { index, day in
                     // Convert date string to Date, fallback to index-based date
                     let chartDate = parseDate(day.date) ?? Calendar.current.date(byAdding: .day, value: index, to: Date())!
 
@@ -163,13 +211,135 @@ struct SnowForecastChart: View {
     }
 }
 
+// MARK: - Hourly Breakdown Sheet
+
+struct HourlyBreakdownSheet: View {
+    let mountain: Mountain
+    let day: ForecastDay
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: .spacingL) {
+                    // Day summary header
+                    VStack(alignment: .leading, spacing: .spacingS) {
+                        Text(day.dayOfWeek)
+                            .font(.title2)
+                            .fontWeight(.bold)
+
+                        Text(day.date)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal)
+
+                    // Summary stats
+                    HStack(spacing: .spacingL) {
+                        statCard(
+                            icon: "snowflake",
+                            value: "\(day.snowfall)\"",
+                            label: "Expected Snow"
+                        )
+
+                        statCard(
+                            icon: "thermometer.medium",
+                            value: "\(day.high)°/\(day.low)°",
+                            label: "High/Low"
+                        )
+
+                        statCard(
+                            icon: "wind",
+                            value: "\(day.wind.speed)mph",
+                            label: "Wind"
+                        )
+                    }
+                    .padding(.horizontal)
+
+                    // Conditions
+                    VStack(alignment: .leading, spacing: .spacingS) {
+                        Text("Conditions")
+                            .font(.headline)
+
+                        HStack(spacing: .spacingS) {
+                            Text(day.iconEmoji)
+                                .font(.title)
+
+                            Text(day.conditions)
+                                .font(.body)
+                                .foregroundColor(.primary)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(.cornerRadiusCard)
+                    }
+                    .padding(.horizontal)
+
+                    // Precipitation probability
+                    VStack(alignment: .leading, spacing: .spacingS) {
+                        Text("Precipitation")
+                            .font(.headline)
+
+                        HStack {
+                            Image(systemName: "drop.fill")
+                                .foregroundColor(.blue)
+                            Text("\(day.precipProbability)% chance of \(day.precipType)")
+                                .font(.subheadline)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(.cornerRadiusCard)
+                    }
+                    .padding(.horizontal)
+
+                    Spacer()
+                }
+                .padding(.vertical)
+            }
+            .navigationTitle(mountain.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func statCard(icon: String, value: String, label: String) -> some View {
+        VStack(spacing: .spacingXS) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(.blue)
+
+            Text(value)
+                .font(.headline)
+                .fontWeight(.semibold)
+
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, .spacingM)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(.cornerRadiusCard)
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
     ScrollView {
         VStack(spacing: 20) {
             SnowForecastChart(
-                favorites: []
+                favorites: [],
+                showHeader: true
             )
             .padding()
             .background(Color(.secondarySystemBackground))

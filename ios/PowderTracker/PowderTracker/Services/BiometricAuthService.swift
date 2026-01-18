@@ -201,7 +201,7 @@ class BiometricAuthService {
             }
 
             // Try to refresh the token
-            guard let refreshToken = KeychainHelper.getRefreshToken() else {
+            guard KeychainHelper.getRefreshToken() != nil else {
                 disableBiometric() // Disable since we don't have tokens
                 return .failure(.authenticationFailed)
             }

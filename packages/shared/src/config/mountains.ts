@@ -96,6 +96,48 @@ export const mountains: Record<string, MountainConfig> = {
       // Stevens Pass webcams have moved to a dynamic system
       // Visit https://www.stevenspass.com/the-mountain/mountain-conditions/mountain-cams.aspx for live webcams
     ],
+    roadWebcams: [
+      {
+        id: 'us2-skykomish',
+        name: 'US-2 at Skykomish',
+        url: 'https://images.wsdot.wa.gov/nw/002vc04558.jpg',
+        highway: 'US-2',
+        milepost: '45.6',
+        agency: 'WSDOT',
+      },
+      {
+        id: 'us2-oldfaithful',
+        name: 'US-2 Old Faithful Avalanche Zone',
+        url: 'https://images.wsdot.wa.gov/nc/002vc06190.jpg',
+        highway: 'US-2',
+        milepost: '61.9',
+        agency: 'WSDOT',
+      },
+      {
+        id: 'us2-bigwindy',
+        name: 'US-2 at Big Windy',
+        url: 'https://images.wsdot.wa.gov/nc/002vc06300.jpg',
+        highway: 'US-2',
+        milepost: '63',
+        agency: 'WSDOT',
+      },
+      {
+        id: 'us2-weststevensskilodge',
+        name: 'US-2 West Stevens Pass - Ski Lodge',
+        url: 'https://images.wsdot.wa.gov/nc/002vc06430.jpg',
+        highway: 'US-2',
+        milepost: '64.3',
+        agency: 'WSDOT',
+      },
+      {
+        id: 'us2-eaststevenssummit',
+        name: 'US-2 East Stevens Pass Summit',
+        url: 'https://images.wsdot.wa.gov/nc/002vc06458.jpg',
+        highway: 'US-2',
+        milepost: '64.6',
+        agency: 'WSDOT',
+      },
+    ],
     color: '#10b981',
     website: 'https://www.stevenspass.com',
     logo: '/logos/stevens.png',
@@ -286,6 +328,16 @@ export const mountains: Record<string, MountainConfig> = {
     webcams: [
       // White Pass webcams have moved to a dynamic system
       // Visit https://skiwhitepass.com/mountain-cams for live cameras
+    ],
+    roadWebcams: [
+      {
+        id: 'us12-whitepasssummit',
+        name: 'US-12 White Pass Summit',
+        url: 'https://images.wsdot.wa.gov/sc/012vc15095.jpg',
+        highway: 'US-12',
+        milepost: '150.9',
+        agency: 'WSDOT',
+      },
     ],
     color: '#ec4899',
     website: 'https://skiwhitepass.com',

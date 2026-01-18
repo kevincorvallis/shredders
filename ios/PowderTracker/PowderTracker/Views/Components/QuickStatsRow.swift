@@ -18,19 +18,19 @@ struct QuickStatsRow: View {
             // Total Snow Next 7 Days
             statItem(
                 value: "\(totalSnow7Day)\"",
-                label: "next 7 days",
+                label: "7-day total",
                 icon: "snowflake",
                 color: totalSnow7Day >= 12 ? .blue : .secondary
             )
 
             Divider()
-                .frame(height: 40)
+                .frame(height: 32)
 
             // Best Day
             if let best = bestDay {
                 statItem(
                     value: best.name,
-                    label: "\(best.snowfall)\" expected",
+                    label: "\(best.snowfall)\" snow",
                     icon: "star.fill",
                     color: .yellow
                 )
@@ -44,7 +44,7 @@ struct QuickStatsRow: View {
             }
 
             Divider()
-                .frame(height: 40)
+                .frame(height: 32)
 
             // Active Alerts
             statItem(
@@ -54,16 +54,16 @@ struct QuickStatsRow: View {
                 color: alertCount > 0 ? .orange : .green
             )
         }
-        .padding(.vertical, .spacingS)
+        .padding(.vertical, 8)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(.cornerRadiusCard)
+        .cornerRadius(10)
     }
 
     private func statItem(value: String, label: String, icon: String, color: Color) -> some View {
-        VStack(spacing: .spacingXS) {
-            HStack(spacing: .spacingXS) {
+        VStack(spacing: 2) {
+            HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.caption)
+                    .font(.system(size: 11))
                     .foregroundColor(color)
 
                 Text(value)

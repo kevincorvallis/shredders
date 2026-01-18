@@ -7,6 +7,7 @@ enum MapExpansionState {
     case collapsed
     case expanded
 
+    @MainActor
     var height: CGFloat {
         switch self {
         case .collapsed: return 120
