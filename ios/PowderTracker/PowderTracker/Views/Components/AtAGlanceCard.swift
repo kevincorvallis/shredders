@@ -137,7 +137,7 @@ struct AtAGlanceCard: View {
                     .fontWeight(.bold)
                     .foregroundColor(.secondary)
 
-                ForEach(metrics, id: \.self) { metric in
+                ForEach(Array(metrics.enumerated()), id: \.offset) { _, metric in
                     Text(metric)
                         .font(.subheadline)
                         .fontWeight(.semibold)

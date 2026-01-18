@@ -45,84 +45,155 @@ struct MountainDetailView: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .top) {
-                // Main scrollable content
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Spacer for header
-                        Color.clear
-                            .frame(height: headerFullHeight + tabBarHeight)
+        ScrollView {
+            VStack(spacing: 0) {
+                // Hero header with mountain info
+                heroHeader
 
-                        // Alert banner if needed
-                        if let data = viewModel.locationData, !data.alerts.isEmpty && !alertsDismissed {
-                            AlertBannerView(
-                                alerts: data.alerts,
-                                isDismissed: $alertsDismissed
-                            )
-                            .padding(.horizontal, .spacingL)
-                            .padding(.top, .spacingM)
-                        }
+                // Tab bar
+                tabBarView
 
-                        // Tab content
-                        tabContent
-                            .padding(.horizontal, .spacingL)
-                            .padding(.top, .spacingM)
-                            .padding(.bottom, .spacingXL)
-                    }
-                    .background(
-                        GeometryReader { scrollGeometry in
-                            Color.clear
-                                .preference(
-                                    key: ScrollOffsetPreferenceKey.self,
-                                    value: scrollGeometry.frame(in: .named("scroll")).minY
-                                )
-                        }
+                // Alert banner if needed
+                if let data = viewModel.locationData, !data.alerts.isEmpty && !alertsDismissed {
+                    AlertBannerView(
+                        alerts: data.alerts,
+                        isDismissed: $alertsDismissed
                     )
-                }
-                .coordinateSpace(name: "scroll")
-                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        headerCollapsed = offset < -100
-                    }
+                    .padding(.horizontal, .spacingL)
+                    .padding(.top, .spacingM)
                 }
 
-                // Fixed header + tab bar
-                VStack(spacing: 0) {
-                    // Collapsible header
-                    CollapsibleHeaderView(
-                        mountain: mountain,
-                        webcam: viewModel.locationData?.mountain.webcams.first,
-                        isCollapsed: headerCollapsed,
-                        fullHeight: headerFullHeight,
-                        collapsedHeight: headerCollapsedHeight
-                    )
-
-                    // Sticky tab bar
-                    StickyTabBar(
-                        selectedTab: $selectedTab,
-                        tabs: DetailTab.allCases
-                    )
-                }
+                // Tab content
+                tabContent
+                    .padding(.horizontal, .spacingL)
+                    .padding(.top, .spacingM)
+                    .padding(.bottom, .spacingXL)
             }
         }
         .background(Color(.systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                if headerCollapsed {
-                    Text(mountain.shortName)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                }
-            }
-        }
+        .navigationTitle(mountain.shortName)
         .task {
             await viewModel.fetchData()
         }
         .refreshable {
             await viewModel.fetchData()
         }
+    }
+
+    // MARK: - Hero Header
+
+    private var heroHeader: some View {
+        ZStack(alignment: .bottomLeading) {
+            // Background - webcam image or gradient
+            if let webcam = viewModel.locationData?.mountain.webcams.first {
+                AsyncImage(url: URL(string: webcam.url)) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    default:
+                        mountainGradient
+                    }
+                }
+            } else {
+                mountainGradient
+            }
+
+            // Gradient overlay for text readability
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.7)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            // Mountain info overlay
+            HStack(spacing: .spacingM) {
+                MountainLogoView(
+                    logoUrl: mountain.logo,
+                    color: mountain.color,
+                    size: 44
+                )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(mountain.name)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+
+                    Text(mountain.region.uppercased())
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white.opacity(0.8))
+                }
+
+                Spacer()
+
+                // Elevation badge
+                Text("\(mountain.elevation.summit.formatted())ft")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(Color.black.opacity(0.5)))
+            }
+            .padding(.spacingM)
+        }
+        .frame(height: headerFullHeight)
+        .clipped()
+    }
+
+    private var mountainGradient: some View {
+        LinearGradient(
+            colors: mountainGradientColors,
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private var mountainGradientColors: [Color] {
+        if let color = Color(hex: mountain.color) {
+            return [color, color.opacity(0.7)]
+        }
+        return [.blue, .purple]
+    }
+
+    // MARK: - Tab Bar
+
+    private var tabBarView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: .spacingS) {
+                ForEach(DetailTab.allCases) { tab in
+                    Button {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            selectedTab = tab
+                        }
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: tab.icon)
+                                .font(.system(size: 18))
+                            Text(tab.rawValue)
+                                .font(.caption)
+                                .fontWeight(selectedTab == tab ? .semibold : .regular)
+                        }
+                        .foregroundColor(selectedTab == tab ? .blue : .secondary)
+                        .frame(minWidth: 70)
+                        .padding(.vertical, .spacingS)
+                        .padding(.horizontal, .spacingS)
+                        .background(
+                            RoundedRectangle(cornerRadius: .cornerRadiusButton)
+                                .fill(selectedTab == tab ? Color.blue.opacity(0.12) : Color.clear)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, .spacingM)
+            .padding(.vertical, .spacingS)
+        }
+        .background(Color(.systemBackground))
     }
 
     // MARK: - Tab Content

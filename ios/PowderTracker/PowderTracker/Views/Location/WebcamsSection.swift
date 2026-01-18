@@ -86,7 +86,7 @@ struct LocationRoadWebcamCard: View {
                     ZStack {
                         Color(.systemGray5)
                         VStack {
-                            Image(systemName: "exclamationmark.camera")
+                            Image(systemName: "camera.metering.unknown")
                                 .font(.title)
                                 .foregroundColor(.secondary)
                             Text("Failed to load")
@@ -148,7 +148,7 @@ struct WebcamExpandedView: View {
                             .aspectRatio(contentMode: .fit)
                     } else if state.error != nil {
                         VStack {
-                            Image(systemName: "exclamationmark.camera")
+                            Image(systemName: "camera.metering.unknown")
                                 .font(.largeTitle)
                                 .foregroundColor(.secondary)
                             Text("Failed to load image")
@@ -227,7 +227,7 @@ struct LocationResortWebcamCard: View {
                     ZStack {
                         Color(.systemGray5)
                         VStack {
-                            Image(systemName: "exclamationmark.camera")
+                            Image(systemName: "camera.metering.unknown")
                                 .font(.title)
                                 .foregroundColor(.secondary)
                             Text("Failed to load")
@@ -275,7 +275,7 @@ struct ResortWebcamExpandedView: View {
                             .aspectRatio(contentMode: .fit)
                     } else if state.error != nil {
                         VStack {
-                            Image(systemName: "exclamationmark.camera")
+                            Image(systemName: "camera.metering.unknown")
                                 .font(.largeTitle)
                                 .foregroundColor(.secondary)
                             Text("Failed to load image")
