@@ -5,7 +5,12 @@ import jwt from 'jsonwebtoken';
 
 // Mock dependencies
 vi.mock('http2');
-vi.mock('fs');
+vi.mock('fs', () => ({
+  default: {
+    readFileSync: vi.fn().mockReturnValue('mock_private_key_content'),
+  },
+  readFileSync: vi.fn().mockReturnValue('mock_private_key_content'),
+}));
 vi.mock('jsonwebtoken');
 
 describe('APNs Service', () => {

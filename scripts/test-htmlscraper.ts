@@ -2,8 +2,8 @@
  * Test HTMLScraper with OnTheSnow JSON parser
  */
 
-import { HTMLScraper } from './src/lib/scraper/HTMLScraper';
-import { scraperConfigs } from './src/lib/scraper/configs';
+import { HTMLScraper } from '../src/lib/scraper/HTMLScraper';
+import { scraperConfigs } from '../src/lib/scraper/configs';
 
 async function testHTMLScraper() {
   console.log('Testing HTMLScraper with OnTheSnow JSON parser...\n');

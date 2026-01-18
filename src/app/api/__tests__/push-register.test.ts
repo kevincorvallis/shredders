@@ -26,9 +26,11 @@ describe('POST /api/push/register', () => {
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({
-              data: null,
-              error: null,
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: null,
+                error: null,
+              }),
             }),
           }),
         }),
@@ -82,10 +84,10 @@ describe('POST /api/push/register', () => {
     const response = await POST(mockRequest);
     const data = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(data).toHaveProperty('id');
-    expect(data.device_token).toBe('abc123');
-    expect(data.platform).toBe('ios');
+    expect(response.status).toBe(201);
+    expect(data.token).toHaveProperty('id');
+    expect(data.token.device_token).toBe('abc123');
+    expect(data.token.platform).toBe('ios');
   });
 
   it('should reject invalid platform', async () => {
@@ -130,7 +132,7 @@ describe('POST /api/push/register', () => {
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toContain('Unauthorized');
+    expect(data.error).toBe('Not authenticated');
   });
 
   it('should update existing device token', async () => {
@@ -138,13 +140,15 @@ describe('POST /api/push/register', () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: 'existing123',
-              device_token: 'old_token',
-              platform: 'ios',
-            },
-            error: null,
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: {
+                id: 'existing123',
+                device_token: 'old_token',
+                platform: 'ios',
+              },
+              error: null,
+            }),
           }),
         }),
       }),
@@ -180,7 +184,7 @@ describe('POST /api/push/register', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.device_token).toBe('new_token');
+    expect(data.token.device_token).toBe('new_token');
   });
 });
 
@@ -225,7 +229,7 @@ describe('DELETE /api/push/register', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.message).toContain('unregistered');
+    expect(data.success).toBe(true);
   });
 
   it('should require deviceId parameter', async () => {
@@ -237,7 +241,7 @@ describe('DELETE /api/push/register', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('deviceId');
+    expect(data.error).toBe('Device ID is required');
   });
 
   it('should require authentication for DELETE', async () => {
@@ -257,6 +261,6 @@ describe('DELETE /api/push/register', () => {
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toContain('Unauthorized');
+    expect(data.error).toBe('Not authenticated');
   });
 });
