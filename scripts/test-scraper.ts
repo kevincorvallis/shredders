@@ -1,5 +1,5 @@
-import { HTMLScraper } from './src/lib/scraper/HTMLScraper';
-import { scraperConfigs } from './src/lib/scraper/configs';
+import { HTMLScraper } from '../src/lib/scraper/HTMLScraper';
+import { scraperConfigs } from '../src/lib/scraper/configs';
 
 // Test Stevens Pass scraper with OnTheSnow fallback
 const config = scraperConfigs.stevens;

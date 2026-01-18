@@ -24,18 +24,35 @@ describe('GET /api/alerts/subscriptions', () => {
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({
-              data: [
-                {
-                  id: 'sub123',
-                  user_id: 'user123',
-                  mountain_id: 'baker',
-                  weather_alerts: true,
-                  powder_alerts: true,
-                  powder_threshold: 6,
-                },
-              ],
-              error: null,
+            order: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({
+                data: [
+                  {
+                    id: 'sub123',
+                    user_id: 'user123',
+                    mountain_id: 'baker',
+                    weather_alerts: true,
+                    powder_alerts: true,
+                    powder_threshold: 6,
+                  },
+                ],
+                error: null,
+              }),
+              then: function(resolve: any) {
+                return resolve({
+                  data: [
+                    {
+                      id: 'sub123',
+                      user_id: 'user123',
+                      mountain_id: 'baker',
+                      weather_alerts: true,
+                      powder_alerts: true,
+                      powder_threshold: 6,
+                    },
+                  ],
+                  error: null,
+                });
+              },
             }),
           }),
         }),
@@ -54,9 +71,9 @@ describe('GET /api/alerts/subscriptions', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(Array.isArray(data)).toBe(true);
-    expect(data[0]).toHaveProperty('mountain_id', 'baker');
-    expect(data[0]).toHaveProperty('weather_alerts', true);
+    expect(Array.isArray(data.subscriptions)).toBe(true);
+    expect(data.subscriptions[0]).toHaveProperty('mountain_id', 'baker');
+    expect(data.subscriptions[0]).toHaveProperty('weather_alerts', true);
   });
 
   it('should filter by mountainId query param', async () => {
@@ -86,7 +103,7 @@ describe('GET /api/alerts/subscriptions', () => {
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toContain('Unauthorized');
+    expect(data.error).toBe('Not authenticated');
   });
 });
 
@@ -153,10 +170,10 @@ describe('POST /api/alerts/subscriptions', () => {
     const response = await POST(mockRequest);
     const data = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(data).toHaveProperty('id');
-    expect(data.mountain_id).toBe('baker');
-    expect(data.weather_alerts).toBe(true);
+    expect(response.status).toBe(201);
+    expect(data.subscription).toHaveProperty('id');
+    expect(data.subscription.mountain_id).toBe('baker');
+    expect(data.subscription.weather_alerts).toBe(true);
   });
 
   it('should validate powder threshold range', async () => {
@@ -233,7 +250,7 @@ describe('POST /api/alerts/subscriptions', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.powder_threshold).toBe(10);
+    expect(data.subscription.powder_threshold).toBe(10);
   });
 });
 
@@ -276,7 +293,7 @@ describe('DELETE /api/alerts/subscriptions', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.message).toContain('Subscription deleted');
+    expect(data.success).toBe(true);
   });
 
   it('should require mountainId parameter', async () => {
@@ -288,6 +305,6 @@ describe('DELETE /api/alerts/subscriptions', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('mountainId');
+    expect(data.error).toBe('Mountain ID is required');
   });
 });

@@ -7,7 +7,7 @@ import { getMountain } from '@shredders/shared';
 import { Shield, Home, History, Camera, RefreshCw } from 'lucide-react';
 import { MountainSelector } from '@/components/MountainSelector';
 import { useMountain } from '@/context/MountainContext';
-import { useMountainData } from '@/lib/hooks/useMountainData';
+import { useMountainData } from '@/hooks/useMountainData';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MountainPage({
