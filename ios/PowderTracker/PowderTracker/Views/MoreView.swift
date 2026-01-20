@@ -35,16 +35,22 @@ struct MoreView: View {
                 }
 
                 Section {
-                    Link(destination: URL(string: "https://weather.gov")!) {
-                        Label("Weather.gov", systemImage: "cloud.sun")
+                    if let weatherURL = URL(string: "https://weather.gov") {
+                        Link(destination: weatherURL) {
+                            Label("Weather.gov", systemImage: "cloud.sun")
+                        }
                     }
 
-                    Link(destination: URL(string: "https://wsdot.com/travel")!) {
-                        Label("WSDOT Traffic", systemImage: "car")
+                    if let wsdotURL = URL(string: "https://wsdot.com/travel") {
+                        Link(destination: wsdotURL) {
+                            Label("WSDOT Traffic", systemImage: "car")
+                        }
                     }
 
-                    Link(destination: URL(string: "https://nwac.us")!) {
-                        Label("NW Avalanche Center", systemImage: "exclamationmark.triangle")
+                    if let nwacURL = URL(string: "https://nwac.us") {
+                        Link(destination: nwacURL) {
+                            Label("NW Avalanche Center", systemImage: "exclamationmark.triangle")
+                        }
                     }
                 } header: {
                     Text("External Resources")

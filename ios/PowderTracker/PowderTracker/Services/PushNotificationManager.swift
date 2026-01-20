@@ -16,8 +16,11 @@ class PushNotificationManager: NSObject {
     var authorizationStatus: UNAuthorizationStatus = .notDetermined
 
     private override init() {
+        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
+            fatalError("Invalid Supabase URL configuration: \(AppConfig.supabaseURL)")
+        }
         self.supabase = SupabaseClient(
-            supabaseURL: URL(string: AppConfig.supabaseURL)!,
+            supabaseURL: supabaseURL,
             supabaseKey: AppConfig.supabaseAnonKey
         )
         self.apiClient = APIClient.shared
@@ -32,10 +35,14 @@ class PushNotificationManager: NSObject {
         let granted = try await center.requestAuthorization(options: options)
 
         if granted {
+            #if DEBUG
             print("Push notification permission granted")
+            #endif
             await registerForPushNotifications()
         } else {
+            #if DEBUG
             print("Push notification permission denied")
+            #endif
         }
 
         // Update authorization status
@@ -65,7 +72,9 @@ class PushNotificationManager: NSObject {
         let tokenString = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         self.deviceToken = tokenString
 
+        #if DEBUG
         print("Device token received: \(tokenString)")
+        #endif
 
         // Register with backend
         Task {
@@ -75,7 +84,9 @@ class PushNotificationManager: NSObject {
 
     /// Handle registration failure (called from AppDelegate)
     func didFailToRegisterForRemoteNotifications(withError error: Error) {
+        #if DEBUG
         print("Failed to register for push notifications: \(error)")
+        #endif
         isRegistered = false
     }
 
@@ -129,9 +140,13 @@ class PushNotificationManager: NSObject {
             }
 
             isRegistered = true
+            #if DEBUG
             print("Device token registered with backend successfully")
+            #endif
         } catch {
+            #if DEBUG
             print("Failed to register device token with backend: \(error)")
+            #endif
             isRegistered = false
         }
     }
@@ -164,9 +179,13 @@ class PushNotificationManager: NSObject {
 
             isRegistered = false
             deviceToken = nil
+            #if DEBUG
             print("Device unregistered from push notifications")
+            #endif
         } catch {
+            #if DEBUG
             print("Failed to unregister device: \(error)")
+            #endif
         }
     }
 
@@ -178,7 +197,9 @@ class PushNotificationManager: NSObject {
 
     /// Handle notification data extracted from notification (for concurrency safety)
     func handleNotificationData(_ userInfo: [AnyHashable: Any]) {
+        #if DEBUG
         print("Received notification:", userInfo)
+        #endif
 
         // Handle different notification types
         if let type = userInfo["type"] as? String {
@@ -188,7 +209,10 @@ class PushNotificationManager: NSObject {
             case "powder-alert":
                 handlePowderAlert(userInfo)
             default:
+                #if DEBUG
                 print("Unknown notification type:", type)
+                #endif
+                break
             }
         }
 
@@ -202,7 +226,9 @@ class PushNotificationManager: NSObject {
     private func handleWeatherAlert(_ userInfo: [AnyHashable: Any]) {
         guard let mountainId = userInfo["mountainId"] as? String else { return }
 
+        #if DEBUG
         print("Weather alert for mountain:", mountainId)
+        #endif
 
         // TODO: Navigate to alerts view or show alert details
         // This could be implemented with a notification center pattern
@@ -220,7 +246,9 @@ class PushNotificationManager: NSObject {
             return
         }
 
+        #if DEBUG
         print("Powder alert for mountain \(mountainId): \(snowfallInches)\"")
+        #endif
 
         // TODO: Navigate to mountain conditions or show powder details
         NotificationCenter.default.post(

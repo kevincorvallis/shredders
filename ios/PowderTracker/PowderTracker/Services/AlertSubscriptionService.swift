@@ -9,8 +9,11 @@ class AlertSubscriptionService {
     private let supabase: SupabaseClient
 
     private init() {
+        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
+            fatalError("Invalid Supabase URL configuration: \(AppConfig.supabaseURL)")
+        }
         self.supabase = SupabaseClient(
-            supabaseURL: URL(string: AppConfig.supabaseURL)!,
+            supabaseURL: supabaseURL,
             supabaseKey: AppConfig.supabaseAnonKey
         )
     }

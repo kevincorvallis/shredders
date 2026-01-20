@@ -349,16 +349,6 @@ class SingleMountainViewModel {
     var isLoading = false
     var error: String?
 
-    // Mock road conditions - TODO: Wire up real data
-    var mockRoadConditions: [RoadCondition] = [
-        RoadCondition(
-            name: "Main Access Road",
-            status: "Open",
-            conditions: "Snow and ice, drive carefully",
-            chainsRequired: true
-        )
-    ]
-
     private let apiClient = APIClient.shared
     private var currentMountainId: String = ""
 

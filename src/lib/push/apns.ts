@@ -247,3 +247,32 @@ export async function sendPowderAlert(
   });
 }
 
+/**
+ * Send event reminder notification
+ */
+export async function sendEventReminder(
+  deviceToken: string,
+  options: {
+    eventTitle: string;
+    eventId: string;
+    mountainName: string;
+    eventDate: string;
+    departureTime?: string;
+    organizerName: string;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const timeInfo = options.departureTime ? ` at ${options.departureTime}` : '';
+  return sendPushNotification(deviceToken, {
+    title: `Tomorrow: ${options.eventTitle}`,
+    body: `${options.mountainName}${timeInfo} - organized by ${options.organizerName}`,
+    category: 'event-reminder',
+    sound: 'default',
+    badge: 1,
+    data: {
+      type: 'event-reminder',
+      eventId: options.eventId,
+    },
+    threadId: `event-${options.eventId}`,
+  });
+}
+

@@ -68,15 +68,6 @@ struct SignInWithAppleButton: View {
                 .frame(height: 50)
                 .cornerRadius(10)
 
-                if isSimulator {
-                    Text("⚠️ Sign in with Apple may not work on simulator. Use a physical device or email/password.")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal)
-                }
-
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
                         .font(.caption)
@@ -154,7 +145,10 @@ struct SignInWithAppleButton: View {
     // MARK: - Nonce Generation
 
     private func randomNonceString(length: Int = 32) -> String {
-        precondition(length > 0)
+        guard length > 0 else {
+            // Return a default nonce if invalid length provided
+            return randomNonceString(length: 32)
+        }
         let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
         var result = ""
         var remainingLength = length
@@ -164,7 +158,11 @@ struct SignInWithAppleButton: View {
                 var random: UInt8 = 0
                 let errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
                 if errorCode != errSecSuccess {
-                    fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+                    // If secure random fails, fall back to arc4random (less secure but won't crash)
+                    #if DEBUG
+                    print("Warning: SecRandomCopyBytes failed with OSStatus \(errorCode), using fallback")
+                    #endif
+                    return UInt8(arc4random_uniform(256))
                 }
                 return random
             }
@@ -197,38 +195,13 @@ struct SignInWithAppleButton: View {
     // MARK: - Availability Check
 
     private func checkSignInWithAppleAvailability() async {
-        isCheckingAvailability = true
-
-        // Check if Sign in with Apple is available
-        let provider = ASAuthorizationAppleIDProvider()
-
-        do {
-            // Try to get credential state for a dummy user ID
-            // This will fail gracefully if iCloud is not signed in
-            let state = try await provider.credentialState(forUserID: "test")
-
-            // If we can query credential state, Sign in with Apple is available
-            isAvailable = true
-            print("Sign in with Apple is available. Credential state: \(state.rawValue)")
-        } catch let error as NSError {
-            // If we get an error, it likely means iCloud is not signed in
-            // or Sign in with Apple is not available
-            print("Sign in with Apple availability check failed: \(error)")
-
-            // Check error code to determine if it's an iCloud issue
-            if error.domain == "com.apple.AuthenticationServices.AuthorizationError" {
-                isAvailable = false
-            } else {
-                // Unknown error, assume available and let user try
-                isAvailable = true
-            }
-        } catch {
-            print("Unexpected error checking Sign in with Apple: \(error)")
-            // On unexpected error, assume available
-            isAvailable = true
-        }
-
+        // Sign in with Apple is available on all iOS 13+ devices
+        // Rather than pre-emptively checking (which can give false negatives),
+        // we assume it's available and let the user try.
+        // If it fails due to iCloud not being signed in, the error handler
+        // in handleSignInWithApple will show a helpful message.
         isCheckingAvailability = false
+        isAvailable = true
     }
 }
 

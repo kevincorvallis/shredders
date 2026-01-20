@@ -11,6 +11,7 @@
  */
 
 import { createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 export async function createClient() {
@@ -37,4 +38,29 @@ export async function createClient() {
       },
     }
   );
+}
+
+/**
+ * Create a Supabase admin client that bypasses RLS
+ *
+ * Use this client sparingly for:
+ * - Creating records that trigger automatic related inserts
+ * - Admin operations that need to bypass row-level security
+ *
+ * This client uses the service role key and should NEVER be exposed client-side.
+ */
+export function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing Supabase admin credentials');
+  }
+
+  return createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }

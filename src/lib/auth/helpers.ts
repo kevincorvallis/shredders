@@ -5,6 +5,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { generateTokenPair, type TokenPayload } from './jwt';
 import { addToBlacklist } from './token-blacklist';
 import {
@@ -16,18 +17,21 @@ import {
 /**
  * Create auth tokens for a user
  * Fetches user details from database and generates JWT token pair
+ * Uses admin client to bypass RLS for system operations
  */
 export async function createUserTokens(userId: string) {
-  const supabase = await createClient();
+  // Use admin client to bypass RLS - this is called during signup/login
+  const adminClient = createAdminClient();
 
   // Fetch user details from users table
-  const { data: user, error } = await supabase
+  const { data: user, error } = await adminClient
     .from('users')
     .select('auth_user_id, email, username')
     .eq('auth_user_id', userId)
     .single();
 
   if (error || !user) {
+    console.error('createUserTokens error:', error);
     throw new Error('User not found');
   }
 
@@ -46,6 +50,7 @@ export async function createUserTokens(userId: string) {
  */
 export async function authenticateUser(email: string, password: string) {
   const supabase = await createClient();
+  const adminClient = createAdminClient();
 
   // Authenticate with Supabase
   const { data: authData, error: authError } =
@@ -58,8 +63,8 @@ export async function authenticateUser(email: string, password: string) {
     throw new Error('Invalid credentials');
   }
 
-  // Update last login timestamp
-  await supabase
+  // Update last login timestamp using admin client to bypass RLS
+  await adminClient
     .from('users')
     .update({ last_login_at: new Date().toISOString() })
     .eq('auth_user_id', authData.user.id);
@@ -82,7 +87,8 @@ export async function authenticateUser(email: string, password: string) {
  * @throws Error if token has been reused (security attack detected)
  */
 export async function refreshUserSession(oldTokenPayload: TokenPayload) {
-  const supabase = await createClient();
+  // Use admin client to bypass RLS for system operations
+  const adminClient = createAdminClient();
 
   // 1. Check if this refresh token has already been used
   const tokenUsed = await isTokenUsed(oldTokenPayload.jti);
@@ -100,7 +106,7 @@ export async function refreshUserSession(oldTokenPayload: TokenPayload) {
   }
 
   // 2. Fetch user details for new tokens
-  const { data: user, error } = await supabase
+  const { data: user, error } = await adminClient
     .from('users')
     .select('auth_user_id, email, username')
     .eq('auth_user_id', oldTokenPayload.userId)
@@ -160,15 +166,16 @@ export async function refreshUserSession(oldTokenPayload: TokenPayload) {
 /**
  * Logout helper
  * Updates logout timestamp (optional - for token blacklisting if implemented)
+ * Uses admin client to bypass RLS for system operations
  */
 export async function logoutUser(userId: string, token?: string) {
   // If using a token blacklist (Redis, DB), add the token here
   // For now, we rely on client-side token removal
 
-  const supabase = await createClient();
+  const adminClient = createAdminClient();
 
   // Optionally update logout time for tracking
-  await supabase
+  await adminClient
     .from('users')
     .update({ last_logout_at: new Date().toISOString() })
     .eq('auth_user_id', userId)
@@ -180,11 +187,12 @@ export async function logoutUser(userId: string, token?: string) {
 /**
  * Get user by ID
  * Fetches complete user profile from database
+ * Uses admin client to bypass RLS for system operations
  */
 export async function getUserById(userId: string) {
-  const supabase = await createClient();
+  const adminClient = createAdminClient();
 
-  const { data: user, error } = await supabase
+  const { data: user, error } = await adminClient
     .from('users')
     .select('*')
     .eq('auth_user_id', userId)
@@ -200,11 +208,12 @@ export async function getUserById(userId: string) {
 /**
  * Check if user exists
  * Returns boolean indicating if user with given email exists
+ * Uses admin client to bypass RLS for system operations
  */
 export async function userExists(email: string): Promise<boolean> {
-  const supabase = await createClient();
+  const adminClient = createAdminClient();
 
-  const { data } = await supabase
+  const { data } = await adminClient
     .from('users')
     .select('id')
     .eq('email', email)

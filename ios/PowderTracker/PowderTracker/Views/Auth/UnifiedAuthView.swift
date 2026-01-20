@@ -196,45 +196,48 @@ struct UnifiedAuthView: View {
     }
 
     private var actionSection: some View {
-        Section {
-            Button {
-                handleSubmit()
-            } label: {
-                HStack {
-                    Spacer()
-                    if isLoading {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Text(isSignupMode ? "Create Account" : "Sign In")
-                            .fontWeight(.semibold)
-                    }
-                    Spacer()
-                }
-            }
-            .disabled(!isFormValid || isLoading)
-
-            // Forgot Password link (only in login mode)
-            if !isSignupMode {
+        Group {
+            Section {
                 Button {
-                    showForgotPassword = true
+                    handleSubmit()
                 } label: {
                     HStack {
                         Spacer()
-                        Text("Forgot Password?")
-                            .font(.subheadline)
-                            .foregroundStyle(.blue)
+                        if isLoading {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text(isSignupMode ? "Create Account" : "Sign In")
+                                .fontWeight(.semibold)
+                        }
                         Spacer()
                     }
                 }
-                .buttonStyle(.plain)
-                .sheet(isPresented: $showForgotPassword) {
-                    ForgotPasswordView()
+                .disabled(!isFormValid || isLoading)
+            }
+            .listRowBackground(isFormValid ? Color.blue : Color.gray.opacity(0.3))
+            .foregroundColor(.white)
+
+            // Forgot Password link (only in login mode)
+            if !isSignupMode {
+                Section {
+                    Button {
+                        showForgotPassword = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("Forgot Password?")
+                                .font(.subheadline)
+                            Spacer()
+                        }
+                    }
+                    .sheet(isPresented: $showForgotPassword) {
+                        ForgotPasswordView()
+                    }
                 }
+                .listRowBackground(Color.clear)
             }
         }
-        .listRowBackground(isFormValid ? Color.blue : Color.gray.opacity(0.3))
-        .foregroundColor(.white)
     }
 
     private var toggleModeSection: some View {

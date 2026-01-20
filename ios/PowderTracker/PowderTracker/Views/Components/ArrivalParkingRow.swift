@@ -275,8 +275,10 @@ struct ArrivalParkingRow: View {
                 .padding(.vertical, 4)
             }
 
-            if pkg.reservationRequired, let url = pkg.reservationUrl {
-                Link(destination: URL(string: url)!) {
+            if pkg.reservationRequired,
+               let urlString = pkg.reservationUrl,
+               let url = URL(string: urlString) {
+                Link(destination: url) {
                     HStack {
                         Image(systemName: "calendar.badge.plus")
                         Text("Reserve Parking")

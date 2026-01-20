@@ -359,9 +359,11 @@ struct AlternativeTimeRow: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview {
     ScrollView {
         ArrivalTimeCard(arrivalTime: .mock)
             .padding()
     }
 }
+#endif

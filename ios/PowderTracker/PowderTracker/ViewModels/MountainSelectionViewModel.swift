@@ -80,7 +80,9 @@ class MountainSelectionViewModel: ObservableObject {
                         let conditions = try await self.apiClient.fetchConditions(for: mountain.id)
                         return (mountain.id, conditions)
                     } catch {
+                        #if DEBUG
                         print("Failed to fetch conditions for \(mountain.id): \(error.localizedDescription)")
+                        #endif
                         return (mountain.id, nil)
                     }
                 }

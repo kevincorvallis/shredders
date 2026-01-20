@@ -1,0 +1,36 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "4F8Q446767.com.shredders.powdertracker"
+        ],
+        "paths": [
+          "/events/*",
+          "/events/invite/*",
+          "/mountains/*"
+        ],
+        "components": [
+          {
+            "/": "/events/*",
+            "comment": "Matches all event pages"
+          },
+          {
+            "/": "/events/invite/*",
+            "comment": "Matches event invite links"
+          },
+          {
+            "/": "/mountains/*",
+            "comment": "Matches all mountain pages"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "4F8Q446767.com.shredders.powdertracker"
+    ]
+  }
+}

@@ -63,7 +63,7 @@ struct MountainsView: View {
     private var bestPowderTodaySection: some View {
         if let bestMountain = bestPowderMountain {
             NavigationLink {
-                LocationView(mountain: bestMountain)
+                MountainDetailView(mountain: bestMountain)
             } label: {
                 BestPowderTodayCard(
                     mountain: bestMountain,
@@ -80,7 +80,7 @@ struct MountainsView: View {
     }
 
     private var bestPowderMountain: Mountain? {
-        viewModel.mountains
+        filteredMountains
             .filter { viewModel.getScore(for: $0) != nil }
             .max { m1, m2 in
                 (viewModel.getScore(for: m1) ?? 0) < (viewModel.getScore(for: m2) ?? 0)
@@ -202,7 +202,7 @@ struct MountainsView: View {
         LazyVStack(spacing: 12) {
             ForEach(filteredMountains) { mountain in
                 NavigationLink {
-                    LocationView(mountain: mountain)
+                    MountainDetailView(mountain: mountain)
                 } label: {
                     MountainCardRow(
                         mountain: mountain,

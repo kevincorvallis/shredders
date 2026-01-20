@@ -53,7 +53,7 @@ class AuthService {
         let supabaseURLString = AppConfig.supabaseURL
         guard let supabaseURL = URL(string: supabaseURLString) else {
             // This should never happen with valid config, but handle gracefully
-            preconditionFailure("Invalid Supabase URL configuration: \(supabaseURLString)")
+            fatalError("Invalid Supabase URL configuration: \(supabaseURLString)")
         }
 
         supabase = SupabaseClient(
@@ -344,7 +344,9 @@ class AuthService {
                 } catch {
                     // Supabase sign-in failure doesn't block login
                     // Real-time features will be unavailable
+                    #if DEBUG
                     print("Supabase sign-in failed (non-critical): \(error)")
+                    #endif
                 }
             }
 
@@ -410,6 +412,15 @@ class AuthService {
             }
 
             guard (200...299).contains(httpResponse.statusCode) else {
+                // Try to decode error with details
+                struct ErrorResponse: Decodable {
+                    let error: String
+                    let details: [String]?
+                }
+                if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
+                    let message = errorResponse.details?.joined(separator: ", ") ?? errorResponse.error
+                    throw AuthError.serverError(message)
+                }
                 if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
                    let errorMessage = errorData["error"] {
                     throw AuthError.serverError(errorMessage)
@@ -449,7 +460,9 @@ class AuthService {
                 } catch {
                     // Supabase signup failure doesn't block signup
                     // User is already created via backend
+                    #if DEBUG
                     print("Supabase signup failed (non-critical): \(error)")
+                    #endif
                 }
             }
 
@@ -522,7 +535,9 @@ class AuthService {
 
             userProfile = response
         } catch {
+            #if DEBUG
             print("Failed to fetch user profile: \(error)")
+            #endif
         }
     }
 

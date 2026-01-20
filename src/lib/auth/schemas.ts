@@ -54,10 +54,11 @@ export const signupSchema = z.object({
     .trim(),
   displayName: z
     .string()
-    .min(1, 'Display name must not be empty')
     .max(50, 'Display name must be less than 50 characters')
     .trim()
-    .optional(),
+    .optional()
+    .nullable()
+    .transform(val => val || undefined), // Convert null/empty to undefined
 });
 
 export type SignupInput = z.infer<typeof signupSchema>;

@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E1E2E3E4E5E6E7E8E9E0E1E2 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A2A3A4A5A6A7A8A9A0A1A2 /* Event.swift */; };
+		F1F2F3F4F5F6F7F8F9F0F1F2 /* EventService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B2B3B4B5B6B7B8B9B0B1B2 /* EventService.swift */; };
+		EV01EV02EV03EV04EV05EV06 /* EventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0C1C2 /* EventsView.swift */; };
+		ED01ED02ED03ED04ED05ED06 /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D2D3D4D5D6D7D8D9D0D1D2 /* EventDetailView.swift */; };
+		EC01EC02EC03EC04EC05EC06 /* EventCreateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F2E3F4E5F6E7F8E9F0E1F2 /* EventCreateView.swift */; };
+		EI01EI02EI03EI04EI05EI06 /* EventInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2F3E4F5E6F7E8F9E0F1E2 /* EventInviteView.swift */; };
+		WM01WM02WM03WM04WM05WM06 /* WeatherMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WF01WF02WF03WF04WF05WF06 /* WeatherMapView.swift */; };
+		WT01WT02WT03WT04WT05WT06 /* WeatherTileOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = WO01WO02WO03WO04WO05WO06 /* WeatherTileOverlay.swift */; };
 		02D9CE2DF4A3EB4899971BF1 /* LiftsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07BF540F4EE15A6577D7E3B1 /* LiftsTab.swift */; };
 		030F5B74F5BF29320F6B352B /* SafetyTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BB4D6DD0E6679DB9E7D922B /* SafetyTab.swift */; };
 		062B45B4B9AC1078F41D1620 /* OpenSnowStyleSnowfallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C27CECD6A64ACBF25AA7373 /* OpenSnowStyleSnowfallView.swift */; };
@@ -261,6 +269,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A1A2A3A4A5A6A7A8A9A0A1A2 /* Event.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
+		B1B2B3B4B5B6B7B8B9B0B1B2 /* EventService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventService.swift; sourceTree = "<group>"; };
+		C1C2C3C4C5C6C7C8C9C0C1C2 /* EventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsView.swift; sourceTree = "<group>"; };
+		D1D2D3D4D5D6D7D8D9D0D1D2 /* EventDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailView.swift; sourceTree = "<group>"; };
+		E1F2E3F4E5F6E7F8E9F0E1F2 /* EventCreateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCreateView.swift; sourceTree = "<group>"; };
+		F1E2F3E4F5E6F7E8F9E0F1E2 /* EventInviteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventInviteView.swift; sourceTree = "<group>"; };
+		WF01WF02WF03WF04WF05WF06 /* WeatherMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherMapView.swift; sourceTree = "<group>"; };
+		WO01WO02WO03WO04WO05WO06 /* WeatherTileOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTileOverlay.swift; sourceTree = "<group>"; };
 		013EF204A2C423B3A82322CD /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
 		01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryData.swift; sourceTree = "<group>"; };
 		01FC72C486A24966EC54ABAE /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
@@ -579,6 +595,7 @@
 		6F25545104CB3A21A3BABA7F /* Map */ = {
 			isa = PBXGroup;
 			children = (
+				WF01WF02WF03WF04WF05WF06 /* WeatherMapView.swift */,
 				A7E18DBD910AA9F0FD8F7CB9 /* OverlayPickerBar.swift */,
 				727C580714943D26E54AB220 /* OverlayPickerSheet.swift */,
 				0BC9D2BD4A024BC2A9F4D001 /* MapTimeScrubber.swift */,
@@ -650,6 +667,8 @@
 		848CD3FF1F0ED180B6A41DBD /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				WO01WO02WO03WO04WO05WO06 /* WeatherTileOverlay.swift */,
+				B1B2B3B4B5B6B7B8B9B0B1B2 /* EventService.swift */,
 				65E0616F45B880757A20A4EB /* AlertSubscriptionService.swift */,
 				22899CFF2589BF56026F6C79 /* APIClient.swift */,
 				D8708FAF142B3D7735BF24C1 /* AuthService.swift */,
@@ -775,6 +794,7 @@
 		DA2F471601079E33498D575B /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				A1A2A3A4A5A6A7A8A9A0A1A2 /* Event.swift */,
 				7EA736B63341B3D7FA70C139 /* AlertSubscription.swift */,
 				CFF0F98B22E5EC2A1BBC1318 /* ArrivalTime.swift */,
 				01FC72C486A24966EC54ABAE /* ChatMessage.swift */,
@@ -845,9 +865,21 @@
 			path = Home;
 			sourceTree = "<group>";
 		};
+		EVGRP001EVGRP002EVGRP003 /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				C1C2C3C4C5C6C7C8C9C0C1C2 /* EventsView.swift */,
+				D1D2D3D4D5D6D7D8D9D0D1D2 /* EventDetailView.swift */,
+				E1F2E3F4E5F6E7F8E9F0E1F2 /* EventCreateView.swift */,
+				F1E2F3E4F5E6F7E8F9E0F1E2 /* EventInviteView.swift */,
+			);
+			path = Events;
+			sourceTree = "<group>";
+		};
 		FB275362EEA83C2D1C4035C1 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				EVGRP001EVGRP002EVGRP003 /* Events */,
 				013EF204A2C423B3A82322CD /* AlertsView.swift */,
 				C528BC7B8C59EABA2DBA9F58 /* ChatView.swift */,
 				9E8F75C7ACA67E68B1B910FC /* ContentView.swift */,
@@ -984,6 +1016,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1E2E3E4E5E6E7E8E9E0E1E2 /* Event.swift in Sources */,
+				F1F2F3F4F5F6F7F8F9F0F1F2 /* EventService.swift in Sources */,
+				EV01EV02EV03EV04EV05EV06 /* EventsView.swift in Sources */,
+				ED01ED02ED03ED04ED05ED06 /* EventDetailView.swift in Sources */,
+				EC01EC02EC03EC04EC05EC06 /* EventCreateView.swift in Sources */,
+				EI01EI02EI03EI04EI05EI06 /* EventInviteView.swift in Sources */,
+				WM01WM02WM03WM04WM05WM06 /* WeatherMapView.swift in Sources */,
+				WT01WT02WT03WT04WT05WT06 /* WeatherTileOverlay.swift in Sources */,
 				2C0F2CC3FA7E48B0BE3FE380 /* MountainMarker.swift in Sources */,
 				1A63FED6399D4408AAF05C61 /* MapSectionView.swift in Sources */,
 				5A18DD1C82877CFE114B2852 /* APIClient.swift in Sources */,

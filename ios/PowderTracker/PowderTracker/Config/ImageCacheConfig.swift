@@ -45,7 +45,9 @@ class ImageCacheConfig {
         // Create and set the pipeline
         ImagePipeline.shared = ImagePipeline(configuration: configuration)
 
-        print("✅ Nuke ImageCache configured: Memory=\(ImageCache.shared.costLimit / 1024 / 1024)MB, Disk=\(DataLoader.sharedUrlCache.diskCapacity / 1024 / 1024)MB")
+        #if DEBUG
+        print("Nuke ImageCache configured: Memory=\(ImageCache.shared.costLimit / 1024 / 1024)MB, Disk=\(DataLoader.sharedUrlCache.diskCapacity / 1024 / 1024)MB")
+        #endif
     }
 
     /// Reduce cache limits for older devices with less memory
@@ -53,7 +55,9 @@ class ImageCacheConfig {
         ImageCache.shared.costLimit = 1024 * 1024 * 75 // 75MB
         ImageCache.shared.countLimit = 50
 
-        print("⚠️ Low memory device detected - reduced cache to 75MB")
+        #if DEBUG
+        print("Low memory device detected - reduced cache to 75MB")
+        #endif
     }
 
     /// Clear all image caches (memory + disk)
@@ -62,6 +66,8 @@ class ImageCacheConfig {
         ImagePipeline.shared.cache.removeAll()
         DataLoader.sharedUrlCache.removeAllCachedResponses()
 
-        print("🗑️ All image caches cleared")
+        #if DEBUG
+        print("All image caches cleared")
+        #endif
     }
 }

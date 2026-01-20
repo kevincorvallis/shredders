@@ -71,6 +71,19 @@ enum AppConfig {
         return productionSupabaseAnonKey
     }
 
+    // MARK: - Weather API Configuration
+
+    /// OpenWeatherMap API key for weather overlays (temperature, wind, etc.)
+    static var openWeatherMapAPIKey: String? {
+        // Check for environment override
+        if let envKey = ProcessInfo.processInfo.environment["OPENWEATHERMAP_API_KEY"],
+           !envKey.isEmpty {
+            return envKey
+        }
+        // Production key
+        return "0fcef4fc1f3c235610ce608aa2911860"
+    }
+
     // MARK: - URL Helpers
 
     /// Safely creates a URL from the API base URL

@@ -293,8 +293,9 @@ struct ResortWebcamExpandedView: View {
                     Text(webcam.name)
                         .font(.headline)
 
-                    if let refreshUrl = webcam.refreshUrl {
-                        Link(destination: URL(string: refreshUrl)!) {
+                    if let refreshUrl = webcam.refreshUrl,
+                       let url = URL(string: refreshUrl) {
+                        Link(destination: url) {
                             HStack {
                                 Image(systemName: "link")
                                 Text("View on resort website")
