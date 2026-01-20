@@ -84,7 +84,8 @@ class WeatherTileOverlay: MKTileOverlay {
             return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/hrrr::MASSDEN/{z}/{x}/{y}.png"
 
         case .avalanche:
-            // Avalanche data would need to come from NWAC/regional centers
+            // Avalanche uses polygon overlays from avalanche.org API, not tile overlays
+            // Return nil here - handled separately by WeatherOverlayManager
             return nil
 
         case .landOwnership, .offlineMaps:
@@ -93,7 +94,7 @@ class WeatherTileOverlay: MKTileOverlay {
         }
     }
 
-    /// Check if this overlay type is available (has valid URL)
+    /// Check if this overlay type is available (has valid URL or data source)
     static func isAvailable(_ overlayType: MapOverlayType) -> Bool {
         switch overlayType {
         case .radar, .clouds, .snowfall, .snowDepth, .smoke:
@@ -102,7 +103,10 @@ class WeatherTileOverlay: MKTileOverlay {
         case .temperature, .wind:
             // These require OpenWeatherMap API key (no free alternative)
             return openWeatherMapKey != nil
-        case .avalanche, .landOwnership, .offlineMaps:
+        case .avalanche:
+            // Avalanche uses polygon overlays from avalanche.org API (free, no key needed)
+            return true
+        case .landOwnership, .offlineMaps:
             return false
         }
     }
@@ -220,12 +224,15 @@ struct RainViewerResponse: Codable {
 class WeatherOverlayManager: ObservableObject {
     private weak var mapView: MKMapView?
     private var currentOverlay: WeatherTileOverlay?
+    private var currentAvalanchePolygons: [AvalanchePolygon] = []
     private var animationTimer: Timer?
     private var animationTimestamps: [Int] = []
     private var currentAnimationIndex = 0
 
     @Published var isAnimating = false
     @Published var currentTimestamp: Int?
+    @Published var isLoadingAvalanche = false
+    @Published var avalancheError: String?
 
     func attach(to mapView: MKMapView) {
         self.mapView = mapView
@@ -237,6 +244,12 @@ class WeatherOverlayManager: ObservableObject {
 
         // Remove existing weather overlay
         removeCurrentOverlay()
+
+        // Handle avalanche overlay specially (uses polygons, not tiles)
+        if overlayType == .avalanche {
+            loadAvalancheOverlay()
+            return
+        }
 
         // For radar overlays, we need a valid timestamp from RainViewer
         if overlayType == .radar || (overlayType == .snowfall && timestamp == nil) || (overlayType == .snowDepth && timestamp == nil) {
@@ -259,6 +272,55 @@ class WeatherOverlayManager: ObservableObject {
         } else {
             addOverlayToMap(overlayType, timestamp: timestamp)
         }
+    }
+
+    /// Load avalanche forecast polygons from avalanche.org API
+    private func loadAvalancheOverlay() {
+        guard let mapView = mapView else { return }
+
+        isLoadingAvalanche = true
+        avalancheError = nil
+
+        Task {
+            do {
+                let response = try await AvalancheService.shared.getAvalancheZones()
+
+                await MainActor.run {
+                    // Convert features to polygons and add to map
+                    for feature in response.features {
+                        let polygons = feature.toPolygons()
+                        currentAvalanchePolygons.append(contentsOf: polygons)
+                        for polygon in polygons {
+                            mapView.addOverlay(polygon, level: .aboveRoads)
+                        }
+                    }
+
+                    isLoadingAvalanche = false
+
+                    #if DEBUG
+                    print("Added \(currentAvalanchePolygons.count) avalanche zone polygons")
+                    #endif
+                }
+            } catch {
+                await MainActor.run {
+                    isLoadingAvalanche = false
+                    avalancheError = error.localizedDescription
+                    #if DEBUG
+                    print("Failed to load avalanche data: \(error)")
+                    #endif
+                }
+            }
+        }
+    }
+
+    /// Remove avalanche polygons from the map
+    private func removeAvalancheOverlays() {
+        guard let mapView = mapView else { return }
+
+        for polygon in currentAvalanchePolygons {
+            mapView.removeOverlay(polygon)
+        }
+        currentAvalanchePolygons.removeAll()
     }
 
     private func addOverlayToMap(_ overlayType: MapOverlayType, timestamp: Int?) {
@@ -286,11 +348,15 @@ class WeatherOverlayManager: ObservableObject {
     func removeCurrentOverlay() {
         stopAnimation()
 
+        // Remove tile overlay
         if let overlay = currentOverlay {
             mapView?.removeOverlay(overlay)
             currentOverlay = nil
             currentTimestamp = nil
         }
+
+        // Remove avalanche polygons
+        removeAvalancheOverlays()
     }
 
     /// Start radar animation
@@ -339,6 +405,15 @@ class WeatherOverlayManager: ObservableObject {
         if let weatherOverlay = overlay as? WeatherTileOverlay {
             return WeatherTileOverlayRenderer(tileOverlay: weatherOverlay)
         }
+
+        if let avalanchePolygon = overlay as? AvalanchePolygon {
+            let renderer = MKPolygonRenderer(polygon: avalanchePolygon)
+            renderer.fillColor = avalanchePolygon.fillColor.withAlphaComponent(0.4)
+            renderer.strokeColor = avalanchePolygon.strokeColor
+            renderer.lineWidth = 1.5
+            return renderer
+        }
+
         return nil
     }
 }

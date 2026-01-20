@@ -15,6 +15,7 @@
 		EI01EI02EI03EI04EI05EI06 /* EventInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2F3E4F5E6F7E8F9E0F1E2 /* EventInviteView.swift */; };
 		WM01WM02WM03WM04WM05WM06 /* WeatherMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WF01WF02WF03WF04WF05WF06 /* WeatherMapView.swift */; };
 		WT01WT02WT03WT04WT05WT06 /* WeatherTileOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = WO01WO02WO03WO04WO05WO06 /* WeatherTileOverlay.swift */; };
+		AV01AV02AV03AV04AV05AV06 /* AvalancheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AS01AS02AS03AS04AS05AS06 /* AvalancheService.swift */; };
 		02D9CE2DF4A3EB4899971BF1 /* LiftsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07BF540F4EE15A6577D7E3B1 /* LiftsTab.swift */; };
 		030F5B74F5BF29320F6B352B /* SafetyTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BB4D6DD0E6679DB9E7D922B /* SafetyTab.swift */; };
 		062B45B4B9AC1078F41D1620 /* OpenSnowStyleSnowfallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C27CECD6A64ACBF25AA7373 /* OpenSnowStyleSnowfallView.swift */; };
@@ -277,6 +278,7 @@
 		F1E2F3E4F5E6F7E8F9E0F1E2 /* EventInviteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventInviteView.swift; sourceTree = "<group>"; };
 		WF01WF02WF03WF04WF05WF06 /* WeatherMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherMapView.swift; sourceTree = "<group>"; };
 		WO01WO02WO03WO04WO05WO06 /* WeatherTileOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTileOverlay.swift; sourceTree = "<group>"; };
+		AS01AS02AS03AS04AS05AS06 /* AvalancheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvalancheService.swift; sourceTree = "<group>"; };
 		013EF204A2C423B3A82322CD /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
 		01EADF592FE55CABC4B9D8E5 /* HistoryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryData.swift; sourceTree = "<group>"; };
 		01FC72C486A24966EC54ABAE /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
@@ -668,6 +670,7 @@
 			isa = PBXGroup;
 			children = (
 				WO01WO02WO03WO04WO05WO06 /* WeatherTileOverlay.swift */,
+				AS01AS02AS03AS04AS05AS06 /* AvalancheService.swift */,
 				B1B2B3B4B5B6B7B8B9B0B1B2 /* EventService.swift */,
 				65E0616F45B880757A20A4EB /* AlertSubscriptionService.swift */,
 				22899CFF2589BF56026F6C79 /* APIClient.swift */,
@@ -1024,6 +1027,7 @@
 				EI01EI02EI03EI04EI05EI06 /* EventInviteView.swift in Sources */,
 				WM01WM02WM03WM04WM05WM06 /* WeatherMapView.swift in Sources */,
 				WT01WT02WT03WT04WT05WT06 /* WeatherTileOverlay.swift in Sources */,
+				AV01AV02AV03AV04AV05AV06 /* AvalancheService.swift in Sources */,
 				2C0F2CC3FA7E48B0BE3FE380 /* MountainMarker.swift in Sources */,
 				1A63FED6399D4408AAF05C61 /* MapSectionView.swift in Sources */,
 				5A18DD1C82877CFE114B2852 /* APIClient.swift in Sources */,

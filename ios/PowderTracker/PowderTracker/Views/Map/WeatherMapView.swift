@@ -104,9 +104,18 @@ struct WeatherMapView: UIViewRepresentable {
         // MARK: - Overlay Rendering
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            // Check for weather overlay
+            // Check for weather overlay (tiles)
             if let weatherOverlay = overlay as? WeatherTileOverlay {
                 return WeatherTileOverlayRenderer(tileOverlay: weatherOverlay)
+            }
+
+            // Check for avalanche polygon overlay
+            if let avalanchePolygon = overlay as? AvalanchePolygon {
+                let renderer = MKPolygonRenderer(polygon: avalanchePolygon)
+                renderer.fillColor = avalanchePolygon.fillColor.withAlphaComponent(0.4)
+                renderer.strokeColor = avalanchePolygon.strokeColor
+                renderer.lineWidth = 1.5
+                return renderer
             }
 
             // Check for lift overlay
