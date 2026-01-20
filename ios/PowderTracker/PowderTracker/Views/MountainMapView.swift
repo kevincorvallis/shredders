@@ -49,9 +49,9 @@ struct MountainMapView: View {
                         VStack {
                             Spacer()
                             HStack {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.orange)
-                                Text("\(overlay.fullName) requires API key")
+                                Image(systemName: overlay.isComingSoon || overlay == .avalanche ? "clock.fill" : "exclamationmark.triangle.fill")
+                                    .foregroundColor(overlay.isComingSoon || overlay == .avalanche ? .blue : .orange)
+                                Text(overlayUnavailableMessage(for: overlay))
                                     .font(.caption)
                             }
                             .padding(8)
@@ -187,6 +187,19 @@ struct MountainMapView: View {
                 OverlayPickerSheet(overlayState: overlayState)
                     .presentationDetents([.medium, .large])
             }
+        }
+    }
+
+    private func overlayUnavailableMessage(for overlay: MapOverlayType) -> String {
+        switch overlay {
+        case .avalanche:
+            return "Avalanche Advisory - Coming Soon"
+        case .landOwnership, .offlineMaps:
+            return "\(overlay.fullName) - Coming Soon"
+        case .temperature, .wind:
+            return "\(overlay.fullName) requires API key"
+        default:
+            return "\(overlay.fullName) unavailable"
         }
     }
 

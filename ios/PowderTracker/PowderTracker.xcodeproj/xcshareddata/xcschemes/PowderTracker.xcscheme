@@ -50,6 +50,13 @@
             ReferencedContainer = "container:PowderTracker.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "OPENWEATHERMAP_API_KEY"
+            value = "7e241b644b07ae36f2e85436017f4cfa"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
