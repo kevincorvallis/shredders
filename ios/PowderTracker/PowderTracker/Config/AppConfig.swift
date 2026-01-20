@@ -74,14 +74,14 @@ enum AppConfig {
     // MARK: - Weather API Configuration
 
     /// OpenWeatherMap API key for weather overlays (temperature, wind, etc.)
+    /// Set OPENWEATHERMAP_API_KEY environment variable or configure in Xcode scheme
     static var openWeatherMapAPIKey: String? {
-        // Check for environment override
         if let envKey = ProcessInfo.processInfo.environment["OPENWEATHERMAP_API_KEY"],
            !envKey.isEmpty {
             return envKey
         }
-        // Production key
-        return "0fcef4fc1f3c235610ce608aa2911860"
+        // Key must be configured via environment variable
+        return nil
     }
 
     // MARK: - URL Helpers
