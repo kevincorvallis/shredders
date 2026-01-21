@@ -43,17 +43,28 @@ struct WeatherMapView: UIViewRepresentable {
     }
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
-        // Update annotations if mountains changed
-        updateAnnotations(mapView, context: context)
+        let coordinator = context.coordinator
+
+        // Only update annotations if mountains changed
+        if coordinator.lastMountainIds != Set(mountains.map { $0.id }) {
+            coordinator.lastMountainIds = Set(mountains.map { $0.id })
+            updateAnnotations(mapView, context: context)
+        }
+
+        // Ensure overlay manager is attached to the current map view (lightweight check)
+        coordinator.overlayManager.attach(to: mapView)
 
         // Handle overlay state changes
-        let coordinator = context.coordinator
         let currentOverlay = overlayState.activeOverlay
         let currentTimeOffset = overlayState.selectedTimeOffset
 
         // Check if overlay changed
         if currentOverlay != coordinator.lastOverlayType ||
            currentTimeOffset != coordinator.lastTimeOffset {
+
+            #if DEBUG
+            print("WeatherMapView.updateUIView - overlay changed from \(coordinator.lastOverlayType?.rawValue ?? "none") to \(currentOverlay?.rawValue ?? "none")")
+            #endif
 
             coordinator.lastOverlayType = currentOverlay
             coordinator.lastTimeOffset = currentTimeOffset
@@ -96,6 +107,7 @@ struct WeatherMapView: UIViewRepresentable {
         // Track state to detect changes
         var lastOverlayType: MapOverlayType?
         var lastTimeOffset: TimeInterval = 0
+        var lastMountainIds: Set<String> = []
 
         init(_ parent: WeatherMapView) {
             self.parent = parent
@@ -104,13 +116,23 @@ struct WeatherMapView: UIViewRepresentable {
         // MARK: - Overlay Rendering
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            #if DEBUG
+            print("mapView(rendererFor:) called for overlay type: \(type(of: overlay))")
+            #endif
+
             // Check for weather overlay (tiles)
             if let weatherOverlay = overlay as? WeatherTileOverlay {
+                #if DEBUG
+                print("Returning WeatherTileOverlayRenderer for \(weatherOverlay.overlayType.rawValue)")
+                #endif
                 return WeatherTileOverlayRenderer(tileOverlay: weatherOverlay)
             }
 
             // Check for avalanche polygon overlay
             if let avalanchePolygon = overlay as? AvalanchePolygon {
+                #if DEBUG
+                print("Returning renderer for avalanche polygon: \(avalanchePolygon.title ?? "unknown")")
+                #endif
                 let renderer = MKPolygonRenderer(polygon: avalanchePolygon)
                 renderer.fillColor = avalanchePolygon.fillColor.withAlphaComponent(0.4)
                 renderer.strokeColor = avalanchePolygon.strokeColor
@@ -123,6 +145,9 @@ struct WeatherMapView: UIViewRepresentable {
                 return LiftTileOverlayRenderer(tileOverlay: liftOverlay)
             }
 
+            #if DEBUG
+            print("Returning default MKOverlayRenderer")
+            #endif
             return MKOverlayRenderer(overlay: overlay)
         }
 

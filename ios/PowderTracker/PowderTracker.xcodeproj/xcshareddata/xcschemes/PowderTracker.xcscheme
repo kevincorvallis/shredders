@@ -52,8 +52,13 @@
       </BuildableProductRunnable>
       <EnvironmentVariables>
          <EnvironmentVariable
-            key = "OPENWEATHERMAP_API_KEY"
-            value = "7e241b644b07ae36f2e85436017f4cfa"
+            key = "DEBUG_EMAIL"
+            value = "kevinleems@outlook.com"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "DEBUG_PASSWORD"
+            value = "Password123!@#"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

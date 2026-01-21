@@ -9,9 +9,8 @@ class LikeService {
     private let supabase: SupabaseClient
 
     private init() {
-        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
-            fatalError("Invalid Supabase URL configuration: \(AppConfig.supabaseURL)")
-        }
+        // URL is hardcoded in AppConfig - safe to force unwrap
+        let supabaseURL = URL(string: AppConfig.supabaseURL)!
         self.supabase = SupabaseClient(
             supabaseURL: supabaseURL,
             supabaseKey: AppConfig.supabaseAnonKey

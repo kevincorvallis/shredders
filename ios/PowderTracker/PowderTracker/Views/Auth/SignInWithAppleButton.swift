@@ -111,9 +111,11 @@ struct SignInWithAppleButton: View {
                 case .unknown:
                     // Check for specific underlying error details
                     let nsError = error as NSError
+                    #if DEBUG
                     if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
                         print("Underlying error: \(underlyingError)")
                     }
+                    #endif
 
                     // Provide more helpful error message
                     if isSimulator {

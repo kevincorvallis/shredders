@@ -221,7 +221,9 @@ struct CheckInCardView: View {
             try await CheckInService.shared.deleteCheckIn(id: checkIn.id)
             onDeleted?()
         } catch {
+            #if DEBUG
             print("Failed to delete check-in: \(error)")
+            #endif
         }
 
         isDeleting = false

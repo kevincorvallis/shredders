@@ -60,3 +60,4 @@ data/ski-lifts/*.osm.gz
 
 # Generated verification reports (large files)
 verification-reports/*.json
+ios/PowderTracker/build/

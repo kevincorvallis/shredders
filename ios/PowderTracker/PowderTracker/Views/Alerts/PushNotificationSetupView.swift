@@ -178,7 +178,9 @@ struct PushNotificationSetupView: View {
             try await pushManager.requestAuthorization()
             await checkStatus()
         } catch {
+            #if DEBUG
             print("Failed to request permission:", error)
+            #endif
         }
 
         isRequesting = false

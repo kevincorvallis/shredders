@@ -14,9 +14,8 @@ class PhotoService: ObservableObject {
     @Published var error: String?
 
     private init() {
-        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
-            fatalError("Invalid Supabase URL configuration: \(AppConfig.supabaseURL)")
-        }
+        // URL is hardcoded in AppConfig - safe to force unwrap
+        let supabaseURL = URL(string: AppConfig.supabaseURL)!
         supabase = SupabaseClient(
             supabaseURL: supabaseURL,
             supabaseKey: AppConfig.supabaseAnonKey

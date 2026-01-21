@@ -49,7 +49,9 @@ class LiftTileOverlay: MKTileOverlay {
         // Fetch tile data
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
+                #if DEBUG
                 print("Failed to load tile \(path.z)/\(path.x)/\(path.y): \(error.localizedDescription)")
+                #endif
                 result(nil, error)
                 return
             }
@@ -57,7 +59,9 @@ class LiftTileOverlay: MKTileOverlay {
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200,
                   let data = data else {
+                #if DEBUG
                 print("Invalid response for tile \(path.z)/\(path.x)/\(path.y)")
+                #endif
                 result(nil, NSError(domain: "LiftTileOverlay", code: -1, userInfo: [
                     NSLocalizedDescriptionKey: "Invalid tile response"
                 ]))

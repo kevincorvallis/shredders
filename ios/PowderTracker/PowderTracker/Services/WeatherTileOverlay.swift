@@ -240,7 +240,16 @@ class WeatherOverlayManager: ObservableObject {
 
     /// Show an overlay on the map
     func showOverlay(_ overlayType: MapOverlayType, timestamp: Int? = nil) {
-        guard let mapView = mapView else { return }
+        #if DEBUG
+        print("WeatherOverlayManager.showOverlay - type: \(overlayType.rawValue), mapView: \(mapView != nil ? "attached" : "NIL")")
+        #endif
+
+        guard let mapView = mapView else {
+            #if DEBUG
+            print("WeatherOverlayManager.showOverlay - ERROR: mapView is nil!")
+            #endif
+            return
+        }
 
         // Remove existing weather overlay
         removeCurrentOverlay()
@@ -324,12 +333,17 @@ class WeatherOverlayManager: ObservableObject {
     }
 
     private func addOverlayToMap(_ overlayType: MapOverlayType, timestamp: Int?) {
-        guard let mapView = mapView else { return }
+        guard let mapView = mapView else {
+            #if DEBUG
+            print("addOverlayToMap - ERROR: mapView is nil!")
+            #endif
+            return
+        }
 
         // Create and add new overlay - returns nil if unavailable
         guard let overlay = WeatherTileOverlay(overlayType: overlayType, timestamp: timestamp) else {
             #if DEBUG
-            print("Overlay \(overlayType.displayName) is not available")
+            print("addOverlayToMap - Overlay \(overlayType.displayName) is not available (init returned nil)")
             #endif
             return
         }
@@ -337,11 +351,17 @@ class WeatherOverlayManager: ObservableObject {
         currentTimestamp = timestamp
 
         #if DEBUG
-        print("Adding overlay: \(overlayType.displayName) with timestamp: \(timestamp ?? 0)")
+        print("addOverlayToMap - Adding overlay: \(overlayType.displayName) with timestamp: \(timestamp ?? 0)")
+        print("addOverlayToMap - URL template: \(overlay.urlTemplate ?? "none")")
+        print("addOverlayToMap - Map overlays count before: \(mapView.overlays.count)")
         #endif
 
         // Add overlay above base map but below annotations
         mapView.addOverlay(overlay, level: .aboveRoads)
+
+        #if DEBUG
+        print("addOverlayToMap - Map overlays count after: \(mapView.overlays.count)")
+        #endif
     }
 
     /// Remove the current weather overlay

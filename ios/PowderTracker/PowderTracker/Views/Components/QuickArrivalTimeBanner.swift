@@ -115,7 +115,9 @@ struct QuickArrivalTimeBanner: View {
         do {
             arrivalTime = try await APIClient.shared.fetchArrivalTime(for: mountain.id)
         } catch {
+            #if DEBUG
             print("Failed to load quick arrival time: \(error)")
+            #endif
         }
 
         isLoading = false

@@ -46,7 +46,9 @@ struct ForecastTab: View {
             hourlyData = try await hourly
             powderDayData = try await powderDay
         } catch {
+            #if DEBUG
             print("Failed to load forecast data: \(error)")
+            #endif
         }
 
         isLoading = false

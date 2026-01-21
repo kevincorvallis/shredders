@@ -16,9 +16,8 @@ class PushNotificationManager: NSObject {
     var authorizationStatus: UNAuthorizationStatus = .notDetermined
 
     private override init() {
-        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
-            fatalError("Invalid Supabase URL configuration: \(AppConfig.supabaseURL)")
-        }
+        // URL is hardcoded in AppConfig - safe to force unwrap
+        let supabaseURL = URL(string: AppConfig.supabaseURL)!
         self.supabase = SupabaseClient(
             supabaseURL: supabaseURL,
             supabaseKey: AppConfig.supabaseAnonKey

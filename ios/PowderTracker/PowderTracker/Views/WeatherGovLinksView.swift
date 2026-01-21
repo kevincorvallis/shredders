@@ -99,9 +99,11 @@ struct WeatherGovLinksView: View {
             }
         } catch {
             // Only log non-cancellation errors
+            #if DEBUG
             if !Task.isCancelled && (error as NSError).code != NSURLErrorCancelled {
                 print("Failed to load weather.gov links: \(error)")
             }
+            #endif
         }
     }
 
@@ -117,9 +119,11 @@ struct WeatherGovLinksView: View {
             }
         } catch {
             // Only log non-cancellation errors
+            #if DEBUG
             if !Task.isCancelled && (error as NSError).code != NSURLErrorCancelled {
                 print("Failed to load alerts: \(error)")
             }
+            #endif
         }
     }
 }

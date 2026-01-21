@@ -19,23 +19,23 @@ struct EventCreateView: View {
     @State private var isSubmitting = false
     @State private var error: String?
 
-    // All mountains from the app config
+    // All mountains from the app config (IDs must match backend)
     private let mountains: [(id: String, name: String)] = [
-        ("stevens-pass", "Stevens Pass"),
-        ("crystal-mountain", "Crystal Mountain"),
-        ("snoqualmie-pass", "Snoqualmie Pass"),
-        ("mt-baker", "Mt. Baker"),
-        ("white-pass", "White Pass"),
-        ("mission-ridge", "Mission Ridge"),
-        ("mt-hood-meadows", "Mt. Hood Meadows"),
+        ("baker", "Mt. Baker"),
+        ("stevens", "Stevens Pass"),
+        ("crystal", "Crystal Mountain"),
+        ("snoqualmie", "Snoqualmie Pass"),
+        ("whitepass", "White Pass"),
+        ("missionridge", "Mission Ridge"),
+        ("meadows", "Mt. Hood Meadows"),
         ("timberline", "Timberline"),
-        ("mt-hood-skibowl", "Mt. Hood Skibowl"),
-        ("mt-bachelor", "Mt. Bachelor"),
+        ("bachelor", "Mt. Bachelor"),
         ("schweitzer", "Schweitzer"),
-        ("lookout-pass", "Lookout Pass"),
-        ("49-degrees-north", "49 Degrees North"),
-        ("silver-mountain", "Silver Mountain"),
-        ("whistler-blackcomb", "Whistler Blackcomb"),
+        ("lookout", "Lookout Pass"),
+        ("fortynine", "49 Degrees North"),
+        ("whistler", "Whistler Blackcomb"),
+        ("brundage", "Brundage Mountain"),
+        ("sunvalley", "Sun Valley"),
     ]
 
     var body: some View {

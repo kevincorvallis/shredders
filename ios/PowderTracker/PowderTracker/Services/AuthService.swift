@@ -49,13 +49,8 @@ class AuthService {
 
     private init() {
         // Initialize Supabase client (for real-time features only)
-        // URL is validated at config level, safe to use
-        let supabaseURLString = AppConfig.supabaseURL
-        guard let supabaseURL = URL(string: supabaseURLString) else {
-            // This should never happen with valid config, but handle gracefully
-            fatalError("Invalid Supabase URL configuration: \(supabaseURLString)")
-        }
-
+        // URL is hardcoded in AppConfig - safe to force unwrap
+        let supabaseURL = URL(string: AppConfig.supabaseURL)!
         supabase = SupabaseClient(
             supabaseURL: supabaseURL,
             supabaseKey: AppConfig.supabaseAnonKey
@@ -65,9 +60,42 @@ class AuthService {
 
         Task {
             await checkSession()
+
+            // Auto-login in DEBUG builds if credentials are provided via environment variables
+            #if DEBUG
+            await performDebugAutoLogin()
+            #endif
+
             await listenForAuthChanges()
         }
     }
+
+    // MARK: - Debug Auto-Login
+
+    #if DEBUG
+    /// Automatically logs in using environment variables for development convenience.
+    /// Set DEBUG_EMAIL and DEBUG_PASSWORD in your Xcode scheme's environment variables.
+    private func performDebugAutoLogin() async {
+        // Skip if already authenticated
+        guard !isAuthenticated else { return }
+
+        // Check for debug credentials in environment variables
+        guard let email = ProcessInfo.processInfo.environment["DEBUG_EMAIL"],
+              let password = ProcessInfo.processInfo.environment["DEBUG_PASSWORD"],
+              !email.isEmpty, !password.isEmpty else {
+            return
+        }
+
+        print("🔐 [DEBUG] Auto-login enabled, signing in as \(email)...")
+
+        do {
+            try await signInViaBackend(email: email, password: password)
+            print("🔐 [DEBUG] Auto-login successful!")
+        } catch {
+            print("🔐 [DEBUG] Auto-login failed: \(error.localizedDescription)")
+        }
+    }
+    #endif
 
     // MARK: - Session Management
 
@@ -441,27 +469,23 @@ class AuthService {
                 throw AuthError.tokenStorageFailed
             }
 
-            // Also create Supabase session for real-time features (non-blocking)
-            // Backend signup already creates the user - this just creates a local session
+            // Create Supabase session for real-time features (non-blocking)
+            // Backend signup already creates the user - just sign in to get a local session
             let supabaseClient = self.supabase
             Task { [weak self] in
                 do {
-                    let supabaseResponse = try await supabaseClient.auth.signUp(
+                    let session = try await supabaseClient.auth.signIn(
                         email: email,
-                        password: password,
-                        data: [
-                            "username": .string(username),
-                            "display_name": .string(displayName ?? username)
-                        ]
+                        password: password
                     )
                     await MainActor.run {
-                        self?.currentUser = supabaseResponse.user
+                        self?.currentUser = session.user
                     }
                 } catch {
-                    // Supabase signup failure doesn't block signup
+                    // Supabase sign-in failure doesn't block signup
                     // User is already created via backend
                     #if DEBUG
-                    print("Supabase signup failed (non-critical): \(error)")
+                    print("Supabase sign-in failed (non-critical): \(error)")
                     #endif
                 }
             }

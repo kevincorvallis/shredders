@@ -48,7 +48,9 @@ struct TravelTab: View {
         do {
             arrivalTime = try await APIClient.shared.fetchArrivalTime(for: mountain.id)
         } catch {
+            #if DEBUG
             print("Failed to load arrival time: \(error)")
+            #endif
         }
 
         isLoadingArrivalTime = false
@@ -60,7 +62,9 @@ struct TravelTab: View {
         do {
             parkingPrediction = try await APIClient.shared.fetchParkingPrediction(for: mountain.id)
         } catch {
+            #if DEBUG
             print("Failed to load parking prediction: \(error)")
+            #endif
         }
 
         isLoadingParking = false

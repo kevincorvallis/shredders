@@ -139,8 +139,9 @@ struct PhotoCardView: View {
             try await PhotoService.shared.deletePhoto(photo.id)
             await onDeleted?()
         } catch {
-            // Show error (could add error state here)
+            #if DEBUG
             print("Failed to delete photo: \(error)")
+            #endif
         }
 
         isDeleting = false

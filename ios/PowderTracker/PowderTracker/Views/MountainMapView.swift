@@ -34,8 +34,8 @@ struct MountainMapView: View {
                         },
                         region: $mapRegion
                     )
-                    // Force SwiftUI to trigger updateUIView when overlay changes
-                    .id("\(overlayState.activeOverlay?.rawValue ?? "none")-\(overlayState.selectedTimeOffset)")
+                    // Note: Don't use .id() here - it destroys and recreates the map view.
+                    // UIViewRepresentable already calls updateUIView when @ObservedObject changes.
 
                     // Legend overlay (when overlay is active)
                     if let overlay = overlayState.activeOverlay {

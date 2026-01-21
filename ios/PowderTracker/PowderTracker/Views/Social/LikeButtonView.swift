@@ -56,7 +56,9 @@ struct LikeButtonView: View {
                 isLiked = try await LikeService.shared.isLiked(webcamId: id)
             }
         } catch {
+            #if DEBUG
             print("Error checking like status: \(error)")
+            #endif
         }
     }
 
@@ -89,7 +91,9 @@ struct LikeButtonView: View {
                     likeCount = newLiked ? likeCount + 1 : likeCount - 1
                 }
             } catch {
+                #if DEBUG
                 print("Error toggling like: \(error)")
+                #endif
             }
 
             isLoading = false
