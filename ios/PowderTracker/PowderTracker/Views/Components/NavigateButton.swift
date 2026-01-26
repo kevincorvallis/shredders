@@ -38,6 +38,8 @@ struct NavigateButton: View {
                     .stroke(borderColor, lineWidth: borderWidth)
             )
         }
+        .accessibilityLabel("Navigate to \(mountain.name)")
+        .accessibilityHint("Opens Maps app with driving directions")
     }
 
     private func openMaps() {

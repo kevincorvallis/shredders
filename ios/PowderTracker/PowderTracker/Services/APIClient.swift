@@ -12,19 +12,34 @@ enum APIError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid URL"
+            return "Unable to connect. Please try again."
         case .networkError(let error):
-            return "Network error: \(error.localizedDescription)"
-        case .decodingError(let error):
-            return "Failed to decode response: \(error.localizedDescription)"
+            if let urlError = error as? URLError {
+                switch urlError.code {
+                case .notConnectedToInternet:
+                    return "No internet connection. Please check your network settings."
+                case .timedOut:
+                    return "Request timed out. Please try again."
+                case .cannotFindHost, .cannotConnectToHost:
+                    return "Unable to reach server. Please try again later."
+                default:
+                    return "Connection failed. Please check your internet and try again."
+                }
+            }
+            return "Connection failed. Please check your internet and try again."
+        case .decodingError:
+            return "We're having trouble loading this data. Please try again."
         case .serverError(let code):
-            return "Server error: \(code)"
+            if code >= 500 {
+                return "Our servers are experiencing issues. Please try again in a moment."
+            }
+            return "Something went wrong. Please try again."
         case .unauthorized:
-            return "Unauthorized - please sign in again"
+            return "Please sign in to continue."
         case .rateLimited(let retryAfter):
-            return "Too many requests. Please try again in \(retryAfter) seconds"
+            return "Too many requests. Please wait \(retryAfter) seconds and try again."
         case .tokenRefreshFailed:
-            return "Session expired - please sign in again"
+            return "Your session has expired. Please sign in again."
         }
     }
 }

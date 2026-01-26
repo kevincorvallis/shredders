@@ -18,6 +18,11 @@ class HomeViewModel: ObservableObject {
     @Published var arrivalTimes: [String: ArrivalTimeRecommendation] = [:]
     @Published var parkingPredictions: [String: ParkingPredictionResponse] = [:]
 
+    // Track failed enhanced data loads for potential retry
+    @Published var failedArrivalTimeLoads: Set<String> = []
+    @Published var failedParkingLoads: Set<String> = []
+    @Published var isLoadingEnhancedData = false
+
     // O(1) mountain lookup by ID
     private var mountainsById: [String: Mountain] = [:]
 
@@ -113,6 +118,10 @@ class HomeViewModel: ObservableObject {
 
     /// Load arrival times and parking predictions for favorites
     func loadEnhancedData() async {
+        isLoadingEnhancedData = true
+        failedArrivalTimeLoads.removeAll()
+        failedParkingLoads.removeAll()
+
         await withTaskGroup(of: Void.self) { group in
             // Load arrival times
             for mountainId in favoritesManager.favoriteIds {
@@ -121,9 +130,15 @@ class HomeViewModel: ObservableObject {
                         let arrivalTime = try await self.apiClient.fetchArrivalTime(for: mountainId)
                         await MainActor.run {
                             self.arrivalTimes[mountainId] = arrivalTime
+                            self.failedArrivalTimeLoads.remove(mountainId)
                         }
                     } catch {
-                        // Arrival time is optional, silently fail
+                        await MainActor.run {
+                            self.failedArrivalTimeLoads.insert(mountainId)
+                        }
+                        #if DEBUG
+                        print("Failed to load arrival time for \(mountainId): \(error.localizedDescription)")
+                        #endif
                     }
                 }
 
@@ -133,11 +148,46 @@ class HomeViewModel: ObservableObject {
                         let parking = try await self.apiClient.fetchParkingPrediction(for: mountainId)
                         await MainActor.run {
                             self.parkingPredictions[mountainId] = parking
+                            self.failedParkingLoads.remove(mountainId)
                         }
                     } catch {
-                        // Parking prediction is optional, silently fail
+                        await MainActor.run {
+                            self.failedParkingLoads.insert(mountainId)
+                        }
+                        #if DEBUG
+                        print("Failed to load parking for \(mountainId): \(error.localizedDescription)")
+                        #endif
                     }
                 }
+            }
+        }
+
+        isLoadingEnhancedData = false
+    }
+
+    /// Retry loading enhanced data for a specific mountain
+    func retryEnhancedData(for mountainId: String) async {
+        if failedArrivalTimeLoads.contains(mountainId) {
+            do {
+                let arrivalTime = try await apiClient.fetchArrivalTime(for: mountainId)
+                arrivalTimes[mountainId] = arrivalTime
+                failedArrivalTimeLoads.remove(mountainId)
+            } catch {
+                #if DEBUG
+                print("Retry failed for arrival time \(mountainId): \(error.localizedDescription)")
+                #endif
+            }
+        }
+
+        if failedParkingLoads.contains(mountainId) {
+            do {
+                let parking = try await apiClient.fetchParkingPrediction(for: mountainId)
+                parkingPredictions[mountainId] = parking
+                failedParkingLoads.remove(mountainId)
+            } catch {
+                #if DEBUG
+                print("Retry failed for parking \(mountainId): \(error.localizedDescription)")
+                #endif
             }
         }
     }

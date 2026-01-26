@@ -424,7 +424,8 @@ class EventService {
         // Try to refresh Keychain tokens if we have a refresh token
         if KeychainHelper.getRefreshToken() != nil {
             do {
-                try await refreshTokens()
+                // Delegate to AuthService for token refresh (single source of truth)
+                try await AuthService.shared.refreshTokens()
                 if let accessToken = KeychainHelper.getAccessToken() {
                     request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
                     return
@@ -444,47 +445,6 @@ class EventService {
         }
 
         throw EventServiceError.notAuthenticated
-    }
-
-    private func refreshTokens() async throws {
-        guard let refreshToken = KeychainHelper.getRefreshToken() else {
-            throw EventServiceError.notAuthenticated
-        }
-
-        guard let url = URL(string: "\(baseURL)/auth/refresh") else {
-            throw EventServiceError.invalidURL
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        struct RefreshRequest: Encodable {
-            let refreshToken: String
-        }
-
-        struct RefreshResponse: Decodable {
-            let accessToken: String
-            let refreshToken: String
-        }
-
-        request.httpBody = try JSONEncoder().encode(RefreshRequest(refreshToken: refreshToken))
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            KeychainHelper.clearTokens()
-            throw EventServiceError.notAuthenticated
-        }
-
-        let tokens = try JSONDecoder().decode(RefreshResponse.self, from: data)
-
-        try KeychainHelper.saveTokens(
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            expiresIn: 15 * 60
-        )
     }
 }
 

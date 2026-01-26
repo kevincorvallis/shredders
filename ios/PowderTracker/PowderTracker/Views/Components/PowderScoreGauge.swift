@@ -46,6 +46,9 @@ struct PowderScoreGauge: View {
             Text("Powder Score")
                 .font(.headline)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Powder Score: \(score) out of \(maxScore), \(label)")
+        .accessibilityValue("\(score)")
     }
 }
 

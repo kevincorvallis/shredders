@@ -235,7 +235,13 @@ class WeatherOverlayManager: ObservableObject {
     @Published var avalancheError: String?
 
     deinit {
-        animationTimer?.invalidate()
+        // Schedule timer invalidation on main thread since deinit is nonisolated
+        let timer = animationTimer
+        if timer != nil {
+            DispatchQueue.main.async {
+                timer?.invalidate()
+            }
+        }
     }
 
     func attach(to mapView: MKMapView) {

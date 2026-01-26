@@ -88,6 +88,9 @@ struct MountainStatusIndicator: View {
                 animateProgress = true
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(isOpen ? "Mountain is open, \(percentOpen) percent of terrain accessible" : "Mountain is closed")
+        .accessibilityValue(isOpen ? "\(percentOpen) percent" : "Closed")
     }
 }
 

@@ -44,6 +44,10 @@ struct TodaysPickCard: View {
             .heroShadow()
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Today's pick: \(mountain.name), powder score \(String(format: "%.1f", powderScore.score))")
+        .accessibilityHint("Double tap to view details")
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: - Header Section
