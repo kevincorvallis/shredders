@@ -21,7 +21,7 @@ struct ContentView: View {
                 }
                 .tag(0)
 
-            // Redesigned Mountains grid view
+            // Mountains view (MountainsTabView available as alternative - add to Xcode project first)
             MountainsView()
                 .tabItem {
                     Label("Mountains", systemImage: "mountain.2.fill")
