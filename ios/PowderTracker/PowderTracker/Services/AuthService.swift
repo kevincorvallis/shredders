@@ -49,8 +49,9 @@ class AuthService {
 
     private init() {
         // Initialize Supabase client (for real-time features only)
-        // URL is hardcoded in AppConfig - safe to force unwrap
-        let supabaseURL = URL(string: AppConfig.supabaseURL)!
+        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
+            fatalError("Invalid Supabase URL configuration: \(AppConfig.supabaseURL)")
+        }
         supabase = SupabaseClient(
             supabaseURL: supabaseURL,
             supabaseKey: AppConfig.supabaseAnonKey

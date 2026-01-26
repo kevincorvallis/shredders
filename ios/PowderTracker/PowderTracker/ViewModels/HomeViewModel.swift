@@ -4,7 +4,12 @@ import SwiftUI
 @MainActor
 class HomeViewModel: ObservableObject {
     @Published var mountainData: [String: MountainBatchedResponse] = [:]
-    @Published var mountains: [Mountain] = []
+    @Published var mountains: [Mountain] = [] {
+        didSet {
+            // Rebuild lookup dictionary when mountains change
+            mountainsById = Dictionary(uniqueKeysWithValues: mountains.map { ($0.id, $0) })
+        }
+    }
     @Published var isLoading = false
     @Published var error: String?
     @Published var lastRefreshDate: Date?
@@ -12,6 +17,9 @@ class HomeViewModel: ObservableObject {
     // Enhanced data for homepage redesign
     @Published var arrivalTimes: [String: ArrivalTimeRecommendation] = [:]
     @Published var parkingPredictions: [String: ParkingPredictionResponse] = [:]
+
+    // O(1) mountain lookup by ID
+    private var mountainsById: [String: Mountain] = [:]
 
     private let apiClient = APIClient.shared
     private let favoritesManager = FavoritesManager.shared
@@ -82,7 +90,7 @@ class HomeViewModel: ObservableObject {
     /// Get all favorite mountains with their complete data
     func getFavoritesWithData() -> [(mountain: Mountain, data: MountainBatchedResponse)] {
         return favoritesManager.favoriteIds.compactMap { mountainId in
-            guard let mountain = mountains.first(where: { $0.id == mountainId }),
+            guard let mountain = mountainsById[mountainId],
                   let data = mountainData[mountainId] else {
                 return nil
             }
@@ -93,7 +101,7 @@ class HomeViewModel: ObservableObject {
     /// Get all favorite mountains with their forecast data
     func getFavoritesWithForecast() -> [(mountain: Mountain, forecast: [ForecastDay])] {
         return favoritesManager.favoriteIds.compactMap { mountainId in
-            guard let mountain = mountains.first(where: { $0.id == mountainId }),
+            guard let mountain = mountainsById[mountainId],
                   let data = mountainData[mountainId] else {
                 return nil
             }
@@ -141,9 +149,10 @@ class HomeViewModel: ObservableObject {
         let now = Date()
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
 
         return arrivalTimes.compactMap { (mountainId, arrival) -> (Mountain, ArrivalTimeRecommendation)? in
-            guard let mountain = mountains.first(where: { $0.id == mountainId }),
+            guard let mountain = mountainsById[mountainId],
                   let optimalTime = formatter.date(from: arrival.arrivalWindow.optimal) else {
                 return nil
             }
@@ -164,7 +173,7 @@ class HomeViewModel: ObservableObject {
         return mountainData
             .filter { favoriteMountainIds.contains($0.key) }
             .compactMap { (id, data) -> (Mountain, MountainPowderScore, MountainBatchedResponse)? in
-                guard let mountain = mountains.first(where: { $0.id == id }) else { return nil }
+                guard let mountain = mountainsById[id] else { return nil }
                 return (mountain, data.powderScore, data)
             }
             .max { $0.1.score < $1.1.score }
@@ -186,7 +195,7 @@ class HomeViewModel: ObservableObject {
         let scores = mountainData
             .filter { favoriteMountainIds.contains($0.key) }
             .compactMap { (id, data) -> (mountain: Mountain, score: Double, data: MountainBatchedResponse)? in
-                guard let mountain = mountains.first(where: { $0.id == id }),
+                guard let mountain = mountainsById[id],
                       let status = data.status,
                       status.isOpen else {
                     return nil
@@ -271,7 +280,7 @@ class HomeViewModel: ObservableObject {
     /// Get favorite mountains with their data
     func getFavoriteMountains() -> [(mountain: Mountain, data: MountainBatchedResponse)] {
         favoritesManager.favoriteIds.compactMap { id in
-            guard let mountain = mountains.first(where: { $0.id == id }),
+            guard let mountain = mountainsById[id],
                   let data = mountainData[id] else {
                 return nil
             }
@@ -313,7 +322,7 @@ class HomeViewModel: ObservableObject {
         let diff = best.conditions.snowfall24h - mountain.conditions.snowfall24h
 
         if diff > 0 {
-            if let bestMountain = mountains.first(where: { $0.id == bestMountainId }) {
+            if let bestMountain = mountainsById[bestMountainId] {
                 return "+\(diff)\" more than \(bestMountain.shortName)"
             }
         }
@@ -324,7 +333,7 @@ class HomeViewModel: ObservableObject {
     /// Generate "Why Best?" reasons for the top powder mountain
     func getWhyBestReasons(for mountainId: String) -> [String] {
         guard let data = mountainData[mountainId],
-              mountains.first(where: { $0.id == mountainId }) != nil else {
+              mountainsById[mountainId] != nil else {
             return []
         }
 
@@ -359,7 +368,7 @@ class HomeViewModel: ObservableObject {
                 .sorted { $0.value.powderScore.score > $1.value.powderScore.score }
 
             if let secondBest = sorted.first,
-               let secondBestMountain = mountains.first(where: { $0.id == secondBest.key }) {
+               let secondBestMountain = mountainsById[secondBest.key] {
                 let diff = snow24h - secondBest.value.conditions.snowfall24h
                 if diff > 0 {
                     reasons.append("+\(diff)\" more than \(secondBestMountain.shortName)")
@@ -377,7 +386,7 @@ class HomeViewModel: ObservableObject {
         var webcams: [(mountain: Mountain, webcam: MountainDetail.Webcam)] = []
 
         for mountainId in favoritesManager.favoriteIds {
-            guard let mountain = mountains.first(where: { $0.id == mountainId }),
+            guard let mountain = mountainsById[mountainId],
                   let data = mountainData[mountainId] else {
                 continue
             }

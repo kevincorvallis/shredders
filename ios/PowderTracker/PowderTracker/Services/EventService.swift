@@ -13,8 +13,11 @@ class EventService {
     private init() {
         self.baseURL = AppConfig.apiBaseURL
         self.decoder = JSONDecoder()
+        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
+            fatalError("Invalid Supabase URL configuration: \(AppConfig.supabaseURL)")
+        }
         self.supabase = SupabaseClient(
-            supabaseURL: URL(string: AppConfig.supabaseURL)!,
+            supabaseURL: supabaseURL,
             supabaseKey: AppConfig.supabaseAnonKey
         )
     }
@@ -123,6 +126,7 @@ class EventService {
         // Format date
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         let eventDateString = dateFormatter.string(from: eventDate)
 
         let requestBody = CreateEventRequest(
@@ -188,6 +192,7 @@ class EventService {
         if let eventDate = eventDate {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
+            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
             body["eventDate"] = dateFormatter.string(from: eventDate)
         }
         if let departureTime = departureTime { body["departureTime"] = departureTime }

@@ -234,6 +234,10 @@ class WeatherOverlayManager: ObservableObject {
     @Published var isLoadingAvalanche = false
     @Published var avalancheError: String?
 
+    deinit {
+        animationTimer?.invalidate()
+    }
+
     func attach(to mapView: MKMapView) {
         self.mapView = mapView
     }
