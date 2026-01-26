@@ -133,7 +133,7 @@ class HomeViewModel: ObservableObject {
                             self.failedArrivalTimeLoads.remove(mountainId)
                         }
                     } catch {
-                        await MainActor.run {
+                        _ = await MainActor.run {
                             self.failedArrivalTimeLoads.insert(mountainId)
                         }
                         #if DEBUG
@@ -151,7 +151,7 @@ class HomeViewModel: ObservableObject {
                             self.failedParkingLoads.remove(mountainId)
                         }
                     } catch {
-                        await MainActor.run {
+                        _ = await MainActor.run {
                             self.failedParkingLoads.insert(mountainId)
                         }
                         #if DEBUG

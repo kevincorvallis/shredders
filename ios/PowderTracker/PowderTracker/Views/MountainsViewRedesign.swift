@@ -630,7 +630,7 @@ struct MountainsViewRedesign: View {
 
     private var totalFreshSnow: Int {
         viewModel.mountains.compactMap { viewModel.getConditions(for: $0)?.snowfall24h }
-            .max().map(Int.init) ?? 0
+            .max() ?? 0
     }
 
     private var overallConditionText: String {
