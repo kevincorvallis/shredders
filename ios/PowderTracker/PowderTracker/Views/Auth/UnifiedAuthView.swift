@@ -27,48 +27,50 @@ struct UnifiedAuthView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                // Header section
-                headerSection
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Header section
+                    headerSection
 
-                // Sign in with Apple (primary option)
-                appleSignInSection
+                    // Sign in with Apple (primary option)
+                    appleSignInSection
 
-                // Divider
-                Section {
+                    // Divider with "or"
                     HStack {
-                        VStack {
-                            Divider()
-                        }
+                        Rectangle()
+                            .fill(Color.secondary.opacity(0.3))
+                            .frame(height: 1)
                         Text("or")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 8)
-                        VStack {
-                            Divider()
-                        }
+                        Rectangle()
+                            .fill(Color.secondary.opacity(0.3))
+                            .frame(height: 1)
                     }
-                }
-                .listRowBackground(Color.clear)
+                    .padding(.horizontal)
 
-                // Email/Password section
-                credentialsSection
+                    // Email/Password section
+                    credentialsSection
 
-                // Error message
-                if let errorMessage = errorMessage {
-                    Section {
+                    // Error message
+                    if let errorMessage = errorMessage {
                         Text(errorMessage)
                             .font(.footnote)
                             .foregroundStyle(.red)
+                            .padding(.horizontal)
+                            .multilineTextAlignment(.center)
                     }
+
+                    // Action buttons
+                    actionSection
+
+                    // Toggle between login/signup
+                    toggleModeSection
                 }
-
-                // Action buttons
-                actionSection
-
-                // Toggle between login/signup
-                toggleModeSection
+                .padding(.vertical)
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(isSignupMode ? "Create Account" : "Sign In")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -85,184 +87,169 @@ struct UnifiedAuthView: View {
     // MARK: - Sections
 
     private var headerSection: some View {
-        Section {
-            VStack(spacing: 8) {
-                Image(systemName: "mountain.2.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.blue)
+        VStack(spacing: 6) {
+            Image(systemName: "mountain.2.fill")
+                .font(.system(size: 44))
+                .foregroundStyle(.blue)
 
-                Text(isSignupMode ? "Welcome to PowderTracker" : "Welcome Back")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.9)
+            Text(isSignupMode ? "Welcome to PowderTracker" : "Welcome Back")
+                .font(.title3)
+                .fontWeight(.semibold)
 
-                Text(isSignupMode ? "Create your account to track conditions" : "Sign in to access your favorites")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical)
+            Text(isSignupMode ? "Create your account to track conditions" : "Sign in to access your favorites")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
         }
-        .listRowBackground(Color.clear)
+        .padding(.horizontal)
     }
 
     private var appleSignInSection: some View {
-        Section {
+        VStack(spacing: 8) {
             SignInWithAppleButton()
-        } header: {
-            Text("Recommended")
+                .padding(.horizontal)
+
+            Text("Use your Apple ID to sign in securely")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-        } footer: {
-            Text("Use your Apple ID to sign in securely without creating a password")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var credentialsSection: some View {
-        Section {
-            // Email
-            TextField("Email", text: $email)
-                .textContentType(.emailAddress)
-                .keyboardType(.emailAddress)
-                .autocapitalization(.none)
-                .focused($focusedField, equals: .email)
-                .submitLabel(.next)
-                .onSubmit {
-                    if isSignupMode {
-                        focusedField = .displayName
-                    } else {
-                        focusedField = .password
-                    }
-                }
-
-            // Display Name (only for signup)
-            if isSignupMode {
-                TextField("Display Name (Optional)", text: $displayName)
-                    .textContentType(.name)
-                    .focused($focusedField, equals: .displayName)
+        VStack(spacing: 0) {
+            VStack(spacing: 0) {
+                // Email
+                TextField("Email", text: $email)
+                    .textContentType(.emailAddress)
+                    .keyboardType(.emailAddress)
+                    .autocapitalization(.none)
+                    .focused($focusedField, equals: .email)
                     .submitLabel(.next)
                     .onSubmit {
-                        focusedField = .password
+                        if isSignupMode {
+                            focusedField = .displayName
+                        } else {
+                            focusedField = .password
+                        }
                     }
-            }
+                    .padding()
 
-            // Password
-            SecureField("Password", text: $password)
-                .textContentType(isSignupMode ? .newPassword : .password)
-                .focused($focusedField, equals: .password)
-                .submitLabel(isSignupMode ? .continue : .go)
-                .onSubmit {
-                    handleSubmit()
+                Divider().padding(.leading)
+
+                // Display Name (only for signup)
+                if isSignupMode {
+                    TextField("Display Name (Optional)", text: $displayName)
+                        .textContentType(.name)
+                        .focused($focusedField, equals: .displayName)
+                        .submitLabel(.next)
+                        .onSubmit {
+                            focusedField = .password
+                        }
+                        .padding()
+
+                    Divider().padding(.leading)
                 }
 
-            // Password requirements (only for signup)
-            if isSignupMode && !password.isEmpty {
-                passwordRequirementsView
+                // Password
+                SecureField("Password", text: $password)
+                    .textContentType(isSignupMode ? .newPassword : .password)
+                    .focused($focusedField, equals: .password)
+                    .submitLabel(isSignupMode ? .continue : .go)
+                    .onSubmit {
+                        handleSubmit()
+                    }
+                    .padding()
+
+                // Password requirements (only for signup, compact inline)
+                if isSignupMode && !password.isEmpty {
+                    Divider().padding(.leading)
+                    passwordRequirementsView
+                        .padding()
+                }
             }
-        } header: {
-            Text("Email & Password")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        } footer: {
-            if isSignupMode && password.isEmpty {
-                Text("Password must contain: 12+ characters, uppercase, lowercase, number, and special character")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(10)
+            .padding(.horizontal)
         }
     }
 
     private var passwordRequirementsView: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        // Compact 2-column grid for password requirements
+        let columns = [GridItem(.flexible()), GridItem(.flexible())]
+        return LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
             ForEach(Array(zip(PasswordRequirement.all.indices, PasswordRequirement.all)), id: \.0) { index, requirement in
-                HStack(spacing: 8) {
+                HStack(spacing: 4) {
                     Image(systemName: passwordRequirementsMet[index] ? "checkmark.circle.fill" : "circle")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(passwordRequirementsMet[index] ? .green : .secondary)
-                    Text(requirement.description)
-                        .font(.caption)
+                    Text(requirement.shortDescription)
+                        .font(.caption2)
                         .foregroundStyle(passwordRequirementsMet[index] ? .primary : .secondary)
+                        .lineLimit(1)
                 }
             }
         }
-        .padding(.vertical, 4)
     }
 
     private var actionSection: some View {
-        Group {
-            Section {
-                Button {
-                    handleSubmit()
-                } label: {
-                    HStack {
-                        Spacer()
-                        if isLoading {
-                            ProgressView()
-                                .tint(.white)
-                        } else {
-                            Text(isSignupMode ? "Create Account" : "Sign In")
-                                .fontWeight(.semibold)
-                        }
-                        Spacer()
+        VStack(spacing: 12) {
+            Button {
+                handleSubmit()
+            } label: {
+                HStack {
+                    Spacer()
+                    if isLoading {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Text(isSignupMode ? "Create Account" : "Sign In")
+                            .fontWeight(.semibold)
                     }
+                    Spacer()
                 }
-                .disabled(!isFormValid || isLoading)
+                .padding()
+                .background(isFormValid ? Color.blue : Color.gray.opacity(0.3))
+                .foregroundColor(.white)
+                .cornerRadius(10)
             }
-            .listRowBackground(isFormValid ? Color.blue : Color.gray.opacity(0.3))
-            .foregroundColor(.white)
+            .disabled(!isFormValid || isLoading)
+            .padding(.horizontal)
 
             // Forgot Password link (only in login mode)
             if !isSignupMode {
-                Section {
-                    Button {
-                        showForgotPassword = true
-                    } label: {
-                        HStack {
-                            Spacer()
-                            Text("Forgot Password?")
-                                .font(.subheadline)
-                            Spacer()
-                        }
-                    }
-                    .sheet(isPresented: $showForgotPassword) {
-                        ForgotPasswordView()
-                    }
+                Button {
+                    showForgotPassword = true
+                } label: {
+                    Text("Forgot Password?")
+                        .font(.subheadline)
+                        .foregroundStyle(.blue)
                 }
-                .listRowBackground(Color.clear)
+                .sheet(isPresented: $showForgotPassword) {
+                    ForgotPasswordView()
+                }
             }
         }
     }
 
     private var toggleModeSection: some View {
-        Section {
-            Button {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    isSignupMode.toggle()
-                    errorMessage = nil
-                    password = "" // Clear password when switching modes
-                }
-            } label: {
-                HStack {
-                    Spacer()
-                    Text(isSignupMode ? "Already have an account? " : "Don't have an account? ")
-                        .foregroundStyle(.secondary)
-                    +
-                    Text(isSignupMode ? "Sign In" : "Sign Up")
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.blue)
-                    Spacer()
-                }
+        Button {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isSignupMode.toggle()
+                errorMessage = nil
+                password = "" // Clear password when switching modes
             }
-            .buttonStyle(.plain)
+        } label: {
+            HStack(spacing: 4) {
+                Text(isSignupMode ? "Already have an account?" : "Don't have an account?")
+                    .foregroundStyle(.secondary)
+                Text(isSignupMode ? "Sign In" : "Sign Up")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.blue)
+            }
+            .font(.subheadline)
         }
-        .listRowBackground(Color.clear)
+        .buttonStyle(.plain)
+        .padding(.top, 8)
     }
 
     // MARK: - Password Validation
@@ -270,14 +257,15 @@ struct UnifiedAuthView: View {
     /// Password requirement: 12+ chars, uppercase, lowercase, number, special char
     private struct PasswordRequirement: Sendable {
         let description: String
+        let shortDescription: String
         let isMet: @Sendable (String) -> Bool
 
-		static let all: [PasswordRequirement] = [
-            PasswordRequirement(description: "At least 12 characters") { $0.count >= 12 },
-            PasswordRequirement(description: "One uppercase letter") { $0.contains(where: { $0.isUppercase }) },
-            PasswordRequirement(description: "One lowercase letter") { $0.contains(where: { $0.isLowercase }) },
-            PasswordRequirement(description: "One number") { $0.contains(where: { $0.isNumber }) },
-            PasswordRequirement(description: "One special character") { $0.contains(where: { "!@#$%^&*()_+-=[]{}|;':\",./<>?".contains($0) }) }
+        static let all: [PasswordRequirement] = [
+            PasswordRequirement(description: "At least 12 characters", shortDescription: "12+ chars") { $0.count >= 12 },
+            PasswordRequirement(description: "One uppercase letter", shortDescription: "Uppercase") { $0.contains(where: { $0.isUppercase }) },
+            PasswordRequirement(description: "One lowercase letter", shortDescription: "Lowercase") { $0.contains(where: { $0.isLowercase }) },
+            PasswordRequirement(description: "One number", shortDescription: "Number") { $0.contains(where: { $0.isNumber }) },
+            PasswordRequirement(description: "One special character", shortDescription: "Special char") { $0.contains(where: { "!@#$%^&*()_+-=[]{}|;':\",./<>?".contains($0) }) }
         ]
     }
 
