@@ -319,7 +319,7 @@ struct PlannerView: View {
                             NavigationLink {
                                 MountainDetailView(mountain: mountain)
                             } label: {
-                                ForecastRow(
+                                PlannerMountainRow(
                                     mountain: mountain,
                                     conditions: viewModel.getConditions(for: mountain),
                                     score: viewModel.getScore(for: mountain),
@@ -524,7 +524,7 @@ struct ExploreView: View {
 
     private var regionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Browse by Region", icon: "map.fill")
+            MountainsTabSectionHeader(title: "Browse by Region", icon: "map.fill")
                 .padding(.horizontal)
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -544,7 +544,7 @@ struct ExploreView: View {
 
     private var categoriesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Categories", icon: "square.grid.2x2.fill")
+            MountainsTabSectionHeader(title: "Categories", icon: "square.grid.2x2.fill")
                 .padding(.horizontal)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -586,7 +586,7 @@ struct ExploreView: View {
 
     private var allMountainsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "All Mountains", icon: "mountain.2.fill")
+            MountainsTabSectionHeader(title: "All Mountains", icon: "mountain.2.fill")
                 .padding(.horizontal)
 
             ForEach(viewModel.mountains.sorted { $0.name < $1.name }) { mountain in
@@ -1060,7 +1060,7 @@ struct PlannerCard: View {
     }
 }
 
-struct ForecastRow: View {
+struct PlannerMountainRow: View {
     let mountain: Mountain
     let conditions: MountainConditions?
     let score: Double?
@@ -1114,7 +1114,7 @@ struct ForecastRow: View {
     }
 }
 
-struct SectionHeader: View {
+struct MountainsTabSectionHeader: View {
     let title: String
     let icon: String
 

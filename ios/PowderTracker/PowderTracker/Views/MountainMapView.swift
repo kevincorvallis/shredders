@@ -368,7 +368,7 @@ struct MountainRow: View {
 }
 
 // MARK: - Section Header
-struct SectionHeader: View {
+struct MapSectionHeader: View {
     let title: String
 
     var body: some View {
