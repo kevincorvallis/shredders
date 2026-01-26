@@ -1,4 +1,5 @@
 import Foundation
+import Supabase
 
 @MainActor
 @Observable
@@ -7,10 +8,15 @@ class EventService {
 
     private let baseURL: String
     private let decoder: JSONDecoder
+    private let supabase: SupabaseClient
 
     private init() {
         self.baseURL = AppConfig.apiBaseURL
         self.decoder = JSONDecoder()
+        self.supabase = SupabaseClient(
+            supabaseURL: URL(string: AppConfig.supabaseURL)!,
+            supabaseKey: AppConfig.supabaseAnonKey
+        )
     }
 
     // MARK: - List Events
@@ -237,7 +243,7 @@ class EventService {
         request.httpMethod = "DELETE"
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (_, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -404,15 +410,35 @@ class EventService {
     // MARK: - Auth Helper
 
     private func addAuthHeader(to request: inout URLRequest) async throws {
-        if KeychainHelper.isAccessTokenExpired() {
-            try await refreshTokens()
+        // First try Keychain JWT tokens (from email/password login)
+        if let accessToken = KeychainHelper.getAccessToken(), !KeychainHelper.isAccessTokenExpired() {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            return
         }
 
-        guard let accessToken = KeychainHelper.getAccessToken() else {
-            throw EventServiceError.notAuthenticated
+        // Try to refresh Keychain tokens if we have a refresh token
+        if KeychainHelper.getRefreshToken() != nil {
+            do {
+                try await refreshTokens()
+                if let accessToken = KeychainHelper.getAccessToken() {
+                    request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+                    return
+                }
+            } catch {
+                // Refresh failed, fall through to try Supabase session
+            }
         }
 
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        // Fallback to Supabase session token (for Sign In with Apple users)
+        do {
+            let session = try await supabase.auth.session
+            request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+            return
+        } catch {
+            // No Supabase session either
+        }
+
+        throw EventServiceError.notAuthenticated
     }
 
     private func refreshTokens() async throws {

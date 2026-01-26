@@ -244,7 +244,7 @@ class WeatherOverlayManager: ObservableObject {
         print("WeatherOverlayManager.showOverlay - type: \(overlayType.rawValue), mapView: \(mapView != nil ? "attached" : "NIL")")
         #endif
 
-        guard let mapView = mapView else {
+        guard mapView != nil else {
             #if DEBUG
             print("WeatherOverlayManager.showOverlay - ERROR: mapView is nil!")
             #endif
@@ -381,7 +381,7 @@ class WeatherOverlayManager: ObservableObject {
 
     /// Start radar animation
     func startRadarAnimation() async {
-        guard let mapView = mapView else { return }
+        guard mapView != nil else { return }
 
         do {
             let timestamps = try await RainViewerService.shared.getAnimationTimestamps()
