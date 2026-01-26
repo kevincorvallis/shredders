@@ -67,9 +67,17 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
+    // Determine the correct redirect URL based on environment
+    // In production, always use the Vercel URL
+    const isProduction = process.env.NODE_ENV === 'production' ||
+                         process.env.VERCEL_ENV === 'production';
+    const baseUrl = isProduction
+      ? 'https://shredders-bay.vercel.app'
+      : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+
     // Send password reset email via Supabase
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://shredders-bay.vercel.app'}/auth/reset-password`,
+      redirectTo: `${baseUrl}/auth/reset-password`,
     });
 
     if (error) {

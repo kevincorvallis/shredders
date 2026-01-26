@@ -82,83 +82,91 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    // First, check if an auth user already exists for this email
-    // This handles the case where auth user exists but profile doesn't (e.g., Apple Sign In)
-    const { data: existingAuthUsers } = await adminClient.auth.admin.listUsers();
-    const existingAuthUser = existingAuthUsers?.users?.find(u => u.email === email);
-
     let userId: string;
     let userEmail: string;
 
-    if (existingAuthUser) {
-      // Auth user exists - check if profile exists
-      userId = existingAuthUser.id;
-      userEmail = existingAuthUser.email || email;
+    // Try to sign up - this will fail if user already exists
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          display_name: displayName || username,
+        },
+      },
+    });
 
-      // Check if profile exists for this auth user
+    if (authError) {
+      // Check if the error is because user already exists
+      // In that case, try to find the auth user and create missing profile
+      if (authError.message?.includes('already registered') ||
+          authError.message?.includes('already been registered') ||
+          authError.code === 'user_already_exists') {
+
+        // User exists in auth - check if they have a profile
+        // Look up by email in our users table
+        const { data: existingProfile } = await adminClient
+          .from('users')
+          .select('id, auth_user_id, email')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (existingProfile) {
+          // Profile exists - tell user to sign in instead
+          return NextResponse.json({
+            error: 'An account with this email already exists. Please sign in instead.',
+          }, { status: 409 });
+        }
+
+        // Auth user exists but no profile - we can't easily get their auth_user_id
+        // without admin listUsers, so tell them to sign in with their existing method
+        return NextResponse.json({
+          error: 'An account with this email already exists. Please sign in with your original method (e.g., Apple Sign In).',
+        }, { status: 409 });
+      }
+
+      // Other auth error
+      await logSignupFailure(email, authError.message, {
+        ipAddress,
+        username,
+        errorCode: authError.code,
+        signupDuration: Date.now() - startTime,
+      });
+
+      return NextResponse.json({ error: authError.message }, { status: 400 });
+    }
+
+    // Check if signup returned a user (it might return null for existing unconfirmed users)
+    if (!authData.user) {
+      // This can happen when Supabase has email confirmation enabled
+      // and user exists but hasn't confirmed - check for profile
       const { data: existingProfile } = await adminClient
         .from('users')
         .select('id, auth_user_id, email')
-        .eq('auth_user_id', userId)
+        .eq('email', email)
         .maybeSingle();
 
       if (existingProfile) {
-        // Both auth user and profile exist - return success (user should sign in)
-        const tokens = await createUserTokens(userId);
         return NextResponse.json({
-          user: {
-            id: userId,
-            email: userEmail,
-          },
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-          message: 'Account already exists',
-        });
+          error: 'An account with this email already exists. Please check your email for a confirmation link or sign in.',
+        }, { status: 409 });
       }
 
-      // Auth user exists but profile doesn't - we'll create the profile below
-      console.log('[SIGNUP] Auth user exists but profile missing, creating profile for:', email);
-    } else {
-      // No existing auth user - create new one
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-            display_name: displayName || username,
-          },
-        },
+      await logSignupFailure(email, 'Failed to create user account', {
+        ipAddress,
+        username,
+        signupDuration: Date.now() - startTime,
       });
 
-      if (authError) {
-        // Log failed signup
-        await logSignupFailure(email, authError.message, {
-          ipAddress,
-          username,
-          errorCode: authError.code,
-          signupDuration: Date.now() - startTime,
-        });
-
-        return NextResponse.json({ error: authError.message }, { status: 400 });
-      }
-
-      if (!authData.user) {
-        await logSignupFailure(email, 'Failed to create user account', {
-          ipAddress,
-          username,
-          signupDuration: Date.now() - startTime,
-        });
-
-        return NextResponse.json(
-          { error: 'Failed to create user' },
-          { status: 500 }
-        );
-      }
-
-      userId = authData.user.id;
-      userEmail = authData.user.email || email;
+      return NextResponse.json(
+        { error: 'Failed to create user. Please try again.' },
+        { status: 500 }
+      );
     }
+
+    userId = authData.user.id;
+    userEmail = authData.user.email || email;
 
     // Check if a profile already exists (double-check)
     const { data: existingProfile } = await adminClient
