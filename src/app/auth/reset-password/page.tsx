@@ -1,40 +1,82 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { FormEvent, useState, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import { FormEvent, useState, useEffect } from 'react';
 import Link from 'next/link';
 
-function ResetPasswordForm() {
+export default function ResetPasswordPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const supabase = createClient();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [validToken, setValidToken] = useState<boolean | null>(null);
+  const [isReady, setIsReady] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if we have the necessary tokens in the URL hash
-    // Supabase sends tokens as hash fragments: #access_token=...&type=recovery
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
+    // Handle the auth callback - exchange code for session
+    const handleAuthCallback = async () => {
+      try {
+        // Get the code from URL if present (PKCE flow)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
 
-    if (type === 'recovery' && accessToken) {
-      setValidToken(true);
-    } else {
-      // Check URL params as fallback
-      const code = searchParams.get('code');
-      if (code) {
-        setValidToken(true);
-      } else {
-        setValidToken(false);
+        if (code) {
+          // Exchange the code for a session
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            console.error('Code exchange error:', error);
+            setSessionError(error.message);
+            return;
+          }
+        }
+
+        // Check if we have an active session (from hash fragment or code exchange)
+        const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+
+        if (sessionErr) {
+          console.error('Session error:', sessionErr);
+          setSessionError(sessionErr.message);
+          return;
+        }
+
+        if (!session) {
+          // Try to handle hash fragment (older flow)
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          const type = hashParams.get('type');
+
+          if (type === 'recovery' && accessToken && refreshToken) {
+            const { error: setSessionErr } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+
+            if (setSessionErr) {
+              console.error('Set session error:', setSessionErr);
+              setSessionError(setSessionErr.message);
+              return;
+            }
+          } else {
+            setSessionError('Invalid or expired reset link. Please request a new one.');
+            return;
+          }
+        }
+
+        setIsReady(true);
+      } catch (err: any) {
+        console.error('Auth callback error:', err);
+        setSessionError(err.message || 'Failed to process reset link');
       }
-    }
-  }, [searchParams]);
+    };
+
+    handleAuthCallback();
+  }, [supabase.auth]);
 
   const validatePassword = (pwd: string): string[] => {
     const errors: string[] = [];
@@ -66,8 +108,6 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-
       const { error: updateError } = await supabase.auth.updateUser({
         password: password,
       });
@@ -79,8 +119,9 @@ function ResetPasswordForm() {
 
       setSuccess(true);
 
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
+      // Sign out and redirect to login after 3 seconds
+      setTimeout(async () => {
+        await supabase.auth.signOut();
         router.push('/auth/login');
       }, 3000);
     } catch (err: any) {
@@ -90,23 +131,26 @@ function ResetPasswordForm() {
     }
   };
 
-  if (validToken === null) {
+  // Show loading while processing auth callback
+  if (!isReady && !sessionError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Loading...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="text-gray-600">Processing reset link...</div>
+        </div>
       </div>
     );
   }
 
-  if (validToken === false) {
+  // Show error if session setup failed
+  if (sessionError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full space-y-8 text-center">
           <div className="text-6xl">:(</div>
-          <h2 className="text-2xl font-bold text-gray-900">Invalid or Expired Link</h2>
-          <p className="text-gray-600">
-            This password reset link is invalid or has expired. Please request a new one.
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900">Reset Link Invalid</h2>
+          <p className="text-gray-600">{sessionError}</p>
           <Link
             href="/auth/login"
             className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -170,7 +214,7 @@ function ResetPasswordForm() {
                     const met = !passwordErrors.includes(req);
                     return (
                       <div key={req} className={`text-xs flex items-center gap-1 ${met ? 'text-green-600' : 'text-gray-500'}`}>
-                        <span>{met ? '✓' : '○'}</span>
+                        <span>{met ? '\u2713' : '\u25CB'}</span>
                         <span>{req}</span>
                       </div>
                     );
@@ -210,17 +254,5 @@ function ResetPasswordForm() {
         </form>
       </div>
     </div>
-  );
-}
-
-export default function ResetPasswordPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    }>
-      <ResetPasswordForm />
-    </Suspense>
   );
 }
