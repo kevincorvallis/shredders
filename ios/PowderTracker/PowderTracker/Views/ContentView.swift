@@ -21,8 +21,8 @@ struct ContentView: View {
                 }
                 .tag(0)
 
-            // Mountains view (MountainsTabView available as alternative - add to Xcode project first)
-            MountainsView()
+            // Mountains view with purpose-driven tabs (Today, Plan, Explore, My Pass)
+            MountainsTabView()
                 .tabItem {
                     Label("Mountains", systemImage: "mountain.2.fill")
                 }
