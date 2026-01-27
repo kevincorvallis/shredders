@@ -20,7 +20,8 @@
     "db:cleanup": "psql $DATABASE_URL -c \"SELECT cleanup_old_mountain_status();\"",
     "scraper:run": "curl http://localhost:3000/api/scraper/run",
     "scraper:status": "curl http://localhost:3000/api/scraper/status",
-    "verify": "tsx scripts/verify-data-sources.ts"
+    "verify": "tsx scripts/verify-data-sources.ts",
+    "test:events-db": "tsx scripts/test-events-db.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.56",
