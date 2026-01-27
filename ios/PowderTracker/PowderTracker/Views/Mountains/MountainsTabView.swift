@@ -136,22 +136,49 @@ struct ConditionsView: View {
                 sortPicker
                     .padding(.horizontal)
 
-                // Conditions cards
-                ForEach(sortedMountains) { mountain in
-                    NavigationLink {
-                        MountainDetailView(mountain: mountain)
-                    } label: {
-                        ConditionMountainCard(
-                            mountain: mountain,
-                            conditions: viewModel.getConditions(for: mountain),
-                            score: viewModel.getScore(for: mountain),
-                            distance: viewModel.getDistance(to: mountain),
-                            isFavorite: favoritesManager.isFavorite(mountain.id),
-                            onFavoriteToggle: { toggleFavorite(mountain.id) }
-                        )
+                // Loading state
+                if viewModel.isLoading && viewModel.mountains.isEmpty {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        Text("Loading mountains...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+                } else if sortedMountains.isEmpty {
+                    // Empty state
+                    VStack(spacing: 12) {
+                        Image(systemName: "mountain.2")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("No mountains found")
+                            .font(.headline)
+                        Text("Pull to refresh")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+                } else {
+                    // Conditions cards
+                    ForEach(sortedMountains) { mountain in
+                        NavigationLink {
+                            MountainDetailView(mountain: mountain)
+                        } label: {
+                            ConditionMountainCard(
+                                mountain: mountain,
+                                conditions: viewModel.getConditions(for: mountain),
+                                score: viewModel.getScore(for: mountain),
+                                distance: viewModel.getDistance(to: mountain),
+                                isFavorite: favoritesManager.isFavorite(mountain.id),
+                                onFavoriteToggle: { toggleFavorite(mountain.id) }
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal)
+                    }
                 }
 
                 Spacer(minLength: 50)
@@ -164,8 +191,8 @@ struct ConditionsView: View {
         HStack(spacing: 16) {
             StatusPill(
                 value: "\(openMountainsCount)",
-                label: "Open",
-                color: .green
+                label: openLabel,
+                color: openLabel == "Open" ? .green : .gray
             )
 
             StatusPill(
@@ -207,19 +234,23 @@ struct ConditionsView: View {
     }
 
     private var sortedMountains: [Mountain] {
-        let open = viewModel.mountains.filter {
-            viewModel.getConditions(for: $0)?.liftStatus?.isOpen ?? false
-        }
+        let all = viewModel.mountains
 
         switch sortBy {
         case .bestConditions:
-            return open.sorted { (viewModel.getScore(for: $0) ?? 0) > (viewModel.getScore(for: $1) ?? 0) }
+            // Sort by score, with open mountains prioritized
+            return all.sorted { m1, m2 in
+                let open1 = viewModel.getConditions(for: m1)?.liftStatus?.isOpen ?? false
+                let open2 = viewModel.getConditions(for: m2)?.liftStatus?.isOpen ?? false
+                if open1 != open2 { return open1 }
+                return (viewModel.getScore(for: m1) ?? 0) > (viewModel.getScore(for: m2) ?? 0)
+            }
         case .nearest:
-            return open.sorted { (viewModel.getDistance(to: $0) ?? .infinity) < (viewModel.getDistance(to: $1) ?? .infinity) }
+            return all.sorted { (viewModel.getDistance(to: $0) ?? .infinity) < (viewModel.getDistance(to: $1) ?? .infinity) }
         case .mostSnow:
-            return open.sorted { (viewModel.getConditions(for: $0)?.snowfall24h ?? 0) > (viewModel.getConditions(for: $1)?.snowfall24h ?? 0) }
+            return all.sorted { (viewModel.getConditions(for: $0)?.snowfall24h ?? 0) > (viewModel.getConditions(for: $1)?.snowfall24h ?? 0) }
         case .openLifts:
-            return open.sorted {
+            return all.sorted {
                 (viewModel.getConditions(for: $0)?.liftStatus?.liftsOpen ?? 0) >
                 (viewModel.getConditions(for: $1)?.liftStatus?.liftsOpen ?? 0)
             }
@@ -227,9 +258,18 @@ struct ConditionsView: View {
     }
 
     private var openMountainsCount: Int {
-        viewModel.mountains.filter {
+        let openCount = viewModel.mountains.filter {
             viewModel.getConditions(for: $0)?.liftStatus?.isOpen ?? false
         }.count
+        // If no mountains are open, show total count
+        return openCount > 0 ? openCount : viewModel.mountains.count
+    }
+
+    private var openLabel: String {
+        let openCount = viewModel.mountains.filter {
+            viewModel.getConditions(for: $0)?.liftStatus?.isOpen ?? false
+        }.count
+        return openCount > 0 ? "Open" : "Total"
     }
 
     private var freshSnowCount: Int {
@@ -932,14 +972,14 @@ struct ConditionMountainCard: View {
                     Text(mountain.shortName)
                         .font(.headline)
 
-                    if let status = conditions?.liftStatus, status.isOpen {
-                        Text("OPEN")
+                    if let status = conditions?.liftStatus {
+                        Text(status.isOpen ? "OPEN" : "CLOSED")
                             .font(.caption2)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.green)
+                            .background(status.isOpen ? Color.green : Color.red.opacity(0.8))
                             .cornerRadius(4)
                     }
                 }
@@ -955,6 +995,10 @@ struct ConditionMountainCard: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+                    } else {
+                        Text(mountain.region.capitalized)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
 
                     if let distance = distance {
