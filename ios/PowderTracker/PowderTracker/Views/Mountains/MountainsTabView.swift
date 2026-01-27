@@ -48,13 +48,15 @@ struct MountainsTabView: View {
         HStack(spacing: 0) {
             ForEach(MountainViewMode.allCases, id: \.self) { mode in
                 Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    withAnimation(.snappy) {
                         selectedMode = mode
                     }
+                    HapticFeedback.selection.trigger()
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: mode.icon)
                             .font(.system(size: 18))
+                            .symbolRenderingMode(.hierarchical)
                         Text(mode.title)
                             .font(.caption2)
                             .fontWeight(.medium)
@@ -73,12 +75,14 @@ struct MountainsTabView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .sensoryFeedback(.selection, trigger: selectedMode)
+                .accessibilityLabel("\(mode.title) view")
+                .accessibilityHint("Shows mountains sorted by \(mode.title.lowercased())")
             }
         }
         .padding(4)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(14)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .limitDynamicType()
     }
 }
 

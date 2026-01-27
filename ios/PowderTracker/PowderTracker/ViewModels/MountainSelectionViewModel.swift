@@ -29,9 +29,17 @@ class MountainSelectionViewModel: ObservableObject {
         isLoading = true
         error = nil
 
+        #if DEBUG
+        print("🏔️ [MountainSelectionVM] Starting loadMountains()")
+        #endif
+
         do {
             let response = try await apiClient.fetchMountains()
             mountains = response.mountains
+
+            #if DEBUG
+            print("🏔️ [MountainSelectionVM] Loaded \(mountains.count) mountains")
+            #endif
 
             // Request location to calculate distances
             locationManager.requestLocation()
@@ -40,12 +48,19 @@ class MountainSelectionViewModel: ObservableObject {
             await fetchAllPowderScores()
             await fetchAllConditions()
 
+            #if DEBUG
+            print("🏔️ [MountainSelectionVM] Loaded \(mountainConditions.count) conditions, \(mountainScores.count) scores")
+            #endif
+
             // Set default selection if none
             if selectedMountain == nil, let first = mountains.first {
                 selectedMountain = first
             }
         } catch {
             self.error = error
+            #if DEBUG
+            print("🏔️ [MountainSelectionVM] ERROR: \(error.localizedDescription)")
+            #endif
         }
 
         isLoading = false
