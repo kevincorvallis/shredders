@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct EventsView: View {
+    @Environment(AuthService.self) private var authService
     @State private var events: [Event] = []
     @State private var isLoading = true
     @State private var error: String?
@@ -14,6 +15,176 @@ struct EventsView: View {
     }
 
     var body: some View {
+        // Show sample events view for non-authenticated users
+        if !authService.isAuthenticated {
+            unauthenticatedEventsView
+        } else {
+            authenticatedEventsView
+        }
+    }
+
+    // MARK: - Unauthenticated View (Sample Events)
+
+    private var unauthenticatedEventsView: some View {
+        NavigationStack {
+            ZStack {
+                // Background gradient
+                LinearGradient(
+                    colors: [hexColor("0F172A"), hexColor("1E293B")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Hero Section
+                        VStack(spacing: 16) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "person.3.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 48, height: 48)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [hexColor("0EA5E9").opacity(0.3), hexColor("A855F7").opacity(0.3)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(hexColor("0EA5E9").opacity(0.5), lineWidth: 1)
+                                    )
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Plan ski trips with friends")
+                                        .font(.headline)
+                                        .foregroundStyle(.white)
+
+                                    Text("Create events, coordinate carpools")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.white.opacity(0.7))
+                                }
+
+                                Spacer()
+                            }
+                            .padding(16)
+                            .background(
+                                LinearGradient(
+                                    colors: [hexColor("0EA5E9").opacity(0.2), hexColor("A855F7").opacity(0.2)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(hexColor("0EA5E9").opacity(0.3), lineWidth: 1)
+                            )
+
+                            Text("Sign in to join upcoming trips or create your own")
+                                .font(.footnote)
+                                .foregroundStyle(.white.opacity(0.6))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+
+                            // CTA Buttons
+                            VStack(spacing: 12) {
+                                NavigationLink(destination: UnifiedAuthView()) {
+                                    HStack {
+                                        Text("Sign in to join events")
+                                            .fontWeight(.semibold)
+                                        Image(systemName: "arrow.right")
+                                    }
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(hexColor("0EA5E9"))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
+
+                                NavigationLink(destination: UnifiedAuthView()) {
+                                    Text("Create an account")
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 14)
+                                        .background(hexColor("334155"))
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+
+                        // Sample Events Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 8) {
+                                Text("Example Events")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(.white.opacity(0.6))
+
+                                Text("Preview")
+                                    .font(.caption)
+                                    .foregroundStyle(.white.opacity(0.5))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(hexColor("1E293B"))
+                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+
+                            ForEach(SampleEventData.samples) { event in
+                                SampleEventRow(event: event)
+                                    .padding(.horizontal)
+                            }
+                        }
+
+                        // Bottom CTA
+                        VStack(spacing: 12) {
+                            Text("Ready to hit the slopes with friends?")
+                                .font(.subheadline)
+                                .foregroundStyle(.white.opacity(0.6))
+
+                            NavigationLink(destination: UnifiedAuthView()) {
+                                HStack {
+                                    Text("Get started free")
+                                        .fontWeight(.semibold)
+                                    Image(systemName: "arrow.right")
+                                }
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    LinearGradient(
+                                        colors: [hexColor("0EA5E9"), hexColor("0284C7")],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .shadow(color: hexColor("0EA5E9").opacity(0.3), radius: 12, y: 4)
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 24)
+                    }
+                    .padding(.bottom, 32)
+                }
+            }
+            .navigationTitle("Ski Events")
+            .navigationBarTitleDisplayMode(.large)
+        }
+    }
+
+    // MARK: - Authenticated View
+
+    private var authenticatedEventsView: some View {
         NavigationStack {
             Group {
                 if isLoading {
@@ -143,6 +314,12 @@ struct EventsView: View {
 
         isLoading = false
     }
+
+    // MARK: - Helper
+
+    private func hexColor(_ hex: String) -> Color {
+        Color(hex: hex) ?? .gray
+    }
 }
 
 // MARK: - Event Row View
@@ -217,6 +394,317 @@ struct EventRowView: View {
     }
 }
 
+// MARK: - Sample Event Data
+
+struct SampleEventData: Identifiable {
+    let id: String
+    let title: String
+    let mountainName: String
+    let eventDate: String
+    let departureTime: String?
+    let departureLocation: String?
+    let goingCount: Int
+    let maybeCount: Int
+    let skillLevel: SkillLevel
+    let carpoolAvailable: Bool
+    let carpoolSeats: Int?
+
+    var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: eventDate) else { return eventDate }
+        formatter.dateFormat = "EEE, MMM d"
+        return formatter.string(from: date)
+    }
+
+    var formattedTime: String? {
+        guard let time = departureTime else { return nil }
+        let components = time.split(separator: ":")
+        guard components.count >= 2, let hour = Int(components[0]) else { return time }
+        let h12 = hour % 12 == 0 ? 12 : hour % 12
+        let ampm = hour >= 12 ? "PM" : "AM"
+        return "\(h12):\(components[1]) \(ampm)"
+    }
+
+    static let samples: [SampleEventData] = [
+        SampleEventData(
+            id: "sample-1",
+            title: "First Tracks Friday",
+            mountainName: "Summit at Snoqualmie",
+            eventDate: getUpcomingDate(2),
+            departureTime: "06:00:00",
+            departureLocation: "Seattle - Capitol Hill",
+            goingCount: 8,
+            maybeCount: 3,
+            skillLevel: .beginner,
+            carpoolAvailable: true,
+            carpoolSeats: 4
+        ),
+        SampleEventData(
+            id: "sample-2",
+            title: "Powder Day at Baker!",
+            mountainName: "Mt. Baker",
+            eventDate: getUpcomingDate(3),
+            departureTime: "05:30:00",
+            departureLocation: "Bellingham",
+            goingCount: 6,
+            maybeCount: 2,
+            skillLevel: .intermediate,
+            carpoolAvailable: true,
+            carpoolSeats: 3
+        ),
+        SampleEventData(
+            id: "sample-3",
+            title: "Backside Bowls Session",
+            mountainName: "Stevens Pass",
+            eventDate: getUpcomingDate(5),
+            departureTime: "06:30:00",
+            departureLocation: "Bellevue - Downtown",
+            goingCount: 4,
+            maybeCount: 1,
+            skillLevel: .advanced,
+            carpoolAvailable: true,
+            carpoolSeats: 2
+        ),
+        SampleEventData(
+            id: "sample-4",
+            title: "Steep Chutes & Cliffs",
+            mountainName: "Crystal Mountain",
+            eventDate: getUpcomingDate(7),
+            departureTime: "05:00:00",
+            departureLocation: "Tacoma",
+            goingCount: 3,
+            maybeCount: 0,
+            skillLevel: .expert,
+            carpoolAvailable: false,
+            carpoolSeats: nil
+        ),
+        SampleEventData(
+            id: "sample-5",
+            title: "Group Day - All Welcome!",
+            mountainName: "Whistler Blackcomb",
+            eventDate: getUpcomingDate(10),
+            departureTime: "04:00:00",
+            departureLocation: "Seattle - University District",
+            goingCount: 12,
+            maybeCount: 5,
+            skillLevel: .all,
+            carpoolAvailable: true,
+            carpoolSeats: 6
+        )
+    ]
+
+    private static func getUpcomingDate(_ daysFromNow: Int) -> String {
+        let date = Calendar.current.date(byAdding: .day, value: daysFromNow, to: Date()) ?? Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Sample Event Row
+
+struct SampleEventRow: View {
+    let event: SampleEventData
+    @State private var showSignInPrompt = false
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 16)
+                .fill(hexColor("1E293B").opacity(0.7))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(hexColor("334155").opacity(0.5), lineWidth: 1)
+                )
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(event.title)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+
+                        HStack(spacing: 8) {
+                            Label(event.mountainName, systemImage: "mountain.2")
+                                .font(.subheadline)
+                                .foregroundStyle(hexColor("0EA5E9"))
+
+                            Text("•")
+                                .foregroundStyle(.white.opacity(0.3))
+
+                            Text(event.formattedDate)
+                                .font(.subheadline)
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                    }
+
+                    Spacer()
+
+                    skillLevelBadge(for: event.skillLevel)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    if let time = event.formattedTime {
+                        Label("Departing \(time)", systemImage: "clock")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
+
+                    if let location = event.departureLocation {
+                        Label(location, systemImage: "mappin.and.ellipse")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
+                }
+
+                HStack(spacing: 16) {
+                    Label("\(event.goingCount) going", systemImage: "person.2.fill")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.6))
+
+                    if event.maybeCount > 0 {
+                        Text("+\(event.maybeCount) maybe")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+
+                    if event.carpoolAvailable, let seats = event.carpoolSeats {
+                        Spacer()
+
+                        HStack(spacing: 4) {
+                            Image(systemName: "car.fill")
+                                .font(.caption2)
+                            Text("Carpool • \(seats) seats")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(hexColor("10B981"))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(hexColor("10B981").opacity(0.2))
+                        .clipShape(Capsule())
+                    }
+                }
+            }
+            .padding(16)
+
+            if showSignInPrompt {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(hexColor("0F172A").opacity(0.9))
+                    .overlay(
+                        VStack(spacing: 8) {
+                            Image(systemName: "lock.fill")
+                                .font(.title2)
+                                .foregroundStyle(hexColor("0EA5E9"))
+
+                            Text("Sign in to view & join")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.white)
+                        }
+                    )
+                    .transition(.opacity)
+            }
+        }
+        .frame(height: 180)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showSignInPrompt = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showSignInPrompt = false
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func skillLevelBadge(for level: SkillLevel) -> some View {
+        HStack(spacing: 6) {
+            // Ski trail difficulty icon
+            skillLevelIcon(for: level)
+
+            Text(skillLevelLabel(for: level))
+                .font(.caption)
+                .fontWeight(.medium)
+        }
+        .foregroundStyle(skillLevelColor(for: level))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(skillLevelColor(for: level).opacity(0.15))
+        .clipShape(Capsule())
+    }
+
+    @ViewBuilder
+    private func skillLevelIcon(for level: SkillLevel) -> some View {
+        switch level {
+        case .beginner:
+            // Green circle
+            Circle()
+                .fill(hexColor("22C55E"))
+                .frame(width: 12, height: 12)
+        case .intermediate:
+            // Blue square
+            Rectangle()
+                .fill(hexColor("3B82F6"))
+                .frame(width: 12, height: 12)
+        case .advanced:
+            // Black diamond
+            Image(systemName: "diamond.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(.black)
+        case .expert:
+            // Double black diamond
+            HStack(spacing: 1) {
+                Image(systemName: "diamond.fill")
+                    .font(.system(size: 10))
+                Image(systemName: "diamond.fill")
+                    .font(.system(size: 10))
+            }
+            .foregroundStyle(.black)
+        case .all:
+            // Multi-level icon (stacked shapes)
+            HStack(spacing: 2) {
+                Circle()
+                    .fill(hexColor("22C55E"))
+                    .frame(width: 8, height: 8)
+                Rectangle()
+                    .fill(hexColor("3B82F6"))
+                    .frame(width: 8, height: 8)
+                Image(systemName: "diamond.fill")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.black)
+            }
+        }
+    }
+
+    private func skillLevelLabel(for level: SkillLevel) -> String {
+        switch level {
+        case .beginner: return "Green"
+        case .intermediate: return "Blue"
+        case .advanced: return "Black"
+        case .expert: return "Double Black"
+        case .all: return "All Levels"
+        }
+    }
+
+    private func skillLevelColor(for level: SkillLevel) -> Color {
+        switch level {
+        case .beginner: return hexColor("22C55E")
+        case .intermediate: return hexColor("3B82F6")
+        case .advanced: return .primary
+        case .expert: return .primary
+        case .all: return hexColor("A855F7")
+        }
+    }
+
+    private func hexColor(_ hex: String) -> Color {
+        Color(hex: hex) ?? .gray
+    }
+}
+
 #Preview {
     EventsView()
+        .environment(AuthService.shared)
 }
