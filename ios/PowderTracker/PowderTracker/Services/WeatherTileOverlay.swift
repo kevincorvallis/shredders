@@ -225,7 +225,7 @@ class WeatherOverlayManager: ObservableObject {
     private weak var mapView: MKMapView?
     private var currentOverlay: WeatherTileOverlay?
     private var currentAvalanchePolygons: [AvalanchePolygon] = []
-    private var animationTimer: Timer?
+    nonisolated(unsafe) private var animationTimer: Timer?
     private var animationTimestamps: [Int] = []
     private var currentAnimationIndex = 0
 
