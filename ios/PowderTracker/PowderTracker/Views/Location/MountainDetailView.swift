@@ -13,7 +13,7 @@ struct MountainDetailView: View {
     @State private var alertsDismissed = false
 
     // Sticky header constants
-    private let headerFullHeight: CGFloat = 160
+    private let headerFullHeight: CGFloat = 180
     private let headerCollapsedHeight: CGFloat = 50
     private let tabBarHeight: CGFloat = 50
 
@@ -87,7 +87,7 @@ struct MountainDetailView: View {
                     Section("Quick Actions") {
                         Button {
                             HapticFeedback.light.trigger()
-                            FavoritesManager.shared.toggleFavorite(mountain.id)
+                            _ = FavoritesManager.shared.toggleFavorite(mountain.id)
                         } label: {
                             Label(
                                 FavoritesManager.shared.isFavorite(mountain.id) ? "Remove from Favorites" : "Add to Favorites",
@@ -132,38 +132,33 @@ struct MountainDetailView: View {
     // MARK: - Hero Header
 
     private var heroHeader: some View {
-        GeometryReader { geo in
-            let minY = geo.frame(in: .global).minY
-            let isScrollingUp = minY > 0
-
-            ZStack(alignment: .bottomLeading) {
-                // Background - webcam image or gradient with parallax
-                Group {
-                    if let webcam = viewModel.locationData?.mountain.webcams.first {
-                        AsyncImage(url: URL(string: webcam.url)) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            default:
-                                mountainGradient
-                            }
+        ZStack(alignment: .bottomLeading) {
+            // Background - webcam image or gradient
+            Group {
+                if let webcam = viewModel.locationData?.mountain.webcams.first {
+                    AsyncImage(url: URL(string: webcam.url)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        default:
+                            mountainGradient
                         }
-                    } else {
-                        mountainGradient
                     }
+                } else {
+                    mountainGradient
                 }
-                // Parallax effect: scale up and offset when pulling down
-                .scaleEffect(isScrollingUp ? 1 + minY / 500 : 1, anchor: .bottom)
-                .offset(y: isScrollingUp ? -minY / 2 : 0)
+            }
+            .frame(height: headerFullHeight)
+            .clipped()
 
-                // Gradient overlay for text readability
-                LinearGradient(
-                    colors: [.clear, .black.opacity(0.7)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+            // Gradient overlay for text readability
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.6)],
+                startPoint: .center,
+                endPoint: .bottom
+            )
 
             // Mountain info overlay
             HStack(spacing: .spacingM) {
@@ -180,7 +175,6 @@ struct MountainDetailView: View {
                         .foregroundColor(.white)
                         .lineLimit(2)
                         .minimumScaleFactor(0.8)
-                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(mountain.region.uppercased())
                         .font(.caption)
@@ -199,10 +193,8 @@ struct MountainDetailView: View {
                     .padding(.vertical, 5)
                     .background(Capsule().fill(Color.black.opacity(0.5)))
             }
-                .padding(.spacingM)
-            }
-            .frame(height: headerFullHeight + (geo.frame(in: .global).minY > 0 ? geo.frame(in: .global).minY : 0))
-            .clipped()
+            .padding(.spacingM)
+            .padding(.bottom, .spacingS)
         }
         .frame(height: headerFullHeight)
     }
