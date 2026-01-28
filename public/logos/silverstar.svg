@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#a78bfa"/>
+  <g fill="white">
+    <!-- Star shape -->
+    <polygon points="100,20 112,65 160,65 122,95 135,140 100,115 65,140 78,95 40,65 88,65"/>
+    <!-- Text -->
+    <text x="100" y="175" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle">SILVERSTAR</text>
+  </g>
+</svg>

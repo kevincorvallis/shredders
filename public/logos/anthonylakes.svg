@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#38bdf8"/>
+  <g fill="white">
+    <!-- Mountain -->
+    <polygon points="100,25 40,100 160,100"/>
+    <!-- Lake waves -->
+    <path d="M30,120 Q50,110 70,120 Q90,130 110,120 Q130,110 150,120 Q170,130 190,120 L190,140 L30,140 Z" fill="#0ea5e9"/>
+    <path d="M30,135 Q50,125 70,135 Q90,145 110,135 Q130,125 150,135 Q170,145 190,135 L190,155 L30,155 Z" fill="#0284c7"/>
+    <!-- Text -->
+    <text x="100" y="180" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">ANTHONY LAKES</text>
+  </g>
+</svg>

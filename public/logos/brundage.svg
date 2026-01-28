@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#fb7185"/>
+  <g fill="white">
+    <!-- Mountain peaks -->
+    <polygon points="100,30 40,130 160,130"/>
+    <polygon points="60,70 30,130 90,130" fill="#fda4af"/>
+    <polygon points="140,60 100,130 180,130" fill="#fda4af"/>
+    <!-- Text -->
+    <text x="100" y="165" font-family="Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle">BRUNDAGE</text>
+  </g>
+</svg>

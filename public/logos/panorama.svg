@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#22d3ee"/>
+  <g fill="white">
+    <!-- Panoramic mountain range -->
+    <polygon points="0,130 30,80 60,110 100,50 140,100 170,70 200,130"/>
+    <polygon points="0,130 20,100 50,120 80,90 120,115 150,85 180,110 200,130" fill="#67e8f9"/>
+    <!-- Text -->
+    <text x="100" y="165" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle">PANORAMA</text>
+  </g>
+</svg>
