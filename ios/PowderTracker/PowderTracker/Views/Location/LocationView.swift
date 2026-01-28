@@ -62,7 +62,7 @@ struct LocationView: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color(.secondarySystemBackground))
-                        .cornerRadius(12)
+                        .cornerRadius(.cornerRadiusCard)
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal)

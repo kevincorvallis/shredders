@@ -105,7 +105,7 @@ struct SnowSummarySection: View {
                     }
                     .padding()
                     .background(Color(.secondarySystemBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(.cornerRadiusCard)
                 }
             } else {
                 ProgressView()
@@ -115,8 +115,25 @@ struct SnowSummarySection: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(snowAccessibilityDescription)
+    }
+
+    private var snowAccessibilityDescription: String {
+        guard let conditions = conditions else { return "Snow summary loading" }
+        var description = "Snow summary. "
+        if let depth = conditions.snowDepth {
+            description += "Base depth \(depth) inches, \(depthQuality(depth)). "
+        }
+        description += "\(conditions.snowfall24h) inches in the last 24 hours. "
+        description += "\(conditions.snowfall48h) inches in the last 48 hours. "
+        description += "\(conditions.snowfall7d) inches in the last 7 days. "
+        if let score = powderScore {
+            description += "Powder score \(String(format: "%.1f", score.score)) out of 10."
+        }
+        return description
     }
 
     private var snowfall24h: Int {
@@ -183,7 +200,7 @@ struct SnowMetricCard: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 }
 

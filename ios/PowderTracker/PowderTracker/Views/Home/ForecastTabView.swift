@@ -36,7 +36,7 @@ struct ForecastTabView: View {
                 SnowForecastChart(favorites: favoritesWithForecast)
                     .padding(12)
                     .background(Color(.secondarySystemBackground))
-                    .cornerRadius(10)
+                    .cornerRadius(.cornerRadiusSmall)
                     .accessibilityLabel("7-day snow forecast chart for your favorite mountains")
             } else {
                 emptyForecastState

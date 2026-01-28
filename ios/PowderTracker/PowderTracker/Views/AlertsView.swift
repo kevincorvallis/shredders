@@ -149,7 +149,7 @@ struct AlertsView: View {
         }
         .padding()
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 
     private var mountainPickerSheet: some View {
@@ -316,7 +316,7 @@ struct AlertCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(severityColor.opacity(0.3), lineWidth: 2)

@@ -63,7 +63,7 @@ struct MountainConditionsCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.1), radius: 8, x: 0, y: 2)
     }
 
@@ -181,7 +181,7 @@ struct ElevationTempView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(8)
+        .cornerRadius(.cornerRadiusButton)
     }
 
     private var tempColor: Color {

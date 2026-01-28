@@ -133,7 +133,7 @@ struct MountainManagementRow: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(Color.secondary.opacity(0.15))
-                .cornerRadius(6)
+                .cornerRadius(.cornerRadiusMicro)
         }
         .padding(.vertical, 4)
     }

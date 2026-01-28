@@ -21,9 +21,10 @@ struct MediumWidgetView: View {
                 // Header
                 HStack {
                     Text("🏔️")
-                    Text("Mt. Baker")
+                    Text(entry.mountainName)
                         .font(.caption)
                         .fontWeight(.semibold)
+                        .lineLimit(1)
                 }
 
                 Spacer()
@@ -118,6 +119,8 @@ struct MediumWidgetView: View {
 } timeline: {
     PowderEntry(
         date: Date(),
+        mountainId: "crystal-mountain",
+        mountainName: "Crystal Mountain",
         snowDepth: 142,
         snowfall24h: 8,
         powderScore: 8,

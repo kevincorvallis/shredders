@@ -117,7 +117,7 @@ struct MountainPickerRow: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(Color(.tertiarySystemFill))
-                        .cornerRadius(4)
+                        .cornerRadius(.cornerRadiusTiny)
                 }
             }
 

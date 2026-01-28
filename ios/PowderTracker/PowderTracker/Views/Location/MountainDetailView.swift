@@ -59,17 +59,18 @@ struct MountainDetailView: View {
                         alerts: data.alerts,
                         isDismissed: $alertsDismissed
                     )
-                    .padding(.horizontal, .spacingL)
+                    .padding(.horizontal, .spacingXL) // Match tab content padding for shadow space
                     .padding(.top, .spacingM)
                 }
 
                 // Tab content
                 tabContent
-                    .padding(.horizontal, .spacingL)
+                    .padding(.horizontal, .spacingXL) // Increased from spacingL (16) to spacingXL (20) for shadow overflow
                     .padding(.top, .spacingM)
                     .padding(.bottom, .spacingXL)
             }
         }
+        .scrollClipDisabled() // iOS 17+ - allows shadows to overflow
         .background(Color(.systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(mountain.shortName)
@@ -79,34 +80,90 @@ struct MountainDetailView: View {
         .refreshable {
             await viewModel.fetchData()
         }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    // Quick actions
+                    Section("Quick Actions") {
+                        Button {
+                            HapticFeedback.light.trigger()
+                            FavoritesManager.shared.toggleFavorite(mountain.id)
+                        } label: {
+                            Label(
+                                FavoritesManager.shared.isFavorite(mountain.id) ? "Remove from Favorites" : "Add to Favorites",
+                                systemImage: FavoritesManager.shared.isFavorite(mountain.id) ? "star.slash" : "star.fill"
+                            )
+                        }
+
+                        Button {
+                            HapticFeedback.light.trigger()
+                            // Share mountain
+                        } label: {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+
+                        if let url = URL(string: mountain.website) {
+                            Link(destination: url) {
+                                Label("Visit Website", systemImage: "safari")
+                            }
+                        }
+                    }
+
+                    Section("Navigate") {
+                        Button {
+                            HapticFeedback.light.trigger()
+                            let lat = mountain.location.lat
+                            let lng = mountain.location.lng
+                            if let mapURL = URL(string: "maps://?daddr=\(lat),\(lng)") {
+                                UIApplication.shared.open(mapURL)
+                            }
+                        } label: {
+                            Label("Open in Maps", systemImage: "map")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .symbolRenderingMode(.hierarchical)
+                }
+            }
+        }
     }
 
     // MARK: - Hero Header
 
     private var heroHeader: some View {
-        ZStack(alignment: .bottomLeading) {
-            // Background - webcam image or gradient
-            if let webcam = viewModel.locationData?.mountain.webcams.first {
-                AsyncImage(url: URL(string: webcam.url)) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    default:
+        GeometryReader { geo in
+            let minY = geo.frame(in: .global).minY
+            let isScrollingUp = minY > 0
+
+            ZStack(alignment: .bottomLeading) {
+                // Background - webcam image or gradient with parallax
+                Group {
+                    if let webcam = viewModel.locationData?.mountain.webcams.first {
+                        AsyncImage(url: URL(string: webcam.url)) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            default:
+                                mountainGradient
+                            }
+                        }
+                    } else {
                         mountainGradient
                     }
                 }
-            } else {
-                mountainGradient
-            }
+                // Parallax effect: scale up and offset when pulling down
+                .scaleEffect(isScrollingUp ? 1 + minY / 500 : 1, anchor: .bottom)
+                .offset(y: isScrollingUp ? -minY / 2 : 0)
 
-            // Gradient overlay for text readability
-            LinearGradient(
-                colors: [.clear, .black.opacity(0.7)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+                // Gradient overlay for text readability
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.7)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
 
             // Mountain info overlay
             HStack(spacing: .spacingM) {
@@ -121,6 +178,9 @@ struct MountainDetailView: View {
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(mountain.region.uppercased())
                         .font(.caption)
@@ -139,10 +199,12 @@ struct MountainDetailView: View {
                     .padding(.vertical, 5)
                     .background(Capsule().fill(Color.black.opacity(0.5)))
             }
-            .padding(.spacingM)
+                .padding(.spacingM)
+            }
+            .frame(height: headerFullHeight + (geo.frame(in: .global).minY > 0 ? geo.frame(in: .global).minY : 0))
+            .clipped()
         }
         .frame(height: headerFullHeight)
-        .clipped()
     }
 
     private var mountainGradient: some View {
@@ -177,6 +239,8 @@ struct MountainDetailView: View {
                             Text(tab.rawValue)
                                 .font(.caption)
                                 .fontWeight(selectedTab == tab ? .semibold : .regular)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.85)
                         }
                         .foregroundColor(selectedTab == tab ? .blue : .secondary)
                         .frame(minWidth: 70)

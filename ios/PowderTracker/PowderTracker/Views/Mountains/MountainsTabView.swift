@@ -47,6 +47,7 @@ struct MountainsTabView: View {
     private var modePicker: some View {
         HStack(spacing: 0) {
             ForEach(MountainViewMode.allCases, id: \.self) { mode in
+                let isSelected = selectedMode == mode
                 Button {
                     withAnimation(.snappy) {
                         selectedMode = mode
@@ -54,19 +55,21 @@ struct MountainsTabView: View {
                     HapticFeedback.selection.trigger()
                 } label: {
                     VStack(spacing: 4) {
-                        Image(systemName: mode.icon)
+                        Image(systemName: isSelected ? mode.iconFilled : mode.icon)
                             .font(.system(size: 18))
                             .symbolRenderingMode(.hierarchical)
+                            .scaleEffect(isSelected ? 1.15 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
                         Text(mode.title)
                             .font(.caption2)
-                            .fontWeight(.medium)
+                            .fontWeight(isSelected ? .semibold : .medium)
                     }
-                    .foregroundColor(selectedMode == mode ? .white : .secondary)
+                    .foregroundColor(isSelected ? .white : .secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(
                         Group {
-                            if selectedMode == mode {
+                            if isSelected {
                                 RoundedRectangle(cornerRadius: 10)
                                     .fill(Color.blue)
                                     .matchedGeometryEffect(id: "selected", in: namespace)
@@ -105,8 +108,17 @@ enum MountainViewMode: String, CaseIterable {
 
     var icon: String {
         switch self {
-        case .conditions: return "sun.snow.fill"
+        case .conditions: return "sun.snow"
         case .planner: return "calendar"
+        case .explore: return "binoculars"
+        case .myPass: return "wallet.pass"
+        }
+    }
+
+    var iconFilled: String {
+        switch self {
+        case .conditions: return "sun.snow.fill"
+        case .planner: return "calendar.circle.fill"
         case .explore: return "binoculars.fill"
         case .myPass: return "wallet.pass.fill"
         }
@@ -181,6 +193,7 @@ struct ConditionsView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .navigationHaptic()
                         .padding(.horizontal)
                     }
                 }
@@ -229,7 +242,7 @@ struct ConditionsView: View {
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .background(sortBy == sort ? Color.blue : Color(.tertiarySystemBackground))
-                            .cornerRadius(20)
+                            .cornerRadius(.cornerRadiusPill)
                     }
                     .buttonStyle(.plain)
                 }
@@ -372,6 +385,7 @@ struct PlannerView: View {
                                 )
                             }
                             .buttonStyle(.plain)
+                            .navigationHaptic()
                             .padding(.horizontal)
                         }
                     }
@@ -388,6 +402,7 @@ struct PlannerView: View {
                 },
                 viewModel: viewModel
             )
+            .modernSheetStyle()
         }
     }
 
@@ -411,7 +426,7 @@ struct PlannerView: View {
                     .padding(.vertical, 10)
                     .background(selectedDay == day ? Color.blue : Color(.tertiarySystemBackground))
                     .foregroundColor(selectedDay == day ? .white : .primary)
-                    .cornerRadius(12)
+                    .cornerRadius(.cornerRadiusCard)
                 }
                 .buttonStyle(.plain)
             }
@@ -441,7 +456,7 @@ struct PlannerView: View {
         }
         .padding()
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 
     private var bestForDay: [Mountain] {
@@ -492,9 +507,14 @@ struct PlannerView: View {
 
     private func toggleCompare(_ id: String) {
         if compareList.contains(id) {
+            HapticFeedback.light.trigger()
             compareList.removeAll { $0 == id }
         } else if compareList.count < 4 {
+            HapticFeedback.light.trigger()
             compareList.append(id)
+        } else {
+            // Max reached
+            HapticFeedback.warning.trigger()
         }
     }
 }
@@ -541,6 +561,7 @@ struct ExploreView: View {
                 viewModel: viewModel,
                 favoritesManager: favoritesManager
             )
+            .modernSheet(detents: [.medium, .large])
         }
     }
 
@@ -563,7 +584,7 @@ struct ExploreView: View {
         }
         .padding(12)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 
     private var regionSection: some View {
@@ -643,6 +664,7 @@ struct ExploreView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .navigationHaptic()
                 .padding(.horizontal)
             }
         }
@@ -650,24 +672,97 @@ struct ExploreView: View {
 
     private var searchResultsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("\(searchResults.count) results")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
+            if searchResults.isEmpty {
+                // Empty search state with suggestions
+                emptySearchSuggestions
+            } else {
+                Text("\(searchResults.count) results")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
 
-            ForEach(searchResults) { mountain in
-                NavigationLink {
-                    MountainDetailView(mountain: mountain)
-                } label: {
-                    ExploreRow(
-                        mountain: mountain,
-                        isFavorite: favoritesManager.isFavorite(mountain.id)
-                    )
+                ForEach(searchResults) { mountain in
+                    NavigationLink {
+                        MountainDetailView(mountain: mountain)
+                    } label: {
+                        ExploreRow(
+                            mountain: mountain,
+                            isFavorite: favoritesManager.isFavorite(mountain.id)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .navigationHaptic()
+                    .padding(.horizontal)
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal)
             }
         }
+    }
+
+    private var emptySearchSuggestions: some View {
+        VStack(spacing: 20) {
+            // Empty state icon
+            Image(systemName: "magnifyingglass")
+                .font(.largeTitle)
+                .foregroundColor(.secondary)
+                .symbolEffect(.pulse.byLayer, options: .repeating)
+
+            VStack(spacing: 4) {
+                Text("No mountains found")
+                    .font(.headline)
+                Text("Try one of these suggestions")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            // Suggested actions
+            VStack(spacing: 12) {
+                // Popular search suggestions
+                HStack(spacing: 8) {
+                    ForEach(["Baker", "Crystal", "Stevens"], id: \.self) { suggestion in
+                        Button {
+                            searchText = suggestion
+                            HapticFeedback.light.trigger()
+                        } label: {
+                            Text(suggestion)
+                                .font(.subheadline)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                Divider()
+                    .padding(.vertical, 8)
+
+                // Action buttons
+                VStack(spacing: 8) {
+                    Button {
+                        searchText = ""
+                        HapticFeedback.light.trigger()
+                    } label: {
+                        Label("Clear search", systemImage: "xmark.circle")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.secondary.opacity(0.3))
+
+                    Button {
+                        selectedRegion = ExploreRegion.allCases.first
+                        searchText = ""
+                        HapticFeedback.light.trigger()
+                    } label: {
+                        Label("Browse by region", systemImage: "map")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.horizontal, 40)
+            }
+        }
+        .padding(.top, 40)
     }
 
     private var searchResults: [Mountain] {
@@ -768,6 +863,7 @@ struct MyPassView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .navigationHaptic()
                         .padding(.horizontal)
                     }
                 }
@@ -800,7 +896,7 @@ struct MyPassView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .background(selectedPass == pass ? pass.color : Color(.tertiarySystemBackground))
-                    .cornerRadius(20)
+                    .cornerRadius(.cornerRadiusPill)
                 }
                 .buttonStyle(.plain)
             }
@@ -841,7 +937,7 @@ struct MyPassView: View {
         }
         .padding()
         .background(selectedPass.color.opacity(0.1))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
     }
 
     private var filteredMountains: [Mountain] {
@@ -949,7 +1045,7 @@ struct StatusPill: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 }
 
@@ -984,7 +1080,7 @@ struct ConditionMountainCard: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(status.isOpen ? Color.green : Color.red.opacity(0.8))
-                            .cornerRadius(4)
+                            .cornerRadius(.cornerRadiusTiny)
                     }
                 }
 
@@ -1040,7 +1136,7 @@ struct ConditionMountainCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
     }
 
     private func scoreColor(_ score: Double) -> Color {
@@ -1100,7 +1196,7 @@ struct PlannerCard: View {
         }
         .frame(width: 120)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isInCompareList ? Color.blue : Color.clear, lineWidth: 2)
@@ -1158,7 +1254,7 @@ struct PlannerMountainRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 }
 
@@ -1201,7 +1297,7 @@ struct RegionTile: View {
             .frame(width: 130)
             .padding()
             .background(region.color.opacity(0.1))
-            .cornerRadius(16)
+            .cornerRadius(.cornerRadiusHero)
         }
         .buttonStyle(.plain)
     }
@@ -1236,7 +1332,7 @@ struct CategoryTile: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 }
 
@@ -1271,7 +1367,7 @@ struct ExploreRow: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(passType == .epic ? Color.purple.opacity(0.1) : Color.orange.opacity(0.1))
-                    .cornerRadius(6)
+                    .cornerRadius(.cornerRadiusMicro)
             }
 
             if isFavorite {
@@ -1286,7 +1382,7 @@ struct ExploreRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 }
 
@@ -1351,7 +1447,7 @@ struct PassMountainRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 }
 
@@ -1409,6 +1505,7 @@ struct RegionSheet: View {
                         }
                     }
                 }
+                .navigationHaptic()
             }
             .navigationTitle(region.displayName)
             .navigationBarTitleDisplayMode(.inline)

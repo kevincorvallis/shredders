@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct MountainCardRow: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let mountain: Mountain
     let conditions: MountainConditions?
     let powderScore: MountainPowderScore?
@@ -57,11 +59,13 @@ struct MountainCardRow: View {
                         HStack(spacing: .spacingXS) {
                             Image(systemName: "snowflake")
                                 .font(.caption)
+                                .symbolRenderingMode(.hierarchical)
                                 .foregroundColor(.blue)
 
                             Text("\(conditions.snowfall24h)\" / \(conditions.snowfall48h)\"")
                                 .metric()
                                 .foregroundColor(.primary)
+                                .contentTransition(.numericText())
 
                             Text("24h / 48h")
                                 .font(.caption2)
@@ -71,6 +75,7 @@ struct MountainCardRow: View {
                         HStack(spacing: .spacingXS) {
                             Image(systemName: "snowflake")
                                 .font(.caption)
+                                .symbolRenderingMode(.hierarchical)
                                 .foregroundColor(.secondary)
                             Text("No new snow")
                                 .font(.caption)
@@ -91,14 +96,23 @@ struct MountainCardRow: View {
 
             Spacer()
 
-            // Favorite button
+            // Favorite button with haptic feedback and bounce animation
             if let isFavorite = isFavorite, let toggle = onFavoriteToggle {
-                Button(action: toggle) {
+                Button {
+                    HapticFeedback.medium.trigger()
+                    toggle()
+                } label: {
                     Image(systemName: isFavorite ? "star.fill" : "star")
                         .font(.title3)
+                        .symbolRenderingMode(.hierarchical)
                         .foregroundColor(isFavorite ? .yellow : .gray)
+                        .symbolEffect(.bounce, value: isFavorite)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibleButton(
+                    label: isFavorite ? "Remove from favorites" : "Add to favorites"
+                )
             }
 
             // Powder score circle
@@ -132,6 +146,148 @@ struct MountainCardRow: View {
             }
         }
         .standardCard()
+        .contextMenu {
+            // Favorite action
+            if let isFavorite = isFavorite, let toggle = onFavoriteToggle {
+                Button {
+                    HapticFeedback.light.trigger()
+                    toggle()
+                } label: {
+                    Label(
+                        isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                        systemImage: isFavorite ? "star.slash" : "star.fill"
+                    )
+                }
+            }
+
+            // Share action
+            Button {
+                // Share sheet will be presented by parent view
+            } label: {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+
+            // Navigate action
+            if let url = URL(string: mountain.website) {
+                Link(destination: url) {
+                    Label("Visit Website", systemImage: "safari")
+                }
+            }
+
+            Divider()
+
+            // Info section
+            if let conditions = conditions {
+                Text("\(conditions.snowfall24h)\" fresh / \(conditions.snowfall48h)\" 48h")
+                if let temp = conditions.temperature {
+                    Text("\(Int(temp))°F")
+                }
+            }
+        } preview: {
+            // Preview card for context menu
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    MountainLogoView(
+                        logoUrl: mountain.logo,
+                        color: mountain.color,
+                        size: 60
+                    )
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(mountain.name)
+                            .font(.headline)
+                            .fontWeight(.bold)
+
+                        Text(mountain.region)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    if let score = powderScore?.score {
+                        ZStack {
+                            Circle()
+                                .fill(Color.forPowderScore(score))
+                                .frame(width: 50, height: 50)
+
+                            Text("\(Int(score))")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                        }
+                    }
+                }
+
+                if let conditions = conditions {
+                    Divider()
+
+                    HStack(spacing: 20) {
+                        VStack(alignment: .leading) {
+                            Text("24h Snow")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(conditions.snowfall24h)\"")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                        }
+
+                        VStack(alignment: .leading) {
+                            Text("Base")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(conditions.snowDepth)\"")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                        }
+
+                        if let temp = conditions.temperature {
+                            VStack(alignment: .leading) {
+                                Text("Temp")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(Int(temp))°F")
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding()
+            .frame(width: 300)
+        }
+        .accessibleCard(
+            label: accessibilityLabel,
+            hint: "Double tap to view mountain details"
+        )
+        .limitDynamicType()
+    }
+
+    private var accessibilityLabel: String {
+        var parts: [String] = [mountain.shortName]
+
+        if let conditions = conditions {
+            if conditions.snowfall24h > 0 || conditions.snowfall48h > 0 {
+                parts.append("\(conditions.snowfall24h) inches in 24 hours, \(conditions.snowfall48h) inches in 48 hours")
+            } else {
+                parts.append("No new snow")
+            }
+
+            if let liftStatus = conditions.liftStatus {
+                parts.append("\(liftStatus.liftsOpen) of \(liftStatus.liftsTotal) lifts open")
+            }
+        }
+
+        if let score = powderScore {
+            parts.append("Powder score \(Int(score.score)) out of 10")
+        }
+
+        if let isFav = isFavorite, isFav {
+            parts.append("Favorited")
+        }
+
+        return parts.joined(separator: ". ")
     }
 
     private func scoreColor(_ score: Double) -> Color {

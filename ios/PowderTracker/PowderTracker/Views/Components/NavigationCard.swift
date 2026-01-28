@@ -75,13 +75,13 @@ struct NavigationCard: View {
                         endPoint: .trailing
                     )
                 )
-                .cornerRadius(12)
+                .cornerRadius(.cornerRadiusCard)
             }
             .buttonStyle(.plain)
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.08), radius: 8, x: 0, y: 4)
         .alert("Opening Maps", isPresented: $showingDirectionsAlert) {
             Button("OK", role: .cancel) { }

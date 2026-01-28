@@ -119,7 +119,7 @@ struct SkeletonRect: View {
         Rectangle()
             .fill(Color(.systemGray5))
             .frame(width: width, height: height)
-            .cornerRadius(4)
+            .cornerRadius(.cornerRadiusTiny)
             .shimmer()
     }
 }

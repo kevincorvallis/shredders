@@ -15,6 +15,7 @@ struct SnowForecastChart: View {
     @State private var selectedRange: ForecastRange = .sevenDays
     @State private var selectedDataPoint: (mountain: Mountain, day: ForecastDay)? = nil
     @State private var showingHourlySheet: Bool = false
+    @State private var selectedDate: Date? = nil
 
     enum ForecastRange: String, CaseIterable {
         case threeDays = "3D"
@@ -158,6 +159,61 @@ struct SnowForecastChart: View {
                 }
             }
         }
+        .chartXSelection(value: $selectedDate)
+        .chartOverlay { proxy in
+            // Show tooltip when a date is selected
+            if let selectedDate = selectedDate,
+               let xPosition = proxy.position(forX: selectedDate) {
+                let snowfallData = getSnowfallForDate(selectedDate)
+                if !snowfallData.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(formatSelectedDate(selectedDate))
+                            .font(.caption.bold())
+                            .foregroundColor(.primary)
+
+                        ForEach(snowfallData, id: \.mountain.id) { data in
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(mountainColor(for: data.mountain))
+                                    .frame(width: 6, height: 6)
+                                Text("\(data.mountain.shortName): \(data.snowfall)\"")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .shadow(radius: 4)
+                    .position(x: min(max(xPosition, 60), proxy.plotSize.width - 60), y: 40)
+                }
+            }
+        }
+        .onChange(of: selectedDate) { _, newValue in
+            if newValue != nil {
+                HapticFeedback.selection.trigger()
+            }
+        }
+    }
+
+    /// Get snowfall data for all mountains on the selected date
+    private func getSnowfallForDate(_ date: Date) -> [(mountain: Mountain, snowfall: Int)] {
+        let calendar = Calendar.current
+        return favorites.compactMap { favorite in
+            let forecastDays = Array(favorite.forecast.prefix(selectedRange.days))
+            if let day = forecastDays.first(where: { parseDate($0.date).map { calendar.isDate($0, inSameDayAs: date) } ?? false }) {
+                return (mountain: favorite.mountain, snowfall: day.snowfall)
+            }
+            return nil
+        }
+    }
+
+    /// Format the selected date for display
+    private func formatSelectedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE, MMM d"
+        return formatter.string(from: date)
     }
 
     /// Parse date string (YYYY-MM-DD format) to Date
@@ -343,7 +399,7 @@ struct HourlyBreakdownSheet: View {
             )
             .padding()
             .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
+            .cornerRadius(.cornerRadiusCard)
         }
         .padding()
     }

@@ -36,7 +36,7 @@ struct ListItemSkeleton: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 }
 
@@ -97,7 +97,7 @@ struct HistoryChartSkeleton: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }
@@ -122,7 +122,7 @@ struct PatrolViewSkeleton: View {
                 }
                 .padding()
                 .background(Color(.systemBackground))
-                .cornerRadius(16)
+                .cornerRadius(.cornerRadiusHero)
 
                 // Safety info cards
                 ForEach(0..<3, id: \.self) { _ in
@@ -152,7 +152,7 @@ struct WebcamsViewSkeleton: View {
                     }
                     .padding()
                     .background(Color(.systemBackground))
-                    .cornerRadius(16)
+                    .cornerRadius(.cornerRadiusHero)
                 }
             }
             .padding()

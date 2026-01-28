@@ -90,7 +90,7 @@ struct StatCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 }
 

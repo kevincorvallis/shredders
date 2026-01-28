@@ -104,7 +104,7 @@ struct AboutView: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemBackground))
-                .cornerRadius(12)
+                .cornerRadius(.cornerRadiusCard)
 
                 VStack(spacing: 12) {
                     Text("Data provided by:")

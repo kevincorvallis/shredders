@@ -87,7 +87,7 @@ struct SafetyAssessmentCard: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
                     .background(levelColor.opacity(0.2))
-                    .cornerRadius(8)
+                    .cornerRadius(.cornerRadiusButton)
             }
 
             Text(data.assessment.description)
@@ -115,7 +115,7 @@ struct SafetyAssessmentCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
     }
 
@@ -159,7 +159,7 @@ struct ExtendedWeatherCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }
@@ -212,7 +212,7 @@ struct VisibilityCard: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 4)
                         .background(visibilityColor(visibility).opacity(0.2))
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                 }
             } else {
                 Text("Visibility data unavailable")
@@ -221,7 +221,7 @@ struct VisibilityCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
     }
 
@@ -302,7 +302,7 @@ struct WindAssessmentCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
     }
 
@@ -345,7 +345,7 @@ struct HazardMatrixCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }
@@ -407,7 +407,7 @@ struct ErrorCard: View {
         .padding()
         .frame(maxWidth: .infinity, minHeight: 200)
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
     }
 }
 

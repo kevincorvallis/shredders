@@ -27,9 +27,16 @@ class FavoritesManager: ObservableObject {
     func toggleFavorite(_ mountainId: String) -> Bool {
         if isFavorite(mountainId) {
             remove(mountainId)
+            HapticFeedback.light.trigger()
             return false
         } else {
-            return add(mountainId)
+            let added = add(mountainId)
+            if added {
+                HapticFeedback.success.trigger()
+            } else {
+                HapticFeedback.warning.trigger()
+            }
+            return added
         }
     }
 

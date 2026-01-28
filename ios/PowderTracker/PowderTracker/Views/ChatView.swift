@@ -22,6 +22,7 @@ struct ChatView: View {
                         }
                         .padding()
                     }
+                    .scrollDismissesKeyboard(.interactively)
                     .onChange(of: viewModel.messages.count) { _, _ in
                         if let lastMessage = viewModel.messages.last {
                             withAnimation {
@@ -51,7 +52,7 @@ struct ChatView: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
                         .background(Color(.secondarySystemBackground))
-                        .cornerRadius(20)
+                        .cornerRadius(.cornerRadiusPill)
                         .focused($isInputFocused)
                         .lineLimit(1...4)
 
@@ -134,7 +135,7 @@ struct SuggestionButton: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
                 .background(Color(.secondarySystemBackground))
-                .cornerRadius(16)
+                .cornerRadius(.cornerRadiusHero)
         }
     }
 }
@@ -154,7 +155,7 @@ struct MessageBubble: View {
                     .padding(.vertical, 10)
                     .background(message.role == .user ? Color.blue : Color(.secondarySystemBackground))
                     .foregroundColor(message.role == .user ? .white : .primary)
-                    .cornerRadius(18)
+                    .cornerRadius(.cornerRadiusBubble)
                     .opacity(message.content.isEmpty ? 0.6 : 1)
 
                 Text(message.timestamp, style: .time)

@@ -152,6 +152,7 @@ struct CommentListView: View {
             }
             .padding()
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var parentComments: [Comment] {
@@ -477,7 +478,7 @@ struct CommentInputView: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
                         .background(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.blue)
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                 }
                 .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSubmitting)
 

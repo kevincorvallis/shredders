@@ -23,19 +23,19 @@ struct TodayTabView: View {
                 yourFavoritesSection
                     .opacity(isVisible ? 1 : 0)
                     .offset(y: isVisible ? 0 : 20)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1), value: isVisible)
+                    .animation(.smooth.delay(0.1), value: isVisible)
 
                 // Section 2: 7-Day Snow Forecast Chart
                 forecastChartSection
                     .opacity(isVisible ? 1 : 0)
                     .offset(y: isVisible ? 0 : 20)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2), value: isVisible)
+                    .animation(.smooth.delay(0.2), value: isVisible)
 
                 // Section 3: Mountain Details (Expandable)
                 mountainDetailsSection
                     .opacity(isVisible ? 1 : 0)
                     .offset(y: isVisible ? 0 : 20)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.3), value: isVisible)
+                    .animation(.smooth.delay(0.3), value: isVisible)
             }
         }
         .padding(.horizontal, .spacingL)
@@ -111,13 +111,15 @@ struct TodayTabView: View {
             // Show "See All" button if there are more than 3 favorites
             if favoritesManager.favoriteIds.count > 3 {
                 Button {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    HapticFeedback.selection.trigger()
+                    withAnimation(.bouncy) {
                         showAllFavorites.toggle()
                     }
                 } label: {
                     HStack {
                         Image(systemName: showAllFavorites ? "chevron.up" : "chevron.down")
                             .font(.caption)
+                            .symbolRenderingMode(.hierarchical)
 
                         Text(showAllFavorites ? "Show Less" : "See All (\(favoritesManager.favoriteIds.count))")
                             .font(.subheadline)
@@ -127,10 +129,11 @@ struct TodayTabView: View {
                     }
                     .foregroundColor(.blue)
                     .padding(.spacingM)
-                    .background(Color(.tertiarySystemBackground))
-                    .cornerRadius(.cornerRadiusCard)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusCard))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(showAllFavorites ? "Show fewer favorites" : "Show all \(favoritesManager.favoriteIds.count) favorites")
             }
         }
     }
@@ -139,6 +142,7 @@ struct TodayTabView: View {
         VStack(spacing: .spacingL) {
             Image(systemName: "star.slash")
                 .font(.system(size: 60))
+                .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
 
             Text("No Favorites Yet")
@@ -152,6 +156,8 @@ struct TodayTabView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No favorites yet. Add mountains to track conditions and snowfall.")
     }
 }
 

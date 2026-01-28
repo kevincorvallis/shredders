@@ -67,7 +67,7 @@ struct WeatherGovLinksView: View {
                     }
                 }
                 .background(Color(.systemBackground))
-                .cornerRadius(12)
+                .cornerRadius(.cornerRadiusCard)
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
             }
         }
@@ -156,7 +156,7 @@ struct WeatherAlertCard: View {
                     .font(.caption)
                     .padding(8)
                     .background(Color.black.opacity(0.1))
-                    .cornerRadius(6)
+                    .cornerRadius(.cornerRadiusMicro)
                     .lineLimit(3)
             }
 
@@ -172,7 +172,7 @@ struct WeatherAlertCard: View {
         }
         .padding()
         .background(severityColor.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(severityColor.opacity(0.3), lineWidth: 2)

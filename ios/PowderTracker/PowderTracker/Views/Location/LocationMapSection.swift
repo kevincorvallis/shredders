@@ -30,7 +30,7 @@ struct LocationMapSection: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.blue.opacity(0.8))
-                    .cornerRadius(12)
+                    .cornerRadius(.cornerRadiusCard)
                 }
             }
 
@@ -101,7 +101,7 @@ struct LocationMapSection: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(.ultraThinMaterial)
-                            .cornerRadius(8)
+                            .cornerRadius(.cornerRadiusButton)
                     }
                 }
 
@@ -115,7 +115,7 @@ struct LocationMapSection: View {
                 MapScaleView()
             }
             .frame(height: 280)
-            .cornerRadius(12)
+            .cornerRadius(.cornerRadiusCard)
             .onAppear {
                 // Center map on mountain with tight zoom to show terrain detail
                 cameraPosition = .region(
@@ -149,7 +149,7 @@ struct LocationMapSection: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
     }
 

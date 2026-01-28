@@ -83,8 +83,23 @@ struct WeatherSummarySection: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        guard let conditions = conditions else { return "Weather information loading" }
+        var description = "Weather: \(conditions.conditions). "
+        if let temp = conditions.temperature {
+            description += "Temperature \(temp) degrees. "
+        }
+        if let wind = conditions.wind {
+            description += "Wind \(wind.speed) miles per hour from the \(wind.direction). "
+        }
+        description += "\(conditions.snowfall24h) inches of snow in the last 24 hours."
+        return description
     }
 
     private var weatherIcon: String {
@@ -225,7 +240,7 @@ struct TempGradientBar: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .cornerRadius(8)
+        .cornerRadius(.cornerRadiusButton)
     }
 
     private func tempColor(_ temp: Int) -> Color {

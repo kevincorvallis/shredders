@@ -30,8 +30,8 @@ struct WebcamsSection: View {
                 }
                 .padding()
                 .background(Color(.systemBackground))
-                .cornerRadius(12)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                .cornerRadius(.cornerRadiusCard)
+                .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
             }
 
             // Road Webcams
@@ -57,8 +57,8 @@ struct WebcamsSection: View {
                 }
                 .padding()
                 .background(Color(.systemBackground))
-                .cornerRadius(12)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                .cornerRadius(.cornerRadiusCard)
+                .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
             }
         }
     }
@@ -78,7 +78,7 @@ struct LocationRoadWebcamCard: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 250, height: 180)
                         .clipped()
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                         .onTapGesture {
                             isImageExpanded = true
                         }
@@ -95,7 +95,7 @@ struct LocationRoadWebcamCard: View {
                         }
                     }
                     .frame(width: 250, height: 180)
-                    .cornerRadius(8)
+                    .cornerRadius(.cornerRadiusButton)
                 } else {
                     ProgressView()
                         .frame(width: 250, height: 180)
@@ -219,7 +219,7 @@ struct LocationResortWebcamCard: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 250, height: 180)
                         .clipped()
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                         .onTapGesture {
                             isImageExpanded = true
                         }
@@ -236,7 +236,7 @@ struct LocationResortWebcamCard: View {
                         }
                     }
                     .frame(width: 250, height: 180)
-                    .cornerRadius(8)
+                    .cornerRadius(.cornerRadiusButton)
                 } else {
                     ProgressView()
                         .frame(width: 250, height: 180)

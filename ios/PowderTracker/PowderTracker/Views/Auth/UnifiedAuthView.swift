@@ -70,6 +70,7 @@ struct UnifiedAuthView: View {
                 }
                 .padding(.vertical)
             }
+            .scrollDismissesKeyboard(.interactively)
             .background(Color(.systemGroupedBackground))
             .navigationTitle(isSignupMode ? "Create Account" : "Sign In")
             .navigationBarTitleDisplayMode(.inline)
@@ -168,7 +169,7 @@ struct UnifiedAuthView: View {
                 }
             }
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(10)
+            .cornerRadius(.cornerRadiusSmall)
             .padding(.horizontal)
         }
     }
@@ -210,7 +211,7 @@ struct UnifiedAuthView: View {
                 .padding()
                 .background(isFormValid ? Color.blue : Color.gray.opacity(0.3))
                 .foregroundColor(.white)
-                .cornerRadius(10)
+                .cornerRadius(.cornerRadiusSmall)
             }
             .disabled(!isFormValid || isLoading)
             .padding(.horizontal)

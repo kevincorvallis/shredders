@@ -141,7 +141,7 @@ struct OpenSnowStyleSnowfallView: View {
                         day.isToday ?
                             Color.blue : Color.clear
                     )
-                    .cornerRadius(4)
+                    .cornerRadius(.cornerRadiusTiny)
 
                 Text(day.dateLabel)
                     .font(.caption)

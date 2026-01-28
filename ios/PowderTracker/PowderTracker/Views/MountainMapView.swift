@@ -56,7 +56,7 @@ struct MountainMapView: View {
                             }
                             .padding(8)
                             .background(.ultraThinMaterial)
-                            .cornerRadius(8)
+                            .cornerRadius(.cornerRadiusButton)
                             .padding()
                         }
                     }
@@ -95,7 +95,7 @@ struct MountainMapView: View {
                     }
                     .padding(.spacingS)
                     .background(Color(.secondarySystemBackground))
-                    .cornerRadius(8)
+                    .cornerRadius(.cornerRadiusButton)
 
                     // Filter chips row
                     ScrollView(.horizontal, showsIndicators: false) {

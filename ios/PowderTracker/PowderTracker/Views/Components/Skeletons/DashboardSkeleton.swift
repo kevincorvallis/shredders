@@ -60,11 +60,11 @@ struct PowderScoreSkeleton: View {
             }
             .padding()
             .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
+            .cornerRadius(.cornerRadiusCard)
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }
@@ -90,7 +90,7 @@ struct ConditionsCardSkeleton: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }
@@ -123,7 +123,7 @@ struct CardSkeleton: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }
@@ -149,7 +149,7 @@ struct ForecastPreviewSkeleton: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }

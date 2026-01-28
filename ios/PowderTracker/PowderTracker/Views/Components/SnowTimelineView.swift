@@ -86,7 +86,7 @@ struct SnowTimelineView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
     }
 
@@ -155,12 +155,12 @@ struct SnowDayBar: View {
                     .padding(.horizontal, 4)
                     .padding(.vertical, 2)
                     .background(Color.blue.opacity(0.1))
-                    .cornerRadius(4)
+                    .cornerRadius(.cornerRadiusTiny)
             }
         }
         .frame(width: 44)
         .background(dataPoint.isToday ? Color.blue.opacity(0.05) : Color.clear)
-        .cornerRadius(8)
+        .cornerRadius(.cornerRadiusButton)
     }
 
     private var barHeight: CGFloat {

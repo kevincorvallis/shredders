@@ -8,6 +8,7 @@ struct PowderDayCard: View {
             HStack {
                 Image(systemName: "calendar.badge.clock")
                     .foregroundStyle(.purple)
+                    .accessibilityHidden(true)
                 Text("Powder Day Planner")
                     .font(.headline)
                 Spacer()
@@ -36,7 +37,9 @@ struct PowderDayCard: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusCard))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Powder Day Planner")
     }
 }
 
@@ -116,7 +119,22 @@ struct PowderDayRow: View {
         .padding(12)
         .frame(width: 140)
         .background(Color(.systemGray5))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusSmall))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        var description = "\(isToday ? "Today" : day.dayOfWeek), \(formattedDate). "
+        description += "Powder score \(String(format: "%.1f", day.predictedPowderScore)) out of 10. "
+        description += "\(day.verdict.displayName). "
+        description += "\(Int(day.confidence * 100)) percent confidence. "
+        if day.forecastSnapshot.snowfall > 0 {
+            description += "\(day.forecastSnapshot.snowfall) inches of snow expected. "
+        }
+        description += "High \(day.forecastSnapshot.high), low \(day.forecastSnapshot.low) degrees. "
+        description += "\(day.crowdRisk.displayName) crowd risk."
+        return description
     }
 
     private var isToday: Bool {

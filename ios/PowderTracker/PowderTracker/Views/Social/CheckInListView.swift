@@ -38,7 +38,7 @@ struct CheckInListView: View {
                             .padding(.vertical, 8)
                             .background(Color.blue)
                             .foregroundStyle(.white)
-                            .cornerRadius(8)
+                            .cornerRadius(.cornerRadiusButton)
                     }
                 }
             }
@@ -121,7 +121,7 @@ struct CheckInListView: View {
                         .padding(.vertical, 12)
                         .background(Color.blue)
                         .foregroundStyle(.white)
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                 }
                 .padding(.top, 8)
             }

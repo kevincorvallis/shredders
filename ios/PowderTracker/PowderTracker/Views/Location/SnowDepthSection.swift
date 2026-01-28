@@ -60,7 +60,7 @@ struct SnowDepthSection: View {
                         .padding(12)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.secondarySystemBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                     }
 
                     // Year-over-Year Comparison
@@ -106,7 +106,7 @@ struct SnowDepthSection: View {
                         }
                         .padding(12)
                         .background(Color(.secondarySystemBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                     }
                 }
             }
@@ -200,7 +200,7 @@ struct SnowDepthSection: View {
                         .foregroundColor(.blue)
                         .padding()
                         .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                     }
                     .transition(.opacity)
                 }
@@ -215,7 +215,7 @@ struct SnowDepthSection: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
     }
 
@@ -254,6 +254,6 @@ struct SnowfallCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(8)
+        .cornerRadius(.cornerRadiusButton)
     }
 }

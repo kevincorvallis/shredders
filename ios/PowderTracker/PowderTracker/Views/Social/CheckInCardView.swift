@@ -53,7 +53,7 @@ struct CheckInCardView: View {
                                 .padding(.vertical, 2)
                                 .background(Color(.systemGray5))
                                 .foregroundStyle(.secondary)
-                                .cornerRadius(4)
+                                .cornerRadius(.cornerRadiusTiny)
                         }
                     }
 
@@ -78,7 +78,7 @@ struct CheckInCardView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .background(Color.blue.opacity(0.1))
-                    .cornerRadius(8)
+                    .cornerRadius(.cornerRadiusButton)
                 }
             }
 
@@ -145,7 +145,7 @@ struct CheckInCardView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
         .confirmationDialog(
             "Delete Check-In",
@@ -192,7 +192,7 @@ struct CheckInCardView: View {
         .padding(.vertical, 6)
         .background(Color(.systemGray6))
         .foregroundStyle(.secondary)
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 
     private func formatCondition(_ condition: String) -> String {

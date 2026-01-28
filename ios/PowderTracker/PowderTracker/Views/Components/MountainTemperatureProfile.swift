@@ -36,7 +36,7 @@ struct MountainTemperatureProfile: View {
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .cornerRadius(12)
+                    .cornerRadius(.cornerRadiusCard)
 
                     // Mountain silhouette with temperature gradient
                     MountainProfileShape()
@@ -97,7 +97,7 @@ struct MountainTemperatureProfile: View {
                 }
             }
             .frame(height: 200)
-            .cornerRadius(12)
+            .cornerRadius(.cornerRadiusCard)
 
             // Legend
             HStack(spacing: 16) {

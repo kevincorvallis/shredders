@@ -48,6 +48,10 @@ struct ContentView: View {
                 }
                 .tag(4)
         }
+        .onChange(of: selectedTab) { oldValue, newValue in
+            // Haptic feedback on tab change
+            HapticFeedback.selection.trigger()
+        }
         .onChange(of: deepLinkMountainId) { oldValue, newValue in
             if let mountainId = newValue {
                 // Look up the mountain

@@ -65,7 +65,7 @@ struct OverlayRow: View {
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.orange.opacity(0.15))
-                                .cornerRadius(4)
+                                .cornerRadius(.cornerRadiusTiny)
                         }
                     }
 

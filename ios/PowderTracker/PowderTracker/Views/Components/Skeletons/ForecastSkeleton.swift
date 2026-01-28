@@ -49,7 +49,7 @@ struct ForecastDayCardSkeleton: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: Color(.label).opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }

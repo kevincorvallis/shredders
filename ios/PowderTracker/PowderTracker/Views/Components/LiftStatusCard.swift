@@ -2,6 +2,8 @@ import SwiftUI
 
 /// Creative lift status card showing live data from DynamoDB
 struct LiftStatusCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let liftStatus: LiftStatus
     @State private var animateProgress = false
 
@@ -73,6 +75,7 @@ struct LiftStatusCard: View {
             if let message = liftStatus.message, !message.isEmpty {
                 HStack {
                     Image(systemName: "info.circle.fill")
+                        .symbolRenderingMode(.hierarchical)
                         .foregroundColor(.blue)
                     Text(message)
                         .font(.subheadline)
@@ -91,6 +94,7 @@ struct LiftStatusCard: View {
             HStack {
                 Image(systemName: "clock.fill")
                     .font(.caption)
+                    .symbolRenderingMode(.hierarchical)
                     .foregroundColor(.secondary)
                 Text("Updated \(timeAgo)")
                     .font(.caption)
@@ -99,10 +103,12 @@ struct LiftStatusCard: View {
             }
         }
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemGroupedBackground))
-                .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusHero))
+        .adaptiveShadow(colorScheme: colorScheme, radius: 8, y: 2)
+        .accessibleCard(
+            label: "\(liftStatus.isOpen ? "Open" : "Closed"). \(liftStatus.liftsOpen) of \(liftStatus.liftsTotal) lifts operating. \(liftStatus.runsOpen) of \(liftStatus.runsTotal) runs open. Updated \(timeAgo).",
+            hint: nil
         )
         .onAppear {
             withAnimation(.easeOut(duration: 1.0)) {
@@ -184,6 +190,7 @@ struct CircularProgressView: View {
                 VStack(spacing: 2) {
                     Image(systemName: icon)
                         .font(.title3)
+                        .symbolRenderingMode(.hierarchical)
                         .foregroundColor(color)
 
                     Text("\(value)")
@@ -244,6 +251,16 @@ struct LiftStatusBadge: View {
             Capsule()
                 .fill(statusColor.opacity(0.1))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: String {
+        if liftStatus.isOpen {
+            return "Open, \(liftStatus.percentOpen) percent capacity, \(liftStatus.liftsOpen) of \(liftStatus.liftsTotal) lifts"
+        } else {
+            return "Closed"
+        }
     }
 
     private var statusColor: Color {
@@ -255,6 +272,174 @@ struct LiftStatusBadge: View {
         case 80...100: return .green
         case 50..<80: return .orange
         default: return .red
+        }
+    }
+}
+
+// MARK: - Mini Lift Map
+
+/// A visual grid map showing lift status with a simplified mountain layout
+struct MiniLiftMap: View {
+    let liftStatus: LiftStatus
+    @State private var animateIn = false
+
+    /// Simulated lift positions for visual layout (normalized 0-1 coordinates)
+    private var liftPositions: [(x: CGFloat, y: CGFloat, isOpen: Bool)] {
+        guard liftStatus.liftsTotal > 0 else { return [] }
+
+        // Generate lift positions in a mountain-like pattern
+        // Lifts are spread across the mountain with more at the base
+        var positions: [(x: CGFloat, y: CGFloat, isOpen: Bool)] = []
+
+        for i in 0..<liftStatus.liftsTotal {
+            let isOpen = i < liftStatus.liftsOpen
+            let progress = CGFloat(i) / CGFloat(max(1, liftStatus.liftsTotal - 1))
+
+            // Create a mountain-like distribution
+            // Base lifts (lower y values), peak lifts (higher y values)
+            let tier = i / 3 // Group lifts into tiers
+            let tierOffset = CGFloat(i % 3) / 3.0
+
+            // X position: spread across with slight randomization per tier
+            let baseX: CGFloat = 0.2 + tierOffset * 0.6 + (progress * 0.1)
+            let x = min(max(baseX, 0.1), 0.9)
+
+            // Y position: tiers go up the mountain (inverted - 0 is top)
+            let y = 0.8 - CGFloat(tier) * 0.15
+
+            positions.append((x: x, y: max(0.2, y), isOpen: isOpen))
+        }
+
+        return positions
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                // Mountain silhouette background
+                MountainSilhouette()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.blue.opacity(0.1),
+                                Color.blue.opacity(0.05)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+
+                // Lift markers
+                ForEach(Array(liftPositions.enumerated()), id: \.offset) { index, position in
+                    LiftMarker(isOpen: position.isOpen, index: index, animate: animateIn)
+                        .position(
+                            x: geo.size.width * position.x,
+                            y: geo.size.height * position.y
+                        )
+                }
+
+                // Legend
+                VStack {
+                    Spacer()
+                    HStack(spacing: 16) {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 8, height: 8)
+                            Text("Open")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Color.red.opacity(0.5))
+                                .frame(width: 8, height: 8)
+                            Text("Closed")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                    )
+                }
+                .padding(.bottom, 8)
+            }
+        }
+        .frame(height: 120)
+        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusCard))
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.8).delay(0.2)) {
+                animateIn = true
+            }
+        }
+    }
+}
+
+/// Mountain silhouette shape for the background
+struct MountainSilhouette: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        // Start from bottom left
+        path.move(to: CGPoint(x: 0, y: rect.maxY))
+
+        // Left slope
+        path.addLine(to: CGPoint(x: rect.width * 0.15, y: rect.height * 0.5))
+        path.addLine(to: CGPoint(x: rect.width * 0.25, y: rect.height * 0.6))
+
+        // Main peak
+        path.addLine(to: CGPoint(x: rect.width * 0.4, y: rect.height * 0.2))
+        path.addLine(to: CGPoint(x: rect.width * 0.5, y: rect.height * 0.1)) // Summit
+
+        // Secondary peak
+        path.addLine(to: CGPoint(x: rect.width * 0.6, y: rect.height * 0.25))
+        path.addLine(to: CGPoint(x: rect.width * 0.7, y: rect.height * 0.15))
+
+        // Right slope
+        path.addLine(to: CGPoint(x: rect.width * 0.85, y: rect.height * 0.45))
+        path.addLine(to: CGPoint(x: rect.width, y: rect.maxY))
+
+        // Close path
+        path.closeSubpath()
+
+        return path
+    }
+}
+
+/// Individual lift marker on the map
+struct LiftMarker: View {
+    let isOpen: Bool
+    let index: Int
+    let animate: Bool
+
+    var body: some View {
+        ZStack {
+            // Outer glow for open lifts
+            if isOpen && animate {
+                Circle()
+                    .fill(Color.green.opacity(0.3))
+                    .frame(width: 20, height: 20)
+            }
+
+            // Main marker
+            Circle()
+                .fill(isOpen ? Color.green : Color.red.opacity(0.5))
+                .frame(width: 10, height: 10)
+                .overlay(
+                    Circle()
+                        .stroke(Color.white, lineWidth: 1.5)
+                )
+                .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
+                .scaleEffect(animate ? 1.0 : 0.0)
+                .animation(
+                    .spring(response: 0.4, dampingFraction: 0.6)
+                        .delay(Double(index) * 0.05),
+                    value: animate
+                )
         }
     }
 }

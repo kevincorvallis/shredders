@@ -53,7 +53,7 @@ struct LocationMapSectionTiled: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.purple.opacity(0.8))
-                    .cornerRadius(12)
+                    .cornerRadius(.cornerRadiusCard)
                 }
                 .buttonStyle(.plain)
 
@@ -69,7 +69,7 @@ struct LocationMapSectionTiled: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.blue.opacity(0.8))
-                    .cornerRadius(12)
+                    .cornerRadius(.cornerRadiusCard)
                 }
             }
 
@@ -83,7 +83,7 @@ struct LocationMapSectionTiled: View {
                     region: $region
                 )
                 .frame(height: 280)
-                .cornerRadius(12)
+                .cornerRadius(.cornerRadiusCard)
             } else {
                 // Vector rendering mode - draws all lifts directly
                 Map(position: .constant(.region(region))) {
@@ -127,7 +127,7 @@ struct LocationMapSectionTiled: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(.ultraThinMaterial)
-                                .cornerRadius(8)
+                                .cornerRadius(.cornerRadiusButton)
                         }
                     }
 
@@ -141,7 +141,7 @@ struct LocationMapSectionTiled: View {
                     MapScaleView()
                 }
                 .frame(height: 280)
-                .cornerRadius(12)
+                .cornerRadius(.cornerRadiusCard)
             }
 
             // Performance info
@@ -188,8 +188,8 @@ struct LocationMapSectionTiled: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .cornerRadius(.cornerRadiusCard)
+        .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
     }
 
     private func formatCoordinate(_ lat: Double, _ lng: Double) -> String {

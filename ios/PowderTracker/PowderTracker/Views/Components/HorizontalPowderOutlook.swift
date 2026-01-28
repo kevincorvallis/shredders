@@ -93,7 +93,7 @@ struct Compact3DayCard: View {
         }
         .frame(width: 130)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(10)
+        .cornerRadius(.cornerRadiusSmall)
     }
 
     private func dayRow(_ day: ForecastDay, isFirst: Bool) -> some View {

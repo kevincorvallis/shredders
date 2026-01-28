@@ -58,6 +58,10 @@ class MountainSelectionViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            // Trigger error haptic feedback
+            await MainActor.run {
+                HapticFeedback.error.trigger()
+            }
             #if DEBUG
             print("🏔️ [MountainSelectionVM] ERROR: \(error.localizedDescription)")
             #endif

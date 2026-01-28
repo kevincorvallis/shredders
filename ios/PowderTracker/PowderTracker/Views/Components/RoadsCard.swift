@@ -48,6 +48,23 @@ struct RoadsCard: View {
         .padding()
         .background(Color(.systemGray6))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(roadsAccessibilityLabel)
+    }
+
+    private var roadsAccessibilityLabel: String {
+        guard let roads = roads else { return "Road conditions loading" }
+        if !roads.supported || !roads.configured || roads.passes.isEmpty {
+            return "Road and pass conditions. No data available."
+        }
+        var label = "Road and pass conditions."
+        for pass in roads.passes.prefix(2) {
+            label += " \(pass.name): \(pass.roadCondition)."
+            if pass.travelAdvisory {
+                label += " Travel advisory in effect."
+            }
+        }
+        return label
     }
 }
 

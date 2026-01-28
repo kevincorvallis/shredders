@@ -153,7 +153,7 @@ struct ComparisonGridCard: View {
             .padding(10)
         }
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(10)
+        .cornerRadius(.cornerRadiusSmall)
         .overlay(
             RoundedRectangle(cornerRadius: 10)
                 .stroke(isBest ? scoreColor : Color.clear, lineWidth: 2)

@@ -130,7 +130,7 @@ struct MountainsViewRedesign: View {
                 }
                 .padding(.spacingM)
                 .background(Color(.secondarySystemBackground))
-                .cornerRadius(12)
+                .cornerRadius(.cornerRadiusCard)
 
                 if isSearching {
                     Button("Cancel") {
@@ -487,7 +487,7 @@ struct MountainsViewRedesign: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
     }
 
     // MARK: - Comparison Bar
@@ -537,7 +537,7 @@ struct MountainsViewRedesign: View {
             }
             .padding()
             .background(.ultraThinMaterial)
-            .cornerRadius(16)
+            .cornerRadius(.cornerRadiusHero)
             .padding()
             .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
         }
@@ -774,7 +774,7 @@ struct QuickFilterChip: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .background(isSelected ? filter.color : filter.color.opacity(0.15))
-            .cornerRadius(20)
+            .cornerRadius(.cornerRadiusPill)
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.selection, trigger: isSelected)
@@ -894,7 +894,7 @@ struct ConditionCard: View {
         }
         .frame(width: 140)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(isSelectedForComparison ? Color.blue : Color.clear, lineWidth: 2)
@@ -937,7 +937,7 @@ struct NearbyCard: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.blue.opacity(0.1))
-                    .cornerRadius(8)
+                    .cornerRadius(.cornerRadiusButton)
                 }
             }
 
@@ -965,7 +965,7 @@ struct NearbyCard: View {
         .padding()
         .frame(width: 160)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
     }
 }
 
@@ -1005,7 +1005,7 @@ struct FavoriteCard: View {
         .padding()
         .frame(width: 200)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
     }
 }
 
@@ -1048,7 +1048,7 @@ struct RegionCard: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(region.color.opacity(0.1))
-            .cornerRadius(16)
+            .cornerRadius(.cornerRadiusHero)
         }
         .buttonStyle(.plain)
     }
@@ -1129,7 +1129,7 @@ struct CompactMountainRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isSelectedForComparison ? Color.blue : Color.clear, lineWidth: 2)
@@ -1174,7 +1174,7 @@ struct SearchResultRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 }
 

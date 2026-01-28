@@ -108,7 +108,7 @@ struct FloatingLegend: View {
                             .frame(height: 8)
                     }
                 }
-                .cornerRadius(2)
+                .cornerRadius(.cornerRadiusTiny / 2)
 
                 // Labels
                 HStack {

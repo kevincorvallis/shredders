@@ -36,7 +36,7 @@ struct CheckInFormView: View {
                                         .frame(width: 50, height: 50)
                                         .background(rating == value ? Color.blue : Color(.systemGray6))
                                         .foregroundStyle(rating == value ? .white : .primary)
-                                        .cornerRadius(8)
+                                        .cornerRadius(.cornerRadiusButton)
                                 }
                             }
                         }

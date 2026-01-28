@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct EnhancedMountainCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let mountain: Mountain
     let conditions: MountainConditions?
     let powderScore: MountainPowderScore?
@@ -21,9 +23,31 @@ struct EnhancedMountainCard: View {
             // Quick info pills
             infoPillsSection
         }
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusHero))
+        .adaptiveShadow(colorScheme: colorScheme, radius: 8, y: 4)
+        .accessibleCard(
+            label: accessibilityLabel,
+            hint: "Double tap to view mountain details"
+        )
+    }
+
+    private var accessibilityLabel: String {
+        var components: [String] = [mountain.shortName]
+
+        if let score = powderScore?.score {
+            components.append("Powder score \(Int(score)) out of 10")
+        }
+
+        if let snowfall = conditions?.snowfall24h, snowfall > 0 {
+            components.append("\(Int(snowfall)) inches fresh snow")
+        }
+
+        if let temp = conditions?.temperature {
+            components.append("\(Int(temp)) degrees")
+        }
+
+        return components.joined(separator: ", ")
     }
 
     // MARK: - Header
@@ -50,15 +74,25 @@ struct EnhancedMountainCard: View {
             )
 
             VStack(alignment: .trailing, spacing: 8) {
-                // Favorite button
-                Button(action: onFavoriteToggle) {
+                // Favorite button with haptic feedback and bounce animation
+                Button {
+                    HapticFeedback.medium.trigger()
+                    onFavoriteToggle()
+                } label: {
                     Image(systemName: isFavorite ? "star.fill" : "star")
                         .font(.title3)
+                        .symbolRenderingMode(.hierarchical)
                         .foregroundColor(isFavorite ? .yellow : .white)
+                        .symbolEffect(.bounce, value: isFavorite)
                         .shadow(radius: 2)
                         .padding(8)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibleButton(
+                    label: isFavorite ? "Remove from favorites" : "Add to favorites",
+                    hint: "Double tap to toggle favorite status"
+                )
 
                 // Live status badges
                 statusBadges
@@ -130,7 +164,7 @@ struct EnhancedMountainCard: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Color(.tertiarySystemBackground))
-                    .cornerRadius(4)
+                    .cornerRadius(.cornerRadiusTiny)
             }
 
             Divider()

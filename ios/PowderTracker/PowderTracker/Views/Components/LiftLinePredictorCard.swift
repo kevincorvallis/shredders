@@ -25,11 +25,13 @@ struct LiftLinePredictorCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: .spacingL) {
             // Header
-            HStack {
+            HStack(alignment: .center, spacing: .spacingS) {
                 Label("Lift Line Forecast", systemImage: "clock.fill")
                     .sectionHeader()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
 
-                Spacer()
+                Spacer(minLength: .spacingS)
 
                 // AI badge
                 HStack(spacing: .spacingXS) {
@@ -45,6 +47,7 @@ struct LiftLinePredictorCard: View {
                     Capsule()
                         .fill(Color.purple.opacity(.opacitySubtle))
                 )
+                .layoutPriority(1) // Ensure badge doesn't get compressed
             }
 
             // Overall busyness indicator
@@ -93,14 +96,19 @@ struct LiftLinePredictorCard: View {
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(colorForBusyness(prediction.overall))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
                 Text("Overall Mountain")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
 
                 Text("~\(LiftLinePredictor.estimatedWaitTime(busyness: prediction.overall)) typical wait")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
             }
 
             Spacer()
@@ -119,7 +127,7 @@ struct LiftLinePredictorCard: View {
                 Rectangle()
                     .fill(busynessBarColor(index: index))
                     .frame(width: 30, height: 8)
-                    .cornerRadius(2)
+                    .cornerRadius(.cornerRadiusTiny / 2)
             }
         }
     }
@@ -237,7 +245,7 @@ struct LiftLinePredictorCard: View {
                             .fill(Color.blue)
                             .frame(width: geometry.size.width * prediction.confidence, height: 4)
                     }
-                    .cornerRadius(2)
+                    .cornerRadius(.cornerRadiusTiny / 2)
                 }
                 .frame(height: 4)
 

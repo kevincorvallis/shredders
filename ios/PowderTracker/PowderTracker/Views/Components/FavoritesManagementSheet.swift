@@ -18,12 +18,22 @@ struct FavoritesManagementSheet: View {
                                 mountain: mountain,
                                 isFavorite: true,
                                 onToggle: {
-                                    favoritesManager.remove(mountain.id)
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        favoritesManager.remove(mountain.id)
+                                    }
+                                    HapticFeedback.light.trigger()
                                 }
                             )
+                            .transition(.asymmetric(
+                                insertion: .scale.combined(with: .opacity),
+                                removal: .scale.combined(with: .opacity)
+                            ))
                         }
                         .onMove { source, destination in
-                            favoritesManager.reorder(from: source, to: destination)
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                favoritesManager.reorder(from: source, to: destination)
+                            }
+                            HapticFeedback.selection.trigger()
                         }
                     } header: {
                         Text("Your Mountains")
@@ -39,9 +49,15 @@ struct FavoritesManagementSheet: View {
                             mountain: mountain,
                             isFavorite: false,
                             onToggle: {
-                                _ = favoritesManager.add(mountain.id)
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    _ = favoritesManager.add(mountain.id)
+                                }
                             }
                         )
+                        .transition(.asymmetric(
+                            insertion: .scale.combined(with: .opacity),
+                            removal: .move(edge: .leading).combined(with: .opacity)
+                        ))
                     }
                 } header: {
                     Text("Add Mountains")
@@ -117,7 +133,7 @@ struct FavoriteMountainRow: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(passTypeColor(passType).opacity(0.15))
-                            .cornerRadius(4)
+                            .cornerRadius(.cornerRadiusTiny)
                     }
                 }
             }

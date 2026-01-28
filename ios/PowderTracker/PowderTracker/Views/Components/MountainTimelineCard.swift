@@ -280,7 +280,7 @@ struct MountainTimelineCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(.ultraThinMaterial)
-        .cornerRadius(8)
+        .cornerRadius(.cornerRadiusButton)
     }
 
     // MARK: - Snow Timeline (Dynamically scrollable timeline)

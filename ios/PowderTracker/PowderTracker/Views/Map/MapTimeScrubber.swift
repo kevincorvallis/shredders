@@ -32,13 +32,13 @@ struct MapTimeScrubber: View {
                         Rectangle()
                             .fill(Color(.systemGray4))
                             .frame(height: 4)
-                            .cornerRadius(2)
+                            .cornerRadius(.cornerRadiusTiny / 2)
 
                         // Progress
                         Rectangle()
                             .fill(Color.blue)
                             .frame(width: progressWidth(in: geometry), height: 4)
-                            .cornerRadius(2)
+                            .cornerRadius(.cornerRadiusTiny / 2)
 
                         // Thumb
                         Circle()

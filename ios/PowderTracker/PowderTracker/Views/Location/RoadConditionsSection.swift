@@ -46,7 +46,7 @@ struct RoadConditionsSection: View {
                         .foregroundColor(.blue)
                         .padding()
                         .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                     }
                     .transition(.opacity)
                 }
@@ -67,8 +67,8 @@ struct RoadConditionsSection: View {
             }
             .padding()
             .background(Color(.systemBackground))
-            .cornerRadius(12)
-            .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+            .cornerRadius(.cornerRadiusCard)
+            .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
         }
     }
 
@@ -169,7 +169,7 @@ struct PassConditionCard: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(Color.red.opacity(0.1))
-                            .cornerRadius(4)
+                            .cornerRadius(.cornerRadiusTiny)
                     }
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
@@ -177,7 +177,7 @@ struct PassConditionCard: View {
         }
         .padding()
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(8)
+        .cornerRadius(.cornerRadiusButton)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(pass.travelAdvisory ? Color.red.opacity(0.3) : severityColor.opacity(0.3), lineWidth: 1)

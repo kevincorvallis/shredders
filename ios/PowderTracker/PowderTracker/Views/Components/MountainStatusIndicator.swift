@@ -99,6 +99,8 @@ struct CompactMountainStatus: View {
     let liftStatus: LiftStatus
     let size: CGFloat = 32
 
+    @State private var isPulsing = false
+
     var body: some View {
         HStack(spacing: 8) {
             // Status text
@@ -107,6 +109,13 @@ struct CompactMountainStatus: View {
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundColor(statusColor)
+                    .opacity(isPulsing && liftStatus.isOpen && liftStatus.percentOpen >= 80 ? 0.7 : 1.0)
+                    .animation(
+                        liftStatus.isOpen && liftStatus.percentOpen >= 80
+                            ? .easeInOut(duration: 1.0).repeatForever(autoreverses: true)
+                            : .default,
+                        value: isPulsing
+                    )
 
                 if liftStatus.isOpen && liftStatus.percentOpen > 0 {
                     Text("\(liftStatus.percentOpen)% Open")
@@ -121,6 +130,11 @@ struct CompactMountainStatus: View {
                 percentOpen: liftStatus.percentOpen,
                 size: size
             )
+        }
+        .onAppear {
+            if liftStatus.isOpen && liftStatus.percentOpen >= 80 {
+                isPulsing = true
+            }
         }
     }
 
@@ -186,7 +200,7 @@ struct DetailedMountainStatus: View {
         }
         .padding()
         .background(.ultraThinMaterial)
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
     }
 }
 

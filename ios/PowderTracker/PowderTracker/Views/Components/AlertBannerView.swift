@@ -89,12 +89,16 @@ struct AlertBannerView: View {
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(severity.textColor)
-                                .lineLimit(1)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.9)
+                                .fixedSize(horizontal: false, vertical: true)
 
                             Text(alert.headline)
                                 .font(.caption)
                                 .foregroundColor(severity.textColor.opacity(0.9))
-                                .lineLimit(2)
+                                .lineLimit(3)
+                                .minimumScaleFactor(0.85)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
 
@@ -132,7 +136,19 @@ struct AlertBannerView: View {
             .background(severity.gradient)
             .cornerRadius(.cornerRadiusCard)
             .cardShadow()
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(alertAccessibilityLabel)
+            .accessibilityHint("Double tap to view alert details. Swipe right to dismiss.")
         }
+    }
+
+    private var alertAccessibilityLabel: String {
+        guard let alert = primaryAlert else { return "Weather alert" }
+        var label = "\(severity == .severe ? "Severe" : severity == .warning ? "Warning" : "Watch") alert. \(alert.event). \(alert.headline)"
+        if alerts.count > 1 {
+            label += " Plus \(alerts.count - 1) more alerts."
+        }
+        return label
     }
 }
 
@@ -157,6 +173,7 @@ struct CompactAlertBadge: View {
                 Capsule()
                     .fill(Color.orange)
             )
+            .accessibilityLabel("\(alertCount) active weather alert\(alertCount == 1 ? "" : "s")")
         }
     }
 }

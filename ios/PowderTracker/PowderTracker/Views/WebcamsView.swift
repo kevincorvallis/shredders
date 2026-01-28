@@ -96,10 +96,8 @@ struct WebcamsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        refreshID = UUID()
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
+                    RefreshButton(isLoading: isLoading) {
+                        Task { await loadWebcams() }
                     }
                 }
             }
@@ -188,7 +186,7 @@ struct WebcamCard: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                 } else if state.error != nil {
                     ZStack {
                         Color(.secondarySystemBackground)
@@ -220,7 +218,7 @@ struct WebcamCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
         .onTapGesture(perform: onTap)
     }
@@ -263,7 +261,7 @@ struct RoadWebcamCard: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .cornerRadius(8)
+                        .cornerRadius(.cornerRadiusButton)
                 } else if state.error != nil {
                     ZStack {
                         Color(.secondarySystemBackground)
@@ -295,7 +293,7 @@ struct RoadWebcamCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(.cornerRadiusHero)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
         .onTapGesture(perform: onTap)
     }

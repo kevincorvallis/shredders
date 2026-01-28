@@ -17,6 +17,7 @@ struct CollapsibleHeaderView: View {
         ZStack(alignment: .bottomLeading) {
             // Background - webcam image or gradient
             backgroundLayer
+                .blur(radius: isCollapsed ? 4 : 0)
 
             // Gradient overlay for text readability
             LinearGradient(
@@ -29,10 +30,46 @@ struct CollapsibleHeaderView: View {
             if !isCollapsed {
                 expandedContent
             }
+
+            // Sticky title that fades in when collapsed
+            if isCollapsed {
+                collapsedTitle
+            }
         }
         .frame(height: currentHeight)
         .clipped()
         .animation(.easeOut(duration: 0.3), value: isCollapsed)
+    }
+
+    // MARK: - Collapsed Title
+
+    private var collapsedTitle: some View {
+        HStack(spacing: .spacingS) {
+            MountainLogoView(
+                logoUrl: mountain.logo,
+                color: mountain.color,
+                size: 28
+            )
+
+            Text(mountain.shortName)
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+
+            Spacer()
+
+            // Open/Closed indicator
+            if let status = mountain.status {
+                Circle()
+                    .fill(status.isOpen ? Color.green : Color.red)
+                    .frame(width: 8, height: 8)
+            }
+        }
+        .padding(.horizontal, .spacingL)
+        .padding(.vertical, .spacingS)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.3))
+        .transition(.opacity)
     }
 
     // MARK: - Background Layer

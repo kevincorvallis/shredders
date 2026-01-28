@@ -65,6 +65,8 @@ struct AtAGlanceCard: View {
         .background(Color(.systemBackground))
         .cornerRadius(.cornerRadiusHero)
         .heroShadow()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("At a glance conditions")
     }
 
     // MARK: - Powder Score Header

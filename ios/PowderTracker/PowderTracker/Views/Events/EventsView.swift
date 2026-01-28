@@ -90,13 +90,14 @@ struct EventsView: View {
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal)
 
-                            // CTA Buttons
+                            // CTA Buttons with haptic feedback
                             VStack(spacing: 12) {
                                 NavigationLink(destination: UnifiedAuthView()) {
                                     HStack {
                                         Text("Sign in to join events")
                                             .fontWeight(.semibold)
                                         Image(systemName: "arrow.right")
+                                            .symbolRenderingMode(.hierarchical)
                                     }
                                     .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity)
@@ -104,6 +105,9 @@ struct EventsView: View {
                                     .background(hexColor("0EA5E9"))
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
+                                .simultaneousGesture(TapGesture().onEnded { _ in
+                                    HapticFeedback.light.trigger()
+                                })
 
                                 NavigationLink(destination: UnifiedAuthView()) {
                                     Text("Create an account")
@@ -114,6 +118,9 @@ struct EventsView: View {
                                         .background(hexColor("334155"))
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
+                                .simultaneousGesture(TapGesture().onEnded { _ in
+                                    HapticFeedback.light.trigger()
+                                })
                             }
                         }
                         .padding(.horizontal)
@@ -145,7 +152,7 @@ struct EventsView: View {
                             }
                         }
 
-                        // Bottom CTA
+                        // Bottom CTA with haptic
                         VStack(spacing: 12) {
                             Text("Ready to hit the slopes with friends?")
                                 .font(.subheadline)
@@ -156,6 +163,7 @@ struct EventsView: View {
                                     Text("Get started free")
                                         .fontWeight(.semibold)
                                     Image(systemName: "arrow.right")
+                                        .symbolRenderingMode(.hierarchical)
                                 }
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
@@ -170,6 +178,9 @@ struct EventsView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                                 .shadow(color: hexColor("0EA5E9").opacity(0.3), radius: 12, y: 4)
                             }
+                            .simultaneousGesture(TapGesture().onEnded { _ in
+                                HapticFeedback.medium.trigger()
+                            })
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 24)
@@ -608,15 +619,32 @@ struct SampleEventRow: View {
         .frame(height: 180)
         .contentShape(Rectangle())
         .onTapGesture {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            HapticFeedback.light.trigger()
+            withAnimation(.bouncy) {
                 showSignInPrompt = true
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                withAnimation(.smooth) {
                     showSignInPrompt = false
                 }
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(eventAccessibilityLabel)
+        .accessibilityHint("Double tap to sign in and view event details")
+    }
+
+    private var eventAccessibilityLabel: String {
+        var parts = [event.title, "at \(event.mountainName)", event.formattedDate]
+        if let time = event.formattedTime {
+            parts.append("departing at \(time)")
+        }
+        parts.append("\(event.goingCount) people going")
+        parts.append(skillLevelAccessibilityLabel(for: event.skillLevel))
+        if event.carpoolAvailable {
+            parts.append("Carpool available")
+        }
+        return parts.joined(separator: ", ")
     }
 
     @ViewBuilder
@@ -634,6 +662,17 @@ struct SampleEventRow: View {
         .padding(.vertical, 6)
         .background(skillLevelColor(for: level).opacity(0.15))
         .clipShape(Capsule())
+        .accessibilityLabel("Skill level: \(skillLevelAccessibilityLabel(for: level))")
+    }
+
+    private func skillLevelAccessibilityLabel(for level: SkillLevel) -> String {
+        switch level {
+        case .beginner: return "Beginner, green circle runs"
+        case .intermediate: return "Intermediate, blue square runs"
+        case .advanced: return "Advanced, black diamond runs"
+        case .expert: return "Expert, double black diamond runs"
+        case .all: return "All skill levels welcome"
+        }
     }
 
     @ViewBuilder

@@ -70,7 +70,7 @@ struct TemperatureElevationMapView: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemBackground))
-                .cornerRadius(12)
+                .cornerRadius(.cornerRadiusCard)
                 .padding(.horizontal)
                 .padding(.bottom, 24)
             }
@@ -265,7 +265,7 @@ struct TemperatureGradientLegend: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }
@@ -377,7 +377,7 @@ struct TemperatureDataTable: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }

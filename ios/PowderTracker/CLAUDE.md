@@ -65,6 +65,41 @@ Use this agent to verify weather tile overlays are loading correctly.
 
 ---
 
+## UI Features
+
+### Design System
+- **8pt Grid Spacing** - Consistent spacing tokens (`.spacingXS` through `.spacingXXL`)
+- **Glassmorphic Cards** - `.ultraThinMaterial` backgrounds with layered shadows
+- **SF Symbols** - Semantic icon system via `SkiIcon` enum with 40+ mappings
+- **Adaptive Colors** - All colors use system variants for dark mode support
+
+See `DESIGN_SYSTEM.md` for full component documentation.
+
+### Animations & Interactions
+- **Spring Animations** - `.bouncy`, `.snappy`, `.smooth` presets
+- **Haptic Feedback** - Selection, impact, and notification haptics
+- **Scroll Effects** - `.scrollTransition()` for depth effects
+- **Hero Transitions** - iOS 18+ zoom transitions for mountain cards
+
+### Loading States
+- **Skeleton Views** - Shimmer loading placeholders
+- **Progressive Loading** - Staggered card appearance
+- **Empty States** - Illustrated states with actionable CTAs
+
+### Platform Integration
+- **Widgets** - Small, medium, large home screen widgets
+- **Live Activities** - Dynamic Island and Lock Screen updates
+- **Siri Shortcuts** - "Check conditions at [mountain]" intents
+- **Deep Linking** - `powdertracker://mountains/{id}` URLs
+
+### Accessibility
+- **Dynamic Type** - All text scales with system settings
+- **VoiceOver** - Full accessibility labels and hints
+- **Reduce Motion** - Animations respect system preference
+- **Reduce Haptics** - Haptics disabled when preference set
+
+---
+
 ## Weather Overlay System
 
 ### Supported Overlays

@@ -270,7 +270,7 @@ struct MountainSelectorHeader: View {
             }
             .padding()
             .background(Color(.systemBackground))
-            .cornerRadius(12)
+            .cornerRadius(.cornerRadiusCard)
         }
         .buttonStyle(.plain)
     }
@@ -483,7 +483,7 @@ struct SkeletonMountainCard: View {
             }
         }
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
         .onAppear {
             withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
                 isAnimating = true

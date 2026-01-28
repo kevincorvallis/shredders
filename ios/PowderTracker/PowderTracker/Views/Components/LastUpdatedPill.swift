@@ -76,7 +76,7 @@ struct TimestampPill: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(Color(.tertiarySystemBackground))
-            .cornerRadius(8)
+            .cornerRadius(.cornerRadiusButton)
     }
 
     private var formattedDate: String {

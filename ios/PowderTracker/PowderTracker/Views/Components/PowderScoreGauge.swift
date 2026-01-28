@@ -4,6 +4,9 @@ struct PowderScoreGauge: View {
     let score: Int
     let maxScore: Int
     let label: String
+    var factors: [MountainPowderScore.ScoreFactor]? = nil
+
+    @State private var showFactors = false
 
     private var progress: Double {
         Double(score) / Double(maxScore)
@@ -45,10 +48,80 @@ struct PowderScoreGauge: View {
 
             Text("Powder Score")
                 .font(.headline)
+
+            // Show "Tap for details" hint if factors are available
+            if factors != nil && !showFactors {
+                Text("Tap for breakdown")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if factors != nil {
+                HapticFeedback.light.trigger()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    showFactors.toggle()
+                }
+            }
+        }
+        .popover(isPresented: $showFactors) {
+            scoreFactorsPopover
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Powder Score: \(score) out of \(maxScore), \(label)")
         .accessibilityValue("\(score)")
+        .accessibilityHint(factors != nil ? "Double tap to see score breakdown" : "")
+    }
+
+    @ViewBuilder
+    private var scoreFactorsPopover: some View {
+        if let factors = factors {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Score Breakdown")
+                        .font(.headline)
+                    Spacer()
+                    Button {
+                        showFactors = false
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Divider()
+
+                ForEach(factors, id: \.name) { factor in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(factor.name)
+                                .font(.subheadline.weight(.medium))
+                            if !factor.description.isEmpty {
+                                Text(factor.description)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Spacer()
+
+                        // Factor contribution bar
+                        HStack(spacing: 4) {
+                            ProgressView(value: factor.contribution / 10.0)
+                                .frame(width: 50)
+                                .tint(scoreColor)
+                            Text(String(format: "+%.1f", factor.contribution))
+                                .font(.caption.monospacedDigit())
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+            .padding()
+            .frame(minWidth: 280)
+            .presentationCompactAdaptation(.popover)
+        }
     }
 }
 

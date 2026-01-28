@@ -39,7 +39,7 @@ struct SignInWithAppleButton: View {
                         .frame(height: 50)
                         .background(Color.gray.opacity(0.3))
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(.cornerRadiusSmall)
                         .padding(.horizontal, 4)
                     }
                     .disabled(true)
@@ -66,7 +66,7 @@ struct SignInWithAppleButton: View {
                     }
                 )
                 .frame(height: 50)
-                .cornerRadius(10)
+                .cornerRadius(.cornerRadiusSmall)
 
                 if let errorMessage = errorMessage {
                     Text(errorMessage)

@@ -56,7 +56,7 @@ struct QuickStatsRow: View {
         }
         .padding(.vertical, 8)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(10)
+        .cornerRadius(.cornerRadiusSmall)
     }
 
     private func statItem(value: String, label: String, icon: String, color: Color) -> some View {

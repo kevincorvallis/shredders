@@ -87,7 +87,7 @@ struct WeatherConditionsSection: View {
                             }
                             .padding()
                             .background(Color(.secondarySystemBackground))
-                            .cornerRadius(8)
+                            .cornerRadius(.cornerRadiusButton)
                         }
                         .buttonStyle(.plain)
                     }
@@ -106,7 +106,7 @@ struct WeatherConditionsSection: View {
                             .foregroundColor(.blue)
                             .padding()
                             .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
+                            .cornerRadius(.cornerRadiusButton)
                         }
                     }
                 }
@@ -115,8 +115,8 @@ struct WeatherConditionsSection: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .cornerRadius(.cornerRadiusCard)
+        .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
     }
 
     // MARK: - Tap Handler
@@ -198,7 +198,7 @@ struct PowderScoreBanner: View {
         }
         .padding()
         .background(scoreColor.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(.cornerRadiusCard)
     }
 
     private var scoreIcon: String {
@@ -232,7 +232,7 @@ struct WeatherMetricCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(8)
+        .cornerRadius(.cornerRadiusButton)
     }
 }
 
@@ -257,7 +257,7 @@ struct WeatherDescriptionCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(8)
+        .cornerRadius(.cornerRadiusButton)
     }
 
     private var weatherIcon: String {

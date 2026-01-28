@@ -115,7 +115,7 @@ struct PhotoCardView: View {
             .padding(8)
         }
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(.cornerRadiusButton)
         .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
         .confirmationDialog(
             "Delete Photo",

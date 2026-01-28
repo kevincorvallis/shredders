@@ -28,7 +28,7 @@ struct PhotoUploadView: View {
                                 .scaledToFill()
                                 .frame(height: 300)
                                 .clipped()
-                                .cornerRadius(12)
+                                .cornerRadius(.cornerRadiusCard)
 
                             Button {
                                 selectedImage = nil
@@ -60,7 +60,7 @@ struct PhotoUploadView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 40)
                                 .background(Color(.systemGray6))
-                                .cornerRadius(12)
+                                .cornerRadius(.cornerRadiusCard)
                             }
                             .foregroundStyle(.primary)
 
@@ -77,7 +77,7 @@ struct PhotoUploadView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 40)
                                 .background(Color(.systemGray6))
-                                .cornerRadius(12)
+                                .cornerRadius(.cornerRadiusCard)
                             }
                             .foregroundStyle(.primary)
                         }

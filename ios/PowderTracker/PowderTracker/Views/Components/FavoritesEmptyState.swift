@@ -27,7 +27,7 @@ struct FavoritesEmptyState: View {
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
                     .background(Color.blue)
-                    .cornerRadius(10)
+                    .cornerRadius(.cornerRadiusSmall)
             }
         }
         .padding(.vertical, 60)

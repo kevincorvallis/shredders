@@ -32,6 +32,8 @@ struct ConditionsCard: View {
         .background(Color(.systemBackground))
         .cornerRadius(.cornerRadiusCard)
         .cardShadow()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Current conditions. Snow depth \(conditions.snowDepth) inches. 24 hour snow \(conditions.snowfall24h) inches. Summit temperature \(conditions.temperature.summit) degrees. Base temperature \(conditions.temperature.base) degrees. Wind \(conditions.wind.speed) miles per hour from the \(conditions.wind.direction).")
     }
 }
 
@@ -46,6 +48,7 @@ struct ConditionItem: View {
                 .font(.title3)
                 .foregroundColor(.blue)
                 .frame(width: 28)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: .spacingXS) {
                 Text(title)
@@ -57,6 +60,8 @@ struct ConditionItem: View {
 
             Spacer()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 

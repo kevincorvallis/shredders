@@ -31,7 +31,7 @@ struct ErrorView: View {
                     .padding(.vertical, 12)
                     .background(Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(.cornerRadiusCard)
             }
             .buttonStyle(.plain)
         }

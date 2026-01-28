@@ -144,11 +144,15 @@ struct LeaveNowCard: View {
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusCard))
             }
+            .accessibilityLabel("Get directions to \(mountain.name)")
+            .accessibilityHint("Opens Maps app with directions")
         }
         .padding(.spacingL)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(.cornerRadiusHero)
         .heroShadow()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Leave now for \(mountain.name). Optimal arrival time: \(arrivalTime.arrivalWindow.optimal). Parking: \(arrivalTime.factors.parkingDifficulty.displayName). Crowd level: \(arrivalTime.factors.expectedCrowdLevel.displayName).")
     }
 
     private var confidenceColor: Color {
