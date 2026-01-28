@@ -68,20 +68,34 @@ export async function GET(
 
     // Get user's RSVP status if authenticated
     let userRSVPStatus = null;
+    let userProfileId: string | null = null;
+
     if (authUser) {
-      const { data: userAttendee } = await supabase
-        .from('event_attendees')
-        .select('status')
-        .eq('event_id', id)
-        .eq('user_id', authUser.userId)
+      // Look up the internal users.id from auth_user_id
+      const adminClient = createAdminClient();
+      const { data: userProfile } = await adminClient
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.userId)
         .single();
 
-      userRSVPStatus = userAttendee?.status || null;
+      userProfileId = userProfile?.id || null;
+
+      if (userProfileId) {
+        const { data: userAttendee } = await supabase
+          .from('event_attendees')
+          .select('status')
+          .eq('event_id', id)
+          .eq('user_id', userProfileId)
+          .single();
+
+        userRSVPStatus = userAttendee?.status || null;
+      }
     }
 
     // Get invite token if user is the creator
     let inviteToken = null;
-    if (authUser && event.user_id === authUser.userId) {
+    if (authUser && userProfileId && event.user_id === userProfileId) {
       const { data: tokenData } = await supabase
         .from('event_invite_tokens')
         .select('token')
@@ -162,7 +176,7 @@ export async function GET(
       maybeCount: event.maybe_count,
       creator: event.creator,
       userRSVPStatus,
-      isCreator: authUser ? event.user_id === authUser.userId : false,
+      isCreator: userProfileId ? event.user_id === userProfileId : false,
       attendees: transformedAttendees,
       conditions,
       inviteToken: inviteToken || undefined,
@@ -219,7 +233,21 @@ export async function PATCH(
       );
     }
 
-    if (existingEvent.user_id !== authUser.userId) {
+    // Look up the internal users.id from auth_user_id
+    const { data: userProfile, error: userError } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (userError || !userProfile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      );
+    }
+
+    if (existingEvent.user_id !== userProfile.id) {
       return NextResponse.json(
         { error: 'You can only edit your own events' },
         { status: 403 }
@@ -410,7 +438,21 @@ export async function DELETE(
       );
     }
 
-    if (existingEvent.user_id !== authUser.userId) {
+    // Look up the internal users.id from auth_user_id
+    const { data: userProfile, error: userError } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (userError || !userProfile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      );
+    }
+
+    if (existingEvent.user_id !== userProfile.id) {
       return NextResponse.json(
         { error: 'You can only cancel your own events' },
         { status: 403 }

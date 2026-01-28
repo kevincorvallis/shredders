@@ -176,17 +176,26 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (existingProfile) {
-      // Profile exists - return success
-      const tokens = await createUserTokens(userId);
-      return NextResponse.json({
-        user: {
-          id: userId,
-          email: userEmail,
-        },
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        message: 'Account already exists',
-      });
+      // Profile exists - check if it matches the current auth user
+      if (existingProfile.auth_user_id === userId) {
+        // Same auth user, just return tokens for the existing profile
+        const tokens = await createUserTokens(existingProfile.auth_user_id);
+        return NextResponse.json({
+          user: {
+            id: existingProfile.auth_user_id,
+            email: userEmail,
+          },
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          message: 'Account already exists',
+        });
+      } else {
+        // Profile exists with DIFFERENT auth_user_id (e.g., user signed up with Apple first)
+        // Tell user to use their existing sign-in method
+        return NextResponse.json({
+          error: 'An account with this email already exists. Please sign in with your original method (e.g., Apple Sign In).',
+        }, { status: 409 });
+      }
     }
 
     // Check if username is taken
@@ -252,7 +261,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate JWT tokens for the new user
+    // Check if email verification is required
+    // When Supabase has "Confirm email" enabled, email_confirmed_at will be null
+    const needsEmailVerification = !authData.user.email_confirmed_at;
+
+    if (needsEmailVerification) {
+      // Log successful signup (pending verification)
+      await logSignupSuccess(userId, email, {
+        username,
+        ipAddress,
+        signupDuration: Date.now() - startTime,
+        pendingVerification: true,
+      });
+
+      // Don't generate tokens yet - user needs to verify email first
+      return NextResponse.json({
+        user: {
+          id: userId,
+          email: userEmail,
+        },
+        needsEmailVerification: true,
+        message: 'Please check your email to verify your account',
+      });
+    }
+
+    // Generate JWT tokens for the new user (email already confirmed or confirmation disabled)
     const tokens = await createUserTokens(userId);
 
     // Log successful signup

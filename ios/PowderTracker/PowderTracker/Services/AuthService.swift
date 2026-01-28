@@ -227,6 +227,21 @@ class AuthService {
 
             currentUser = session.user
 
+            // Store tokens in Keychain so other services can access them
+            // This ensures EventService, LikeService, etc. can authenticate
+            do {
+                try KeychainHelper.saveTokens(
+                    accessToken: session.accessToken,
+                    refreshToken: session.refreshToken ?? "",
+                    expiresIn: session.expiresAt - Date().timeIntervalSince1970
+                )
+            } catch {
+                #if DEBUG
+                print("Warning: Failed to store Apple Sign In tokens in Keychain: \(error)")
+                #endif
+                // Continue even if token storage fails - Supabase session is still valid
+            }
+
             // Check if user profile exists, create if not
             let existingProfile = try? await supabase
                 .from("users")

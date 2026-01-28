@@ -62,6 +62,22 @@ export async function POST(
       );
     }
 
+    // Look up the internal users.id from auth_user_id
+    // The event_attendees.user_id foreign key references users.id, not users.auth_user_id
+    const { data: userProfile, error: userError } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (userError || !userProfile) {
+      console.error('Error finding user profile:', userError);
+      return NextResponse.json(
+        { error: 'User profile not found. Please try signing out and back in.' },
+        { status: 404 }
+      );
+    }
+
     const body: RSVPRequest = await request.json();
     const { status, isDriver, needsRide, pickupLocation } = body;
 
@@ -79,7 +95,7 @@ export async function POST(
       .from('event_attendees')
       .select('id')
       .eq('event_id', eventId)
-      .eq('user_id', authUser.userId)
+      .eq('user_id', userProfile.id)
       .single();
 
     let attendeeData;
@@ -122,7 +138,7 @@ export async function POST(
         .from('event_attendees')
         .insert({
           event_id: eventId,
-          user_id: authUser.userId,
+          user_id: userProfile.id,
           status,
           is_driver: isDriver ?? false,
           needs_ride: needsRide ?? false,
@@ -228,8 +244,23 @@ export async function DELETE(
       );
     }
 
+    // Look up the internal users.id from auth_user_id
+    const { data: userProfile, error: userError } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (userError || !userProfile) {
+      console.error('Error finding user profile:', userError);
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      );
+    }
+
     // Event creator cannot remove their RSVP
-    if (event.user_id === authUser.userId) {
+    if (event.user_id === userProfile.id) {
       return NextResponse.json(
         { error: 'Event creator cannot remove their RSVP' },
         { status: 400 }
@@ -241,7 +272,7 @@ export async function DELETE(
       .from('event_attendees')
       .delete()
       .eq('event_id', eventId)
-      .eq('user_id', authUser.userId);
+      .eq('user_id', userProfile.id);
 
     if (deleteError) {
       console.error('Error deleting RSVP:', deleteError);

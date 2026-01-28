@@ -7,7 +7,9 @@
 
 import { NextRequest } from 'next/server';
 import { getAuthUser } from './middleware';
+import { extractTokenFromHeader } from './jwt';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export interface AuthenticatedUser {
   userId: string;
@@ -18,7 +20,10 @@ export interface AuthenticatedUser {
 
 /**
  * Get authenticated user from either JWT token or Supabase session
- * Tries JWT first, then falls back to Supabase
+ * Tries in order:
+ * 1. Custom JWT (email/password login)
+ * 2. Supabase Bearer token (Apple Sign In)
+ * 3. Supabase session cookies (web clients)
  *
  * @param req - Next.js request object
  * @returns Authenticated user or null if not authenticated
@@ -35,7 +40,7 @@ export interface AuthenticatedUser {
 export async function getDualAuthUser(
   req: NextRequest
 ): Promise<AuthenticatedUser | null> {
-  // Try JWT first
+  // Try custom JWT first (for email/password login via backend)
   const jwtUser = getAuthUser(req);
 
   if (jwtUser) {
@@ -47,7 +52,33 @@ export async function getDualAuthUser(
     };
   }
 
-  // Fallback to Supabase session
+  // Try to extract Bearer token and verify as Supabase token (for Apple Sign In)
+  const authHeader = req.headers.get('authorization');
+  const bearerToken = extractTokenFromHeader(authHeader);
+
+  if (bearerToken) {
+    // Use admin client to verify the Supabase JWT token
+    const adminClient = createAdminClient();
+    const { data: { user: supabaseUser }, error } = await adminClient.auth.getUser(bearerToken);
+
+    if (supabaseUser && !error) {
+      // Fetch username from users table
+      const { data: profile } = await adminClient
+        .from('users')
+        .select('username')
+        .eq('auth_user_id', supabaseUser.id)
+        .single();
+
+      return {
+        userId: supabaseUser.id,
+        email: supabaseUser.email || '',
+        username: profile?.username,
+        authMethod: 'supabase',
+      };
+    }
+  }
+
+  // Fallback to Supabase session cookies (for web clients)
   const supabase = await createClient();
   const {
     data: { user: supabaseUser },

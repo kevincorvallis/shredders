@@ -48,6 +48,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Look up the internal users.id from auth_user_id if authenticated
+    let userProfileId: string | null = null;
+    if (authUser) {
+      const adminClient = createAdminClient();
+      const { data: userProfile } = await adminClient
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.userId)
+        .single();
+
+      userProfileId = userProfile?.id || null;
+
+      // Only require profile for filters that need it
+      if (!userProfileId && (createdByMe || attendingOnly)) {
+        return NextResponse.json(
+          { error: 'User profile not found' },
+          { status: 404 }
+        );
+      }
+    }
+
     // Build base query
     let query = supabase
       .from('events')
@@ -74,8 +95,8 @@ export async function GET(request: NextRequest) {
       query = query.gte('event_date', today);
     }
 
-    if (createdByMe && authUser) {
-      query = query.eq('user_id', authUser.userId);
+    if (createdByMe && userProfileId) {
+      query = query.eq('user_id', userProfileId);
     }
 
     const { data: events, error, count } = await query;
@@ -91,7 +112,7 @@ export async function GET(request: NextRequest) {
     // If filtering by attending, we need a different query
     let filteredEvents = events || [];
 
-    if (attendingOnly && authUser && !createdByMe) {
+    if (attendingOnly && userProfileId && !createdByMe) {
       // Fetch events where user is an attendee
       const { data: attendeeEvents, error: attendeeError } = await supabase
         .from('event_attendees')
@@ -107,7 +128,7 @@ export async function GET(request: NextRequest) {
             )
           )
         `)
-        .eq('user_id', authUser.userId)
+        .eq('user_id', userProfileId)
         .in('status', ['going', 'maybe']);
 
       if (attendeeError) {
@@ -150,7 +171,7 @@ export async function GET(request: NextRequest) {
         maybeCount: event.maybe_count,
         creator: event.creator,
         userRSVPStatus: event.userRSVPStatus || null,
-        isCreator: authUser ? event.user_id === authUser.userId : false,
+        isCreator: userProfileId ? event.user_id === userProfileId : false,
       };
     });
 
@@ -296,11 +317,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Look up the internal users.id from auth_user_id
+    // The events.user_id foreign key references users.id, not users.auth_user_id
+    const { data: userProfile, error: userError } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (userError || !userProfile) {
+      console.error('Error finding user profile:', userError);
+      return NextResponse.json(
+        { error: 'User profile not found. Please try signing out and back in.' },
+        { status: 404 }
+      );
+    }
+
     // Create event using admin client to bypass RLS for initial insert
     const { data: event, error: insertError } = await adminClient
       .from('events')
       .insert({
-        user_id: authUser.userId,
+        user_id: userProfile.id,  // Use users.id, not auth_user_id
         mountain_id: mountainId,
         title: title.trim(),
         notes: notes?.trim() || null,
@@ -338,7 +375,7 @@ export async function POST(request: NextRequest) {
       .insert({
         event_id: event.id,
         token,
-        created_by: authUser.userId,
+        created_by: userProfile.id,  // Use users.id, not auth_user_id
         expires_at: null, // No expiration by default
         max_uses: null, // Unlimited uses by default
       });
