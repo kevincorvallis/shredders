@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { headers } from 'next/headers';
 
 export interface DeviceInfo {
@@ -148,7 +149,8 @@ export async function createSession(params: {
   expiresAt: Date;
   deviceId?: string;
 }): Promise<void> {
-  const supabase = await createClient();
+  // Use admin client to bypass RLS - this is called during login before user is authenticated
+  const supabase = createAdminClient();
   const headersList = await headers();
 
   // Get user agent

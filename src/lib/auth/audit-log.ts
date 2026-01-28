@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { headers } from 'next/headers';
 
 export type AuditEventType =
@@ -48,7 +49,8 @@ export interface AuditLogParams {
  */
 export async function logAuthEvent(params: AuditLogParams): Promise<void> {
   try {
-    const supabase = await createClient();
+    // Use admin client to bypass RLS - audit logs are system operations
+    const supabase = createAdminClient();
 
     const { error } = await supabase.from('audit_logs').insert({
       user_id: params.userId || null,
