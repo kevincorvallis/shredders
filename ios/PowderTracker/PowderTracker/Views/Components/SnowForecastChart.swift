@@ -38,6 +38,9 @@ struct SnowForecastChart: View {
     // Track previous date for haptic feedback on date change
     @State private var previousSelectedDate: Date? = nil
 
+    // Chart drawing animation state
+    @State private var chartDrawingProgress: CGFloat = 0
+
     // Computed properties for powder day analysis
     private var powderDays: [(date: Date, maxSnowfall: Int)] {
         var dayMap: [Date: Int] = [:]
@@ -142,6 +145,13 @@ struct SnowForecastChart: View {
         .animation(.easeInOut(duration: 0.3), value: isLoading)
         .animation(.easeInOut(duration: 0.3), value: error != nil)
         .onAppear {
+            // Animate chart lines drawing in
+            if chartDrawingProgress == 0 {
+                withAnimation(.easeOut(duration: 0.8).delay(0.2)) {
+                    chartDrawingProgress = 1
+                }
+            }
+
             // Show hint for first-time users
             if !hasSeenHint && !hasInteracted && !favorites.isEmpty {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -171,10 +181,14 @@ struct SnowForecastChart: View {
             }
         }
         .onChange(of: selectedRange) { _, _ in
-            // Reset legend state when range changes
+            // Reset legend state and animate chart redraw when range changes
+            chartDrawingProgress = 0
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 hiddenMountains.removeAll()
                 selectedDate = nil
+            }
+            withAnimation(.easeOut(duration: 0.6).delay(0.1)) {
+                chartDrawingProgress = 1
             }
         }
     }
@@ -539,6 +553,8 @@ struct SnowForecastChart: View {
         }
         .chartLegend(.hidden) // Using interactive legend instead
         .chartXSelection(value: $selectedDate)
+        .opacity(chartDrawingProgress)
+        .scaleEffect(x: 1, y: chartDrawingProgress, anchor: .bottom)
         .chartOverlay { proxy in
             GeometryReader { geo in
                 // Invisible interaction area to detect touches
