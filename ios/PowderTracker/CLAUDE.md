@@ -63,6 +63,36 @@ Use this agent to verify weather tile overlays are loading correctly.
 - Iowa State Mesonet API (smoke/AQI)
 - Tile loading and rendering
 
+### production-verifier
+Use this agent after making changes to authentication, events, or backend API code.
+
+**Trigger:** After modifying:
+- `src/app/api/auth/*` - Authentication endpoints
+- `src/app/api/events/*` - Events endpoints
+- `src/lib/auth/*` - Auth utilities
+- `Services/AuthService.swift` - iOS auth service
+- `Services/EventService.swift` - iOS events service
+
+**What it does:**
+1. Runs automated API health checks (12 tests)
+2. Verifies auth protection (401 for protected endpoints)
+3. Checks data quality (events have creators, mountains exist)
+4. Measures response times
+
+**How to run:**
+```bash
+# Quick API checks (from project root)
+./scripts/verify-production-full.sh
+
+# Full verification with iOS build
+./scripts/verify-production-full.sh --ios-build
+
+# Everything including UI tests
+./scripts/verify-production-full.sh --all
+```
+
+**Production Checklist:** See `PRODUCTION_CHECKLIST.md` for manual testing steps.
+
 ---
 
 ## UI Features
