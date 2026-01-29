@@ -178,7 +178,8 @@ echo "--------------------------------"
 
 # Use curl's built-in timing (works on macOS and Linux)
 response_time=$(curl -s -o /dev/null -w "%{time_total}" "$API_BASE/events" 2>/dev/null)
-response_ms=$(echo "$response_time * 1000" | bc | cut -d'.' -f1)
+# Convert to milliseconds without bc (awk is more portable)
+response_ms=$(echo "$response_time" | awk '{printf "%.0f", $1 * 1000}')
 
 if [ "$response_ms" -lt 1000 ]; then
     echo -e "${GREEN}✓${NC} Response time: ${response_ms}ms (< 1000ms)"
