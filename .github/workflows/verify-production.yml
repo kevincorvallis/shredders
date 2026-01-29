@@ -1,0 +1,68 @@
+name: Verify Production
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  api-verification:
+    name: API Health Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run API verification
+        run: |
+          chmod +x ./scripts/verify-production-full.sh
+          chmod +x ./ios/PowderTracker/scripts/verify-production.sh
+          ./scripts/verify-production-full.sh
+        env:
+          CI: true
+
+  # iOS build verification (runs on macOS, more expensive)
+  # Uncomment to enable iOS build checks on PRs
+  # ios-build:
+  #   name: iOS Build
+  #   runs-on: macos-latest
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Select Xcode
+  #       run: sudo xcode-select -s /Applications/Xcode_15.2.app
+  #
+  #     - name: Build iOS app
+  #       run: |
+  #         cd ios/PowderTracker
+  #         xcodebuild -scheme PowderTracker \
+  #           -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+  #           -quiet \
+  #           build
+
+  # iOS UI tests (runs on macOS, most expensive)
+  # Uncomment to enable UI tests on PRs
+  # ios-tests:
+  #   name: iOS UI Tests
+  #   runs-on: macos-latest
+  #   needs: ios-build
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Select Xcode
+  #       run: sudo xcode-select -s /Applications/Xcode_15.2.app
+  #
+  #     - name: Run UI tests
+  #       run: |
+  #         cd ios/PowderTracker
+  #         xcodebuild test \
+  #           -scheme PowderTracker \
+  #           -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+  #           -only-testing:PowderTrackerUITests \
+  #           -quiet
