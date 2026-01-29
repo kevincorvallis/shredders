@@ -207,7 +207,7 @@ grep -r "isLoading" ios/PowderTracker/PowderTracker/Views/Components/SnowForecas
 - [x] 7.2 Animate lines drawing in on initial load (opacity + scale from bottom)
 - [x] 7.3 Add micro-animation when switching range (3D→7D→15D)
 - [x] 7.4 Smooth data transitions with `.animation(.spring())`
-- [ ] 7.5 Add subtle snow particle effect in header (optional, performance permitting)
+- [x] 7.5 Add subtle snow particle effect in header (animated snowflakes on powder days)
 - [x] 7.6 Polish color palette for mountains (ensure good contrast)
 - [x] 7.7 Add subtle glow effect around powder day points
 - [x] 7.8 Ensure consistent with app design system (glassmorphic, spacing)
