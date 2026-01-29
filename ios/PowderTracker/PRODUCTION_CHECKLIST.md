@@ -2,16 +2,30 @@
 
 Use this checklist after deploying changes to verify the iOS app and backend are working correctly in production.
 
-## Automated Verification Script
+## Automated Verification Scripts
 
-Run the automated verification script first:
+### Quick API Check (from project root)
 
 ```bash
-cd ios/PowderTracker
-./scripts/verify-production.sh
+./scripts/verify-production-full.sh
 ```
 
-This checks:
+### Full Verification (API + iOS build + tests)
+
+```bash
+./scripts/verify-production-full.sh --all
+```
+
+### Options
+
+| Command | What It Does |
+|---------|--------------|
+| `./scripts/verify-production-full.sh` | API checks only (fast) |
+| `./scripts/verify-production-full.sh --ios-build` | API checks + build iOS |
+| `./scripts/verify-production-full.sh --ios-tests` | API checks + run UI tests |
+| `./scripts/verify-production-full.sh --all` | Everything (API + build + tests) |
+
+### What the API checks verify:
 - API availability and response times
 - Public endpoints (events, mountains)
 - Auth protection (401 for protected endpoints)
