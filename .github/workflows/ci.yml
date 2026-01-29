@@ -64,9 +64,12 @@ jobs:
       - name: Build
         run: pnpm run build
         env:
-          # Provide dummy env vars for build (not used at build time)
+          # Provide dummy env vars for build (not used at runtime)
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-key-for-build
+          JWT_ACCESS_SECRET: dummy-jwt-secret-for-ci-build
+          JWT_REFRESH_SECRET: dummy-jwt-refresh-secret-for-ci-build
+          SUPABASE_SERVICE_ROLE_KEY: dummy-service-role-key-for-ci-build
 
   test:
     name: Run Tests
