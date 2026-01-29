@@ -261,7 +261,7 @@ struct EventCreateView: View {
                     Spacer()
 
                     // Weather icon
-                    Text(forecast.iconEmoji ?? weatherIcon(for: forecast.conditions))
+                    Text(forecast.iconEmoji)
                         .font(.largeTitle)
                 }
 

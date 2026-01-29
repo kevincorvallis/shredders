@@ -232,7 +232,7 @@ class AuthService {
             do {
                 try KeychainHelper.saveTokens(
                     accessToken: session.accessToken,
-                    refreshToken: session.refreshToken ?? "",
+                    refreshToken: session.refreshToken,
                     expiresIn: session.expiresAt - Date().timeIntervalSince1970
                 )
             } catch {

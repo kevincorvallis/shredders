@@ -170,7 +170,10 @@ final class AuthenticationUITests: XCTestCase {
         navigateToSignIn()
 
         // Switch to signup mode
-        app.buttons["auth_mode_toggle"].tap()
+        let modeToggle = app.buttons["auth_mode_toggle"]
+        XCTAssertTrue(modeToggle.waitForExistence(timeout: 5), "Mode toggle should exist")
+        modeToggle.tap()
+        Thread.sleep(forTimeInterval: 0.5)
 
         // Verify signup-specific elements appear
         let displayNameField = app.textFields["auth_display_name_field"]
@@ -178,20 +181,26 @@ final class AuthenticationUITests: XCTestCase {
 
         // Verify create account button exists
         let createButton = app.buttons["auth_create_account_button"]
-        XCTAssertTrue(createButton.waitForExistence(timeout: 3), "Create Account button should exist")
+        XCTAssertTrue(createButton.waitForExistence(timeout: 5), "Create Account button should exist")
     }
 
     @MainActor
     func testSignupPasswordRequirementsDisplay() throws {
         launchApp()
         navigateToSignIn()
-        app.buttons["auth_mode_toggle"].tap()
+
+        let modeToggle = app.buttons["auth_mode_toggle"]
+        XCTAssertTrue(modeToggle.waitForExistence(timeout: 5), "Mode toggle should exist")
+        modeToggle.tap()
+        Thread.sleep(forTimeInterval: 0.5)
 
         let emailField = app.textFields["auth_email_field"]
+        XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Email field should exist")
         emailField.tap()
         emailField.typeText("newuser\(Int.random(in: 1000...9999))@test.com")
 
         let passwordField = app.secureTextFields["auth_password_field"]
+        XCTAssertTrue(passwordField.waitForExistence(timeout: 3), "Password field should exist")
         passwordField.tap()
         passwordField.typeText("weak")
 
@@ -205,9 +214,14 @@ final class AuthenticationUITests: XCTestCase {
     func testSignupPasswordStrengthIndicator() throws {
         launchApp()
         navigateToSignIn()
-        app.buttons["auth_mode_toggle"].tap()
+
+        let modeToggle = app.buttons["auth_mode_toggle"]
+        XCTAssertTrue(modeToggle.waitForExistence(timeout: 5), "Mode toggle should exist")
+        modeToggle.tap()
+        Thread.sleep(forTimeInterval: 0.5)
 
         let passwordField = app.secureTextFields["auth_password_field"]
+        XCTAssertTrue(passwordField.waitForExistence(timeout: 5), "Password field should exist")
 
         // Test weak password
         passwordField.tap()
@@ -215,7 +229,7 @@ final class AuthenticationUITests: XCTestCase {
 
         // Requirements should show incomplete
         let incompletePredicate = NSPredicate(format: "label CONTAINS[c] 'circle' OR identifier CONTAINS[c] 'incomplete'")
-        _  = app.images.matching(incompletePredicate)
+        _ = app.images.matching(incompletePredicate)
 
         // Clear and test strong password
         passwordField.tap()
@@ -229,35 +243,42 @@ final class AuthenticationUITests: XCTestCase {
 
         // More requirements should be complete now
         let completePredicate = NSPredicate(format: "label CONTAINS[c] 'checkmark' OR identifier CONTAINS[c] 'complete'")
-        _  = app.images.matching(completePredicate)
+        _ = app.images.matching(completePredicate)
     }
 
     @MainActor
     func testSignupWithValidData() throws {
         launchApp()
         navigateToSignIn()
-        app.buttons["auth_mode_toggle"].tap()
+
+        let modeToggle = app.buttons["auth_mode_toggle"]
+        XCTAssertTrue(modeToggle.waitForExistence(timeout: 5), "Mode toggle should exist")
+        modeToggle.tap()
+        Thread.sleep(forTimeInterval: 0.5)
 
         // Generate unique email
         let uniqueEmail = "uitest_\(Int(Date().timeIntervalSince1970))@test.com"
 
         let emailField = app.textFields["auth_email_field"]
+        XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Email field should exist")
         emailField.tap()
         emailField.typeText(uniqueEmail)
 
         // Optional display name
         let displayNameField = app.textFields["auth_display_name_field"]
-        if displayNameField.exists {
+        if displayNameField.waitForExistence(timeout: 3) {
             displayNameField.tap()
             displayNameField.typeText("UI Test User")
         }
 
         let passwordField = app.secureTextFields["auth_password_field"]
+        XCTAssertTrue(passwordField.waitForExistence(timeout: 3), "Password field should exist")
         passwordField.tap()
         passwordField.typeText("ValidPassword123!")
 
         // Create Account button should be enabled
         let createButton = app.buttons["auth_create_account_button"]
+        XCTAssertTrue(createButton.waitForExistence(timeout: 3), "Create Account button should exist")
         XCTAssertTrue(createButton.isEnabled, "Create Account should be enabled for valid data")
 
         // Note: Actually submitting would create real account - skip in automated tests
@@ -269,15 +290,20 @@ final class AuthenticationUITests: XCTestCase {
         navigateToSignIn()
 
         // Should start in login mode
-        XCTAssertTrue(app.buttons["auth_sign_in_button"].exists, "Should start in login mode")
+        let signInButton = app.buttons["auth_sign_in_button"]
+        XCTAssertTrue(signInButton.waitForExistence(timeout: 5), "Should start in login mode")
 
         // Toggle to signup
-        app.buttons["auth_mode_toggle"].tap()
-        XCTAssertTrue(app.buttons["auth_create_account_button"].waitForExistence(timeout: 3), "Should switch to signup mode")
+        let modeToggle = app.buttons["auth_mode_toggle"]
+        XCTAssertTrue(modeToggle.waitForExistence(timeout: 3), "Mode toggle should exist")
+        modeToggle.tap()
+        Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertTrue(app.buttons["auth_create_account_button"].waitForExistence(timeout: 5), "Should switch to signup mode")
 
         // Toggle back to login
-        app.buttons["auth_mode_toggle"].tap()
-        XCTAssertTrue(app.buttons["auth_sign_in_button"].waitForExistence(timeout: 3), "Should switch back to login mode")
+        modeToggle.tap()
+        Thread.sleep(forTimeInterval: 0.5)
+        XCTAssertTrue(app.buttons["auth_sign_in_button"].waitForExistence(timeout: 5), "Should switch back to login mode")
     }
 
     // MARK: - Logout Tests
@@ -578,27 +604,39 @@ final class AuthenticationUITests: XCTestCase {
         let profileTab = app.tabBars.buttons["Profile"]
         XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
         profileTab.tap()
+        Thread.sleep(forTimeInterval: 1) // Wait for profile view to load
 
         // If already logged in, sign out first
         let signOutButton = app.buttons["profile_sign_out_button"]
-        if signOutButton.waitForExistence(timeout: 2) {
+        if signOutButton.waitForExistence(timeout: 3) {
             // Scroll to make button hittable if needed
             let scrollView = app.scrollViews.firstMatch
-            for _ in 0..<5 {
+            for _ in 0..<8 {
                 if signOutButton.isHittable { break }
                 scrollView.swipeUp()
                 Thread.sleep(forTimeInterval: 0.3)
             }
-            if signOutButton.isHittable {
-                signOutButton.tap()
-                // Handle confirmation dialog (action sheet)
-                Thread.sleep(forTimeInterval: 0.5)
-                let sheetConfirmButton = app.sheets.buttons["Sign Out"]
-                if sheetConfirmButton.waitForExistence(timeout: 3) {
-                    sheetConfirmButton.tap()
-                }
-                _ = app.buttons["profile_sign_in_button"].waitForExistence(timeout: 5)
+
+            guard signOutButton.isHittable else {
+                XCTFail("Sign out button exists but is not hittable after scrolling")
+                return
             }
+
+            signOutButton.tap()
+
+            // Handle confirmation dialog (action sheet)
+            Thread.sleep(forTimeInterval: 0.5)
+            let sheetConfirmButton = app.sheets.buttons["Sign Out"]
+            if sheetConfirmButton.waitForExistence(timeout: 3) {
+                sheetConfirmButton.tap()
+            }
+
+            // Wait for sign out to complete and scroll back to top
+            Thread.sleep(forTimeInterval: 1)
+            scrollView.swipeDown()
+            scrollView.swipeDown()
+
+            _ = app.buttons["profile_sign_in_button"].waitForExistence(timeout: 5)
         }
 
         // Tap sign in
@@ -606,8 +644,9 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertTrue(signInButton.waitForExistence(timeout: 5), "Sign In button should exist")
         signInButton.tap()
 
-        // Wait for auth form
-        _ = app.textFields["auth_email_field"].waitForExistence(timeout: 5)
+        // Wait for auth form to fully load
+        let emailField = app.textFields["auth_email_field"]
+        XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Auth email field should appear")
     }
 
     @MainActor
@@ -760,33 +799,35 @@ final class AuthenticationUITests: XCTestCase {
 
         // Switch to signup mode
         let modeToggle = app.buttons["auth_mode_toggle"]
-        if modeToggle.exists {
-            modeToggle.tap()
-        }
+        XCTAssertTrue(modeToggle.waitForExistence(timeout: 5), "Mode toggle should exist")
+        modeToggle.tap()
+        Thread.sleep(forTimeInterval: 0.5)
 
         // Wait for signup form
-        _ = app.textFields["auth_display_name_field"].waitForExistence(timeout: 3)
+        let displayNameField = app.textFields["auth_display_name_field"]
+        XCTAssertTrue(displayNameField.waitForExistence(timeout: 5), "Display name field should appear")
 
         // Try to signup with existing email
         let emailField = app.textFields["auth_email_field"]
+        XCTAssertTrue(emailField.waitForExistence(timeout: 3), "Email field should exist")
         emailField.tap()
         emailField.typeText(testEmail) // This email already has an account
 
-        // Fill display name if present
-        let displayNameField = app.textFields["auth_display_name_field"]
-        if displayNameField.exists {
-            displayNameField.tap()
-            displayNameField.typeText("Test User")
-        }
+        // Fill display name
+        displayNameField.tap()
+        displayNameField.typeText("Test User")
 
         // Enter valid password
         let passwordField = app.secureTextFields["auth_password_field"]
+        XCTAssertTrue(passwordField.waitForExistence(timeout: 3), "Password field should exist")
         passwordField.tap()
         passwordField.typeText("NewPassword123!")
 
         // Submit
         let createAccountButton = app.buttons["auth_create_account_button"]
-        if createAccountButton.waitForExistence(timeout: 3) && createAccountButton.isEnabled {
+        XCTAssertTrue(createAccountButton.waitForExistence(timeout: 3), "Create Account button should exist")
+
+        if createAccountButton.isEnabled {
             createAccountButton.tap()
 
             // Should show error about existing account
@@ -860,24 +901,36 @@ final class AuthenticationUITests: XCTestCase {
         // Verify logged in
         let profileTab = app.tabBars.buttons["Profile"]
         profileTab.tap()
-        XCTAssertTrue(app.buttons["profile_sign_out_button"].waitForExistence(timeout: 5), "Should be logged in")
+        Thread.sleep(forTimeInterval: 1)
+
+        let signOutBtn = app.buttons["profile_sign_out_button"]
+        XCTAssertTrue(signOutBtn.waitForExistence(timeout: 5), "Should be logged in")
 
         // Sign out - scroll to make button hittable if needed
-        let signOutBtn = app.buttons["profile_sign_out_button"]
         let scrollView = app.scrollViews.firstMatch
-        for _ in 0..<5 {
+        for _ in 0..<8 {
             if signOutBtn.isHittable { break }
             scrollView.swipeUp()
             Thread.sleep(forTimeInterval: 0.3)
         }
+
+        guard signOutBtn.isHittable else {
+            XCTFail("Sign out button exists but is not hittable after scrolling")
+            return
+        }
+
         signOutBtn.tap()
 
         // Handle confirmation dialog (action sheet)
         Thread.sleep(forTimeInterval: 0.5)
         let sheetConfirmButton = app.sheets.buttons["Sign Out"]
-        if sheetConfirmButton.waitForExistence(timeout: 3) {
-            sheetConfirmButton.tap()
-        }
+        XCTAssertTrue(sheetConfirmButton.waitForExistence(timeout: 3), "Sign out confirmation should appear")
+        sheetConfirmButton.tap()
+
+        // Wait for sign out to complete and scroll back to top
+        Thread.sleep(forTimeInterval: 1)
+        scrollView.swipeDown()
+        scrollView.swipeDown()
 
         // Should show sign in button now
         XCTAssertTrue(app.buttons["profile_sign_in_button"].waitForExistence(timeout: 5), "Should show sign in button after logout")

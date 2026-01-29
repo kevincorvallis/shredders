@@ -158,7 +158,7 @@ struct MountainDetailView: View {
     /// Current 24h snowfall in inches
     private var currentSnowfall24h: Int {
         guard let conditions = viewModel.locationData?.conditions else { return 0 }
-        return Int(conditions.snowfall24h ?? 0)
+        return conditions.snowfall24h
     }
 
     // MARK: - Hero Header
