@@ -237,68 +237,81 @@ struct SnowForecastChart: View {
     // MARK: - Interactive Legend
 
     private var interactiveLegend: some View {
-        HStack(spacing: .spacingM) {
+        HStack(spacing: CGFloat.spacingM) {
             ForEach(favorites, id: \.mountain.id) { favorite in
-                let isHidden = hiddenMountains.contains(favorite.mountain.id)
-
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        toggleMountain(favorite.mountain.id)
-                    }
-                    HapticFeedback.selection.trigger()
-                } label: {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(isHidden ? Color.gray.opacity(0.3) : mountainColor(for: favorite.mountain))
-                            .frame(width: 8, height: 8)
-
-                        Text(favorite.mountain.shortName)
-                            .font(.caption)
-                            .foregroundColor(isHidden ? .secondary : .primary)
-
-                        if !isHidden {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundColor(.green)
-                        }
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(isHidden ? Color.clear : mountainColor(for: favorite.mountain).opacity(0.1))
-                    )
-                }
-                .buttonStyle(.plain)
-                .simultaneousGesture(
-                    LongPressGesture(minimumDuration: 0.5)
-                        .onEnded { _ in
-                            isolateMountain(favorite.mountain.id)
-                            HapticFeedback.light.trigger()
-                        }
-                )
-                .accessibilityLabel("\(favorite.mountain.name), \(isHidden ? "hidden" : "visible")")
-                .accessibilityHint("Tap to toggle visibility. Long press to show only this mountain.")
+                legendButton(for: favorite.mountain)
             }
 
             Spacer()
 
-            // Show All button when any mountains are hidden
             if !hiddenMountains.isEmpty {
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        hiddenMountains.removeAll()
-                    }
-                    HapticFeedback.light.trigger()
-                } label: {
-                    Text("Show All")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.blue)
-                }
+                showAllButton
             }
         }
         .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    private func legendButton(for mountain: Mountain) -> some View {
+        let isHidden = hiddenMountains.contains(mountain.id)
+
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                toggleMountain(mountain.id)
+            }
+            HapticFeedback.selection.trigger()
+        } label: {
+            legendButtonLabel(for: mountain, isHidden: isHidden)
+        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.5)
+                .onEnded { _ in
+                    isolateMountain(mountain.id)
+                    HapticFeedback.light.trigger()
+                }
+        )
+        .accessibilityLabel("\(mountain.name), \(isHidden ? "hidden" : "visible")")
+        .accessibilityHint("Tap to toggle visibility. Long press to show only this mountain.")
+    }
+
+    @ViewBuilder
+    private func legendButtonLabel(for mountain: Mountain, isHidden: Bool) -> some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(isHidden ? Color(.systemGray3) : mountainColor(for: mountain))
+                .frame(width: 8, height: 8)
+
+            Text(mountain.shortName)
+                .font(.caption)
+                .foregroundColor(isHidden ? .secondary : .primary)
+
+            if !isHidden {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundColor(.green)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isHidden ? Color.clear : mountainColor(for: mountain).opacity(0.1))
+        )
+    }
+
+    private var showAllButton: some View {
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                hiddenMountains.removeAll()
+            }
+            HapticFeedback.light.trigger()
+        } label: {
+            Text("Show All")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.blue)
+        }
     }
 
     private func toggleMountain(_ id: String) {
@@ -418,8 +431,8 @@ struct SnowForecastChart: View {
                 )
                 .foregroundStyle(
                     powderDay.maxSnowfall >= epicPowderThreshold
-                        ? Color.cyan.opacity(0.15)
-                        : Color.blue.opacity(0.08)
+                        ? Color.cyan.opacity(0.18)
+                        : Color.blue.opacity(0.12)
                 )
             }
 
@@ -451,16 +464,16 @@ struct SnowForecastChart: View {
                             ? AnyShapeStyle(LinearGradient(
                                 colors: [
                                     mountainColor(for: favorite.mountain).opacity(0.5),
-                                    Color.cyan.opacity(0.2),
-                                    mountainColor(for: favorite.mountain).opacity(0.05)
+                                    Color.cyan.opacity(0.25),
+                                    mountainColor(for: favorite.mountain).opacity(0.08)
                                 ],
                                 startPoint: .top,
                                 endPoint: .bottom
                             ))
                             : AnyShapeStyle(LinearGradient(
                                 colors: [
-                                    mountainColor(for: favorite.mountain).opacity(0.3),
-                                    mountainColor(for: favorite.mountain).opacity(0.05)
+                                    mountainColor(for: favorite.mountain).opacity(0.35),
+                                    mountainColor(for: favorite.mountain).opacity(0.08)
                                 ],
                                 startPoint: .top,
                                 endPoint: .bottom
@@ -512,9 +525,9 @@ struct SnowForecastChart: View {
                 .background(
                     LinearGradient(
                         colors: [
-                            Color(.systemBackground).opacity(0.95),
-                            Color.blue.opacity(0.03),
-                            Color(.systemBackground).opacity(0.95)
+                            Color(.systemBackground).opacity(0.98),
+                            Color.blue.opacity(0.05),
+                            Color(.systemBackground).opacity(0.98)
                         ],
                         startPoint: .top,
                         endPoint: .bottom
