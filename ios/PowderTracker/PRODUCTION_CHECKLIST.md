@@ -227,9 +227,231 @@ git push origin main
 
 ---
 
+## iOS Simulator Testing
+
+### Build and Run
+
+```bash
+# Build the app
+cd ios/PowderTracker
+xcodebuild -scheme PowderTracker -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build
+
+# Boot simulator if needed
+xcrun simctl boot "iPhone 16 Pro"
+
+# Install the app
+xcrun simctl install booted ~/Library/Developer/Xcode/DerivedData/PowderTracker-*/Build/Products/Debug-iphonesimulator/PowderTracker.app
+
+# Launch app
+xcrun simctl launch booted com.shredders.powdertracker
+```
+
+### Stream App Logs
+
+```bash
+# Stream all PowderTracker logs
+xcrun simctl spawn booted log stream --predicate 'process CONTAINS "PowderTracker"'
+
+# Filter for auth-related logs
+xcrun simctl spawn booted log stream --predicate 'process CONTAINS "PowderTracker"' | grep -E "(auth|token|keychain|sign|event)"
+
+# Filter for network errors
+xcrun simctl spawn booted log stream --predicate 'process CONTAINS "PowderTracker"' | grep -iE "(error|fail|401|403|500)"
+```
+
+### Take Screenshots
+
+```bash
+# Capture current screen
+xcrun simctl io booted screenshot ~/Desktop/ios_screenshot.png
+
+# Record video (useful for debugging flows)
+xcrun simctl io booted recordVideo ~/Desktop/ios_recording.mov
+# Press Ctrl+C to stop recording
+```
+
+### Reset App State
+
+```bash
+# Uninstall and reinstall to clear all data (including Keychain)
+xcrun simctl uninstall booted com.shredders.powdertracker
+xcrun simctl install booted ~/Library/Developer/Xcode/DerivedData/PowderTracker-*/Build/Products/Debug-iphonesimulator/PowderTracker.app
+```
+
+---
+
+## Running UI Tests
+
+### Run All UI Tests
+
+```bash
+cd ios/PowderTracker
+xcodebuild test \
+  -scheme PowderTracker \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -only-testing:PowderTrackerUITests
+```
+
+### Run Specific Test Classes
+
+```bash
+# Authentication tests only
+xcodebuild test \
+  -scheme PowderTracker \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -only-testing:PowderTrackerUITests/AuthenticationUITests
+
+# Events tests only
+xcodebuild test \
+  -scheme PowderTracker \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  -only-testing:PowderTrackerUITests/EventsUITests
+```
+
+### Test Coverage Areas
+
+| Test Class | What It Covers |
+|------------|----------------|
+| `AuthenticationUITests` | Apple Sign In, token persistence, sign out |
+| `EventsUITests` | Event creation, auth verification |
+
+---
+
+## Troubleshooting
+
+### "User not found" on Signup
+
+**Cause:** Email already exists with a different auth method (e.g., Apple Sign In)
+
+**Fix:**
+- User should sign in with their original method
+- Check if profile exists: `SELECT * FROM users WHERE email = 'user@example.com'`
+
+### "Must be signed in" After Apple Sign In
+
+**Cause:** Token not stored in Keychain or not passed to EventService
+
+**Verify:**
+1. Check logs for Keychain save success
+2. Verify token is passed in Authorization header
+3. Check `dual-auth.ts` handles Supabase tokens
+
+**Fix:** Sign out and sign in again to refresh tokens
+
+### "Failed to create event"
+
+**Cause:** Usually a user ID mismatch (auth_user_id vs users.id)
+
+**Verify:**
+```sql
+-- Check if user has a profile
+SELECT id, auth_user_id, email FROM users WHERE auth_user_id = 'supabase-auth-id';
+```
+
+**Fix:** Ensure backend looks up `users.id` from `auth_user_id` before database operations
+
+### Token Expired / 401 Errors
+
+**Cause:** Access token expired and refresh failed
+
+**Verify:**
+1. Check Keychain has valid refresh token
+2. Check Supabase session is valid
+
+**Fix:**
+- Force sign out and sign in again
+- Clear Keychain: Uninstall and reinstall app
+
+### App Stuck on Loading
+
+**Cause:** Network issue or API timeout
+
+**Verify:**
+1. Check API is reachable: `curl https://shredders-bay.vercel.app/api/events`
+2. Check simulator has network access
+
+**Fix:**
+- Check WiFi/network connection
+- Restart simulator
+- Check Vercel deployment status
+
+### "Invalid skill level" or Validation Errors
+
+**Cause:** iOS app sending unexpected values
+
+**Valid Values:**
+- `skillLevel`: `beginner`, `intermediate`, `advanced`, `expert`, `all`
+- `eventDate`: `YYYY-MM-DD` format, must be today or future
+- `departureTime`: `HH:MM` format
+
+---
+
+## Environment Verification
+
+Before testing, verify the app is pointing to the correct environment:
+
+### Check Current API Target
+
+In `Config/AppConfig.swift`:
+```swift
+// Should return production URL
+static var apiBaseURL: String {
+    // Default: https://shredders-bay.vercel.app/api
+}
+```
+
+### Override for Local Testing
+
+Set environment variable in Xcode scheme:
+- Edit Scheme → Run → Arguments → Environment Variables
+- Add: `SHREDDERS_API_URL` = `http://localhost:3000/api`
+
+### Verify at Runtime
+
+The app logs the API base URL on launch. Check logs for:
+```
+[API] Using base URL: https://shredders-bay.vercel.app/api
+```
+
+---
+
+## Database Verification
+
+### Check User Profile Exists
+
+```sql
+SELECT id, auth_user_id, email, username, display_name
+FROM users
+WHERE email = 'user@example.com';
+```
+
+### Check Event Was Created
+
+```sql
+SELECT e.id, e.title, e.event_date, e.user_id, u.email
+FROM events e
+JOIN users u ON e.user_id = u.id
+WHERE e.created_at > NOW() - INTERVAL '1 hour'
+ORDER BY e.created_at DESC;
+```
+
+### Check RSVP Status
+
+```sql
+SELECT ea.status, e.title, u.email
+FROM event_attendees ea
+JOIN events e ON ea.event_id = e.id
+JOIN users u ON ea.user_id = u.id
+WHERE e.id = 'event-id-here';
+```
+
+---
+
 ## Notes
 
 - Always test on a **real device** for Apple Sign In (simulator has limitations)
 - Clear app data/reinstall if seeing stale token issues
 - Check both WiFi and cellular connections
 - Test with different iOS versions if possible
+- The automated script (`verify-production.sh`) only tests backend APIs
+- Manual testing is still required for iOS-specific flows like Apple Sign In
