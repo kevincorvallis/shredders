@@ -3,19 +3,85 @@ import Charts
 
 /// 7-day snow forecast chart showing all favorite mountains overlaid
 /// Uses Swift Charts with multi-line visualization
+/// Includes powder day highlighting and interactive tooltips
 struct SnowForecastChart: View {
     let favorites: [(mountain: Mountain, forecast: [ForecastDay])]
     var showHeader: Bool = false
+    var chartHeight: CGFloat = .chartHeightStandard
     var onDayTap: ((Mountain, ForecastDay) -> Void)? = nil
+    var isLoading: Bool = false
+    var error: String? = nil
+    var onRetry: (() -> Void)? = nil
 
-    // Chart height - compact for homepage
-    private let chartHeight: CGFloat = 160
+    // Powder day threshold
+    private let powderDayThreshold = 6
+    private let epicPowderThreshold = 12
 
     // Range toggle state
     @State private var selectedRange: ForecastRange = .sevenDays
     @State private var selectedDataPoint: (mountain: Mountain, day: ForecastDay)? = nil
     @State private var showingHourlySheet: Bool = false
     @State private var selectedDate: Date? = nil
+
+    // Chart detail view state
+    @State private var showingChartDetail: Bool = false
+    @State private var selectedMountainForDetail: Mountain? = nil
+
+    // Interactive legend state
+    @State private var hiddenMountains: Set<String> = []
+
+    // Interaction hint tracking
+    @AppStorage("hasSeenForecastChartHint") private var hasSeenHint = false
+    @State private var showInteractionHint = false
+    @State private var hasInteracted = false
+
+    // Track previous date for haptic feedback on date change
+    @State private var previousSelectedDate: Date? = nil
+
+    // Computed properties for powder day analysis
+    private var powderDays: [(date: Date, maxSnowfall: Int)] {
+        var dayMap: [Date: Int] = [:]
+        let calendar = Calendar.current
+
+        for favorite in visibleFavorites {
+            let forecastDays = Array(favorite.forecast.prefix(selectedRange.days))
+            for (index, day) in forecastDays.enumerated() {
+                let chartDate = parseDate(day.date) ?? calendar.date(byAdding: .day, value: index, to: Date())!
+                let normalizedDate = calendar.startOfDay(for: chartDate)
+                if day.snowfall >= powderDayThreshold {
+                    dayMap[normalizedDate] = max(dayMap[normalizedDate] ?? 0, day.snowfall)
+                }
+            }
+        }
+        return dayMap.map { ($0.key, $0.value) }.sorted { $0.date < $1.date }
+    }
+
+    private var bestPowderDay: Date? {
+        powderDays.max(by: { $0.maxSnowfall < $1.maxSnowfall })?.date
+    }
+
+    private var visibleFavorites: [(mountain: Mountain, forecast: [ForecastDay])] {
+        favorites.filter { !hiddenMountains.contains($0.mountain.id) }
+    }
+
+    /// Accessibility label summarizing chart data for VoiceOver
+    private var chartAccessibilityLabel: String {
+        let rangeText = selectedRange == .threeDays ? "3-day" : selectedRange == .sevenDays ? "7-day" : "15-day"
+        let mountainNames = visibleFavorites.map { $0.mountain.shortName }.joined(separator: ", ")
+        let powderDayCount = powderDays.count
+
+        var label = "\(rangeText) snow forecast for \(mountainNames)."
+
+        if powderDayCount > 0 {
+            label += " \(powderDayCount) powder day\(powderDayCount == 1 ? "" : "s") expected."
+        }
+
+        if let bestDay = bestPowderDay, let maxSnow = powderDays.first(where: { $0.date == bestDay })?.maxSnowfall {
+            label += " Best day is \(formatShortDate(bestDay)) with \(maxSnow) inches."
+        }
+
+        return label
+    }
 
     enum ForecastRange: String, CaseIterable {
         case threeDays = "3D"
@@ -36,10 +102,53 @@ struct SnowForecastChart: View {
             // Header with range toggle
             headerWithToggle
 
-            if favorites.isEmpty {
+            if isLoading {
+                chartSkeleton
+                    .transition(.opacity)
+            } else if let error = error {
+                errorState(message: error)
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            } else if favorites.isEmpty {
                 emptyState
+                    .transition(.opacity)
             } else {
-                chart
+                VStack(spacing: CGFloat.spacingS) {
+                    ZStack(alignment: .bottom) {
+                        chart
+                            .accessibilityLabel(chartAccessibilityLabel)
+                            .accessibilityHint("Swipe horizontally to explore forecast data. Double tap to expand chart with customization options.")
+
+                        // Interaction hint overlay
+                        if showInteractionHint {
+                            ChartInteractionHint(isVisible: $showInteractionHint) {
+                                hasSeenHint = true
+                            }
+                            .padding(.bottom, CGFloat.spacingL)
+                            .transition(AnyTransition.opacity.combined(with: AnyTransition.move(edge: .bottom)))
+                        }
+                    }
+
+                    // Interactive legend
+                    interactiveLegend
+
+                    // Powder day summary
+                    if !powderDays.isEmpty {
+                        powderDaySummary
+                    }
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: isLoading)
+        .animation(.easeInOut(duration: 0.3), value: error != nil)
+        .onAppear {
+            // Show hint for first-time users
+            if !hasSeenHint && !hasInteracted && !favorites.isEmpty {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                        showInteractionHint = true
+                    }
+                }
             }
         }
         .sheet(isPresented: $showingHourlySheet) {
@@ -49,6 +158,23 @@ struct SnowForecastChart: View {
                     day: selected.day,
                     isPresented: $showingHourlySheet
                 )
+            }
+        }
+        .sheet(isPresented: $showingChartDetail) {
+            if let mountain = selectedMountainForDetail,
+               let forecast = favorites.first(where: { $0.mountain.id == mountain.id })?.forecast {
+                ChartDetailView(
+                    mountain: mountain,
+                    forecast: forecast,
+                    isPresented: $showingChartDetail
+                )
+            }
+        }
+        .onChange(of: selectedRange) { _, _ in
+            // Reset legend state when range changes
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                hiddenMountains.removeAll()
+                selectedDate = nil
             }
         }
     }
@@ -73,18 +199,225 @@ struct SnowForecastChart: View {
             }
             .pickerStyle(.segmented)
             .frame(width: 140)
+
+            // Expand button to open chart detail view
+            if let firstMountain = visibleFavorites.first?.mountain {
+                Button {
+                    selectedMountainForDetail = firstMountain
+                    showingChartDetail = true
+                    HapticFeedback.light.trigger()
+                } label: {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .frame(width: 32, height: 32)
+                        .background(Color(.tertiarySystemFill))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Expand chart")
+                .accessibilityHint("Opens detailed chart view with customization options")
+            }
         }
     }
 
+    // MARK: - Interactive Legend
+
+    private var interactiveLegend: some View {
+        HStack(spacing: .spacingM) {
+            ForEach(favorites, id: \.mountain.id) { favorite in
+                let isHidden = hiddenMountains.contains(favorite.mountain.id)
+
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        toggleMountain(favorite.mountain.id)
+                    }
+                    HapticFeedback.selection.trigger()
+                } label: {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(isHidden ? Color.gray.opacity(0.3) : mountainColor(for: favorite.mountain))
+                            .frame(width: 8, height: 8)
+
+                        Text(favorite.mountain.shortName)
+                            .font(.caption)
+                            .foregroundColor(isHidden ? .secondary : .primary)
+
+                        if !isHidden {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundColor(.green)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(isHidden ? Color.clear : mountainColor(for: favorite.mountain).opacity(0.1))
+                    )
+                }
+                .buttonStyle(.plain)
+                .simultaneousGesture(
+                    LongPressGesture(minimumDuration: 0.5)
+                        .onEnded { _ in
+                            isolateMountain(favorite.mountain.id)
+                            HapticFeedback.light.trigger()
+                        }
+                )
+                .accessibilityLabel("\(favorite.mountain.name), \(isHidden ? "hidden" : "visible")")
+                .accessibilityHint("Tap to toggle visibility. Long press to show only this mountain.")
+            }
+
+            Spacer()
+
+            // Show All button when any mountains are hidden
+            if !hiddenMountains.isEmpty {
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        hiddenMountains.removeAll()
+                    }
+                    HapticFeedback.light.trigger()
+                } label: {
+                    Text("Show All")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.blue)
+                }
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    private func toggleMountain(_ id: String) {
+        if hiddenMountains.contains(id) {
+            hiddenMountains.remove(id)
+        } else {
+            // Don't allow hiding all mountains
+            if hiddenMountains.count < favorites.count - 1 {
+                hiddenMountains.insert(id)
+            }
+        }
+    }
+
+    private func isolateMountain(_ id: String) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            hiddenMountains = Set(favorites.map { $0.mountain.id }.filter { $0 != id })
+        }
+    }
+
+    // MARK: - Powder Day Summary
+
+    private var powderDaySummary: some View {
+        let summaryText = "\(powderDays.count) powder day\(powderDays.count == 1 ? "" : "s") this \(selectedRange == .threeDays ? "period" : "week")"
+        let bestDayText: String? = {
+            if let bestDay = bestPowderDay, let maxSnow = powderDays.first(where: { $0.date == bestDay })?.maxSnowfall {
+                return "Best day is \(formatShortDate(bestDay)) with \(maxSnow) inches"
+            }
+            return nil
+        }()
+
+        return HStack(spacing: CGFloat.spacingS) {
+            Image(systemName: "snowflake.circle.fill")
+                .foregroundStyle(.cyan)
+
+            Text(summaryText)
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            if let bestDay = bestPowderDay, let maxSnow = powderDays.first(where: { $0.date == bestDay })?.maxSnowfall {
+                Text("•")
+                    .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
+                Image(systemName: "crown.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.yellow)
+                    .accessibilityHidden(true)
+                Text("Best: \(formatShortDate(bestDay)) (\(maxSnow)\")")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(summaryText + (bestDayText.map { ". \($0)" } ?? ""))
+    }
+
+    private func formatShortDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter.string(from: date)
+    }
+
+    // MARK: - Chart Skeleton (Loading State)
+
+    private var chartSkeleton: some View {
+        VStack(spacing: .spacingS) {
+            // Shimmer chart area
+            RoundedRectangle(cornerRadius: .cornerRadiusCard)
+                .fill(Color(.systemGray5))
+                .frame(height: chartHeight)
+                .overlay {
+                    // Animated placeholder lines
+                    GeometryReader { geo in
+                        Path { path in
+                            let width = geo.size.width
+                            let height = geo.size.height
+                            path.move(to: CGPoint(x: 20, y: height * 0.7))
+                            path.addCurve(
+                                to: CGPoint(x: width - 20, y: height * 0.4),
+                                control1: CGPoint(x: width * 0.3, y: height * 0.3),
+                                control2: CGPoint(x: width * 0.7, y: height * 0.6)
+                            )
+                        }
+                        .stroke(Color(.systemGray4), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    }
+                }
+                .shimmering()
+
+            // Skeleton legend
+            HStack(spacing: .spacingM) {
+                ForEach(0..<3, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color(.systemGray5))
+                        .frame(width: 60, height: 20)
+                }
+                Spacer()
+            }
+            .shimmering()
+        }
+    }
+
+    // MARK: - Chart
+
     private var chart: some View {
         Chart {
-            ForEach(favorites, id: \.mountain.id) { favorite in
+            // Powder day background highlights
+            ForEach(powderDays, id: \.date) { powderDay in
+                let calendar = Calendar.current
+                let startOfDay = calendar.startOfDay(for: powderDay.date)
+                let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+                RectangleMark(
+                    xStart: .value("Start", startOfDay),
+                    xEnd: .value("End", endOfDay)
+                )
+                .foregroundStyle(
+                    powderDay.maxSnowfall >= epicPowderThreshold
+                        ? Color.cyan.opacity(0.15)
+                        : Color.blue.opacity(0.08)
+                )
+            }
+
+            ForEach(visibleFavorites, id: \.mountain.id) { favorite in
                 // Get forecast based on selected range
                 let forecastDays = Array(favorite.forecast.prefix(selectedRange.days))
 
                 ForEach(Array(forecastDays.enumerated()), id: \.offset) { index, day in
                     // Convert date string to Date, fallback to index-based date
                     let chartDate = parseDate(day.date) ?? Calendar.current.date(byAdding: .day, value: index, to: Date())!
+                    let isPowderDay = day.snowfall >= powderDayThreshold
 
                     // Line mark for trend
                     LineMark(
@@ -93,29 +426,89 @@ struct SnowForecastChart: View {
                     )
                     .foregroundStyle(by: .value("Mountain", favorite.mountain.shortName))
                     .interpolationMethod(.catmullRom)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5))
+                    .lineStyle(StrokeStyle(lineWidth: .chartLineWidthMedium))
 
-                    // Area fill below line
+                    // Area fill below line - enhanced for powder days
                     AreaMark(
                         x: .value("Day", chartDate),
                         y: .value("Snow", day.snowfall)
                     )
                     .foregroundStyle(
-                        LinearGradient(
-                            colors: [
-                                mountainColor(for: favorite.mountain).opacity(0.3),
-                                mountainColor(for: favorite.mountain).opacity(0.05)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+                        isPowderDay
+                            ? AnyShapeStyle(LinearGradient(
+                                colors: [
+                                    mountainColor(for: favorite.mountain).opacity(0.5),
+                                    Color.cyan.opacity(0.2),
+                                    mountainColor(for: favorite.mountain).opacity(0.05)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ))
+                            : AnyShapeStyle(LinearGradient(
+                                colors: [
+                                    mountainColor(for: favorite.mountain).opacity(0.3),
+                                    mountainColor(for: favorite.mountain).opacity(0.05)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ))
                     )
                     .interpolationMethod(.catmullRom)
+
+                    // Powder day markers
+                    if isPowderDay {
+                        PointMark(
+                            x: .value("Day", chartDate),
+                            y: .value("Snow", day.snowfall)
+                        )
+                        .foregroundStyle(mountainColor(for: favorite.mountain))
+                        .symbolSize(60)
+                        .annotation(position: .top, spacing: 4) {
+                            AnimatedPowderDayBadge(snowfall: day.snowfall, isEpic: day.snowfall >= epicPowderThreshold)
+                        }
+                    }
+
+                    // Highlighted point for selected date
+                    if let selectedDate = selectedDate,
+                       let parsedDate = parseDate(day.date),
+                       Calendar.current.isDate(parsedDate, inSameDayAs: selectedDate) {
+                        PointMark(
+                            x: .value("Day", chartDate),
+                            y: .value("Snow", day.snowfall)
+                        )
+                        .foregroundStyle(mountainColor(for: favorite.mountain))
+                        .symbolSize(100) // Larger size for selected point
+                        .symbol {
+                            Circle()
+                                .fill(mountainColor(for: favorite.mountain))
+                                .frame(width: 10, height: 10)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white, lineWidth: 2)
+                                )
+                                .shadow(color: mountainColor(for: favorite.mountain).opacity(0.5), radius: 4)
+                        }
+                    }
                 }
             }
         }
         .frame(height: chartHeight)
         .frame(minWidth: 100) // Prevent 0x0 CAMetalLayer error
+        .chartPlotStyle { plotArea in
+            plotArea
+                .background(
+                    LinearGradient(
+                        colors: [
+                            Color(.systemBackground).opacity(0.95),
+                            Color.blue.opacity(0.03),
+                            Color(.systemBackground).opacity(0.95)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .cornerRadius(CGFloat.cornerRadiusCard)
+        }
         .chartXAxis {
             AxisMarks(values: .stride(by: .day)) { value in
                 if let date = value.as(Date.self) {
@@ -144,66 +537,212 @@ struct SnowForecastChart: View {
                 }
             }
         }
-        .chartLegend(position: .bottom, spacing: 8) {
-            HStack(spacing: 12) {
-                ForEach(favorites, id: \.mountain.id) { favorite in
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(mountainColor(for: favorite.mountain))
-                            .frame(width: 8, height: 8)
-
-                        Text(favorite.mountain.shortName)
-                            .font(.caption)
-                            .foregroundColor(.primary)
-                    }
-                }
-            }
-        }
+        .chartLegend(.hidden) // Using interactive legend instead
         .chartXSelection(value: $selectedDate)
         .chartOverlay { proxy in
-            // Show tooltip when a date is selected
-            if let selectedDate = selectedDate,
-               let xPosition = proxy.position(forX: selectedDate) {
-                let snowfallData = getSnowfallForDate(selectedDate)
-                if !snowfallData.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(formatSelectedDate(selectedDate))
-                            .font(.caption.bold())
-                            .foregroundColor(.primary)
-
-                        ForEach(snowfallData, id: \.mountain.id) { data in
-                            HStack(spacing: 4) {
-                                Circle()
-                                    .fill(mountainColor(for: data.mountain))
-                                    .frame(width: 6, height: 6)
-                                Text("\(data.mountain.shortName): \(data.snowfall)\"")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
+            GeometryReader { geo in
+                // Invisible interaction area to detect touches
+                Rectangle()
+                    .fill(Color.clear)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                if !hasInteracted {
+                                    hasInteracted = true
+                                    dismissHint()
+                                }
                             }
+                    )
+                    .onTapGesture(count: 2) {
+                        // Double-tap to open chart detail view
+                        if let firstMountain = visibleFavorites.first?.mountain {
+                            selectedMountainForDetail = firstMountain
+                            showingChartDetail = true
+                            HapticFeedback.medium.trigger()
                         }
                     }
-                    .padding(8)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .shadow(radius: 4)
-                    .position(x: min(max(xPosition, 60), proxy.plotSize.width - 60), y: 40)
+
+                // Scrub line when date is selected
+                if let selectedDate = selectedDate,
+                   let xPosition = proxy.position(forX: selectedDate) {
+                    ChartScrubLine(
+                        xPosition: xPosition,
+                        height: geo.size.height,
+                        showGradientFade: true
+                    )
+                    .allowsHitTesting(false)
+                }
+
+                // Tooltip when a date is selected
+                if let selectedDate = selectedDate,
+                   let xPosition = proxy.position(forX: selectedDate) {
+                    let snowfallData = getSnowfallForDate(selectedDate)
+                    if !snowfallData.isEmpty {
+                        chartTooltip(
+                            date: selectedDate,
+                            data: snowfallData,
+                            xPosition: xPosition,
+                            plotWidth: proxy.plotSize.width
+                        )
+                    }
                 }
             }
         }
-        .onChange(of: selectedDate) { _, newValue in
-            if newValue != nil {
-                HapticFeedback.selection.trigger()
+        .onChange(of: selectedDate) { oldValue, newValue in
+            // Track previous date for haptic comparison
+            if let newDate = newValue {
+                // Check if we crossed to a new day
+                let calendar = Calendar.current
+                let crossedToNewDay = previousSelectedDate.map { prev in
+                    !calendar.isDate(prev, inSameDayAs: newDate)
+                } ?? true
+
+                if crossedToNewDay {
+                    HapticFeedback.selection.trigger()
+                }
+
+                previousSelectedDate = newDate
+            }
+
+            // Dismiss hint on first interaction
+            if newValue != nil && !hasInteracted {
+                hasInteracted = true
+                dismissHint()
             }
         }
     }
 
-    /// Get snowfall data for all mountains on the selected date
-    private func getSnowfallForDate(_ date: Date) -> [(mountain: Mountain, snowfall: Int)] {
+    /// Tooltip view for displaying snowfall data
+    private func chartTooltip(
+        date: Date,
+        data: [(mountain: Mountain, snowfall: Int, conditions: String?)],
+        xPosition: CGFloat,
+        plotWidth: CGFloat
+    ) -> some View {
+        let hasPowderDay = data.contains { $0.snowfall >= powderDayThreshold }
+        let isBestDay = bestPowderDay.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false
+
+        return VStack(alignment: .leading, spacing: 6) {
+            // Date header with powder day indicator
+            HStack(spacing: 4) {
+                Text(formatSelectedDate(date))
+                    .font(.caption.bold())
+                    .foregroundColor(.primary)
+
+                if isBestDay {
+                    Image(systemName: "crown.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.yellow)
+                } else if hasPowderDay {
+                    Image(systemName: "snowflake")
+                        .font(.caption2)
+                        .foregroundStyle(.cyan)
+                }
+            }
+
+            // Conditions summary (from first visible mountain)
+            if let conditions = data.first?.conditions, !conditions.isEmpty {
+                Text(conditions)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .italic()
+            }
+
+            Divider()
+                .padding(.vertical, 2)
+
+            // Mountain snowfall data
+            ForEach(data, id: \.mountain.id) { item in
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(mountainColor(for: item.mountain))
+                        .frame(width: 8, height: 8)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                        )
+
+                    Text(item.mountain.shortName)
+                        .font(.caption2.weight(.medium))
+                        .foregroundColor(.primary)
+
+                    Spacer()
+
+                    Text("\(item.snowfall)\"")
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(item.snowfall >= powderDayThreshold ? .cyan : .primary)
+
+                    if item.snowfall >= powderDayThreshold {
+                        Text("POW")
+                            .font(.system(size: 7, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color.cyan))
+                    }
+                }
+            }
+
+            // Tap hint
+            HStack {
+                Image(systemName: "hand.tap")
+                    .font(.caption2)
+                Text("Tap for hourly details")
+                    .font(.caption2)
+            }
+            .foregroundStyle(.tertiary)
+            .padding(.top, 4)
+        }
+        .padding(12)
+        .frame(minWidth: 140)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 6)
+        .position(x: min(max(xPosition, 85), plotWidth - 85), y: 60)
+        .animation(.chartTooltip, value: xPosition)
+        .onTapGesture {
+            openHourlyBreakdown(for: date)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Forecast for \(formatSelectedDate(date)). \(data.map { "\($0.mountain.shortName): \($0.snowfall) inches" }.joined(separator: ". "))")
+        .accessibilityHint("Double tap to view hourly breakdown")
+    }
+
+    /// Open hourly breakdown sheet for the selected date
+    private func openHourlyBreakdown(for date: Date) {
         let calendar = Calendar.current
-        return favorites.compactMap { favorite in
+        // Find the first mountain with matching forecast day
+        for favorite in favorites {
             let forecastDays = Array(favorite.forecast.prefix(selectedRange.days))
             if let day = forecastDays.first(where: { parseDate($0.date).map { calendar.isDate($0, inSameDayAs: date) } ?? false }) {
-                return (mountain: favorite.mountain, snowfall: day.snowfall)
+                selectedDataPoint = (mountain: favorite.mountain, day: day)
+                showingHourlySheet = true
+                HapticFeedback.selection.trigger()
+                break
+            }
+        }
+    }
+
+    /// Dismiss the interaction hint
+    private func dismissHint() {
+        withAnimation(.easeOut(duration: 0.3)) {
+            showInteractionHint = false
+        }
+        hasSeenHint = true
+    }
+
+    /// Get snowfall data for all mountains on the selected date
+    private func getSnowfallForDate(_ date: Date) -> [(mountain: Mountain, snowfall: Int, conditions: String?)] {
+        let calendar = Calendar.current
+        return visibleFavorites.compactMap { favorite in
+            let forecastDays = Array(favorite.forecast.prefix(selectedRange.days))
+            if let day = forecastDays.first(where: { parseDate($0.date).map { calendar.isDate($0, inSameDayAs: date) } ?? false }) {
+                return (mountain: favorite.mountain, snowfall: day.snowfall, conditions: day.conditions)
             }
             return nil
         }
@@ -225,17 +764,84 @@ struct SnowForecastChart: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "chart.line.uptrend.xyaxis")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
+        VStack(spacing: CGFloat.spacingM) {
+            Image(systemName: "mountain.2.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(LinearGradient(
+                    colors: [.blue.opacity(0.6), .cyan.opacity(0.4)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                ))
 
-            Text("No forecast data available")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            VStack(spacing: CGFloat.spacingXS) {
+                Text("No Forecast Data")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text("Add mountains to your favorites to see their snow forecasts here")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+
+            // Optional: Add a visual hint
+            HStack(spacing: 4) {
+                Image(systemName: "star.fill")
+                    .font(.caption)
+                    .foregroundStyle(.yellow)
+                Text("Tap the star on any mountain")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.top, CGFloat.spacingXS)
         }
         .frame(height: chartHeight)
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No forecast data. Add mountains to your favorites to see their snow forecasts.")
+    }
+
+    /// Error state with retry option
+    private func errorState(message: String) -> some View {
+        VStack(spacing: CGFloat.spacingM) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 44))
+                .foregroundStyle(.orange)
+
+            VStack(spacing: CGFloat.spacingXS) {
+                Text("Unable to Load Forecast")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+
+            if let onRetry = onRetry {
+                Button(action: onRetry) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.clockwise")
+                        Text("Try Again")
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, CGFloat.spacingM)
+                    .padding(.vertical, CGFloat.spacingS)
+                    .background(Capsule().fill(Color.blue))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, CGFloat.spacingXS)
+            }
+        }
+        .frame(height: chartHeight)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Error loading forecast. \(message)")
+        .accessibilityHint(onRetry != nil ? "Double tap to retry" : "")
     }
 
     // MARK: - Helpers
@@ -390,12 +996,29 @@ struct HourlyBreakdownSheet: View {
 
 // MARK: - Preview
 
-#Preview {
+#Preview("Default") {
     ScrollView {
         VStack(spacing: 20) {
             SnowForecastChart(
                 favorites: [],
                 showHeader: true
+            )
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(.cornerRadiusCard)
+        }
+        .padding()
+    }
+    .background(Color(.systemGroupedBackground))
+}
+
+#Preview("Loading State") {
+    ScrollView {
+        VStack(spacing: 20) {
+            SnowForecastChart(
+                favorites: [],
+                showHeader: true,
+                isLoading: true
             )
             .padding()
             .background(Color(.secondarySystemBackground))
