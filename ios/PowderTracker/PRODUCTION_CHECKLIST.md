@@ -237,6 +237,9 @@ git push origin main
 
 | Date | Version | Changes Tested |
 |------|---------|----------------|
+| 2026-01-28 | f8e4b65b | Full verification scripts, iOS testing commands |
+| 2026-01-28 | 66d823f4 | Expanded checklist with troubleshooting |
+| 2026-01-28 | eb10a538 | Automated API verification script |
 | 2026-01-28 | 2719a12c | Auth user ID fix, Apple Sign In tokens |
 
 ---
