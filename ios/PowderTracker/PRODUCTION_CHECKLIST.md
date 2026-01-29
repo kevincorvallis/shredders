@@ -2,6 +2,25 @@
 
 Use this checklist after deploying changes to verify the iOS app and backend are working correctly in production.
 
+## Automated Verification Script
+
+Run the automated verification script first:
+
+```bash
+cd ios/PowderTracker
+./scripts/verify-production.sh
+```
+
+This checks:
+- API availability and response times
+- Public endpoints (events, mountains)
+- Auth protection (401 for protected endpoints)
+- Data quality (events have creators, mountains have data)
+
+**All checks should pass before proceeding with manual testing.**
+
+---
+
 ## Quick Smoke Test (5 minutes)
 
 ### Authentication
