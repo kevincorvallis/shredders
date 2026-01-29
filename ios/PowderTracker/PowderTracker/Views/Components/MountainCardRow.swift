@@ -146,6 +146,7 @@ struct MountainCardRow: View {
             }
         }
         .standardCard()
+        .cardMaxWidth()
         .contextMenu {
             // Favorite action
             if let isFavorite = isFavorite, let toggle = onFavoriteToggle {
@@ -236,7 +237,7 @@ struct MountainCardRow: View {
                             Text("Base")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Text("\(conditions.snowDepth)\"")
+                            Text("\(conditions.snowDepth ?? 0)\"")
                                 .font(.title3)
                                 .fontWeight(.semibold)
                         }

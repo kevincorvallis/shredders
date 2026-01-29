@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MountainMap } from '@/components/MountainMapLoader';
 import { Intro } from '@/components/Intro';
+import { WelcomeFlow } from '@/components/WelcomeFlow';
 import { SnowfallTable } from '@/components/SnowfallTable';
 import { getAllMountains } from '@shredders/shared';
 import { getPowderScoreStyle } from '@/lib/design-tokens';
 import { prefetchMountainData } from '@/hooks/useMountainData';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Mountain,
   Snowflake,
@@ -138,12 +140,15 @@ function AlertStrip({ alerts }: { alerts: Array<{ mountain: string; type: string
 // Main Dashboard Component
 export default function Dashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, profile, isAuthenticated } = useAuth();
   const [mountains, setMountains] = useState<MountainData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
+  const [showWelcomeFlow, setShowWelcomeFlow] = useState(false);
 
   const allMountains = getAllMountains();
 
@@ -155,10 +160,29 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Check if authenticated user needs to see onboarding
+  useEffect(() => {
+    if (isAuthenticated && profile) {
+      const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
+      // Also check if coming from verification flow
+      const fromVerification = searchParams.get('verified') === 'true';
+
+      if (!hasCompletedOnboarding || fromVerification) {
+        setShowWelcomeFlow(true);
+      }
+    }
+  }, [isAuthenticated, profile, searchParams]);
+
   // Handle intro completion
   const handleIntroComplete = () => {
     localStorage.setItem('hasSeenIntro', 'true');
     setShowIntro(false);
+  };
+
+  // Handle welcome flow completion
+  const handleWelcomeFlowComplete = () => {
+    localStorage.setItem('hasCompletedOnboarding', 'true');
+    setShowWelcomeFlow(false);
   };
 
   // Fetch all mountain data
@@ -284,6 +308,12 @@ export default function Dashboard() {
   return (
     <>
       {showIntro && <Intro onComplete={handleIntroComplete} />}
+      {showWelcomeFlow && (
+        <WelcomeFlow
+          onComplete={handleWelcomeFlowComplete}
+          userName={profile?.display_name || profile?.username}
+        />
+      )}
       <div className="min-h-screen bg-slate-950 text-slate-100">
       {/* Compact Action Bar */}
       <div className="sticky top-16 z-30 bg-slate-950/95 backdrop-blur-lg border-b border-slate-800">

@@ -10,5 +10,7 @@
     <string>Take photos of mountain conditions to share with the community.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Choose photos from your library to share mountain conditions with the community.</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Use Face ID to quickly sign in to PowderTracker without entering your password.</string>
 </dict>
 </plist>

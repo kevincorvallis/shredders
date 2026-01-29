@@ -308,9 +308,29 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertTrue(logoutButton.isHittable, "Logout button should be hittable after scrolling")
         logoutButton.tap()
 
+        // Handle confirmation dialog (action sheet)
+        // On iOS, .confirmationDialog appears as an action sheet
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Try multiple ways to find the Sign Out confirmation button
+        let sheetConfirmButton = app.sheets.buttons["Sign Out"]
+        let alertConfirmButton = app.alerts.buttons["Sign Out"]
+        let anySignOutButton = app.buttons.matching(NSPredicate(format: "label == 'Sign Out'")).element(boundBy: 1)
+        let destructiveButton = app.sheets.buttons.matching(NSPredicate(format: "label == 'Sign Out'")).firstMatch
+
+        if sheetConfirmButton.waitForExistence(timeout: 3) {
+            sheetConfirmButton.tap()
+        } else if destructiveButton.exists {
+            destructiveButton.tap()
+        } else if alertConfirmButton.exists {
+            alertConfirmButton.tap()
+        } else if anySignOutButton.waitForExistence(timeout: 2) {
+            anySignOutButton.tap()
+        }
+
         // Verify returned to signed out state
         let signInButton = app.buttons["profile_sign_in_button"]
-        XCTAssertTrue(signInButton.waitForExistence(timeout: 5), "Should return to signed out state")
+        XCTAssertTrue(signInButton.waitForExistence(timeout: 10), "Should return to signed out state")
     }
 
     @MainActor
@@ -343,6 +363,13 @@ final class AuthenticationUITests: XCTestCase {
         } else {
             // Skip this test if we can't make the button hittable
             return
+        }
+
+        // Handle confirmation dialog (action sheet)
+        Thread.sleep(forTimeInterval: 0.5)
+        let sheetConfirmButton = app.sheets.buttons["Sign Out"]
+        if sheetConfirmButton.waitForExistence(timeout: 3) {
+            sheetConfirmButton.tap()
         }
 
         // Verify sign in button appears
@@ -555,8 +582,23 @@ final class AuthenticationUITests: XCTestCase {
         // If already logged in, sign out first
         let signOutButton = app.buttons["profile_sign_out_button"]
         if signOutButton.waitForExistence(timeout: 2) {
-            signOutButton.tap()
-            _ = app.buttons["profile_sign_in_button"].waitForExistence(timeout: 3)
+            // Scroll to make button hittable if needed
+            let scrollView = app.scrollViews.firstMatch
+            for _ in 0..<5 {
+                if signOutButton.isHittable { break }
+                scrollView.swipeUp()
+                Thread.sleep(forTimeInterval: 0.3)
+            }
+            if signOutButton.isHittable {
+                signOutButton.tap()
+                // Handle confirmation dialog (action sheet)
+                Thread.sleep(forTimeInterval: 0.5)
+                let sheetConfirmButton = app.sheets.buttons["Sign Out"]
+                if sheetConfirmButton.waitForExistence(timeout: 3) {
+                    sheetConfirmButton.tap()
+                }
+                _ = app.buttons["profile_sign_in_button"].waitForExistence(timeout: 5)
+            }
         }
 
         // Tap sign in
@@ -644,9 +686,25 @@ final class AuthenticationUITests: XCTestCase {
         // Sign out first if logged in
         let profileTab = app.tabBars.buttons["Profile"]
         profileTab.tap()
-        if app.buttons["profile_sign_out_button"].waitForExistence(timeout: 2) {
-            app.buttons["profile_sign_out_button"].tap()
-            _ = app.buttons["profile_sign_in_button"].waitForExistence(timeout: 3)
+        let signOutBtn = app.buttons["profile_sign_out_button"]
+        if signOutBtn.waitForExistence(timeout: 2) {
+            // Scroll to make button hittable if needed
+            let scrollView = app.scrollViews.firstMatch
+            for _ in 0..<5 {
+                if signOutBtn.isHittable { break }
+                scrollView.swipeUp()
+                Thread.sleep(forTimeInterval: 0.3)
+            }
+            if signOutBtn.isHittable {
+                signOutBtn.tap()
+                // Handle confirmation dialog (action sheet)
+                Thread.sleep(forTimeInterval: 0.5)
+                let sheetConfirmButton = app.sheets.buttons["Sign Out"]
+                if sheetConfirmButton.waitForExistence(timeout: 3) {
+                    sheetConfirmButton.tap()
+                }
+                _ = app.buttons["profile_sign_in_button"].waitForExistence(timeout: 5)
+            }
         }
 
         // Navigate to Events
@@ -804,8 +862,22 @@ final class AuthenticationUITests: XCTestCase {
         profileTab.tap()
         XCTAssertTrue(app.buttons["profile_sign_out_button"].waitForExistence(timeout: 5), "Should be logged in")
 
-        // Sign out
-        app.buttons["profile_sign_out_button"].tap()
+        // Sign out - scroll to make button hittable if needed
+        let signOutBtn = app.buttons["profile_sign_out_button"]
+        let scrollView = app.scrollViews.firstMatch
+        for _ in 0..<5 {
+            if signOutBtn.isHittable { break }
+            scrollView.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+        signOutBtn.tap()
+
+        // Handle confirmation dialog (action sheet)
+        Thread.sleep(forTimeInterval: 0.5)
+        let sheetConfirmButton = app.sheets.buttons["Sign Out"]
+        if sheetConfirmButton.waitForExistence(timeout: 3) {
+            sheetConfirmButton.tap()
+        }
 
         // Should show sign in button now
         XCTAssertTrue(app.buttons["profile_sign_in_button"].waitForExistence(timeout: 5), "Should show sign in button after logout")

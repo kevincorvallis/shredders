@@ -1,4 +1,35 @@
 import Foundation
+import SwiftUI
+
+// MARK: - Urgency Level for Last Minute Events
+
+enum UrgencyLevel {
+    case departed   // Already left
+    case critical   // < 1 hour
+    case soon       // 1-3 hours
+    case later      // > 3 hours
+    case none       // No departure time set
+
+    var color: Color {
+        switch self {
+        case .departed: return .gray
+        case .critical: return .red
+        case .soon: return .orange
+        case .later: return .green
+        case .none: return .secondary
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .departed: return "Departed"
+        case .critical: return "Leaving Soon!"
+        case .soon: return "Coming Up"
+        case .later: return "Plenty of Time"
+        case .none: return ""
+        }
+    }
+}
 
 // MARK: - Event Models
 
@@ -67,6 +98,56 @@ struct Event: Codable, Identifiable {
         let h12 = hour % 12 == 0 ? 12 : hour % 12
         let ampm = hour >= 12 ? "PM" : "AM"
         return "\(h12):\(components[1]) \(ampm)"
+    }
+
+    // MARK: - Last Minute Crew Properties
+
+    /// Whether this event is happening today
+    var isToday: Bool {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return eventDate == formatter.string(from: Date())
+    }
+
+    /// Calculates time until departure in seconds
+    var timeUntilDeparture: TimeInterval? {
+        guard let time = departureTime else { return nil }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+
+        guard let departureDate = formatter.date(from: "\(eventDate) \(time)") else {
+            return nil
+        }
+
+        return departureDate.timeIntervalSince(Date())
+    }
+
+    /// Urgency level based on time until departure
+    var urgencyLevel: UrgencyLevel {
+        guard let remaining = timeUntilDeparture else { return .none }
+        switch remaining {
+        case ..<0: return .departed
+        case ..<3600: return .critical      // < 1 hour
+        case ..<10800: return .soon         // 1-3 hours
+        default: return .later              // > 3 hours
+        }
+    }
+
+    /// Formatted countdown string (e.g., "2h 15m")
+    var countdownText: String? {
+        guard let remaining = timeUntilDeparture, remaining > 0 else { return nil }
+
+        let hours = Int(remaining) / 3600
+        let minutes = (Int(remaining) % 3600) / 60
+
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        } else if minutes > 0 {
+            return "\(minutes)m"
+        } else {
+            return "Now!"
+        }
     }
 }
 

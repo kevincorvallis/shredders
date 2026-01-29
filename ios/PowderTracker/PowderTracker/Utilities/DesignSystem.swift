@@ -19,6 +19,104 @@ extension CGFloat {
     static let spacingL: CGFloat = 16    // Section padding and between-card spacing
     static let spacingXL: CGFloat = 20   // Major section breaks
     static let spacingXXL: CGFloat = 24  // Hero sections and screen margins
+
+    // MARK: - iPad Layout Constants
+    /// Maximum content widths to prevent stretched layouts on iPad
+    static let maxContentWidthCompact: CGFloat = 500   // Single column content (forms, cards)
+    static let maxContentWidthRegular: CGFloat = 700   // Wider content (detail views)
+    static let maxContentWidthFull: CGFloat = 1000     // Full-width dashboards
+
+    /// Sidebar dimensions for iPad NavigationSplitView
+    static let sidebarMinWidth: CGFloat = 280
+    static let sidebarMaxWidth: CGFloat = 400
+
+    /// Adaptive grid column sizing
+    static let gridColumnMinWidth: CGFloat = 160       // Minimum card width in grid
+    static let gridColumnIdealWidth: CGFloat = 200     // Ideal card width
+    static let gridColumnMaxWidth: CGFloat = 300       // Maximum card width
+}
+
+// MARK: - Chart Tokens
+
+extension CGFloat {
+    /// Chart Heights - consistent sizing for different contexts
+    static let chartHeightCompact: CGFloat = 120    // Sparklines, inline charts
+    static let chartHeightStandard: CGFloat = 180   // Cards, sections
+    static let chartHeightHero: CGFloat = 240       // Full-screen charts
+
+    /// Chart Line Widths - consistent stroke widths
+    static let chartLineWidthThin: CGFloat = 1.5    // Secondary lines, grids
+    static let chartLineWidthMedium: CGFloat = 2.5  // Primary lines (default)
+    static let chartLineWidthBold: CGFloat = 3.5    // Emphasized lines
+
+    /// Chart Axis & Labels
+    static let chartAxisLabelSpacing: CGFloat = 4   // Space between axis and labels
+    static let chartAnnotationSize: CGFloat = 20    // Size of annotation icons
+
+    /// Chart Selection
+    static let chartSelectionIndicatorSize: CGFloat = 10  // Selection dot size
+}
+
+/// Data types for chart coloring
+enum ChartDataType {
+    case snowfall      // Fresh snow amounts
+    case snowDepth     // Total snow depth
+    case temperature   // Temperature readings
+    case wind          // Wind speed
+    case cumulative    // Cumulative/running totals
+    case comparison    // Historical comparison
+}
+
+extension Color {
+    /// Primary color for chart data types
+    static func chartPrimary(for dataType: ChartDataType) -> Color {
+        switch dataType {
+        case .snowfall:
+            return Color(UIColor.systemCyan)
+        case .snowDepth:
+            return Color(UIColor.systemBlue)
+        case .temperature:
+            return Color(UIColor.systemOrange)
+        case .wind:
+            return Color(UIColor.systemGray)
+        case .cumulative:
+            return Color(UIColor.systemIndigo)
+        case .comparison:
+            return Color(UIColor.systemPurple)
+        }
+    }
+
+    /// Secondary color for chart data types (lighter/faded)
+    static func chartSecondary(for dataType: ChartDataType) -> Color {
+        chartPrimary(for: dataType).opacity(0.3)
+    }
+}
+
+extension LinearGradient {
+    /// Gradient fill for chart areas
+    static func chartGradient(for dataType: ChartDataType) -> LinearGradient {
+        let primaryColor = Color.chartPrimary(for: dataType)
+        return LinearGradient(
+            colors: [
+                primaryColor.opacity(0.4),
+                primaryColor.opacity(0.1),
+                primaryColor.opacity(0.02)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    /// Gradient for powder day highlights
+    static let powderDayHighlight = LinearGradient(
+        colors: [
+            Color.cyan.opacity(0.6),
+            Color.blue.opacity(0.4),
+            Color.cyan.opacity(0.1)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
 }
 
 // MARK: - Opacity Tokens
@@ -2209,3 +2307,131 @@ extension View {
     }
 }
 #endif
+
+// MARK: - iPad Adaptive Layout Components
+
+/// Container that constrains content width on iPad for better readability
+/// On iPhone, content uses full width. On iPad, content is centered with max-width.
+struct AdaptiveContentView<Content: View>: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    let maxWidth: CGFloat
+    let alignment: HorizontalAlignment
+    @ViewBuilder let content: () -> Content
+
+    init(
+        maxWidth: CGFloat = .maxContentWidthRegular,
+        alignment: HorizontalAlignment = .center,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.maxWidth = maxWidth
+        self.alignment = alignment
+        self.content = content
+    }
+
+    var body: some View {
+        if horizontalSizeClass == .regular {
+            HStack {
+                if alignment == .center || alignment == .trailing {
+                    Spacer(minLength: 0)
+                }
+                content()
+                    .frame(maxWidth: maxWidth)
+                if alignment == .center || alignment == .leading {
+                    Spacer(minLength: 0)
+                }
+            }
+        } else {
+            content()
+        }
+    }
+}
+
+/// Adaptive grid that shows more columns on iPad
+/// iPhone: 1-2 columns, iPad: 2-4 columns depending on available width
+struct AdaptiveGrid<Content: View>: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    let minColumnWidth: CGFloat
+    let spacing: CGFloat
+    @ViewBuilder let content: () -> Content
+
+    init(
+        minColumnWidth: CGFloat = .gridColumnIdealWidth,
+        spacing: CGFloat = .spacingL,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.minColumnWidth = minColumnWidth
+        self.spacing = spacing
+        self.content = content
+    }
+
+    var body: some View {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: minColumnWidth), spacing: spacing)],
+            spacing: spacing
+        ) {
+            content()
+        }
+    }
+}
+
+/// View modifier that constrains card width on iPad to prevent stretched appearance
+struct CardMaxWidthModifier: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    let maxWidth: CGFloat
+
+    init(maxWidth: CGFloat = .maxContentWidthCompact) {
+        self.maxWidth = maxWidth
+    }
+
+    func body(content: Content) -> some View {
+        if horizontalSizeClass == .regular {
+            content
+                .frame(maxWidth: maxWidth)
+        } else {
+            content
+        }
+    }
+}
+
+extension View {
+    /// Constrains view width on iPad to prevent stretched appearance
+    func cardMaxWidth(_ maxWidth: CGFloat = .maxContentWidthCompact) -> some View {
+        modifier(CardMaxWidthModifier(maxWidth: maxWidth))
+    }
+
+    /// Wraps content in an adaptive container that centers and constrains width on iPad
+    func adaptiveContent(maxWidth: CGFloat = .maxContentWidthRegular) -> some View {
+        AdaptiveContentView(maxWidth: maxWidth) { self }
+    }
+}
+
+/// Navigation section enum for iPad sidebar
+enum NavigationSection: String, CaseIterable, Identifiable {
+    case today
+    case mountains
+    case events
+    case map
+    case profile
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .today: return "Today"
+        case .mountains: return "Mountains"
+        case .events: return "Events"
+        case .map: return "Map"
+        case .profile: return "Profile"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .today: return "house.fill"
+        case .mountains: return "mountain.2.fill"
+        case .events: return "calendar"
+        case .map: return "map.fill"
+        case .profile: return "person.fill"
+        }
+    }
+}

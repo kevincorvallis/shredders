@@ -7,6 +7,7 @@ struct ProfileView: View {
     @State private var showingLogin = false
     @State private var showingManageFavorites = false
     @State private var showingAlertPreferences = false
+    @State private var showingSignOutConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -55,6 +56,20 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingManageFavorites) {
                 FavoritesManagementSheet()
+            }
+            .confirmationDialog(
+                "Sign Out",
+                isPresented: $showingSignOutConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Sign Out", role: .destructive) {
+                    Task {
+                        try? await authService.signOut()
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to sign out?")
             }
         }
     }
@@ -131,6 +146,7 @@ struct ProfileView: View {
                         .foregroundStyle(.white)
                         .cornerRadius(.cornerRadiusButton)
                 }
+                .accessibilityIdentifier("profile_sign_in_button")
                 .padding(.top, .spacingS)
             }
             .padding(.spacingL)
@@ -367,9 +383,7 @@ struct ProfileView: View {
 
                     // Sign out
                     Button {
-                        Task {
-                            try? await authService.signOut()
-                        }
+                        showingSignOutConfirmation = true
                     } label: {
                         HStack {
                             Image(systemName: "rectangle.portrait.and.arrow.right")
@@ -385,6 +399,7 @@ struct ProfileView: View {
                         }
                         .padding(.spacingM)
                     }
+                    .accessibilityIdentifier("profile_sign_out_button")
                 }
             }
             .background(Color(.secondarySystemBackground))

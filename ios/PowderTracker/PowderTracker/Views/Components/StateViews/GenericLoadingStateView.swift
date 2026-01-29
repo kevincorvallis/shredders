@@ -120,44 +120,7 @@ struct SkeletonRect: View {
             .fill(Color(.systemGray5))
             .frame(width: width, height: height)
             .cornerRadius(.cornerRadiusTiny)
-            .shimmer()
-    }
-}
-
-// MARK: - Shimmer Effect
-
-extension View {
-    func shimmer() -> some View {
-        self.modifier(ShimmerModifier())
-    }
-}
-
-struct ShimmerModifier: ViewModifier {
-    @State private var phase: CGFloat = 0
-
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                GeometryReader { geometry in
-                    LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color.clear,
-                            Color.white.opacity(0.3),
-                            Color.clear
-                        ]),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: geometry.size.width * 2)
-                    .offset(x: -geometry.size.width + (geometry.size.width * 2 * phase))
-                }
-                .mask(content)
-            )
-            .onAppear {
-                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
-                    phase = 1
-                }
-            }
+            .shimmering(active: true)
     }
 }
 

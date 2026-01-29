@@ -67,7 +67,7 @@ struct MountainPickerSkeleton: View {
 }
 
 /// History chart skeleton
-struct HistoryChartSkeleton: View {
+struct ListHistoryChartSkeleton: View {
     var body: some View {
         VStack(spacing: 16) {
             // Title and period selector
@@ -175,7 +175,7 @@ struct WebcamsViewSkeleton: View {
 }
 
 #Preview("History Chart Skeleton") {
-    HistoryChartSkeleton()
+    ListHistoryChartSkeleton()
         .padding()
         .background(Color(.systemGroupedBackground))
 }

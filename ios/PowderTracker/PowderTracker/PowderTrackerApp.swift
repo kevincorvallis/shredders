@@ -5,11 +5,18 @@ import NukeUI
 @main
 struct PowderTrackerApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State private var showIntro = true
     @State private var authService = AuthService.shared
     @State private var deepLinkMountainId: String? = nil
     @State private var deepLinkEventId: String? = nil
     @State private var deepLinkInviteToken: String? = nil
+
+    /// Check if running in UI testing mode
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("UI_TESTING")
+    }
+
+    /// Skip intro screen during UI tests for faster test execution
+    @State private var showIntro: Bool = !ProcessInfo.processInfo.arguments.contains("UI_TESTING")
 
     var body: some Scene {
         WindowGroup {

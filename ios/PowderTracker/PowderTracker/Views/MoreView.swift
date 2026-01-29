@@ -20,7 +20,7 @@ struct MoreView: View {
                     }
 
                     NavigationLink {
-                        HistoryChartView()
+                        HistoryChartContainer()
                     } label: {
                         Label("Snow History", systemImage: "chart.xyaxis.line")
                     }

@@ -48,10 +48,13 @@ export default function SignupPage() {
       return;
     }
 
-    const { error } = await signUp(email, password, username, displayName);
+    const { data, error } = await signUp(email, password, username, displayName);
 
     if (error) {
       setError(error);
+    } else if (data?.needsEmailVerification) {
+      // Redirect to email verification page
+      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
     } else {
       router.push('/');
     }

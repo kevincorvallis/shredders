@@ -134,6 +134,7 @@ struct UnifiedAuthView: View {
                         }
                     }
                     .padding()
+                    .accessibilityIdentifier("auth_email_field")
 
                 Divider().padding(.leading)
 
@@ -147,6 +148,7 @@ struct UnifiedAuthView: View {
                             focusedField = .password
                         }
                         .padding()
+                        .accessibilityIdentifier("auth_display_name_field")
 
                     Divider().padding(.leading)
                 }
@@ -160,6 +162,7 @@ struct UnifiedAuthView: View {
                         handleSubmit()
                     }
                     .padding()
+                    .accessibilityIdentifier("auth_password_field")
 
                 // Password requirements (only for signup, compact inline)
                 if isSignupMode && !password.isEmpty {
@@ -215,6 +218,7 @@ struct UnifiedAuthView: View {
             }
             .disabled(!isFormValid || isLoading)
             .padding(.horizontal)
+            .accessibilityIdentifier(isSignupMode ? "auth_create_account_button" : "auth_sign_in_button")
 
             // Forgot Password link (only in login mode)
             if !isSignupMode {
@@ -225,6 +229,7 @@ struct UnifiedAuthView: View {
                         .font(.subheadline)
                         .foregroundStyle(.blue)
                 }
+                .accessibilityIdentifier("auth_forgot_password_button")
                 .sheet(isPresented: $showForgotPassword) {
                     ForgotPasswordView()
                 }
@@ -251,6 +256,7 @@ struct UnifiedAuthView: View {
         }
         .buttonStyle(.plain)
         .padding(.top, 8)
+        .accessibilityIdentifier("auth_mode_toggle")
     }
 
     // MARK: - Password Validation

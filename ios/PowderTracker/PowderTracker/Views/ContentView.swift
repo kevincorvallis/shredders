@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(AuthService.self) private var authService
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Binding var deepLinkMountainId: String?
     @Binding var deepLinkEventId: String?
     @Binding var deepLinkInviteToken: String?
@@ -9,70 +10,57 @@ struct ContentView: View {
     @State private var selectedEventId: String? = nil
     @State private var selectedInviteToken: String? = nil
     @State private var selectedTab: Int = 0
+    @State private var selectedSection: NavigationSection? = .today
+    @State private var columnVisibility = NavigationSplitViewVisibility.all
     @StateObject private var mountainsViewModel = MountainSelectionViewModel()
     @StateObject private var homeViewModel = HomeViewModel()
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            // New Today view - primary landing screen
-            TodayView(viewModel: homeViewModel)
-                .tabItem {
-                    Label("Today", systemImage: "sun.snow.fill")
-                }
-                .tag(0)
-
-            // Mountains view with purpose-driven tabs (Today, Plan, Explore, My Pass)
-            MountainsTabView()
-                .tabItem {
-                    Label("Mountains", systemImage: "mountain.2.fill")
-                }
-                .tag(1)
-
-            // Events tab
-            EventsView()
-                .tabItem {
-                    Label("Events", systemImage: "calendar")
-                }
-                .tag(2)
-
-            MountainMapView()
-                .tabItem {
-                    Label("Map", systemImage: "map.fill")
-                }
-                .tag(3)
-
-            // Profile tab - re-enabled
-            ProfileView()
-                .tabItem {
-                    Label("Profile", systemImage: "person.circle.fill")
-                }
-                .tag(4)
+        Group {
+            if horizontalSizeClass == .regular {
+                iPadNavigation
+            } else {
+                iPhoneNavigation
+            }
         }
         .onChange(of: selectedTab) { oldValue, newValue in
             // Haptic feedback on tab change
             HapticFeedback.selection.trigger()
         }
+        .onChange(of: selectedSection) { oldValue, newValue in
+            // Sync tab selection with section for deep links
+            if let section = newValue {
+                switch section {
+                case .today: selectedTab = 0
+                case .mountains: selectedTab = 1
+                case .events: selectedTab = 2
+                case .map: selectedTab = 3
+                case .profile: selectedTab = 4
+                }
+                HapticFeedback.selection.trigger()
+            }
+        }
         .onChange(of: deepLinkMountainId) { oldValue, newValue in
             if let mountainId = newValue {
-                // Look up the mountain
                 if let mountain = mountainsViewModel.mountains.first(where: { $0.id == mountainId }) {
                     selectedMountain = mountain
                 }
-                // Clear the deep link after handling
                 deepLinkMountainId = nil
             }
         }
         .onChange(of: deepLinkEventId) { oldValue, newValue in
             if let eventId = newValue {
                 selectedEventId = eventId
-                selectedTab = 2 // Switch to Events tab
+                selectedTab = 2
+                selectedSection = .events
                 deepLinkEventId = nil
             }
         }
         .onChange(of: deepLinkInviteToken) { oldValue, newValue in
             if let token = newValue {
                 selectedInviteToken = token
-                selectedTab = 2 // Switch to Events tab
+                selectedTab = 2
+                selectedSection = .events
                 deepLinkInviteToken = nil
             }
         }
@@ -123,6 +111,82 @@ struct ContentView: View {
         }
         .task {
             await mountainsViewModel.loadMountains()
+        }
+    }
+
+    // MARK: - iPad Navigation (Sidebar + Detail)
+    @ViewBuilder
+    private var iPadNavigation: some View {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            List(NavigationSection.allCases, selection: $selectedSection) { section in
+                Label(section.title, systemImage: section.icon)
+                    .tag(section)
+            }
+            .navigationTitle("PowderTracker")
+            .listStyle(.sidebar)
+        } detail: {
+            NavigationStack {
+                switch selectedSection {
+                case .today:
+                    TodayView(viewModel: homeViewModel)
+                case .mountains:
+                    MountainsTabView()
+                case .events:
+                    EventsView()
+                case .map:
+                    MountainMapView()
+                case .profile:
+                    ProfileView()
+                case nil:
+                    ContentUnavailableView(
+                        "Select a Section",
+                        systemImage: "mountain.2.fill",
+                        description: Text("Choose a section from the sidebar")
+                    )
+                }
+            }
+        }
+        .navigationSplitViewStyle(.balanced)
+    }
+
+    // MARK: - iPhone Navigation (TabView)
+    @ViewBuilder
+    private var iPhoneNavigation: some View {
+        TabView(selection: $selectedTab) {
+            TodayView(viewModel: homeViewModel)
+                .tabItem {
+                    Label("Today", systemImage: "sun.snow.fill")
+                }
+                .tag(0)
+                .accessibilityIdentifier("tab_today")
+
+            MountainsTabView()
+                .tabItem {
+                    Label("Mountains", systemImage: "mountain.2.fill")
+                }
+                .tag(1)
+                .accessibilityIdentifier("tab_mountains")
+
+            EventsView()
+                .tabItem {
+                    Label("Events", systemImage: "calendar")
+                }
+                .tag(2)
+                .accessibilityIdentifier("tab_events")
+
+            MountainMapView()
+                .tabItem {
+                    Label("Map", systemImage: "map.fill")
+                }
+                .tag(3)
+                .accessibilityIdentifier("tab_map")
+
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person.circle.fill")
+                }
+                .tag(4)
+                .accessibilityIdentifier("tab_profile")
         }
     }
 }

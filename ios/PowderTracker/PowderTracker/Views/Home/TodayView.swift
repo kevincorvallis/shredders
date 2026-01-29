@@ -13,27 +13,29 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: .spacingL) {
-                    // Alert banner (if alerts exist)
-                    alertBanner
+                AdaptiveContentView(maxWidth: .maxContentWidthFull) {
+                    LazyVStack(spacing: .spacingL) {
+                        // Alert banner (if alerts exist)
+                        alertBanner
 
-                    // Region header
-                    regionHeader
+                        // Region header
+                        regionHeader
 
-                    // Today's Pick card
-                    todaysPickSection
+                        // Today's Pick card
+                        todaysPickSection
 
-                    // Snow Forecast Chart
-                    forecastChartSection
+                        // Snow Forecast Chart
+                        forecastChartSection
 
-                    // Your Mountains grid
-                    yourMountainsSection
+                        // Your Mountains grid
+                        yourMountainsSection
 
-                    // Webcam strip
-                    webcamSection
+                        // Webcam strip
+                        webcamSection
+                    }
+                    .padding(.horizontal, .spacingL)
+                    .padding(.vertical, .spacingM)
                 }
-                .padding(.horizontal, .spacingL)
-                .padding(.vertical, .spacingM)
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Today")

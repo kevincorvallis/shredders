@@ -11,6 +11,7 @@ struct MountainDetailView: View {
     @State private var selectedTab: DetailTab = .overview
     @State private var headerCollapsed = false
     @State private var alertsDismissed = false
+    @State private var showingPowderDaySheet = false
 
     // Sticky header constants
     private let headerFullHeight: CGFloat = 180
@@ -72,6 +73,24 @@ struct MountainDetailView: View {
         }
         .scrollClipDisabled() // iOS 17+ - allows shadows to overflow
         .background(Color(.systemGroupedBackground))
+        .overlay(alignment: .bottomTrailing) {
+            // Powder Day FAB - shows when significant fresh snow
+            if shouldShowPowderAlert {
+                PowderAlertFAB(
+                    mountainName: mountain.shortName,
+                    snowfall24h: currentSnowfall24h,
+                    onTap: { showingPowderDaySheet = true }
+                )
+                .padding(.trailing, 20)
+                .padding(.bottom, 24)
+            }
+        }
+        .sheet(isPresented: $showingPowderDaySheet) {
+            PowderDayEventSheet(
+                mountain: mountain,
+                snowfall24h: currentSnowfall24h
+            )
+        }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(mountain.shortName)
         .task {
@@ -127,6 +146,19 @@ struct MountainDetailView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Powder Alert Helpers
+
+    /// Whether to show the powder day FAB (6+ inches of fresh snow)
+    private var shouldShowPowderAlert: Bool {
+        currentSnowfall24h >= 6
+    }
+
+    /// Current 24h snowfall in inches
+    private var currentSnowfall24h: Int {
+        guard let conditions = viewModel.locationData?.conditions else { return 0 }
+        return Int(conditions.snowfall24h ?? 0)
     }
 
     // MARK: - Hero Header

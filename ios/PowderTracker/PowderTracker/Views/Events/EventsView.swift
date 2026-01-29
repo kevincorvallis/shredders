@@ -5,11 +5,14 @@ struct EventsView: View {
     @State private var events: [Event] = []
     @State private var isLoading = true
     @State private var error: String?
-    @State private var filter: EventFilter = .all
+    @AppStorage("eventsFilter") private var filter: EventFilter = .all
     @State private var showingCreateSheet = false
+    @State private var navigationPath = NavigationPath()
+    @State private var toast: ToastMessage?
 
-    enum EventFilter: String, CaseIterable {
-        case all = "All Events"
+    enum EventFilter: String, CaseIterable, RawRepresentable {
+        case all = "All"
+        case lastMinute = "Last Minute"
         case mine = "My Events"
         case attending = "Attending"
     }
@@ -196,7 +199,7 @@ struct EventsView: View {
     // MARK: - Authenticated View
 
     private var authenticatedEventsView: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             Group {
                 if isLoading {
                     loadingView
@@ -217,6 +220,7 @@ struct EventsView: View {
                         Image(systemName: "plus.circle.fill")
                             .font(.title2)
                     }
+                    .accessibilityIdentifier("events_create_button")
                 }
             }
             .refreshable {
@@ -227,6 +231,10 @@ struct EventsView: View {
                     Task { await loadEvents() }
                 })
             }
+            .navigationDestination(for: String.self) { eventId in
+                EventDetailView(eventId: eventId)
+            }
+            .toast($toast)
         }
         .task {
             await loadEvents()
@@ -280,28 +288,86 @@ struct EventsView: View {
     }
 
     private var eventsList: some View {
-        List {
-            // Filter picker
-            Picker("Filter", selection: $filter) {
-                ForEach(EventFilter.allCases, id: \.self) { f in
-                    Text(f.rawValue).tag(f)
+        AdaptiveContentView(maxWidth: .maxContentWidthRegular) {
+            List {
+                // Filter picker
+                Picker("Filter", selection: $filter) {
+                    ForEach(EventFilter.allCases, id: \.self) { f in
+                        Text(f.rawValue).tag(f)
+                    }
                 }
-            }
-            .pickerStyle(.segmented)
-            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-            .listRowBackground(Color.clear)
-            .onChange(of: filter) { _, _ in
-                Task { await loadEvents() }
-            }
+                .pickerStyle(.segmented)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .listRowBackground(Color.clear)
+                .onChange(of: filter) { _, _ in
+                    Task { await loadEvents() }
+                }
 
-            // Events
-            ForEach(events) { event in
-                NavigationLink(destination: EventDetailView(eventId: event.id)) {
-                    EventRowView(event: event)
+                // Show Last Minute section or regular events
+                if filter == .lastMinute {
+                    Section {
+                        LastMinuteCrewSection(
+                            events: todayEvents,
+                            onEventTap: { event in
+                                navigationPath.append(event.id)
+                            },
+                            onQuickJoin: { event in
+                                Task { await quickJoinEvent(event) }
+                            }
+                        )
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                } else {
+                    // Regular events list
+                    ForEach(events) { event in
+                        NavigationLink(destination: EventDetailView(eventId: event.id)) {
+                            EventRowView(event: event)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowInsets(EdgeInsets(top: .spacingS, leading: .spacingL, bottom: .spacingS, trailing: .spacingL))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                    }
                 }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color(.systemGroupedBackground))
         }
-        .listStyle(.insetGrouped)
+    }
+
+    /// Events happening today with departure times
+    private var todayEvents: [Event] {
+        events.filter { $0.isToday && $0.departureTime != nil }
+    }
+
+    /// Quick RSVP to join an event
+    private func quickJoinEvent(_ event: Event) async {
+        do {
+            _ = try await EventService.shared.rsvp(eventId: event.id, status: .going)
+            HapticFeedback.success.trigger()
+            await loadEvents()
+            toast = ToastMessage(
+                type: .success,
+                title: "You're in!",
+                message: "You've joined \(event.title)"
+            )
+        } catch let err as EventServiceError {
+            HapticFeedback.error.trigger()
+            toast = ToastMessage(
+                type: .error,
+                title: "Couldn't join event",
+                message: err.localizedDescription
+            )
+        } catch {
+            HapticFeedback.error.trigger()
+            toast = ToastMessage(
+                type: .error,
+                title: "Couldn't join event",
+                message: "Please try again later"
+            )
+        }
     }
 
     // MARK: - Data Loading
@@ -337,71 +403,350 @@ struct EventsView: View {
 
 struct EventRowView: View {
     let event: Event
+    @State private var showingShareSheet = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(event.title)
-                    .font(.headline)
+        HStack(alignment: .top, spacing: .spacingM) {
+            // MARK: - Date Badge (Visual Anchor)
+            VStack(spacing: 2) {
+                Text(dayOfMonth)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.primary)
+                Text(monthAbbrev)
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+            }
+            .frame(width: 44)
+            .padding(.vertical, .spacingS)
+            .background(Color(.tertiarySystemBackground))
+            .cornerRadius(.cornerRadiusButton)
 
-                Spacer()
+            // MARK: - Event Details
+            VStack(alignment: .leading, spacing: .spacingS) {
+                // Title row with badges
+                HStack(alignment: .top) {
+                    Text(event.title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .lineLimit(2)
 
-                if event.isCreator == true {
-                    Text("Organizer")
-                        .font(.caption)
-                        .foregroundStyle(.blue)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(.blue.opacity(0.1))
-                        .clipShape(Capsule())
+                    Spacer(minLength: .spacingS)
+
+                    // Badges
+                    HStack(spacing: .spacingXS) {
+                        if event.isCreator == true {
+                            Text("HOST")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.blue)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(.blue.opacity(0.12))
+                                .cornerRadius(.cornerRadiusMicro)
+                        }
+
+                        if let level = event.skillLevel {
+                            skillLevelBadge(for: level)
+                        }
+                    }
                 }
-            }
 
-            HStack(spacing: 8) {
-                Label(event.mountainName ?? event.mountainId, systemImage: "mountain.2")
-                    .font(.subheadline)
-                    .foregroundStyle(.blue)
+                // Mountain + Time row
+                HStack(spacing: .spacingS) {
+                    // Mountain
+                    HStack(spacing: .spacingXS) {
+                        Image(systemName: "mountain.2.fill")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                        Text(event.mountainName ?? event.mountainId)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.primary)
+                    }
 
-                Text("•")
-                    .foregroundStyle(.secondary)
+                    if let time = event.formattedTime {
+                        Text("•")
+                            .foregroundStyle(.tertiary)
+                        HStack(spacing: .spacingXS) {
+                            Image(systemName: "clock.fill")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(time)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
 
-                Text(event.formattedDate)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+                // Departure location (if available)
+                if let location = event.departureLocation, !location.isEmpty {
+                    HStack(spacing: .spacingXS) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                        Text(location)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
 
-            if let time = event.formattedTime {
-                Label("Departing \(time)", systemImage: "clock")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+                // Bottom row: Attendees + Carpool + RSVP Status
+                HStack(spacing: .spacingM) {
+                    // Attendees
+                    HStack(spacing: .spacingXS) {
+                        Image(systemName: "person.2.fill")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("\(event.goingCount)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.primary)
+                        if event.maybeCount > 0 {
+                            Text("+ \(event.maybeCount)?")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
 
-            HStack {
-                Label("\(event.goingCount)", systemImage: "person.2.fill")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if event.carpoolAvailable {
-                    Label("Carpool", systemImage: "car.fill")
-                        .font(.caption)
+                    // Carpool badge
+                    if event.carpoolAvailable {
+                        HStack(spacing: .spacingXS) {
+                            Image(systemName: "car.fill")
+                                .font(.caption)
+                            if let seats = event.carpoolSeats, seats > 0 {
+                                Text("\(seats) seats")
+                                    .font(.caption)
+                            } else {
+                                Text("Carpool")
+                                    .font(.caption)
+                            }
+                        }
                         .foregroundStyle(.green)
-                }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(.green.opacity(0.1))
+                        .cornerRadius(.cornerRadiusMicro)
+                    }
 
-                Spacer()
+                    Spacer()
 
-                if let status = event.userRSVPStatus {
-                    Text(status.displayName)
+                    // RSVP Status
+                    if let status = event.userRSVPStatus {
+                        HStack(spacing: .spacingXS) {
+                            Image(systemName: rsvpIcon(for: status))
+                            Text(status.displayName)
+                        }
                         .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundStyle(status == .going ? .green : .orange)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(rsvpColor(for: status))
                         .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(status == .going ? .green.opacity(0.1) : .orange.opacity(0.1))
-                        .clipShape(Capsule())
+                        .padding(.vertical, 4)
+                        .background(rsvpColor(for: status).opacity(0.12))
+                        .cornerRadius(.cornerRadiusMicro)
+                    }
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.spacingM)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(.cornerRadiusCard)
+        .cardShadow()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(eventRowAccessibilityLabel)
+        .accessibilityHint("Double tap to view details. Long press for options.")
+        .contextMenu {
+            Button {
+                showingShareSheet = true
+            } label: {
+                Label("Share Event", systemImage: "square.and.arrow.up")
+            }
+
+            Button {
+                copyEventLink()
+            } label: {
+                Label("Copy Link", systemImage: "doc.on.doc")
+            }
+
+            Button {
+                sendViaText()
+            } label: {
+                Label("Send via Text", systemImage: "message.fill")
+            }
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            if let url = shareURL {
+                ShareSheet(items: [url, shareMessage])
+            }
+        }
+    }
+
+    // MARK: - Share Helpers
+
+    private var shareURL: URL? {
+        URL(string: "\(AppConfig.apiBaseURL.replacingOccurrences(of: "/api", with: ""))/events/\(event.id)")
+    }
+
+    private var shareMessage: String {
+        """
+        Join me skiing at \(event.mountainName ?? event.mountainId)! 🎿
+
+        \(event.title)
+        📅 \(event.formattedDate)
+        \(event.formattedTime.map { "⏰ Departing \($0)" } ?? "")
+        👥 \(event.goingCount) people going
+        """
+    }
+
+    private func sendViaText() {
+        guard let url = shareURL else { return }
+        let smsURL = URL(string: "sms:&body=\(shareMessage)\n\(url.absoluteString)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")
+        if let smsURL = smsURL {
+            UIApplication.shared.open(smsURL)
+        }
+    }
+
+    // MARK: - Skill Level Badge
+
+    @ViewBuilder
+    private func skillLevelBadge(for level: SkillLevel) -> some View {
+        HStack(spacing: 3) {
+            skillLevelIcon(for: level)
+            Text(skillLevelLabel(for: level))
+                .font(.caption2)
+                .fontWeight(.medium)
+        }
+        .foregroundStyle(skillLevelColor(for: level))
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(skillLevelColor(for: level).opacity(0.12))
+        .cornerRadius(.cornerRadiusMicro)
+    }
+
+    @ViewBuilder
+    private func skillLevelIcon(for level: SkillLevel) -> some View {
+        switch level {
+        case .beginner:
+            Circle()
+                .fill(.green)
+                .frame(width: 8, height: 8)
+        case .intermediate:
+            Rectangle()
+                .fill(.blue)
+                .frame(width: 8, height: 8)
+        case .advanced, .expert:
+            Image(systemName: "diamond.fill")
+                .font(.system(size: 8))
+        case .all:
+            Image(systemName: "star.fill")
+                .font(.system(size: 8))
+        }
+    }
+
+    private func skillLevelLabel(for level: SkillLevel) -> String {
+        switch level {
+        case .beginner: return "Green"
+        case .intermediate: return "Blue"
+        case .advanced: return "Black"
+        case .expert: return "2x Black"
+        case .all: return "All"
+        }
+    }
+
+    private func skillLevelColor(for level: SkillLevel) -> Color {
+        switch level {
+        case .beginner: return .green
+        case .intermediate: return .blue
+        case .advanced, .expert: return .primary
+        case .all: return .purple
+        }
+    }
+
+    // MARK: - Date Formatting
+
+    private var dayOfMonth: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: event.eventDate) else {
+            return "--"
+        }
+        formatter.dateFormat = "d"
+        return formatter.string(from: date)
+    }
+
+    private var monthAbbrev: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: event.eventDate) else {
+            return "---"
+        }
+        formatter.dateFormat = "MMM"
+        return formatter.string(from: date)
+    }
+
+    // MARK: - RSVP Helpers
+
+    private func rsvpIcon(for status: RSVPStatus) -> String {
+        switch status {
+        case .going: return "checkmark.circle.fill"
+        case .maybe: return "questionmark.circle.fill"
+        case .invited: return "envelope.fill"
+        case .declined: return "xmark.circle.fill"
+        }
+    }
+
+    private func rsvpColor(for status: RSVPStatus) -> Color {
+        switch status {
+        case .going: return .green
+        case .maybe: return .orange
+        case .invited: return .blue
+        case .declined: return .secondary
+        }
+    }
+
+    // MARK: - Accessibility
+
+    private var eventRowAccessibilityLabel: String {
+        var parts = [event.title, "at \(event.mountainName ?? event.mountainId)", event.formattedDate]
+
+        if let time = event.formattedTime {
+            parts.append("departing at \(time)")
+        }
+
+        parts.append("\(event.goingCount) people going")
+
+        if event.maybeCount > 0 {
+            parts.append("\(event.maybeCount) maybe")
+        }
+
+        if let level = event.skillLevel {
+            parts.append("Skill level \(level.displayName)")
+        }
+
+        if event.carpoolAvailable {
+            parts.append("Carpool available")
+        }
+
+        if event.isCreator == true {
+            parts.append("You're the organizer")
+        }
+
+        if let status = event.userRSVPStatus {
+            parts.append(status == .going ? "You're going" : "You said maybe")
+        }
+
+        return parts.joined(separator: ", ")
+    }
+
+    // MARK: - Sharing
+
+    private func copyEventLink() {
+        let url = URL(string: "\(AppConfig.apiBaseURL.replacingOccurrences(of: "/api", with: ""))/events/\(event.id)")!
+        UIPasteboard.general.url = url
+        HapticFeedback.success.trigger()
     }
 }
 

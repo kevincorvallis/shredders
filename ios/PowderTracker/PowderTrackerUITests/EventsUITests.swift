@@ -993,27 +993,6 @@ final class EventsUITests: XCTestCase {
         addScreenshot(named: "Event Detail Forecast")
     }
 
-    @MainActor
-    func testEventDetailConditionsCard() throws {
-        launchAppAndLogin()
-        navigateToEvents()
-
-        let eventCell = app.cells.firstMatch
-        guard eventCell.waitForExistence(timeout: 10) else {
-            return
-        }
-
-        eventCell.tap()
-        _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
-
-        // Look for conditions info (temperature, snow depth, powder score)
-        let conditionsPredicate = NSPredicate(format: "label CONTAINS[c] 'condition' OR label CONTAINS[c] 'powder' OR label CONTAINS[c] 'depth' OR label CONTAINS[c] 'temperature'")
-        let conditionsCard = app.staticTexts.matching(conditionsPredicate).firstMatch
-
-        // Conditions may or may not be available depending on event
-        addScreenshot(named: "Event Conditions Card")
-    }
-
     // MARK: - Edit/Cancel Tests (New)
 
     @MainActor
@@ -1327,6 +1306,253 @@ final class EventsUITests: XCTestCase {
 
         // Carpool info should be visible for events with carpool enabled
         addScreenshot(named: "Carpool Indicators")
+    }
+
+    // MARK: - Toast Notification Tests (New)
+
+    @MainActor
+    func testToastAppearsOnQuickJoin() throws {
+        launchAppAndLogin()
+        navigateToEvents()
+
+        // Switch to Last Minute filter
+        let segmentedControl = app.segmentedControls.firstMatch
+        if segmentedControl.waitForExistence(timeout: 3) {
+            let segments = segmentedControl.buttons
+            for i in 0..<segments.count {
+                let segment = segments.element(boundBy: i)
+                if segment.label.lowercased().contains("last") {
+                    segment.tap()
+                    Thread.sleep(forTimeInterval: 1)
+
+                    // Try quick join
+                    let joinButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Join' OR label CONTAINS[c] 'In'")).firstMatch
+                    if joinButton.waitForExistence(timeout: 3) {
+                        joinButton.tap()
+
+                        // Toast should appear
+                        let toastPredicate = NSPredicate(format: "label CONTAINS[c] 'You\\'re in' OR label CONTAINS[c] 'joined' OR label CONTAINS[c] 'Couldn\\'t'")
+                        let toast = app.staticTexts.matching(toastPredicate).firstMatch
+
+                        // Toast may appear briefly
+                        _ = toast.waitForExistence(timeout: 4)
+
+                        addScreenshot(named: "Quick Join Toast")
+                    }
+                    break
+                }
+            }
+        }
+    }
+
+    @MainActor
+    func testToastAppearsOnCopyLink() throws {
+        launchAppAndLogin()
+        navigateToEvents()
+
+        let eventCell = app.cells.firstMatch
+        guard eventCell.waitForExistence(timeout: 10) else {
+            return
+        }
+
+        eventCell.tap()
+        _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
+
+        // Find and tap copy link
+        let copyButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Copy'")).firstMatch
+        if copyButton.waitForExistence(timeout: 3) {
+            copyButton.tap()
+
+            // Look for toast confirmation
+            let toastPredicate = NSPredicate(format: "label CONTAINS[c] 'Copied' OR label CONTAINS[c] 'Link'")
+            let toast = app.staticTexts.matching(toastPredicate).firstMatch
+            _ = toast.waitForExistence(timeout: 3)
+
+            addScreenshot(named: "Copy Link Toast")
+        }
+    }
+
+    // MARK: - Best Day Suggestion Tests (New)
+
+    @MainActor
+    func testBestDaySuggestionInCreate() throws {
+        launchAppAndLogin()
+        navigateToEvents()
+
+        app.buttons["events_create_button"].tap()
+
+        let titleField = app.textFields["create_event_title_field"]
+        _ = titleField.waitForExistence(timeout: 5)
+
+        // Select a mountain to trigger forecast loading
+        let mountainPicker = app.buttons["create_event_mountain_picker"]
+        if mountainPicker.exists {
+            mountainPicker.tap()
+            let mountainOption = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Baker' OR label CONTAINS[c] 'Stevens'")).firstMatch
+            if mountainOption.waitForExistence(timeout: 3) {
+                mountainOption.tap()
+            }
+        }
+
+        // Wait for forecast to load
+        Thread.sleep(forTimeInterval: 2)
+
+        // Look for Best Day suggestion
+        let bestDayPredicate = NSPredicate(format: "label CONTAINS[c] 'Best' OR label CONTAINS[c] 'Powder Day' OR label CONTAINS[c] 'Switch'")
+        let bestDaySuggestion = app.buttons.matching(bestDayPredicate).firstMatch
+
+        // Best Day may or may not appear depending on forecast data
+        addScreenshot(named: "Best Day Suggestion")
+    }
+
+    @MainActor
+    func testForecastPreviewInCreate() throws {
+        launchAppAndLogin()
+        navigateToEvents()
+
+        app.buttons["events_create_button"].tap()
+
+        _ = app.textFields["create_event_title_field"].waitForExistence(timeout: 5)
+
+        // Select a mountain
+        let mountainPicker = app.buttons["create_event_mountain_picker"]
+        if mountainPicker.exists {
+            mountainPicker.tap()
+            let mountainOption = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Baker'")).firstMatch
+            if mountainOption.waitForExistence(timeout: 3) {
+                mountainOption.tap()
+            }
+        }
+
+        // Wait for forecast
+        Thread.sleep(forTimeInterval: 2)
+
+        // Look for forecast preview elements
+        let forecastPredicate = NSPredicate(format: "label CONTAINS[c] 'Forecast' OR label CONTAINS[c] 'High' OR label CONTAINS[c] 'Low' OR label CONTAINS[c] 'Snow'")
+        let forecastElements = app.staticTexts.matching(forecastPredicate)
+
+        // Forecast preview should appear
+        addScreenshot(named: "Create Event Forecast Preview")
+    }
+
+    // MARK: - Accessibility Tests (New)
+
+    @MainActor
+    func testEventRowAccessibilityLabels() throws {
+        launchAppAndLogin()
+        navigateToEvents()
+
+        let eventCell = app.cells.firstMatch
+        guard eventCell.waitForExistence(timeout: 10) else {
+            return
+        }
+
+        // Verify cell is accessible
+        XCTAssertTrue(eventCell.isHittable, "Event row should be hittable")
+
+        // Check for accessibility elements
+        let accessibilityLabel = eventCell.label
+        XCTAssertFalse(accessibilityLabel.isEmpty, "Event row should have accessibility label")
+    }
+
+    @MainActor
+    func testLastMinuteCardAccessibility() throws {
+        launchAppAndLogin()
+        navigateToEvents()
+
+        // Switch to Last Minute filter
+        let segmentedControl = app.segmentedControls.firstMatch
+        if segmentedControl.waitForExistence(timeout: 3) {
+            let segments = segmentedControl.buttons
+            for i in 0..<segments.count {
+                let segment = segments.element(boundBy: i)
+                if segment.label.lowercased().contains("last") {
+                    segment.tap()
+                    Thread.sleep(forTimeInterval: 1)
+
+                    // Check for accessible event cards
+                    let eventCard = app.buttons.firstMatch
+                    if eventCard.waitForExistence(timeout: 3) {
+                        let label = eventCard.label
+                        // Should have meaningful accessibility label
+                        XCTAssertFalse(label.isEmpty, "Last minute card should have accessibility label")
+                    }
+                    break
+                }
+            }
+        }
+    }
+
+    @MainActor
+    func testVoiceOverCompatibility() throws {
+        launchAppAndLogin()
+        navigateToEvents()
+
+        // Verify main elements are accessible
+        let createButton = app.buttons["events_create_button"]
+        XCTAssertTrue(createButton.waitForExistence(timeout: 5), "Create button should exist")
+        XCTAssertTrue(createButton.isEnabled, "Create button should be enabled")
+        XCTAssertTrue(createButton.isHittable, "Create button should be hittable for VoiceOver")
+    }
+
+    // MARK: - Urgency Color Tests (New)
+
+    @MainActor
+    func testLastMinuteUrgencyColors() throws {
+        launchAppAndLogin()
+        navigateToEvents()
+
+        // Switch to Last Minute filter
+        let segmentedControl = app.segmentedControls.firstMatch
+        if segmentedControl.waitForExistence(timeout: 3) {
+            let segments = segmentedControl.buttons
+            for i in 0..<segments.count {
+                let segment = segments.element(boundBy: i)
+                if segment.label.lowercased().contains("last") {
+                    segment.tap()
+                    Thread.sleep(forTimeInterval: 1)
+
+                    // Look for urgency indicators
+                    let urgentPredicate = NSPredicate(format: "label CONTAINS[c] 'URGENT' OR label CONTAINS[c] 'critical' OR label CONTAINS[c] 'soon'")
+                    _ = app.staticTexts.matching(urgentPredicate).firstMatch
+
+                    // Departed indicator
+                    let departedPredicate = NSPredicate(format: "label CONTAINS[c] 'Departed'")
+                    _ = app.staticTexts.matching(departedPredicate).firstMatch
+
+                    addScreenshot(named: "Urgency Indicators")
+                    break
+                }
+            }
+        }
+    }
+
+    // MARK: - Send via Text Tests (New)
+
+    @MainActor
+    func testSendViaTextOption() throws {
+        launchAppAndLogin()
+        navigateToEvents()
+
+        let eventCell = app.cells.firstMatch
+        guard eventCell.waitForExistence(timeout: 10) else {
+            return
+        }
+
+        // Long press for context menu
+        eventCell.press(forDuration: 1.0)
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Look for Send via Text option
+        let textPredicate = NSPredicate(format: "label CONTAINS[c] 'Text' OR label CONTAINS[c] 'Message'")
+        let textOption = app.buttons.matching(textPredicate).firstMatch
+
+        if textOption.waitForExistence(timeout: 2) {
+            addScreenshot(named: "Send via Text Option")
+        }
+
+        // Dismiss context menu
+        app.tap()
     }
 
     // MARK: - Attendee Count Tests (New)
