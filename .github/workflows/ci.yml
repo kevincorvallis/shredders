@@ -108,6 +108,9 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: sleep 60  # Wait for Vercel to deploy
 
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
       - name: Run API verification
         run: |
           chmod +x ./scripts/verify-production-full.sh
