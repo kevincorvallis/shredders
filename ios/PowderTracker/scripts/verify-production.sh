@@ -45,12 +45,12 @@ check_endpoint() {
 
     if [ "$status" == "$expected_status" ]; then
         echo -e "${GREEN}✓${NC} $name (HTTP $status)"
-        ((PASS++))
+        PASS=$((PASS+1))
         return 0
     else
         echo -e "${RED}✗${NC} $name - Expected $expected_status, got $status"
         echo "  Response: $(echo "$body" | head -c 100)"
-        ((FAIL++))
+        FAIL=$((FAIL+1))
         return 1
     fi
 }
@@ -65,12 +65,12 @@ check_json_endpoint() {
 
     if echo "$response" | jq -e ".$json_key" > /dev/null 2>&1; then
         echo -e "${GREEN}✓${NC} $name (valid JSON with '$json_key')"
-        ((PASS++))
+        PASS=$((PASS+1))
         return 0
     else
         echo -e "${RED}✗${NC} $name - Missing '$json_key' in response"
         echo "  Response: $(echo "$response" | head -c 100)"
-        ((FAIL++))
+        FAIL=$((FAIL+1))
         return 1
     fi
 }
@@ -81,10 +81,10 @@ echo "--------------------------------"
 # Basic connectivity
 if curl -s --connect-timeout 5 "$API_BASE/events" > /dev/null 2>&1; then
     echo -e "${GREEN}✓${NC} API is reachable"
-    ((PASS++))
+    PASS=$((PASS+1))
 else
     echo -e "${RED}✗${NC} API is not reachable!"
-    ((FAIL++))
+    FAIL=$((FAIL+1))
     echo "Aborting further tests."
     exit 1
 fi
@@ -118,10 +118,10 @@ signup_response=$(curl -s -X POST "$API_BASE/auth/signup" \
 
 if echo "$signup_response" | grep -q "error\|details"; then
     echo -e "${GREEN}✓${NC} POST /auth/signup validates input"
-    ((PASS++))
+    PASS=$((PASS+1))
 else
     echo -e "${RED}✗${NC} POST /auth/signup validation not working"
-    ((FAIL++))
+    FAIL=$((FAIL+1))
 fi
 
 # Test login endpoint exists
@@ -131,7 +131,7 @@ login_response=$(curl -s -X POST "$API_BASE/auth/login" \
 
 if echo "$login_response" | grep -q "error\|Invalid"; then
     echo -e "${GREEN}✓${NC} POST /auth/login responds correctly"
-    ((PASS++))
+    PASS=$((PASS+1))
 else
     echo -e "${YELLOW}?${NC} POST /auth/login - unexpected response"
 fi
@@ -151,10 +151,10 @@ if [ "$event_count" -gt 0 ]; then
 
     if [ "$has_creator" != "null" ] && [ "$has_mountain" != "null" ]; then
         echo -e "${GREEN}✓${NC} Events have creator and mountain data"
-        ((PASS++))
+        PASS=$((PASS+1))
     else
         echo -e "${RED}✗${NC} Events missing required fields"
-        ((FAIL++))
+        FAIL=$((FAIL+1))
     fi
 else
     echo -e "${YELLOW}?${NC} No events to verify (empty list)"
@@ -166,10 +166,10 @@ mountain_count=$(echo "$mountains_response" | jq '.mountains | length' 2>/dev/nu
 
 if [ "$mountain_count" -gt 20 ]; then
     echo -e "${GREEN}✓${NC} Mountains list has $mountain_count entries"
-    ((PASS++))
+    PASS=$((PASS+1))
 else
     echo -e "${RED}✗${NC} Mountains list too short: $mountain_count"
-    ((FAIL++))
+    FAIL=$((FAIL+1))
 fi
 
 echo ""
@@ -183,13 +183,13 @@ response_ms=$(echo "$response_time" | awk '{printf "%.0f", $1 * 1000}')
 
 if [ "$response_ms" -lt 1000 ]; then
     echo -e "${GREEN}✓${NC} Response time: ${response_ms}ms (< 1000ms)"
-    ((PASS++))
+    PASS=$((PASS+1))
 elif [ "$response_ms" -lt 3000 ]; then
     echo -e "${YELLOW}?${NC} Response time: ${response_ms}ms (slow but acceptable)"
-    ((PASS++))
+    PASS=$((PASS+1))
 else
     echo -e "${RED}✗${NC} Response time: ${response_ms}ms (too slow!)"
-    ((FAIL++))
+    FAIL=$((FAIL+1))
 fi
 
 echo ""
