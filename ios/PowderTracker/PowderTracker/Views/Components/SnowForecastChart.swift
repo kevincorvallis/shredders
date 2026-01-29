@@ -8,7 +8,6 @@ struct SnowForecastChart: View {
     let favorites: [(mountain: Mountain, forecast: [ForecastDay])]
     var showHeader: Bool = false
     var chartHeight: CGFloat = .chartHeightStandard
-    var onDayTap: ((Mountain, ForecastDay) -> Void)? = nil
     var isLoading: Bool = false
     var error: String? = nil
     var onRetry: (() -> Void)? = nil
