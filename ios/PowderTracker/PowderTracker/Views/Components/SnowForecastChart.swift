@@ -76,6 +76,65 @@ struct SnowForecastChart: View {
         favorites.filter { !hiddenMountains.contains($0.mountain.id) }
     }
 
+    // MARK: - Computed Summary Metrics
+
+    /// Total snowfall across all visible mountains for selected range
+    private var totalSnowfall: Int {
+        visibleFavorites.map { favorite in
+            Array(favorite.forecast.prefix(selectedRange.days))
+                .map { $0.snowfall }
+                .reduce(0, +)
+        }.max() ?? 0
+    }
+
+    /// Total snowfall for next 3 days
+    private var next3DaysSnowfall: Int {
+        visibleFavorites.map { favorite in
+            Array(favorite.forecast.prefix(min(3, selectedRange.days)))
+                .map { $0.snowfall }
+                .reduce(0, +)
+        }.max() ?? 0
+    }
+
+    /// Total snowfall for days 4-7
+    private var days4to7Snowfall: Int {
+        guard selectedRange.days >= 7 else { return 0 }
+        return visibleFavorites.map { favorite in
+            let allDays = Array(favorite.forecast.prefix(selectedRange.days))
+            let laterDays = allDays.dropFirst(3).prefix(4)
+            return laterDays.map { $0.snowfall }.reduce(0, +)
+        }.max() ?? 0
+    }
+
+    /// Best single day with mountain name
+    private var bestDayInfo: (date: Date, snowfall: Int, mountain: Mountain)? {
+        var bestDay: (date: Date, snowfall: Int, mountain: Mountain)?
+
+        for favorite in visibleFavorites {
+            let forecastDays = Array(favorite.forecast.prefix(selectedRange.days))
+            for (index, day) in forecastDays.enumerated() {
+                if day.snowfall > (bestDay?.snowfall ?? 0) {
+                    let chartDate = parseDate(day.date) ?? Calendar.current.date(byAdding: .day, value: index, to: Date())!
+                    bestDay = (chartDate, day.snowfall, favorite.mountain)
+                }
+            }
+        }
+
+        return bestDay
+    }
+
+    /// Mountain with most total snow in range
+    private var winningMountain: (mountain: Mountain, total: Int)? {
+        let mountainTotals = visibleFavorites.map { favorite -> (Mountain, Int) in
+            let total = Array(favorite.forecast.prefix(selectedRange.days))
+                .map { $0.snowfall }
+                .reduce(0, +)
+            return (favorite.mountain, total)
+        }
+
+        return mountainTotals.max(by: { $0.1 < $1.1 })
+    }
+
     /// Accessibility label summarizing chart data for VoiceOver
     private var chartAccessibilityLabel: String {
         let rangeText = selectedRange == .threeDays ? "3-day" : selectedRange == .sevenDays ? "7-day" : "15-day"
@@ -84,12 +143,24 @@ struct SnowForecastChart: View {
 
         var label = "\(rangeText) snow forecast for \(mountainNames)."
 
+        if totalSnowfall > 0 {
+            label += " Total expected: \(totalSnowfall) inches."
+        }
+
+        if let winner = winningMountain, winner.total > 0 {
+            label += " \(winner.mountain.shortName) leading with \(winner.total) inches."
+        }
+
         if powderDayCount > 0 {
             label += " \(powderDayCount) powder day\(powderDayCount == 1 ? "" : "s") expected."
         }
 
-        if let bestDay = bestPowderDay, let maxSnow = powderDays.first(where: { $0.date == bestDay })?.maxSnowfall {
-            label += " Best day is \(formatShortDate(bestDay)) with \(maxSnow) inches."
+        if let best = bestDayInfo {
+            label += " Best day is \(formatShortDate(best.date)) with \(best.snowfall) inches at \(best.mountain.shortName)."
+        }
+
+        if selectedRange == .sevenDays {
+            label += " Next 3 days: \(next3DaysSnowfall) inches. Days 4-7: \(days4to7Snowfall) inches."
         }
 
         return label
@@ -125,6 +196,14 @@ struct SnowForecastChart: View {
                     .transition(.opacity)
             } else {
                 VStack(spacing: CGFloat.spacingS) {
+                    // Summary header with key metrics (always show)
+                    summaryHeader
+
+                    // Period breakdown (Next 3 Days vs Days 4-7)
+                    if (selectedRange == .sevenDays || selectedRange == .fifteenDays) && totalSnowfall > 0 {
+                        periodBreakdown
+                    }
+
                     ZStack(alignment: .bottom) {
                         chart
                             .accessibilityLabel(chartAccessibilityLabel)
@@ -152,9 +231,9 @@ struct SnowForecastChart: View {
                     // Interactive legend
                     interactiveLegend
 
-                    // Powder day summary
-                    if !powderDays.isEmpty {
-                        powderDaySummary
+                    // Compact daily bars (OpenSnow style)
+                    if totalSnowfall > 0 {
+                        dailySnowfallBars
                     }
                 }
                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
@@ -350,6 +429,244 @@ struct SnowForecastChart: View {
         }
     }
 
+    // MARK: - Summary Header
+
+    private var summaryHeader: some View {
+        HStack(spacing: CGFloat.spacingM) {
+            if totalSnowfall > 0 {
+                // Total expected snow
+                summaryBadge(
+                    icon: "snowflake",
+                    value: "\(totalSnowfall)\"",
+                    label: "Total",
+                    color: .blue
+                )
+
+                // Best day
+                if let best = bestDayInfo {
+                    summaryBadge(
+                        icon: "crown.fill",
+                        value: "\(best.snowfall)\"",
+                        label: "Best: \(formatShortDate(best.date))",
+                        color: .yellow
+                    )
+                }
+
+                // Powder days count
+                if !powderDays.isEmpty {
+                    summaryBadge(
+                        icon: "star.fill",
+                        value: "\(powderDays.count)",
+                        label: powderDays.count == 1 ? "Pow Day" : "Pow Days",
+                        color: .cyan
+                    )
+                }
+            } else {
+                // No snow expected - show helpful message
+                HStack(spacing: 6) {
+                    Image(systemName: "sun.max.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+
+                    Text("No snow in forecast")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Text("•")
+                        .foregroundColor(.secondary.opacity(0.5))
+
+                    Text("Check back later for updates")
+                        .font(.caption)
+                        .foregroundColor(.secondary.opacity(0.7))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.orange.opacity(0.08))
+                )
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 4)
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private func summaryBadge(icon: String, value: String, label: String, color: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption2)
+                .foregroundStyle(color)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text(value)
+                    .font(.caption.bold())
+                    .foregroundColor(.primary)
+
+                Text(label)
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(color.opacity(0.12))
+        )
+    }
+
+    // MARK: - Period Breakdown
+
+    private var periodBreakdown: some View {
+        HStack(spacing: CGFloat.spacingS) {
+            if selectedRange == .sevenDays || selectedRange == .fifteenDays {
+                // Next 3 days
+                periodCard(
+                    title: "Next 3 Days",
+                    snowfall: next3DaysSnowfall,
+                    color: .blue
+                )
+
+                if selectedRange == .sevenDays {
+                    // Days 4-7
+                    periodCard(
+                        title: "Days 4-7",
+                        snowfall: days4to7Snowfall,
+                        color: .purple
+                    )
+                }
+            }
+
+            // Winning mountain
+            if let winner = winningMountain, winner.total > 0 {
+                Spacer()
+
+                HStack(spacing: 4) {
+                    Image(systemName: "trophy.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+
+                    Text(winner.mountain.shortName)
+                        .font(.caption.bold())
+                        .foregroundColor(.primary)
+
+                    Text("\(winner.total)\"")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.orange.opacity(0.12))
+                )
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    private func periodCard(title: String, snowfall: Int, color: Color) -> some View {
+        HStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+
+                Text("\(snowfall)\"")
+                    .font(.caption.bold())
+                    .foregroundColor(color)
+            }
+
+            if snowfall >= powderDayThreshold {
+                Image(systemName: "snowflake")
+                    .font(.system(size: 10))
+                    .foregroundStyle(color)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(color.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(color.opacity(0.2), lineWidth: 1)
+                )
+        )
+    }
+
+    // MARK: - Daily Snowfall Bars (OpenSnow style)
+
+    private var dailySnowfallBars: some View {
+        // Get the best mountain's forecast for the bar display
+        guard let bestMountain = winningMountain else {
+            return AnyView(EmptyView())
+        }
+
+        let forecast = favorites.first(where: { $0.mountain.id == bestMountain.mountain.id })?.forecast ?? []
+        let daysToShow = Array(forecast.prefix(selectedRange.days))
+        let maxSnow = daysToShow.map { $0.snowfall }.max() ?? 1
+
+        return AnyView(
+            VStack(alignment: .leading, spacing: 4) {
+                // Label
+                HStack {
+                    Text("\(bestMountain.mountain.shortName) Daily")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+
+                // Bars
+                HStack(spacing: 3) {
+                    ForEach(Array(daysToShow.enumerated()), id: \.offset) { index, day in
+                        VStack(spacing: 2) {
+                            // Bar
+                            let barHeight = maxSnow > 0 ? CGFloat(day.snowfall) / CGFloat(maxSnow) * 24 : 0
+                            let isPowderDay = day.snowfall >= powderDayThreshold
+
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(
+                                    isPowderDay ?
+                                        LinearGradient(colors: [.blue, .cyan], startPoint: .bottom, endPoint: .top) :
+                                        LinearGradient(colors: [Color.blue.opacity(0.4), Color.blue.opacity(0.6)], startPoint: .bottom, endPoint: .top)
+                                )
+                                .frame(height: max(barHeight, day.snowfall > 0 ? 4 : 2))
+                                .frame(maxWidth: .infinity)
+
+                            // Day label
+                            Text(day.dayOfWeek.prefix(1))
+                                .font(.system(size: 8))
+                                .foregroundColor(.secondary)
+
+                            // Amount (only show if > 0)
+                            if day.snowfall > 0 {
+                                Text("\(day.snowfall)")
+                                    .font(.system(size: 8, weight: .medium))
+                                    .foregroundColor(isPowderDay ? .blue : .secondary)
+                            } else {
+                                Text("-")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(.secondary.opacity(0.5))
+                            }
+                        }
+                    }
+                }
+                .frame(height: 50)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.blue.opacity(0.04))
+            )
+        )
+    }
+
     // MARK: - Powder Day Summary
 
     private var powderDaySummary: some View {
@@ -390,9 +707,7 @@ struct SnowForecastChart: View {
     }
 
     private func formatShortDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE"
-        return formatter.string(from: date)
+        Self.shortDateFormatter.string(from: date)
     }
 
     // MARK: - Chart Skeleton (Loading State)
@@ -464,17 +779,8 @@ struct SnowForecastChart: View {
                     let chartDate = parseDate(day.date) ?? Calendar.current.date(byAdding: .day, value: index, to: Date())!
                     let isPowderDay = day.snowfall >= powderDayThreshold
 
-                    // Line mark for trend
-                    LineMark(
-                        x: .value("Day", chartDate),
-                        y: .value("Snow", day.snowfall)
-                    )
-                    .foregroundStyle(by: .value("Mountain", favorite.mountain.shortName))
-                    .interpolationMethod(.catmullRom)
-                    .lineStyle(StrokeStyle(lineWidth: .chartLineWidthMedium))
-
-                    // Area fill below line - enhanced for powder days
-                    AreaMark(
+                    // Bar mark for daily snowfall - more intuitive than lines
+                    BarMark(
                         x: .value("Day", chartDate),
                         y: .value("Snow", day.snowfall)
                     )
@@ -482,34 +788,34 @@ struct SnowForecastChart: View {
                         isPowderDay
                             ? AnyShapeStyle(LinearGradient(
                                 colors: [
-                                    mountainColor(for: favorite.mountain).opacity(0.5),
-                                    Color.cyan.opacity(0.25),
-                                    mountainColor(for: favorite.mountain).opacity(0.08)
+                                    mountainColor(for: favorite.mountain),
+                                    Color.cyan.opacity(0.7)
                                 ],
                                 startPoint: .top,
                                 endPoint: .bottom
                             ))
-                            : AnyShapeStyle(LinearGradient(
-                                colors: [
-                                    mountainColor(for: favorite.mountain).opacity(0.35),
-                                    mountainColor(for: favorite.mountain).opacity(0.08)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ))
+                            : AnyShapeStyle(mountainColor(for: favorite.mountain).opacity(0.7))
                     )
-                    .interpolationMethod(.catmullRom)
+                    .position(by: .value("Mountain", favorite.mountain.shortName))
+                    .cornerRadius(4)
 
-                    // Powder day markers
-                    if isPowderDay {
+                    // Value label on top of bar for significant snowfall
+                    if day.snowfall > 0 {
                         PointMark(
                             x: .value("Day", chartDate),
                             y: .value("Snow", day.snowfall)
                         )
-                        .foregroundStyle(mountainColor(for: favorite.mountain))
-                        .symbolSize(60)
-                        .annotation(position: .top, spacing: 4) {
-                            AnimatedPowderDayBadge(snowfall: day.snowfall, isEpic: day.snowfall >= epicPowderThreshold)
+                        .foregroundStyle(.clear)
+                        .annotation(position: .top, spacing: isPowderDay ? 2 : 4) {
+                            if isPowderDay {
+                                // Show powder badge for 6"+ days
+                                AnimatedPowderDayBadge(snowfall: day.snowfall, isEpic: day.snowfall >= epicPowderThreshold)
+                            } else if day.snowfall >= 2 {
+                                // Show value label for 2-5" days
+                                Text("\(day.snowfall)\"")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
 
@@ -517,22 +823,11 @@ struct SnowForecastChart: View {
                     if let selectedDate = selectedDate,
                        let parsedDate = parseDate(day.date),
                        Calendar.current.isDate(parsedDate, inSameDayAs: selectedDate) {
-                        PointMark(
-                            x: .value("Day", chartDate),
-                            y: .value("Snow", day.snowfall)
+                        RuleMark(
+                            x: .value("Day", chartDate)
                         )
-                        .foregroundStyle(mountainColor(for: favorite.mountain))
-                        .symbolSize(100) // Larger size for selected point
-                        .symbol {
-                            Circle()
-                                .fill(mountainColor(for: favorite.mountain))
-                                .frame(width: 10, height: 10)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.white, lineWidth: 2)
-                                )
-                                .shadow(color: mountainColor(for: favorite.mountain).opacity(0.5), radius: 4)
-                        }
+                        .foregroundStyle(Color.white.opacity(0.5))
+                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 3]))
                     }
                 }
             }
@@ -542,42 +837,56 @@ struct SnowForecastChart: View {
         .chartPlotStyle { plotArea in
             plotArea
                 .background(
-                    LinearGradient(
-                        colors: [
-                            Color(.systemBackground).opacity(0.98),
-                            Color.blue.opacity(0.05),
-                            Color(.systemBackground).opacity(0.98)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+                    ZStack {
+                        // Base gradient
+                        LinearGradient(
+                            colors: [
+                                Color.blue.opacity(0.03),
+                                Color.cyan.opacity(0.02),
+                                Color(.systemBackground)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+
+                        // Subtle grid pattern
+                        Color(.systemGray6).opacity(0.3)
+                            .blendMode(.overlay)
+                    }
                 )
                 .cornerRadius(CGFloat.cornerRadiusCard)
         }
         .chartXAxis {
             AxisMarks(values: .stride(by: .day)) { value in
                 if let date = value.as(Date.self) {
-                    AxisGridLine()
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
+                        .foregroundStyle(Color(.systemGray5))
                     AxisTick()
                     AxisValueLabel {
                         Text(dayLabel(for: date))
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.primary)
                     }
                 }
             }
         }
         .chartYAxis {
-            AxisMarks(position: .leading) { value in
+            AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
                 // Try Double first (in case data comes as Double), then Int
                 let snowfall: Int? = value.as(Int.self) ?? value.as(Double.self).map { Int($0) }
-                if let snowfall = snowfall {
-                    AxisGridLine()
-                    AxisTick()
+                if let snowfall = snowfall, snowfall > 0 {
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 2]))
+                        .foregroundStyle(Color(.systemGray6))
                     AxisValueLabel {
                         Text("\(snowfall)\"")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.blue.opacity(0.1))
+                            )
                     }
                 }
             }
@@ -797,17 +1106,34 @@ struct SnowForecastChart: View {
 
     /// Format the selected date for display
     private func formatSelectedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE, MMM d"
-        return formatter.string(from: date)
+        Self.selectedDateFormatter.string(from: date)
     }
 
-    /// Parse date string (YYYY-MM-DD format) to Date
-    private func parseDate(_ dateString: String) -> Date? {
+    // MARK: - Cached Formatters (Performance Optimization)
+
+    /// Cached date formatter to avoid expensive instantiation in loops
+    private static let dateParser: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.timeZone = TimeZone.current
-        return formatter.date(from: dateString)
+        return formatter
+    }()
+
+    private static let shortDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter
+    }()
+
+    private static let selectedDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE, MMM d"
+        return formatter
+    }()
+
+    /// Parse date string (YYYY-MM-DD format) to Date
+    private func parseDate(_ dateString: String) -> Date? {
+        Self.dateParser.date(from: dateString)
     }
 
     private var emptyState: some View {
@@ -908,15 +1234,10 @@ struct SnowForecastChart: View {
     /// Format date to day label (Mon, Tue, Wed, etc.)
     private func dayLabel(for date: Date) -> String {
         let calendar = Calendar.current
-        let isToday = calendar.isDateInToday(date)
-
-        if isToday {
+        if calendar.isDateInToday(date) {
             return "Today"
         }
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE" // Mon, Tue, Wed
-        return formatter.string(from: date)
+        return Self.shortDateFormatter.string(from: date)
     }
 }
 

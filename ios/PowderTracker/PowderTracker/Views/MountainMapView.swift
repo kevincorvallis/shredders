@@ -255,6 +255,10 @@ struct MountainMapView: View {
                 let s1 = viewModel.getScore(for: m1) ?? 0
                 let s2 = viewModel.getScore(for: m2) ?? 0
                 return s1 > s2
+            case .snowfall:
+                let c1 = viewModel.getConditions(for: m1)?.snowfall24h ?? 0
+                let c2 = viewModel.getConditions(for: m2)?.snowfall24h ?? 0
+                return c1 > c2
             case .favorites:
                 let f1 = favoritesManager.isFavorite(m1.id)
                 let f2 = favoritesManager.isFavorite(m2.id)

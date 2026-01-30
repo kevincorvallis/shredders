@@ -1,6 +1,82 @@
 import SwiftUI
 import CoreLocation
 
+// MARK: - Sort & Filter Options
+
+enum SortOption: String, CaseIterable {
+    case distance = "Distance"
+    case name = "Name"
+    case snowfall = "Snowfall"
+    case powderScore = "Powder Score"
+    case favorites = "Favorites"
+
+    var icon: String {
+        switch self {
+        case .distance: return "location"
+        case .name: return "textformat.abc"
+        case .snowfall: return "snowflake"
+        case .powderScore: return "star.fill"
+        case .favorites: return "star"
+        }
+    }
+}
+
+enum PassFilter: String, CaseIterable {
+    case all = "All Passes"
+    case epic = "Epic"
+    case ikon = "Ikon"
+    case independent = "Independent"
+    case favorites = "Favorites"
+    case freshPowder = "Fresh Powder"
+
+    var passType: PassType? {
+        switch self {
+        case .epic: return .epic
+        case .ikon: return .ikon
+        case .independent: return .independent
+        default: return nil
+        }
+    }
+
+    /// For MountainMapView compatibility
+    var passTypeKey: PassType? {
+        passType
+    }
+
+    var icon: String {
+        switch self {
+        case .all: return "mountain.2"
+        case .epic: return "ticket"
+        case .ikon: return "star.square"
+        case .independent: return "building.2"
+        case .favorites: return "star.fill"
+        case .freshPowder: return "snowflake"
+        }
+    }
+}
+
+// MARK: - Filter Chip Component
+
+struct FilterChip: View {
+    let icon: String
+    let label: String
+    var isActive: Bool = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption)
+            Text(label)
+                .font(.subheadline)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(isActive ? Color.blue : Color(.tertiarySystemFill))
+        .foregroundColor(isActive ? .white : .primary)
+        .clipShape(Capsule())
+    }
+}
+
 // MARK: - Redesigned Mountains View
 
 /// Discovery-focused Mountains tab with smart sections, regions, and visual hierarchy

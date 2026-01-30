@@ -16,7 +16,7 @@
 		07326B5088476D19693F2463 /* AlertTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A4F9FCA3AB0AE9D9EF16D8F /* AlertTypes.swift */; };
 		0AE38B66F59CD266A70A949B /* ForecastSkeleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C99BBDF11000479A8EFC01F /* ForecastSkeleton.swift */; };
 		0AE5B6842F2780DC001D53AD /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE5B6832F2780DC001D53AD /* OnboardingView.swift */; };
-		0AE5B6852F2780DC001D53AD /* MountainsViewRedesign.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE5B6822F2780DC001D53AD /* MountainsViewRedesign.swift */; };
+		0AE5B6852F2780DC001D53AD /* MountainsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE5B6822F2780DC001D53AD /* MountainsView.swift */; };
 		0AE5B6882F27810D001D53AD /* MountainsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE5B6862F27810D001D53AD /* MountainsTabView.swift */; };
 		0AE5B6A92F2A4E13001D53AD /* LocationSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE5B6A72F2A4E13001D53AD /* LocationSearchResultRow.swift */; };
 		0AE5B6AA2F2A4E13001D53AD /* MiniLocationMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE5B6A82F2A4E13001D53AD /* MiniLocationMapView.swift */; };
@@ -357,7 +357,7 @@
 		09CD031FDFC5D9AACA373D0D /* TravelTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TravelTab.swift; sourceTree = "<group>"; };
 		09DCEADC22BB7E6F31592048 /* LiftTileOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftTileOverlay.swift; sourceTree = "<group>"; };
 		0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderScore.swift; sourceTree = "<group>"; };
-		0AE5B6822F2780DC001D53AD /* MountainsViewRedesign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainsViewRedesign.swift; sourceTree = "<group>"; };
+		0AE5B6822F2780DC001D53AD /* MountainsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainsView.swift; sourceTree = "<group>"; };
 		0AE5B6832F2780DC001D53AD /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		0AE5B6862F27810D001D53AD /* MountainsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainsTabView.swift; sourceTree = "<group>"; };
 		0AE5B68D2F2A0A9A001D53AD /* PowderTrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PowderTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1292,7 +1292,7 @@
 			isa = PBXGroup;
 			children = (
 				0AE5B6872F27810D001D53AD /* Mountains */,
-				0AE5B6822F2780DC001D53AD /* MountainsViewRedesign.swift */,
+				0AE5B6822F2780DC001D53AD /* MountainsView.swift */,
 				0AE5B6832F2780DC001D53AD /* OnboardingView.swift */,
 				EVGRP001EVGRP002EVGRP003 /* Events */,
 				013EF204A2C423B3A82322CD /* AlertsView.swift */,
@@ -1496,7 +1496,7 @@
 				EV01EV02EV03EV04EV05EV06 /* EventsView.swift in Sources */,
 				ED01ED02ED03ED04ED05ED06 /* EventDetailView.swift in Sources */,
 				0AE5B6842F2780DC001D53AD /* OnboardingView.swift in Sources */,
-				0AE5B6852F2780DC001D53AD /* MountainsViewRedesign.swift in Sources */,
+				0AE5B6852F2780DC001D53AD /* MountainsView.swift in Sources */,
 				EC01EC02EC03EC04EC05EC06 /* EventCreateView.swift in Sources */,
 				EI01EI02EI03EI04EI05EI06 /* EventInviteView.swift in Sources */,
 				WM01WM02WM03WM04WM05WM06 /* WeatherMapView.swift in Sources */,
