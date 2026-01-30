@@ -16,10 +16,14 @@ struct AvatarPickerView: View {
     private let size: CGFloat = 120
 
     var body: some View {
-        PhotosPicker(selection: $selectedItem, matching: .images) {
+        // Capture the image value to avoid Swift 6 concurrency issues
+        let currentImage = selectedImage
+        let hasImage = selectedImage != nil
+
+        return PhotosPicker(selection: $selectedItem, matching: .images) {
             ZStack {
                 // Avatar circle
-                if let image = selectedImage {
+                if let image = currentImage {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
@@ -64,7 +68,7 @@ struct AvatarPickerView: View {
         }
         .disabled(isUploading)
         .accessibilityLabel("Profile photo picker")
-        .accessibilityHint(selectedImage != nil ? "Double tap to change photo" : "Double tap to add photo")
+        .accessibilityHint(hasImage ? "Double tap to change photo" : "Double tap to add photo")
     }
 }
 
