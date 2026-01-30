@@ -330,6 +330,15 @@ struct MountainDetailView: View {
             // At a glance stats
             AtAGlanceCard(viewModel: viewModel, onNavigateToLifts: { selectedTab = .lifts })
 
+            // Snow Timeline (OpenSnow-style past + future view)
+            if let data = viewModel.locationData {
+                SnowTimelineView(
+                    conditions: data.conditions,
+                    forecast: data.forecast,
+                    mountainName: mountain.shortName
+                )
+            }
+
             // Lift line predictor
             if viewModel.locationData != nil {
                 LiftLinePredictorCard(viewModel: viewModel)
