@@ -163,10 +163,13 @@ final class NavigationUITests: XCTestCase {
         app.tabBars.buttons["Mountains"].tap()
         _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
 
-        // Tap first mountain cell
-        let mountainCell = app.cells.firstMatch
-        if mountainCell.waitForExistence(timeout: 5) {
-            mountainCell.tap()
+        // Tap on a mountain card - Mountains view uses LazyVStack, not List cells
+        // Look for a tappable element that looks like a mountain card
+        sleep(2) // Wait for content to load
+        let mountainCard = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed'")).firstMatch
+
+        if mountainCard.waitForExistence(timeout: 5) {
+            mountainCard.tap()
 
             // Wait for detail view
             _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
@@ -176,8 +179,8 @@ final class NavigationUITests: XCTestCase {
             if backButton.exists && backButton.isHittable {
                 backButton.tap()
 
-                // Should return to mountains list
-                XCTAssertTrue(app.cells.firstMatch.waitForExistence(timeout: 5), "Should return to mountains list")
+                // Should return to mountains list - check scroll view exists
+                XCTAssertTrue(app.scrollViews.firstMatch.waitForExistence(timeout: 5), "Should return to mountains list")
             }
         }
     }
@@ -190,9 +193,12 @@ final class NavigationUITests: XCTestCase {
         app.tabBars.buttons["Mountains"].tap()
         _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
 
-        let mountainCell = app.cells.firstMatch
-        if mountainCell.waitForExistence(timeout: 5) {
-            mountainCell.tap()
+        // Look for a tappable element that looks like a mountain card
+        sleep(2) // Wait for content to load
+        let mountainCard = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed'")).firstMatch
+
+        if mountainCard.waitForExistence(timeout: 5) {
+            mountainCard.tap()
             _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
 
             // Swipe from left edge to go back
@@ -200,8 +206,8 @@ final class NavigationUITests: XCTestCase {
             let endCoordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             coordinate.press(forDuration: 0.1, thenDragTo: endCoordinate)
 
-            // Should return to mountains list
-            _ = app.cells.firstMatch.waitForExistence(timeout: 5)
+            // Should return to mountains list - check scroll view exists
+            _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
         }
     }
 

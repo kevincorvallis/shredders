@@ -154,6 +154,19 @@ export async function GET(
       user: a.user,
     }));
 
+    // Fetch comment count
+    const { count: commentCount } = await supabase
+      .from('event_comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', id)
+      .is('deleted_at', null);
+
+    // Fetch photo count
+    const { count: photoCount } = await supabase
+      .from('event_photos')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', id);
+
     // Transform to API response
     const eventWithDetails: EventWithDetails = {
       id: event.id,
@@ -174,6 +187,8 @@ export async function GET(
       attendeeCount: event.attendee_count,
       goingCount: event.going_count,
       maybeCount: event.maybe_count,
+      commentCount: commentCount ?? 0,
+      photoCount: photoCount ?? 0,
       creator: event.creator,
       userRSVPStatus,
       isCreator: userProfileId ? event.user_id === userProfileId : false,

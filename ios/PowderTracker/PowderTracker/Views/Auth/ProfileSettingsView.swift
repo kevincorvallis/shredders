@@ -69,6 +69,28 @@ struct ProfileSettingsView: View {
                     }
                 }
 
+                // Skiing Preferences
+                Section {
+                    NavigationLink {
+                        SkiingPreferencesView()
+                    } label: {
+                        HStack {
+                            Label("Skiing Preferences", systemImage: "figure.skiing.downhill")
+                                .foregroundStyle(.primary)
+
+                            Spacer()
+
+                            if let level = authService.userProfile?.experienceLevelEnum {
+                                Text(level.displayName)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Preferences")
+                }
+
                 // Link to Account Settings
                 Section {
                     Button {

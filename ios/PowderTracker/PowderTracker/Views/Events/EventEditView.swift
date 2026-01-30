@@ -260,6 +260,8 @@ struct EventEditView: View {
         attendeeCount: 5,
         goingCount: 4,
         maybeCount: 1,
+        commentCount: 0,
+        photoCount: 0,
         creator: EventUser(id: "user-1", username: "test", displayName: "Test User", avatarUrl: nil),
         userRSVPStatus: nil,
         isCreator: true,

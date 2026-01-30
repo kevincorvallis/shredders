@@ -170,6 +170,8 @@ struct EventWithDetails: Codable, Identifiable {
     let attendeeCount: Int
     let goingCount: Int
     let maybeCount: Int
+    let commentCount: Int?
+    let photoCount: Int?
     let creator: EventUser
     let userRSVPStatus: RSVPStatus?
     let isCreator: Bool?
@@ -196,6 +198,8 @@ struct EventWithDetails: Codable, Identifiable {
         case attendeeCount
         case goingCount
         case maybeCount
+        case commentCount
+        case photoCount
         case creator
         case userRSVPStatus
         case isCreator

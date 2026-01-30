@@ -210,6 +210,8 @@ export interface Event {
   attendeeCount: number;
   goingCount: number;
   maybeCount: number;
+  commentCount?: number;
+  photoCount?: number;
   creator: EventUser;
   userRSVPStatus?: RSVPStatus | null;
   isCreator?: boolean;

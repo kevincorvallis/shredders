@@ -33,6 +33,89 @@ xcodebuild -scheme PowderTracker -destination 'platform=iOS Simulator,name=iPhon
 ./scripts/e2e_test.sh
 ```
 
+## Running Tests
+```bash
+# Run all tests
+./scripts/run_tests.sh
+
+# Run snapshot tests only
+./scripts/run_tests.sh snapshots
+
+# Record new snapshot references
+./scripts/run_tests.sh snapshots record
+
+# Run performance tests only
+./scripts/run_tests.sh performance
+
+# Run unit tests (excluding snapshots/performance)
+./scripts/run_tests.sh unit
+```
+
+---
+
+## Testing
+
+### Test Structure
+```
+PowderTrackerTests/
+├── Mocks/
+│   └── MockData.swift          # Factory methods for test data
+├── Snapshots/
+│   ├── SnapshotTestConfig.swift    # Device & appearance configs
+│   ├── MountainCardSnapshotTests.swift
+│   ├── EventCardSnapshotTests.swift
+│   ├── ProfileSnapshotTests.swift
+│   ├── AuthSnapshotTests.swift
+│   ├── ComponentSnapshotTests.swift
+│   └── ...
+└── Performance/
+    ├── AppLaunchPerformanceTests.swift
+    ├── ListScrollPerformanceTests.swift
+    ├── MapPerformanceTests.swift
+    ├── ImageLoadingPerformanceTests.swift
+    └── DataOperationPerformanceTests.swift
+```
+
+### Snapshot Testing
+Uses [PointFree swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing) for visual regression testing.
+
+**Recording new snapshots:**
+1. Set `static let isRecording = true` in `SnapshotTestConfig.swift`
+2. Run: `./scripts/run_tests.sh snapshots record`
+3. Review generated images in `__Snapshots__/` directories
+4. Set `isRecording = false`
+5. Commit reference images to git
+
+**Test configurations:**
+- Devices: iPhone SE, iPhone 15 Pro, iPhone 15 Pro Max, iPad Pro 11"
+- Appearances: Light mode, Dark mode
+- Dynamic Type: Default, Accessibility XXL
+
+**Troubleshooting:**
+- Snapshot failures due to OS/simulator changes: Re-record on consistent environment
+- Ensure CI uses same simulator as local development
+- Reference images can be large - consider git LFS if repo grows
+
+### Performance Testing
+Uses XCTest performance metrics for benchmarking.
+
+**Metrics used:**
+- `XCTApplicationLaunchMetric` - App launch time
+- `XCTMemoryMetric` - Memory usage
+- `XCTCPUMetric` - CPU usage
+- `XCTClockMetric` - Wall clock time
+
+**Setting baselines:**
+1. Run performance tests 5+ times
+2. In Xcode Test Navigator, right-click test → Set Baseline
+3. Baselines are stored in project and should be committed
+
+**Performance targets:**
+- Cold launch: < 2 seconds
+- List scroll 50 items: < 50MB memory
+- Map render: < 500ms to first tiles
+- Image batch load: No memory leaks
+
 ---
 
 ## Custom Agents

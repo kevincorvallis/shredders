@@ -15,6 +15,7 @@ struct EventDetailView: View {
     @State private var showingCancelAlert = false
     @State private var currentUserRSVPStatus: RSVPStatus?
     @State private var toast: ToastMessage?
+    @State private var selectedSocialTab: EventSocialTab = .discussion
 
     var body: some View {
         Group {
@@ -166,6 +167,9 @@ struct EventDetailView: View {
                 // Attendees Card
                 attendeesCard(event: event)
 
+                // Social Sections (Discussion & Activity)
+                socialSections(event: event)
+
                 // RSVP Buttons
                 if event.isCreator != true {
                     rsvpButtons(event: event)
@@ -175,6 +179,149 @@ struct EventDetailView: View {
         }
     }
 
+    // MARK: - Social Sections (Discussion & Activity)
+
+    private func socialSections(event: EventWithDetails) -> some View {
+        VStack(spacing: 12) {
+            // Tab Picker with counts
+            Picker("", selection: $selectedSocialTab) {
+                ForEach(EventSocialTab.allCases, id: \.self) { tab in
+                    HStack(spacing: 4) {
+                        Image(systemName: tab.icon)
+                        Text(tabLabel(for: tab, event: event))
+                    }
+                    .tag(tab)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel("Social content tabs")
+
+            // Content based on selected tab
+            let canView = event.userRSVPStatus != nil || event.isCreator == true
+
+            switch selectedSocialTab {
+            case .discussion:
+                discussionContent(event: event, canView: canView)
+            case .activity:
+                activityContent(event: event, canView: canView)
+            case .photos:
+                photosContent(event: event, canView: canView)
+            }
+        }
+        .padding()
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func discussionContent(event: EventWithDetails, canView: Bool) -> some View {
+        Group {
+            if canView {
+                EventDiscussionView(eventId: eventId)
+                    .frame(minHeight: 250)
+            } else {
+                RSVPGatedContentView(
+                    isGated: true,
+                    previewCount: event.commentCount ?? 0,
+                    contentType: .discussion,
+                    onRSVPTap: {
+                        Task { await rsvp(status: .going) }
+                    }
+                ) {
+                    EventDiscussionView(eventId: eventId)
+                }
+                .frame(height: 220)
+            }
+        }
+    }
+
+    private func activityContent(event: EventWithDetails, canView: Bool) -> some View {
+        Group {
+            if canView {
+                EventActivityView(eventId: eventId)
+                    .frame(minHeight: 250)
+            } else {
+                RSVPGatedContentView(
+                    isGated: true,
+                    previewCount: 0,
+                    contentType: .activity,
+                    onRSVPTap: {
+                        Task { await rsvp(status: .going) }
+                    }
+                ) {
+                    EventActivityView(eventId: eventId)
+                }
+                .frame(height: 220)
+            }
+        }
+    }
+
+    private func photosContent(event: EventWithDetails, canView: Bool) -> some View {
+        Group {
+            if canView {
+                EventPhotosView(eventId: eventId)
+                    .frame(minHeight: 300)
+            } else {
+                RSVPGatedContentView(
+                    isGated: true,
+                    previewCount: event.photoCount ?? 0,
+                    contentType: .photos,
+                    onRSVPTap: {
+                        Task { await rsvp(status: .going) }
+                    }
+                ) {
+                    EventPhotosView(eventId: eventId)
+                }
+                .frame(height: 220)
+            }
+        }
+    }
+
+    // MARK: - Tab Label Helper
+
+    private func tabLabel(for tab: EventSocialTab, event: EventWithDetails) -> String {
+        switch tab {
+        case .discussion:
+            if let count = event.commentCount, count > 0 {
+                return "\(tab.title) (\(count))"
+            }
+        case .photos:
+            if let count = event.photoCount, count > 0 {
+                return "\(tab.title) (\(count))"
+            }
+        case .activity:
+            break // Activity doesn't need a count
+        }
+        return tab.title
+    }
+}
+
+// MARK: - Social Tab Enum
+
+enum EventSocialTab: String, CaseIterable {
+    case discussion
+    case activity
+    case photos
+
+    var title: String {
+        switch self {
+        case .discussion: return "Discussion"
+        case .activity: return "Activity"
+        case .photos: return "Photos"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .discussion: return "bubble.left.and.bubble.right"
+        case .activity: return "chart.line.uptrend.xyaxis"
+        case .photos: return "photo.stack"
+        }
+    }
+}
+
+// MARK: - EventDetailView Extension
+
+extension EventDetailView {
     private func eventInfoCard(event: EventWithDetails) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(event.title)

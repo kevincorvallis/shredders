@@ -412,6 +412,295 @@ class EventService {
         return eventId
     }
 
+    // MARK: - Photos
+
+    /// Fetch photos for an event
+    /// Returns gated response if user hasn't RSVP'd
+    func fetchPhotos(eventId: String, limit: Int = 20, offset: Int = 0) async throws -> EventPhotosResponse {
+        var components = URLComponents(string: "\(baseURL)/events/\(eventId)/photos")!
+        components.queryItems = [
+            URLQueryItem(name: "limit", value: String(limit)),
+            URLQueryItem(name: "offset", value: String(offset)),
+        ]
+
+        guard let url = components.url else {
+            throw EventServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        try? await addAuthHeader(to: &request)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 404 {
+            throw EventServiceError.notFound
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+
+        return try decoder.decode(EventPhotosResponse.self, from: data)
+    }
+
+    /// Upload a photo to an event
+    func uploadPhoto(eventId: String, imageData: Data, caption: String? = nil) async throws -> EventPhoto {
+        guard let url = URL(string: "\(baseURL)/events/\(eventId)/photos") else {
+            throw EventServiceError.invalidURL
+        }
+
+        // Create multipart form data
+        let boundary = UUID().uuidString
+        var body = Data()
+
+        // Add photo file
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"photo\"; filename=\"photo.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n".data(using: .utf8)!)
+
+        // Add caption if provided
+        if let caption = caption, !caption.isEmpty {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"caption\"\r\n\r\n".data(using: .utf8)!)
+            body.append(caption.data(using: .utf8)!)
+            body.append("\r\n".data(using: .utf8)!)
+        }
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+        try await addAuthHeader(to: &request)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 401 {
+            throw EventServiceError.notAuthenticated
+        }
+
+        if httpResponse.statusCode == 403 {
+            throw EventServiceError.rsvpRequired
+        }
+
+        if httpResponse.statusCode == 404 {
+            throw EventServiceError.notFound
+        }
+
+        guard httpResponse.statusCode == 201 else {
+            if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
+               let errorMessage = errorData["error"] {
+                throw EventServiceError.validationError(errorMessage)
+            }
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+
+        let uploadResponse = try decoder.decode(UploadPhotoResponse.self, from: data)
+        return uploadResponse.photo
+    }
+
+    /// Delete a photo
+    func deletePhoto(eventId: String, photoId: String) async throws {
+        guard let url = URL(string: "\(baseURL)/events/\(eventId)/photos/\(photoId)") else {
+            throw EventServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        try await addAuthHeader(to: &request)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 401 {
+            throw EventServiceError.notAuthenticated
+        }
+
+        if httpResponse.statusCode == 403 {
+            throw EventServiceError.notOwner
+        }
+
+        if httpResponse.statusCode == 404 {
+            throw EventServiceError.notFound
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
+               let errorMessage = errorData["error"] {
+                throw EventServiceError.validationError(errorMessage)
+            }
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+    }
+
+    // MARK: - Activity Timeline
+
+    /// Fetch activity timeline for an event
+    /// Returns gated response if user hasn't RSVP'd
+    func fetchActivity(eventId: String, limit: Int = 20, offset: Int = 0) async throws -> EventActivityResponse {
+        var components = URLComponents(string: "\(baseURL)/events/\(eventId)/activity")!
+        components.queryItems = [
+            URLQueryItem(name: "limit", value: String(limit)),
+            URLQueryItem(name: "offset", value: String(offset)),
+        ]
+
+        guard let url = components.url else {
+            throw EventServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        try? await addAuthHeader(to: &request)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 404 {
+            throw EventServiceError.notFound
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+
+        return try decoder.decode(EventActivityResponse.self, from: data)
+    }
+
+    // MARK: - Comments (Discussion)
+
+    /// Fetch comments for an event
+    /// Returns gated response if user hasn't RSVP'd
+    func fetchComments(eventId: String, limit: Int = 50, offset: Int = 0) async throws -> EventCommentsResponse {
+        var components = URLComponents(string: "\(baseURL)/events/\(eventId)/comments")!
+        components.queryItems = [
+            URLQueryItem(name: "limit", value: String(limit)),
+            URLQueryItem(name: "offset", value: String(offset)),
+        ]
+
+        guard let url = components.url else {
+            throw EventServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        try? await addAuthHeader(to: &request) // Optional - non-auth users get gated response
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 404 {
+            throw EventServiceError.notFound
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+
+        return try decoder.decode(EventCommentsResponse.self, from: data)
+    }
+
+    /// Post a comment on an event (requires RSVP)
+    func postComment(eventId: String, content: String, parentId: String? = nil) async throws -> EventComment {
+        guard let url = URL(string: "\(baseURL)/events/\(eventId)/comments") else {
+            throw EventServiceError.invalidURL
+        }
+
+        let requestBody = PostCommentRequest(content: content, parentId: parentId)
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(requestBody)
+        try await addAuthHeader(to: &request)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 401 {
+            throw EventServiceError.notAuthenticated
+        }
+
+        if httpResponse.statusCode == 403 {
+            throw EventServiceError.rsvpRequired
+        }
+
+        if httpResponse.statusCode == 404 {
+            throw EventServiceError.notFound
+        }
+
+        guard httpResponse.statusCode == 201 else {
+            if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
+               let errorMessage = errorData["error"] {
+                throw EventServiceError.validationError(errorMessage)
+            }
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+
+        let commentResponse = try decoder.decode(PostCommentResponse.self, from: data)
+        return commentResponse.comment
+    }
+
+    /// Delete a comment (own comments only, or event creator can delete any)
+    func deleteComment(eventId: String, commentId: String) async throws {
+        guard let url = URL(string: "\(baseURL)/events/\(eventId)/comments/\(commentId)") else {
+            throw EventServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        try await addAuthHeader(to: &request)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 401 {
+            throw EventServiceError.notAuthenticated
+        }
+
+        if httpResponse.statusCode == 403 {
+            throw EventServiceError.notOwner
+        }
+
+        if httpResponse.statusCode == 404 {
+            throw EventServiceError.notFound
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
+               let errorMessage = errorData["error"] {
+                throw EventServiceError.validationError(errorMessage)
+            }
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+    }
+
     // MARK: - Auth Helper
 
     private func addAuthHeader(to request: inout URLRequest) async throws {
@@ -460,6 +749,7 @@ enum EventServiceError: LocalizedError {
     case invalidInvite
     case invalidResponse
     case validationError(String)
+    case rsvpRequired
 
     var errorDescription: String? {
         switch self {
@@ -481,6 +771,8 @@ enum EventServiceError: LocalizedError {
             return "Invalid server response"
         case .validationError(let message):
             return message
+        case .rsvpRequired:
+            return "You must RSVP to participate in this event's discussion"
         }
     }
 }

@@ -619,4 +619,136 @@ class AuthService {
             throw error
         }
     }
+
+    // MARK: - Onboarding
+
+    /// Returns true if the current user needs to complete onboarding
+    var needsOnboarding: Bool {
+        guard let profile = userProfile else { return false }
+        return profile.needsOnboarding
+    }
+
+    /// Update user profile with onboarding data
+    func updateOnboardingProfile(_ profile: OnboardingProfile) async throws {
+        guard let userId = currentUser?.id.uuidString ?? userProfile?.authUserId else {
+            throw NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
+        }
+
+        isLoading = true
+        error = nil
+
+        defer { isLoading = false }
+
+        struct OnboardingUpdate: Encodable {
+            let display_name: String?
+            let bio: String?
+            let avatar_url: String?
+            let experience_level: String?
+            let preferred_terrain: [String]
+            let season_pass_type: String?
+            let home_mountain_id: String?
+            let updated_at: String
+        }
+
+        let updates = OnboardingUpdate(
+            display_name: profile.displayName,
+            bio: profile.bio,
+            avatar_url: profile.avatarUrl,
+            experience_level: profile.experienceLevel?.rawValue,
+            preferred_terrain: profile.preferredTerrain.map { $0.rawValue },
+            season_pass_type: profile.seasonPassType?.rawValue,
+            home_mountain_id: profile.homeMountainId,
+            updated_at: ISO8601DateFormatter().string(from: Date())
+        )
+
+        do {
+            try await supabase
+                .from("users")
+                .update(updates)
+                .eq("auth_user_id", value: userId)
+                .execute()
+
+            await fetchUserProfile(userId: userId)
+
+        } catch {
+            self.error = error.localizedDescription
+            throw error
+        }
+    }
+
+    /// Mark onboarding as complete
+    func completeOnboarding() async throws {
+        guard let userId = currentUser?.id.uuidString ?? userProfile?.authUserId else {
+            throw NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
+        }
+
+        isLoading = true
+        error = nil
+
+        defer { isLoading = false }
+
+        struct CompletionUpdate: Encodable {
+            let has_completed_onboarding: Bool
+            let onboarding_completed_at: String
+            let updated_at: String
+        }
+
+        let now = ISO8601DateFormatter().string(from: Date())
+        let updates = CompletionUpdate(
+            has_completed_onboarding: true,
+            onboarding_completed_at: now,
+            updated_at: now
+        )
+
+        do {
+            try await supabase
+                .from("users")
+                .update(updates)
+                .eq("auth_user_id", value: userId)
+                .execute()
+
+            await fetchUserProfile(userId: userId)
+
+        } catch {
+            self.error = error.localizedDescription
+            throw error
+        }
+    }
+
+    /// Skip onboarding (user can complete later)
+    func skipOnboarding() async throws {
+        guard let userId = currentUser?.id.uuidString ?? userProfile?.authUserId else {
+            throw NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
+        }
+
+        isLoading = true
+        error = nil
+
+        defer { isLoading = false }
+
+        struct SkipUpdate: Encodable {
+            let onboarding_skipped_at: String
+            let updated_at: String
+        }
+
+        let now = ISO8601DateFormatter().string(from: Date())
+        let updates = SkipUpdate(
+            onboarding_skipped_at: now,
+            updated_at: now
+        )
+
+        do {
+            try await supabase
+                .from("users")
+                .update(updates)
+                .eq("auth_user_id", value: userId)
+                .execute()
+
+            await fetchUserProfile(userId: userId)
+
+        } catch {
+            self.error = error.localizedDescription
+            throw error
+        }
+    }
 }

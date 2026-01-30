@@ -182,10 +182,14 @@ final class ProfileUITests: XCTestCase {
         if signOutButton.waitForExistence(timeout: 3) {
             signOutButton.tap()
 
-            // Handle confirmation if present
-            let confirmButton = app.buttons["Sign Out"]
-            if confirmButton.waitForExistence(timeout: 2) {
-                confirmButton.tap()
+            // Handle confirmation dialog - look for the confirm button in the sheet
+            // The confirmation dialog has a "Sign Out" button - use the one in the sheet
+            let confirmSheet = app.sheets.firstMatch
+            if confirmSheet.waitForExistence(timeout: 2) {
+                let confirmButton = confirmSheet.buttons["Sign Out"]
+                if confirmButton.waitForExistence(timeout: 2) {
+                    confirmButton.tap()
+                }
             }
 
             // After sign out, sign in button should appear

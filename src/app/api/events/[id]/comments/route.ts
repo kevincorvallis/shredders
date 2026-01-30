@@ -1,0 +1,341 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { getDualAuthUser } from '@/lib/auth';
+
+/**
+ * Helper: Check if user has RSVP'd to an event (going or maybe)
+ */
+async function checkUserRSVP(
+  supabase: any,
+  eventId: string,
+  userProfileId: string
+): Promise<boolean> {
+  const { data: attendee } = await supabase
+    .from('event_attendees')
+    .select('status')
+    .eq('event_id', eventId)
+    .eq('user_id', userProfileId)
+    .in('status', ['going', 'maybe'])
+    .single();
+
+  return !!attendee;
+}
+
+/**
+ * Helper: Check if user is the event creator
+ */
+async function checkIsCreator(
+  supabase: any,
+  eventId: string,
+  userProfileId: string
+): Promise<boolean> {
+  const { data: event } = await supabase
+    .from('events')
+    .select('user_id')
+    .eq('id', eventId)
+    .single();
+
+  return event?.user_id === userProfileId;
+}
+
+/**
+ * GET /api/events/[id]/comments
+ *
+ * Fetch comments for an event.
+ * - RSVP'd users (going/maybe) or event creator: Full access
+ * - Non-RSVP'd users: Return 403 with comment count only
+ *
+ * Query params:
+ *   - limit: Number of results (default: 50, max: 100)
+ *   - offset: Pagination offset (default: 0)
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: eventId } = await params;
+    const supabase = await createClient();
+    const adminClient = createAdminClient();
+    const { searchParams } = new URL(request.url);
+
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const offset = parseInt(searchParams.get('offset') || '0');
+
+    // Check if event exists
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('id, user_id')
+      .eq('id', eventId)
+      .single();
+
+    if (eventError || !event) {
+      return NextResponse.json(
+        { error: 'Event not found' },
+        { status: 404 }
+      );
+    }
+
+    // Get comment count (always returned)
+    const { count: commentCount } = await supabase
+      .from('event_comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', eventId)
+      .eq('is_deleted', false);
+
+    // Check authentication
+    const authUser = await getDualAuthUser(request);
+
+    if (!authUser) {
+      // Return count only for unauthenticated users
+      return NextResponse.json({
+        comments: [],
+        commentCount: commentCount || 0,
+        gated: true,
+        message: 'RSVP to view comments',
+      });
+    }
+
+    // Look up user's internal profile ID
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (!userProfile) {
+      return NextResponse.json({
+        comments: [],
+        commentCount: commentCount || 0,
+        gated: true,
+        message: 'RSVP to view comments',
+      });
+    }
+
+    // Check if user is creator or has RSVP'd
+    const isCreator = await checkIsCreator(supabase, eventId, userProfile.id);
+    const hasRSVP = await checkUserRSVP(supabase, eventId, userProfile.id);
+
+    if (!isCreator && !hasRSVP) {
+      return NextResponse.json({
+        comments: [],
+        commentCount: commentCount || 0,
+        gated: true,
+        message: 'RSVP to view comments',
+      });
+    }
+
+    // Fetch comments with user info
+    const { data: comments, error: commentsError } = await supabase
+      .from('event_comments')
+      .select(`
+        id,
+        event_id,
+        user_id,
+        content,
+        parent_id,
+        created_at,
+        updated_at,
+        user:user_id (
+          id,
+          username,
+          display_name,
+          avatar_url
+        )
+      `)
+      .eq('event_id', eventId)
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: true })
+      .range(offset, offset + limit - 1);
+
+    if (commentsError) {
+      console.error('Error fetching event comments:', commentsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch comments' },
+        { status: 500 }
+      );
+    }
+
+    // Organize into threads (top-level and replies)
+    const topLevel = (comments || []).filter((c: any) => !c.parent_id);
+    const replies = (comments || []).filter((c: any) => c.parent_id);
+
+    // Attach replies to their parents
+    const threaded = topLevel.map((comment: any) => ({
+      ...comment,
+      replies: replies.filter((r: any) => r.parent_id === comment.id),
+    }));
+
+    return NextResponse.json({
+      comments: threaded,
+      commentCount: commentCount || 0,
+      gated: false,
+    });
+  } catch (error) {
+    console.error('Error in GET /api/events/[id]/comments:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/events/[id]/comments
+ *
+ * Create a comment on an event.
+ * Requires user to be RSVP'd (going/maybe) or event creator.
+ *
+ * Body:
+ *   - content: Comment text (required, max 2000 chars)
+ *   - parentId: Parent comment ID for replies (optional)
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: eventId } = await params;
+    const supabase = await createClient();
+    const adminClient = createAdminClient();
+
+    // Check authentication
+    const authUser = await getDualAuthUser(request);
+    if (!authUser) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    // Check if event exists
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('id, user_id')
+      .eq('id', eventId)
+      .single();
+
+    if (eventError || !event) {
+      return NextResponse.json(
+        { error: 'Event not found' },
+        { status: 404 }
+      );
+    }
+
+    // Look up user's internal profile ID
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (!userProfile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if user is creator or has RSVP'd
+    const isCreator = await checkIsCreator(supabase, eventId, userProfile.id);
+    const hasRSVP = await checkUserRSVP(supabase, eventId, userProfile.id);
+
+    if (!isCreator && !hasRSVP) {
+      return NextResponse.json(
+        { error: 'You must RSVP to comment on this event' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { content, parentId } = body;
+
+    // Validate content
+    if (!content || typeof content !== 'string') {
+      return NextResponse.json(
+        { error: 'Content is required' },
+        { status: 400 }
+      );
+    }
+
+    if (content.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Content cannot be empty' },
+        { status: 400 }
+      );
+    }
+
+    if (content.length > 2000) {
+      return NextResponse.json(
+        { error: 'Content must be less than 2000 characters' },
+        { status: 400 }
+      );
+    }
+
+    // If parent comment specified, verify it exists and belongs to this event
+    if (parentId) {
+      const { data: parentComment, error: parentError } = await supabase
+        .from('event_comments')
+        .select('id, event_id')
+        .eq('id', parentId)
+        .eq('event_id', eventId)
+        .single();
+
+      if (parentError || !parentComment) {
+        return NextResponse.json(
+          { error: 'Parent comment not found' },
+          { status: 404 }
+        );
+      }
+    }
+
+    // Create comment using admin client to bypass RLS
+    const { data: comment, error: insertError } = await adminClient
+      .from('event_comments')
+      .insert({
+        event_id: eventId,
+        user_id: userProfile.id,
+        content: content.trim(),
+        parent_id: parentId || null,
+      })
+      .select(`
+        id,
+        event_id,
+        user_id,
+        content,
+        parent_id,
+        created_at,
+        updated_at
+      `)
+      .single();
+
+    if (insertError) {
+      console.error('Error creating event comment:', insertError);
+      return NextResponse.json(
+        { error: 'Failed to create comment' },
+        { status: 500 }
+      );
+    }
+
+    // Fetch user info for the response
+    const { data: user } = await adminClient
+      .from('users')
+      .select('id, username, display_name, avatar_url')
+      .eq('id', userProfile.id)
+      .single();
+
+    return NextResponse.json({
+      comment: {
+        ...comment,
+        user,
+        replies: [],
+      },
+    }, { status: 201 });
+  } catch (error) {
+    console.error('Error in POST /api/events/[id]/comments:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

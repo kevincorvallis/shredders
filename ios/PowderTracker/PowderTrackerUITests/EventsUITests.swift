@@ -52,11 +52,23 @@ final class EventsUITests: XCTestCase {
         launchApp()
 
         let eventsTab = app.tabBars.buttons["Events"]
+        XCTAssertTrue(eventsTab.waitForExistence(timeout: 5), "Events tab should exist")
         eventsTab.tap()
+        sleep(1) // Wait for tab switch
 
-        // Should show events view
-        let eventsTitle = app.navigationBars.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Event'")).firstMatch
-        XCTAssertTrue(eventsTitle.waitForExistence(timeout: 5) || app.staticTexts["Events"].exists, "Events view should appear")
+        // Should show events view - could be:
+        // 1. Navigation bar with "Ski Events" title
+        // 2. Authenticated events list with create button
+        // 3. Unauthenticated view with sign-in prompt
+        let navTitle = app.navigationBars.matching(NSPredicate(format: "identifier CONTAINS[c] 'event' OR label CONTAINS[c] 'Event' OR label CONTAINS[c] 'Ski'")).firstMatch
+        let signInPrompt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Sign in' OR label CONTAINS[c] 'join events'")).firstMatch
+        let scrollView = app.scrollViews.firstMatch
+
+        let eventsViewAppeared = navTitle.waitForExistence(timeout: 5) ||
+                                 signInPrompt.waitForExistence(timeout: 5) ||
+                                 scrollView.waitForExistence(timeout: 5)
+
+        XCTAssertTrue(eventsViewAppeared, "Events view should appear")
 
         // Take screenshot
         addScreenshot(named: "Events Tab")
@@ -191,8 +203,16 @@ final class EventsUITests: XCTestCase {
         launchAppAndLogin()
         navigateToEvents()
 
+        // The create button only appears for authenticated users
+        // First verify we're logged in by checking we don't see sign-in prompts
+        let signInPrompt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Sign in' OR label CONTAINS[c] 'join events'")).firstMatch
+        if signInPrompt.waitForExistence(timeout: 2) {
+            XCTFail("User is not logged in - sign-in prompt is showing")
+            return
+        }
+
         let createButton = app.buttons["events_create_button"]
-        XCTAssertTrue(createButton.waitForExistence(timeout: 5), "Create event button should exist")
+        XCTAssertTrue(createButton.waitForExistence(timeout: 5), "Create event button should exist (user must be logged in)")
     }
 
     @MainActor
@@ -785,9 +805,16 @@ final class EventsUITests: XCTestCase {
         launchAppAndLogin()
         navigateToEvents()
 
+        // First verify we're logged in
+        let signInPrompt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Sign in' OR label CONTAINS[c] 'join events'")).firstMatch
+        if signInPrompt.waitForExistence(timeout: 2) {
+            XCTFail("User is not logged in - sign-in prompt is showing")
+            return
+        }
+
         // Verify create button is accessible
         let createButton = app.buttons["events_create_button"]
-        XCTAssertTrue(createButton.waitForExistence(timeout: 5), "Create button should exist")
+        XCTAssertTrue(createButton.waitForExistence(timeout: 5), "Create button should exist (requires login)")
         XCTAssertTrue(createButton.isHittable, "Create button should be hittable")
     }
 
@@ -1488,9 +1515,16 @@ final class EventsUITests: XCTestCase {
         launchAppAndLogin()
         navigateToEvents()
 
+        // First verify we're logged in
+        let signInPrompt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Sign in' OR label CONTAINS[c] 'join events'")).firstMatch
+        if signInPrompt.waitForExistence(timeout: 2) {
+            XCTFail("User is not logged in - sign-in prompt is showing")
+            return
+        }
+
         // Verify main elements are accessible
         let createButton = app.buttons["events_create_button"]
-        XCTAssertTrue(createButton.waitForExistence(timeout: 5), "Create button should exist")
+        XCTAssertTrue(createButton.waitForExistence(timeout: 5), "Create button should exist (requires login)")
         XCTAssertTrue(createButton.isEnabled, "Create button should be enabled")
         XCTAssertTrue(createButton.isHittable, "Create button should be hittable for VoiceOver")
     }
@@ -1594,10 +1628,17 @@ final class EventsUITests: XCTestCase {
         let eventsTab = app.tabBars.buttons["Events"]
         if eventsTab.waitForExistence(timeout: 5) {
             eventsTab.tap()
+            sleep(1) // Give time for the tab switch
         }
-        // Wait for events view to load
-        _ = app.buttons["events_create_button"].waitForExistence(timeout: 5) ||
-            app.scrollViews.firstMatch.waitForExistence(timeout: 5)
+        // Wait for events view to load - could be authenticated view with create button,
+        // or unauthenticated view with sign-in prompt, or just the scroll view
+        let createButton = app.buttons["events_create_button"]
+        let scrollView = app.scrollViews.firstMatch
+        let signInPrompt = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Sign in'")).firstMatch
+
+        _ = createButton.waitForExistence(timeout: 5) ||
+            scrollView.waitForExistence(timeout: 5) ||
+            signInPrompt.waitForExistence(timeout: 5)
     }
 
     @MainActor

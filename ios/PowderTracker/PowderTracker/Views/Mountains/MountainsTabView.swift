@@ -134,11 +134,21 @@ struct ConditionsView: View {
     var favoritesManager: FavoritesManager
     @State private var sortBy: ConditionSort = .bestConditions
 
+    // Filter states
+    @State private var filterFreshPowder: Bool = false  // 6"+ in 24h
+    @State private var filterOpenOnly: Bool = false     // Only open resorts
+    @State private var filterFavoritesOnly: Bool = false // Only favorites
+    @State private var filterNearby: Bool = false       // Within 100 miles
+
     enum ConditionSort: String, CaseIterable {
         case bestConditions = "Best Conditions"
         case nearest = "Nearest"
         case mostSnow = "Most Snow"
         case openLifts = "Most Lifts Open"
+    }
+
+    private var hasActiveFilters: Bool {
+        filterFreshPowder || filterOpenOnly || filterFavoritesOnly || filterNearby
     }
 
     var body: some View {
@@ -150,6 +160,10 @@ struct ConditionsView: View {
 
                 // Sort picker
                 sortPicker
+                    .padding(.horizontal)
+
+                // Filter chips
+                filterChips
                     .padding(.horizontal)
 
                 // Loading state
@@ -250,28 +264,146 @@ struct ConditionsView: View {
         }
     }
 
-    private var sortedMountains: [Mountain] {
-        let all = viewModel.mountains
+    private var filterChips: some View {
+        VStack(spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    // Fresh Powder filter
+                    FilterToggleChip(
+                        icon: "snowflake",
+                        label: "6\"+ Snow",
+                        isActive: filterFreshPowder,
+                        activeColor: .cyan
+                    ) {
+                        withAnimation(.spring(response: 0.25)) {
+                            filterFreshPowder.toggle()
+                        }
+                        HapticFeedback.selection.trigger()
+                    }
 
+                    // Open Only filter
+                    FilterToggleChip(
+                        icon: "checkmark.circle",
+                        label: "Open Now",
+                        isActive: filterOpenOnly,
+                        activeColor: .green
+                    ) {
+                        withAnimation(.spring(response: 0.25)) {
+                            filterOpenOnly.toggle()
+                        }
+                        HapticFeedback.selection.trigger()
+                    }
+
+                    // Favorites filter
+                    FilterToggleChip(
+                        icon: "star.fill",
+                        label: "Favorites",
+                        isActive: filterFavoritesOnly,
+                        activeColor: .yellow
+                    ) {
+                        withAnimation(.spring(response: 0.25)) {
+                            filterFavoritesOnly.toggle()
+                        }
+                        HapticFeedback.selection.trigger()
+                    }
+
+                    // Nearby filter
+                    FilterToggleChip(
+                        icon: "location.fill",
+                        label: "< 2 hrs",
+                        isActive: filterNearby,
+                        activeColor: .orange
+                    ) {
+                        withAnimation(.spring(response: 0.25)) {
+                            filterNearby.toggle()
+                        }
+                        HapticFeedback.selection.trigger()
+                    }
+                }
+            }
+
+            // Active filters bar
+            if hasActiveFilters {
+                HStack {
+                    Text("\(filteredAndSortedMountains.count) mountains")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.spring(response: 0.25)) {
+                            filterFreshPowder = false
+                            filterOpenOnly = false
+                            filterFavoritesOnly = false
+                            filterNearby = false
+                        }
+                        HapticFeedback.light.trigger()
+                    } label: {
+                        Text("Clear All")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+        }
+    }
+
+    private var filteredAndSortedMountains: [Mountain] {
+        var mountains = viewModel.mountains
+
+        // Apply filters
+        if filterFreshPowder {
+            mountains = mountains.filter { mountain in
+                (viewModel.getConditions(for: mountain)?.snowfall24h ?? 0) >= 6
+            }
+        }
+
+        if filterOpenOnly {
+            mountains = mountains.filter { mountain in
+                viewModel.getConditions(for: mountain)?.liftStatus?.isOpen ?? false
+            }
+        }
+
+        if filterFavoritesOnly {
+            mountains = mountains.filter { mountain in
+                favoritesManager.isFavorite(mountain.id)
+            }
+        }
+
+        if filterNearby {
+            // Filter to mountains within ~100 miles (roughly 2 hours drive)
+            mountains = mountains.filter { mountain in
+                (viewModel.getDistance(to: mountain) ?? .infinity) <= 100
+            }
+        }
+
+        // Apply sorting
         switch sortBy {
         case .bestConditions:
             // Sort by score, with open mountains prioritized
-            return all.sorted { m1, m2 in
+            return mountains.sorted { m1, m2 in
                 let open1 = viewModel.getConditions(for: m1)?.liftStatus?.isOpen ?? false
                 let open2 = viewModel.getConditions(for: m2)?.liftStatus?.isOpen ?? false
                 if open1 != open2 { return open1 }
                 return (viewModel.getScore(for: m1) ?? 0) > (viewModel.getScore(for: m2) ?? 0)
             }
         case .nearest:
-            return all.sorted { (viewModel.getDistance(to: $0) ?? .infinity) < (viewModel.getDistance(to: $1) ?? .infinity) }
+            return mountains.sorted { (viewModel.getDistance(to: $0) ?? .infinity) < (viewModel.getDistance(to: $1) ?? .infinity) }
         case .mostSnow:
-            return all.sorted { (viewModel.getConditions(for: $0)?.snowfall24h ?? 0) > (viewModel.getConditions(for: $1)?.snowfall24h ?? 0) }
+            return mountains.sorted { (viewModel.getConditions(for: $0)?.snowfall24h ?? 0) > (viewModel.getConditions(for: $1)?.snowfall24h ?? 0) }
         case .openLifts:
-            return all.sorted {
+            return mountains.sorted {
                 (viewModel.getConditions(for: $0)?.liftStatus?.liftsOpen ?? 0) >
                 (viewModel.getConditions(for: $1)?.liftStatus?.liftsOpen ?? 0)
             }
         }
+    }
+
+    // Keep old name as alias for compatibility
+    private var sortedMountains: [Mountain] {
+        filteredAndSortedMountains
     }
 
     private var openMountainsCount: Int {
@@ -528,6 +660,7 @@ struct ExploreView: View {
     var favoritesManager: FavoritesManager
     @State private var searchText = ""
     @State private var selectedRegion: ExploreRegion?
+    @State private var selectedCategory: ExploreCategory?
 
     var body: some View {
         ScrollView {
@@ -558,6 +691,15 @@ struct ExploreView: View {
             RegionSheet(
                 region: region,
                 mountains: mountainsInRegion(region),
+                viewModel: viewModel,
+                favoritesManager: favoritesManager
+            )
+            .modernSheet(detents: [.medium, .large])
+        }
+        .sheet(item: $selectedCategory) { category in
+            CategorySheet(
+                category: category,
+                mountains: mountainsForCategory(category),
                 viewModel: viewModel,
                 favoritesManager: favoritesManager
             )
@@ -609,40 +751,44 @@ struct ExploreView: View {
 
     private var categoriesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            MountainsTabSectionHeader(title: "Categories", icon: "square.grid.2x2.fill")
+            MountainsTabSectionHeader(title: "Quick Filters", icon: "square.grid.2x2.fill")
                 .padding(.horizontal)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 CategoryTile(
-                    title: "Hidden Gems",
-                    subtitle: "Lesser-known favorites",
-                    icon: "sparkles",
-                    color: .purple,
-                    count: hiddenGems.count
+                    title: "Fresh Powder",
+                    subtitle: "6\"+ in 24 hours",
+                    icon: "snowflake",
+                    color: .cyan,
+                    count: freshPowderMountains.count,
+                    onTap: { selectedCategory = .freshPowder }
                 )
 
                 CategoryTile(
-                    title: "Family Friendly",
-                    subtitle: "Great for all ages",
-                    icon: "figure.2.and.child.holdinghands",
+                    title: "Best Scores",
+                    subtitle: "Powder score 7+",
+                    icon: "star.fill",
+                    color: .yellow,
+                    count: bestScoreMountains.count,
+                    onTap: { selectedCategory = .bestScores }
+                )
+
+                CategoryTile(
+                    title: "Open Now",
+                    subtitle: "Lifts spinning",
+                    icon: "checkmark.circle.fill",
                     color: .green,
-                    count: familyFriendly.count
+                    count: openMountains.count,
+                    onTap: { selectedCategory = .openNow }
                 )
 
                 CategoryTile(
-                    title: "Expert Terrain",
-                    subtitle: "Steep & deep",
-                    icon: "figure.skiing.downhill",
-                    color: .black,
-                    count: expertTerrain.count
-                )
-
-                CategoryTile(
-                    title: "Night Skiing",
-                    subtitle: "Lights on",
-                    icon: "moon.stars.fill",
-                    color: .indigo,
-                    count: nightSkiing.count
+                    title: "Your Favorites",
+                    subtitle: "Mountains you love",
+                    icon: "heart.fill",
+                    color: .pink,
+                    count: favoriteMountains.count,
+                    onTap: { selectedCategory = .favorites }
                 )
             }
             .padding(.horizontal)
@@ -779,21 +925,49 @@ struct ExploreView: View {
         }
     }
 
-    // Category filters (simplified - would need actual data)
-    private var hiddenGems: [Mountain] {
-        viewModel.mountains.filter { !favoritesManager.isFavorite($0.id) }
+    // Category filters with real logic
+    private var freshPowderMountains: [Mountain] {
+        viewModel.mountains.filter { mountain in
+            (viewModel.getConditions(for: mountain)?.snowfall24h ?? 0) >= 6
+        }
     }
 
-    private var familyFriendly: [Mountain] {
-        viewModel.mountains // Would filter by terrain difficulty
+    private var bestScoreMountains: [Mountain] {
+        viewModel.mountains.filter { mountain in
+            (viewModel.getScore(for: mountain) ?? 0) >= 7
+        }
     }
 
-    private var expertTerrain: [Mountain] {
-        viewModel.mountains // Would filter by expert terrain %
+    private var openMountains: [Mountain] {
+        viewModel.mountains.filter { mountain in
+            viewModel.getConditions(for: mountain)?.liftStatus?.isOpen ?? false
+        }
     }
 
-    private var nightSkiing: [Mountain] {
-        viewModel.mountains // Would filter by night skiing availability
+    private var favoriteMountains: [Mountain] {
+        viewModel.mountains.filter { mountain in
+            favoritesManager.isFavorite(mountain.id)
+        }
+    }
+
+    private func mountainsForCategory(_ category: ExploreCategory) -> [Mountain] {
+        switch category {
+        case .freshPowder:
+            return freshPowderMountains.sorted {
+                (viewModel.getConditions(for: $0)?.snowfall24h ?? 0) >
+                (viewModel.getConditions(for: $1)?.snowfall24h ?? 0)
+            }
+        case .bestScores:
+            return bestScoreMountains.sorted {
+                (viewModel.getScore(for: $0) ?? 0) > (viewModel.getScore(for: $1) ?? 0)
+            }
+        case .openNow:
+            return openMountains.sorted {
+                (viewModel.getScore(for: $0) ?? 0) > (viewModel.getScore(for: $1) ?? 0)
+            }
+        case .favorites:
+            return favoriteMountains.sorted { $0.name < $1.name }
+        }
     }
 }
 
@@ -979,6 +1153,21 @@ struct MyPassView: View {
 
 // MARK: - Supporting Types
 
+enum ExploreCategory: String, CaseIterable, Identifiable {
+    case freshPowder, bestScores, openNow, favorites
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .freshPowder: return "Fresh Powder"
+        case .bestScores: return "Best Scores"
+        case .openNow: return "Open Now"
+        case .favorites: return "Your Favorites"
+        }
+    }
+}
+
 enum ExploreRegion: String, CaseIterable, Identifiable {
     case washington, oregon, idaho, britishColumbia, montana, california
 
@@ -1046,6 +1235,39 @@ struct StatusPill: View {
         .padding(.vertical, 12)
         .background(color.opacity(0.1))
         .cornerRadius(.cornerRadiusCard)
+    }
+}
+
+struct FilterToggleChip: View {
+    let icon: String
+    let label: String
+    let isActive: Bool
+    let activeColor: Color
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .symbolRenderingMode(.hierarchical)
+                Text(label)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(isActive ? .white : .primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(isActive ? activeColor : Color(.tertiarySystemBackground))
+            .cornerRadius(.cornerRadiusPill)
+            .overlay(
+                RoundedRectangle(cornerRadius: .cornerRadiusPill)
+                    .stroke(isActive ? activeColor : Color.clear, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(label) filter")
+        .accessibilityAddTraits(isActive ? [.isSelected] : [])
     }
 }
 
@@ -1309,30 +1531,44 @@ struct CategoryTile: View {
     let icon: String
     let color: Color
     let count: Int
+    var onTap: (() -> Void)? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundColor(color)
-                Spacer()
-                Text("\(count)")
+        Button {
+            HapticFeedback.selection.trigger()
+            onTap?()
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: icon)
+                        .font(.title3)
+                        .foregroundColor(color)
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Text("\(count)")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.secondary)
+                }
+
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+
+                Text(subtitle)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-
-            Text(subtitle)
-                .font(.caption)
-                .foregroundColor(.secondary)
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(.cornerRadiusCard)
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(.cornerRadiusCard)
+        .buttonStyle(.plain)
+        .disabled(onTap == nil)
     }
 }
 
@@ -1516,6 +1752,117 @@ struct RegionSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+struct CategorySheet: View {
+    let category: ExploreCategory
+    let mountains: [Mountain]
+    @ObservedObject var viewModel: MountainSelectionViewModel
+    var favoritesManager: FavoritesManager
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if mountains.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: emptyStateIcon)
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text(emptyStateTitle)
+                            .font(.headline)
+                        Text(emptyStateSubtitle)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                } else {
+                    List(mountains) { mountain in
+                        NavigationLink {
+                            MountainDetailView(mountain: mountain)
+                        } label: {
+                            HStack {
+                                MountainLogoView(
+                                    logoUrl: mountain.logo,
+                                    color: mountain.color,
+                                    size: 40
+                                )
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(mountain.name)
+                                        .font(.headline)
+                                    HStack(spacing: 8) {
+                                        if let conditions = viewModel.getConditions(for: mountain) {
+                                            if conditions.snowfall24h > 0 {
+                                                Label("\(conditions.snowfall24h)\"", systemImage: "snowflake")
+                                                    .font(.caption)
+                                                    .foregroundColor(.cyan)
+                                            }
+                                            if let status = conditions.liftStatus {
+                                                Text(status.isOpen ? "Open" : "Closed")
+                                                    .font(.caption)
+                                                    .foregroundColor(status.isOpen ? .green : .red)
+                                            }
+                                        }
+                                        if let score = viewModel.getScore(for: mountain) {
+                                            Text(String(format: "%.1f", score))
+                                                .font(.caption)
+                                                .fontWeight(.semibold)
+                                                .foregroundColor(score >= 7 ? .green : score >= 5 ? .yellow : .orange)
+                                        }
+                                    }
+                                }
+
+                                Spacer()
+
+                                if favoritesManager.isFavorite(mountain.id) {
+                                    Image(systemName: "star.fill")
+                                        .foregroundColor(.yellow)
+                                }
+                            }
+                        }
+                        .navigationHaptic()
+                    }
+                }
+            }
+            .navigationTitle(category.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private var emptyStateIcon: String {
+        switch category {
+        case .freshPowder: return "snowflake"
+        case .bestScores: return "star"
+        case .openNow: return "moon.zzz"
+        case .favorites: return "star.slash"
+        }
+    }
+
+    private var emptyStateTitle: String {
+        switch category {
+        case .freshPowder: return "No Fresh Powder"
+        case .bestScores: return "No High Scores"
+        case .openNow: return "No Mountains Open"
+        case .favorites: return "No Favorites Yet"
+        }
+    }
+
+    private var emptyStateSubtitle: String {
+        switch category {
+        case .freshPowder: return "Check back after the next storm for mountains with 6\"+ of fresh snow"
+        case .bestScores: return "No mountains currently have a powder score of 7 or higher"
+        case .openNow: return "It looks like all mountains are currently closed"
+        case .favorites: return "Tap the star on any mountain to add it to your favorites"
+        }
     }
 }
 

@@ -9,6 +9,7 @@ struct PowderTrackerApp: App {
     @State private var deepLinkMountainId: String? = nil
     @State private var deepLinkEventId: String? = nil
     @State private var deepLinkInviteToken: String? = nil
+    @State private var showOnboarding = false
 
     /// Check if running in UI testing mode
     private var isUITesting: Bool {
@@ -35,6 +36,24 @@ struct PowderTrackerApp: App {
                 }
             }
             .animation(.easeInOut(duration: 0.5), value: showIntro)
+            .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
+                // Check if user needs onboarding after authentication
+                if isAuthenticated && authService.needsOnboarding {
+                    // Small delay to let the UI settle
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        showOnboarding = true
+                    }
+                }
+            }
+            .onChange(of: authService.userProfile) { _, profile in
+                // Also check when profile loads
+                if let profile = profile, profile.needsOnboarding && authService.isAuthenticated {
+                    showOnboarding = true
+                }
+            }
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingContainerView(authService: authService)
+            }
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DeepLinkToMountain"))) { notification in
                 if let mountainId = notification.userInfo?["mountainId"] as? String {
                     deepLinkMountainId = mountainId
