@@ -412,25 +412,26 @@ struct EventRowView: View {
                 Text(dayOfMonth)
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(EventCardStyle.primaryText)
                 Text(monthAbbrev)
                     .font(.caption2)
                     .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(EventCardStyle.secondaryText)
                     .textCase(.uppercase)
             }
             .frame(width: 44)
             .padding(.vertical, .spacingS)
-            .background(Color(.tertiarySystemBackground))
+            .background(Color.white.opacity(0.1))
             .cornerRadius(.cornerRadiusButton)
 
             // MARK: - Event Details
-            VStack(alignment: .leading, spacing: .spacingS) {
+            VStack(alignment: .leading, spacing: EventCardStyle.innerSpacing) {
                 // Title row with badges
                 HStack(alignment: .top) {
                     Text(event.title)
                         .font(.headline)
                         .fontWeight(.semibold)
+                        .foregroundStyle(EventCardStyle.primaryText)
                         .lineLimit(2)
 
                     Spacer(minLength: .spacingS)
@@ -441,11 +442,11 @@ struct EventRowView: View {
                             Text("HOST")
                                 .font(.caption2)
                                 .fontWeight(.bold)
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(EventCardStyle.hostBadgeColor)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 3)
-                                .background(.blue.opacity(0.12))
-                                .cornerRadius(.cornerRadiusMicro)
+                                .background(EventCardStyle.hostBadgeColor.opacity(0.15))
+                                .clipShape(Capsule())
                         }
 
                         if let level = event.skillLevel {
@@ -457,79 +458,61 @@ struct EventRowView: View {
                 // Mountain + Time row
                 HStack(spacing: .spacingS) {
                     // Mountain
-                    HStack(spacing: .spacingXS) {
-                        Image(systemName: "mountain.2.fill")
-                            .font(.caption)
-                            .foregroundStyle(.blue)
-                        Text(event.mountainName ?? event.mountainId)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.primary)
-                    }
+                    Label(event.mountainName ?? event.mountainId, systemImage: "mountain.2")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(EventCardStyle.mountainIconColor)
 
                     if let time = event.formattedTime {
                         Text("•")
-                            .foregroundStyle(.tertiary)
-                        HStack(spacing: .spacingXS) {
-                            Image(systemName: "clock.fill")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(time)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
+                            .foregroundStyle(EventCardStyle.tertiaryText)
+                        Label(time, systemImage: "clock")
+                            .font(.subheadline)
+                            .foregroundStyle(EventCardStyle.secondaryText)
                     }
                 }
 
                 // Departure location (if available)
                 if let location = event.departureLocation, !location.isEmpty {
-                    HStack(spacing: .spacingXS) {
-                        Image(systemName: "mappin.circle.fill")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                        Text(location)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
+                    Label(location, systemImage: "mappin.and.ellipse")
+                        .font(.caption)
+                        .foregroundStyle(EventCardStyle.secondaryText)
+                        .lineLimit(1)
                 }
 
                 // Bottom row: Attendees + Carpool + RSVP Status
                 HStack(spacing: .spacingM) {
                     // Attendees
                     HStack(spacing: .spacingXS) {
-                        Image(systemName: "person.2.fill")
+                        Label("\(event.goingCount) going", systemImage: "person.2.fill")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Text("\(event.goingCount)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(EventCardStyle.secondaryText)
+
                         if event.maybeCount > 0 {
-                            Text("+ \(event.maybeCount)?")
+                            Text("+\(event.maybeCount) maybe")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(EventCardStyle.tertiaryText)
                         }
                     }
 
                     // Carpool badge
                     if event.carpoolAvailable {
-                        HStack(spacing: .spacingXS) {
+                        HStack(spacing: 4) {
                             Image(systemName: "car.fill")
-                                .font(.caption)
+                                .font(.caption2)
                             if let seats = event.carpoolSeats, seats > 0 {
-                                Text("\(seats) seats")
+                                Text("Carpool \u{2022} \(seats) seats")
                                     .font(.caption)
                             } else {
                                 Text("Carpool")
                                     .font(.caption)
                             }
                         }
-                        .foregroundStyle(.green)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(.green.opacity(0.1))
-                        .cornerRadius(.cornerRadiusMicro)
+                        .foregroundStyle(EventCardStyle.carpoolColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(EventCardStyle.carpoolColor.opacity(0.2))
+                        .clipShape(Capsule())
                     }
 
                     Spacer()
@@ -545,16 +528,13 @@ struct EventRowView: View {
                         .foregroundStyle(rsvpColor(for: status))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(rsvpColor(for: status).opacity(0.12))
-                        .cornerRadius(.cornerRadiusMicro)
+                        .background(rsvpColor(for: status).opacity(0.15))
+                        .clipShape(Capsule())
                     }
                 }
             }
         }
-        .padding(.spacingM)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(.cornerRadiusCard)
-        .cardShadow()
+        .eventCardBackground()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(eventRowAccessibilityLabel)
         .accessibilityHint("Double tap to view details. Long press for options.")
@@ -613,17 +593,17 @@ struct EventRowView: View {
 
     @ViewBuilder
     private func skillLevelBadge(for level: SkillLevel) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 6) {
             skillLevelIcon(for: level)
             Text(skillLevelLabel(for: level))
-                .font(.caption2)
+                .font(.caption)
                 .fontWeight(.medium)
         }
         .foregroundStyle(skillLevelColor(for: level))
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
-        .background(skillLevelColor(for: level).opacity(0.12))
-        .cornerRadius(.cornerRadiusMicro)
+        .padding(.horizontal, EventCardStyle.badgeHorizontalPadding)
+        .padding(.vertical, EventCardStyle.badgeVerticalPadding)
+        .background(skillLevelColor(for: level).opacity(0.15))
+        .clipShape(Capsule())
     }
 
     @ViewBuilder
@@ -631,18 +611,36 @@ struct EventRowView: View {
         switch level {
         case .beginner:
             Circle()
-                .fill(.green)
-                .frame(width: 8, height: 8)
+                .fill(EventCardStyle.beginnerColor)
+                .frame(width: 12, height: 12)
         case .intermediate:
             Rectangle()
-                .fill(.blue)
-                .frame(width: 8, height: 8)
-        case .advanced, .expert:
+                .fill(EventCardStyle.intermediateColor)
+                .frame(width: 12, height: 12)
+        case .advanced:
             Image(systemName: "diamond.fill")
-                .font(.system(size: 8))
+                .font(.system(size: 12))
+                .foregroundStyle(.black)
+        case .expert:
+            HStack(spacing: 1) {
+                Image(systemName: "diamond.fill")
+                    .font(.system(size: 10))
+                Image(systemName: "diamond.fill")
+                    .font(.system(size: 10))
+            }
+            .foregroundStyle(.black)
         case .all:
-            Image(systemName: "star.fill")
-                .font(.system(size: 8))
+            HStack(spacing: 2) {
+                Circle()
+                    .fill(EventCardStyle.beginnerColor)
+                    .frame(width: 8, height: 8)
+                Rectangle()
+                    .fill(EventCardStyle.intermediateColor)
+                    .frame(width: 8, height: 8)
+                Image(systemName: "diamond.fill")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.black)
+            }
         }
     }
 
@@ -652,16 +650,16 @@ struct EventRowView: View {
         case .intermediate: return "Blue"
         case .advanced: return "Black"
         case .expert: return "2x Black"
-        case .all: return "All"
+        case .all: return "All Levels"
         }
     }
 
     private func skillLevelColor(for level: SkillLevel) -> Color {
         switch level {
-        case .beginner: return .green
-        case .intermediate: return .blue
-        case .advanced, .expert: return .primary
-        case .all: return .purple
+        case .beginner: return EventCardStyle.beginnerColor
+        case .intermediate: return EventCardStyle.intermediateColor
+        case .advanced, .expert: return EventCardStyle.primaryText
+        case .all: return EventCardStyle.allLevelsColor
         }
     }
 
