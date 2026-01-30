@@ -370,6 +370,7 @@ struct MountainsViewRedesign: View {
                                 factors: [],
                                 verdict: "",
                                 conditions: MountainPowderScore.ScoreConditions(snowfall24h: 0, snowfall48h: 0, temperature: 0, windSpeed: 0, upcomingSnow: 0),
+                                stormInfo: nil,
                                 dataAvailable: MountainPowderScore.DataAvailability(snotel: mountain.hasSnotel, noaa: true)
                             )
                         },

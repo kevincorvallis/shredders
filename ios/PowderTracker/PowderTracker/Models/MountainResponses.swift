@@ -22,6 +22,55 @@ struct WeatherAlert: Codable, Identifiable {
     let areaDesc: String
 }
 
+extension WeatherAlert {
+    /// Check if this alert has expired
+    var isExpired: Bool {
+        guard let expires = expires else { return false }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        // Try with fractional seconds first, then without
+        if let expiresDate = formatter.date(from: expires) {
+            return expiresDate < Date()
+        }
+        formatter.formatOptions = [.withInternetDateTime]
+        if let expiresDate = formatter.date(from: expires) {
+            return expiresDate < Date()
+        }
+        return false
+    }
+
+    /// Check if this is a powder-boosting storm event
+    var isPowderBoostEvent: Bool {
+        let powderEvents = [
+            "Winter Storm Warning",
+            "Blizzard Warning",
+            "Heavy Snow Warning",
+            "Winter Weather Advisory",
+            "Snow Squall Warning",
+            "Lake Effect Snow Warning",
+            "Winter Storm Watch",
+            "Blizzard Watch"
+        ]
+        return powderEvents.contains { event.localizedCaseInsensitiveContains($0) || $0.localizedCaseInsensitiveContains(event) }
+    }
+
+    /// Hours remaining until this alert expires
+    var hoursRemaining: Int? {
+        guard let expires = expires else { return nil }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        var expiresDate: Date?
+        expiresDate = formatter.date(from: expires)
+        if expiresDate == nil {
+            formatter.formatOptions = [.withInternetDateTime]
+            expiresDate = formatter.date(from: expires)
+        }
+        guard let date = expiresDate else { return nil }
+        let hours = Int(date.timeIntervalSince(Date()) / 3600)
+        return max(0, hours)
+    }
+}
+
 struct WeatherAlertsResponse: Codable {
     let mountain: MountainInfo
     let alerts: [WeatherAlert]
@@ -164,6 +213,58 @@ struct MountainForecastResponse: Codable {
     }
 }
 
+// MARK: - Storm Info (from powder score endpoint)
+struct StormInfo: Codable {
+    let isActive: Bool
+    let isPowderBoost: Bool
+    let eventType: String?
+    let hoursRemaining: Int?
+    let expectedSnowfall: Int?
+    let severity: String?
+    let scoreBoost: Double?
+
+    /// Calculated intensity based on expected snowfall and severity
+    var intensity: StormIntensity {
+        guard isActive else { return .light }
+        let snowfall = expectedSnowfall ?? 0
+        let severityLevel = severity?.lowercased() ?? ""
+
+        if severityLevel == "extreme" || snowfall >= 24 {
+            return .extreme
+        } else if severityLevel == "severe" || snowfall >= 12 {
+            return .heavy
+        } else if snowfall >= 6 {
+            return .moderate
+        }
+        return .light
+    }
+}
+
+enum StormIntensity: String, Codable {
+    case light
+    case moderate
+    case heavy
+    case extreme
+
+    var displayName: String {
+        switch self {
+        case .light: return "Light Snow"
+        case .moderate: return "Moderate Storm"
+        case .heavy: return "Heavy Storm"
+        case .extreme: return "Extreme Storm"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .light: return "cloud.snow"
+        case .moderate: return "cloud.snow.fill"
+        case .heavy: return "wind.snow"
+        case .extreme: return "snowflake"
+        }
+    }
+}
+
 // MARK: - Mountain Powder Score Response
 struct MountainPowderScore: Codable, Identifiable {
     var id: String { mountain.id }
@@ -173,6 +274,7 @@ struct MountainPowderScore: Codable, Identifiable {
     let factors: [ScoreFactor]
     let verdict: String?
     let conditions: ScoreConditions?
+    let stormInfo: StormInfo?
     let dataAvailable: DataAvailability?
 
     struct ScoreFactor: Codable, Identifiable {
@@ -277,6 +379,28 @@ extension MountainPowderScore {
         ],
         verdict: "Great day for skiing - fresh snow awaits!",
         conditions: ScoreConditions(snowfall24h: 8, snowfall48h: 14, temperature: 28, windSpeed: 15, upcomingSnow: 6),
+        stormInfo: nil,
+        dataAvailable: DataAvailability(snotel: true, noaa: true)
+    )
+
+    static let mockWithStorm = MountainPowderScore(
+        mountain: MountainInfo(id: "baker", name: "Mt. Baker", shortName: "Baker"),
+        score: 8.5,
+        factors: [
+            ScoreFactor(name: "Fresh Snow", value: 8, weight: 0.35, contribution: 2.8, description: "8\" in last 24 hours"),
+            ScoreFactor(name: "Temperature", value: 25, weight: 0.15, contribution: 1.5, description: "25°F - cold powder"),
+        ],
+        verdict: "SEND IT! Epic powder conditions!",
+        conditions: ScoreConditions(snowfall24h: 12, snowfall48h: 18, temperature: 25, windSpeed: 10, upcomingSnow: 18),
+        stormInfo: StormInfo(
+            isActive: true,
+            isPowderBoost: true,
+            eventType: "Winter Storm Warning",
+            hoursRemaining: 18,
+            expectedSnowfall: 18,
+            severity: "Severe",
+            scoreBoost: 1.5
+        ),
         dataAvailable: DataAvailability(snotel: true, noaa: true)
     )
 }

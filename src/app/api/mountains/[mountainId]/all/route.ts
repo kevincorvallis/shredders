@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getMountain } from '@shredders/shared';
 import { withCache } from '@/lib/cache';
 import { getCurrentConditions } from '@/lib/apis/snotel';
-import { getForecast, getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
+import { getForecast, getCurrentWeather, filterActiveAlerts, type NOAAGridConfig } from '@/lib/apis/noaa';
 import { getCurrentFreezingLevelFeet, calculateRainRiskScore, getDailyForecast } from '@/lib/apis/open-meteo';
 import { getWeatherAlerts } from '@/lib/apis/noaa';
 import { getLatestLiftStatus } from '@/lib/dynamodb';
@@ -70,10 +70,13 @@ export async function GET(
         const snotel = snotelData.status === 'fulfilled' ? snotelData.value : null;
         const weather = weatherData.status === 'fulfilled' ? weatherData.value : null;
         const forecast = forecastData.status === 'fulfilled' ? forecastData.value : [];
-        const alerts = alertsData.status === 'fulfilled' ? alertsData.value : [];
+        const rawAlerts = alertsData.status === 'fulfilled' ? alertsData.value : [];
         const freezing = freezingLevel.status === 'fulfilled' ? freezingLevel.value : null;
         const dailyForecast = openMeteoDaily.status === 'fulfilled' ? openMeteoDaily.value : [];
         const liftStatus = liftStatusData.status === 'fulfilled' ? liftStatusData.value : null;
+
+        // Filter out expired alerts
+        const alerts = filterActiveAlerts(rawAlerts);
 
         // Extract today's sunrise/sunset
         const todaySunData = dailyForecast.length > 0 && dailyForecast[0].sunrise && dailyForecast[0].sunset

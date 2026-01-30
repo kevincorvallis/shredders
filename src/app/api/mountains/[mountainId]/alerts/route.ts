@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getMountain } from '@shredders/shared';
-import { getWeatherAlerts } from '@/lib/apis/noaa';
+import { getWeatherAlerts, filterActiveAlerts } from '@/lib/apis/noaa';
 
 export async function GET(
   request: Request,
@@ -17,10 +17,13 @@ export async function GET(
   }
 
   try {
-    const alerts = await getWeatherAlerts(
+    const rawAlerts = await getWeatherAlerts(
       mountain.location.lat,
       mountain.location.lng
     );
+
+    // Filter out expired alerts (defensive - getWeatherAlerts already filters)
+    const alerts = filterActiveAlerts(rawAlerts);
 
     return NextResponse.json({
       mountain: {

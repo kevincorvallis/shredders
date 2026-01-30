@@ -6,7 +6,10 @@ import {
   getCurrentWeather,
   getExtendedCurrentWeather,
   getHourlyForecast,
-  type NOAAGridConfig
+  getWeatherAlerts,
+  analyzeStormFromAlerts,
+  type NOAAGridConfig,
+  type StormInfo
 } from '@/lib/apis/noaa';
 import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';
 
@@ -34,8 +37,9 @@ function calculatePowderScore(
     precipProbability: number | null;
   },
   baseDepth?: number,
-  snowfall72h?: number
-): { score: number; factors: ScoreFactor[] } {
+  snowfall72h?: number,
+  stormInfo?: StormInfo | null
+): { score: number; factors: ScoreFactor[]; stormBoost: number } {
   const factors: ScoreFactor[] = [];
 
   // ===== PRIMARY FACTORS (60% of total) =====
@@ -243,6 +247,18 @@ function calculatePowderScore(
     modifiers.push('Storm cycling (+1)');
   }
 
+  // Storm boost - active winter storm warning boosts score
+  let stormBoost = 0;
+  if (stormInfo?.isPowderBoost && stormInfo.isActive) {
+    // Calculate boost based on expected snowfall (0.5-1.5 points)
+    const expectedSnow = stormInfo.expectedSnowfall ?? 6; // Default to 6" if unknown
+    stormBoost = Math.min(expectedSnow / 12, 1.5); // Max 1.5 point boost
+    stormBoost = Math.round(stormBoost * 10) / 10; // Round to 1 decimal
+
+    baseScoreTotal = Math.min(10, baseScoreTotal + stormBoost);
+    modifiers.push(`Storm incoming (+${stormBoost}): ${stormInfo.eventType}`);
+  }
+
   // Add modifiers to description if any
   if (modifiers.length > 0) {
     factors.push({
@@ -257,7 +273,7 @@ function calculatePowderScore(
 
   const finalScore = Math.round(Math.max(1, Math.min(10, baseScoreTotal)) * 10) / 10;
 
-  return { score: finalScore, factors };
+  return { score: finalScore, factors, stormBoost };
 }
 
 export async function GET(
@@ -302,6 +318,15 @@ export async function GET(
       } catch (error) {
         console.error(`NOAA error for ${mountain.name}:`, error);
       }
+    }
+
+    // Get weather alerts and analyze for storms
+    let stormInfo: StormInfo | null = null;
+    try {
+      const alerts = await getWeatherAlerts(mountain.location.lat, mountain.location.lng);
+      stormInfo = analyzeStormFromAlerts(alerts);
+    } catch (error) {
+      console.error(`Alerts error for ${mountain.name}:`, error);
     }
 
     // Get freezing level from Open-Meteo
@@ -358,7 +383,7 @@ export async function GET(
     const temperature = extendedWeatherData?.temperature ?? weatherData?.temperature ?? snotelData?.temperature ?? 32;
     const windSpeed = extendedWeatherData?.windSpeed ?? weatherData?.windSpeed ?? 0;
 
-    const { score, factors } = calculatePowderScore(
+    const { score, factors, stormBoost } = calculatePowderScore(
       snowfall24h,
       snowfall48h,
       temperature,
@@ -367,7 +392,8 @@ export async function GET(
       rainRisk,
       weatherGovData,
       baseDepth,
-      snowfall72h
+      snowfall72h,
+      stormInfo
     );
 
     // Generate verdict
@@ -414,12 +440,23 @@ export async function GET(
             level: rainRisk.score >= 7 ? 'low' : rainRisk.score >= 4 ? 'moderate' : 'high',
           }
         : null,
+      // Storm info for active winter storm warnings
+      stormInfo: stormInfo?.isActive ? {
+        isActive: stormInfo.isActive,
+        isPowderBoost: stormInfo.isPowderBoost,
+        eventType: stormInfo.eventType,
+        hoursRemaining: stormInfo.hoursRemaining,
+        expectedSnowfall: stormInfo.expectedSnowfall,
+        severity: stormInfo.severity,
+        scoreBoost: stormBoost,
+      } : null,
       elevation: mountain.elevation,
       dataAvailable: {
         snotel: !!snotelData,
         noaa: !!weatherData,
         noaaExtended: !!extendedWeatherData,
         openMeteo: !!freezingLevel,
+        alerts: stormInfo !== null,
       },
     });
   } catch (error) {

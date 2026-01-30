@@ -379,6 +379,18 @@ export interface WeatherAlert {
   areaDesc: string;
 }
 
+/**
+ * Filter out expired alerts
+ */
+export function filterActiveAlerts(alerts: WeatherAlert[]): WeatherAlert[] {
+  const now = new Date();
+  return alerts.filter(alert => {
+    if (!alert.expires) return true; // Keep alerts without expiration
+    const expiresDate = new Date(alert.expires);
+    return expiresDate > now;
+  });
+}
+
 export async function getWeatherAlerts(lat: number, lng: number): Promise<WeatherAlert[]> {
   try {
     const url = `https://api.weather.gov/alerts/active?point=${lat},${lng}`;
@@ -389,7 +401,7 @@ export async function getWeatherAlerts(lat: number, lng: number): Promise<Weathe
       return [];
     }
 
-    return data.features.map((feature: any) => ({
+    const alerts = data.features.map((feature: any) => ({
       id: feature.id,
       event: feature.properties.event,
       headline: feature.properties.headline,
@@ -402,10 +414,98 @@ export async function getWeatherAlerts(lat: number, lng: number): Promise<Weathe
       instruction: feature.properties.instruction,
       areaDesc: feature.properties.areaDesc,
     }));
+
+    // Filter out expired alerts before returning
+    return filterActiveAlerts(alerts);
   } catch (error) {
     console.error('Error fetching weather alerts:', error);
     return [];
   }
+}
+
+// Storm classification - events that boost powder scores
+export const POWDER_BOOST_EVENTS = [
+  'Winter Storm Warning',
+  'Blizzard Warning',
+  'Heavy Snow Warning',
+  'Winter Weather Advisory',
+  'Snow Squall Warning',
+  'Lake Effect Snow Warning',
+  'Winter Storm Watch',
+  'Blizzard Watch',
+] as const;
+
+export interface StormInfo {
+  isActive: boolean;
+  isPowderBoost: boolean;
+  eventType: string | null;
+  hoursRemaining: number | null;
+  expectedSnowfall: number | null;
+  severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | null;
+}
+
+/**
+ * Analyze alerts to determine if there's an active storm that should boost powder score
+ */
+export function analyzeStormFromAlerts(alerts: WeatherAlert[]): StormInfo {
+  const activeAlerts = filterActiveAlerts(alerts);
+
+  // Find the most significant powder-boosting alert
+  const powderAlert = activeAlerts.find(alert =>
+    POWDER_BOOST_EVENTS.some(event =>
+      alert.event.toLowerCase().includes(event.toLowerCase()) ||
+      event.toLowerCase().includes(alert.event.toLowerCase())
+    )
+  );
+
+  if (!powderAlert) {
+    return {
+      isActive: false,
+      isPowderBoost: false,
+      eventType: null,
+      hoursRemaining: null,
+      expectedSnowfall: null,
+      severity: null,
+    };
+  }
+
+  // Calculate hours remaining
+  let hoursRemaining: number | null = null;
+  if (powderAlert.expires) {
+    const expiresDate = new Date(powderAlert.expires);
+    const now = new Date();
+    hoursRemaining = Math.max(0, Math.round((expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60)));
+  }
+
+  // Try to extract expected snowfall from description
+  let expectedSnowfall: number | null = null;
+  const description = powderAlert.description.toLowerCase();
+
+  // Match patterns like "12 to 18 inches", "6-12 inches", "up to 24 inches"
+  const snowfallPatterns = [
+    /(\d+)\s*to\s*(\d+)\s*inch/i,
+    /(\d+)\s*-\s*(\d+)\s*inch/i,
+    /up\s*to\s*(\d+)\s*inch/i,
+    /(\d+)\s*inch/i,
+  ];
+
+  for (const pattern of snowfallPatterns) {
+    const match = description.match(pattern);
+    if (match) {
+      // Take the higher number if a range is given
+      expectedSnowfall = match[2] ? parseInt(match[2]) : parseInt(match[1]);
+      break;
+    }
+  }
+
+  return {
+    isActive: true,
+    isPowderBoost: true,
+    eventType: powderAlert.event,
+    hoursRemaining,
+    expectedSnowfall,
+    severity: powderAlert.severity as StormInfo['severity'],
+  };
 }
 
 // Hourly Forecast (next 48-156 hours)

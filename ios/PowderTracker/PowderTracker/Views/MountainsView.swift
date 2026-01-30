@@ -316,6 +316,7 @@ struct MountainsView: View {
                             windSpeed: 0,
                             upcomingSnow: 0
                         ),
+                        stormInfo: nil,
                         dataAvailable: MountainPowderScore.DataAvailability(
                             snotel: mountain.hasSnotel,
                             noaa: true

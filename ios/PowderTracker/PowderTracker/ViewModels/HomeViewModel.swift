@@ -46,13 +46,28 @@ class HomeViewModel: ObservableObject {
         isLoading = true
         error = nil
 
+        #if DEBUG
+        print("📡 [HomeVM] loadFavoritesData starting for: \(favoritesManager.favoriteIds)")
+        #endif
+
         await withTaskGroup(of: (String, MountainBatchedResponse?).self) { group in
             for mountainId in favoritesManager.favoriteIds {
                 group.addTask {
                     do {
                         let data = try await self.apiClient.fetchMountainData(for: mountainId)
+                        #if DEBUG
+                        print("📡 [HomeVM] Loaded \(mountainId) - forecast count: \(data.forecast.count)")
+                        if data.forecast.isEmpty {
+                            print("⚠️ [HomeVM] API returned EMPTY forecast for \(mountainId)")
+                        } else {
+                            print("📡 [HomeVM] \(mountainId) forecast days: \(data.forecast.map { $0.dayOfWeek }.joined(separator: ", "))")
+                        }
+                        #endif
                         return (mountainId, data)
                     } catch {
+                        #if DEBUG
+                        print("❌ [HomeVM] Failed to load \(mountainId): \(error.localizedDescription)")
+                        #endif
                         return (mountainId, nil)
                     }
                 }
@@ -64,6 +79,10 @@ class HomeViewModel: ObservableObject {
                 }
             }
         }
+
+        #if DEBUG
+        print("📡 [HomeVM] loadFavoritesData complete. mountainData keys: \(Array(mountainData.keys))")
+        #endif
 
         isLoading = false
         lastRefreshDate = Date()
@@ -105,11 +124,32 @@ class HomeViewModel: ObservableObject {
 
     /// Get all favorite mountains with their forecast data
     func getFavoritesWithForecast() -> [(mountain: Mountain, forecast: [ForecastDay])] {
+        #if DEBUG
+        print("🔍 [HomeVM] getFavoritesWithForecast called")
+        print("🔍 [HomeVM] favoriteIds: \(favoritesManager.favoriteIds)")
+        print("🔍 [HomeVM] mountainsById count: \(mountainsById.count)")
+        print("🔍 [HomeVM] mountainData count: \(mountainData.count)")
+        #endif
+
         return favoritesManager.favoriteIds.compactMap { mountainId in
-            guard let mountain = mountainsById[mountainId],
-                  let data = mountainData[mountainId] else {
+            guard let mountain = mountainsById[mountainId] else {
+                #if DEBUG
+                print("⚠️ [HomeVM] Mountain not found in mountainsById: \(mountainId)")
+                #endif
                 return nil
             }
+            guard let data = mountainData[mountainId] else {
+                #if DEBUG
+                print("⚠️ [HomeVM] Data not found in mountainData: \(mountainId)")
+                #endif
+                return nil
+            }
+            #if DEBUG
+            print("✅ [HomeVM] \(mountainId) forecast count: \(data.forecast.count)")
+            if data.forecast.isEmpty {
+                print("⚠️ [HomeVM] \(mountainId) has EMPTY forecast!")
+            }
+            #endif
             return (mountain, data.forecast)
         }
     }
@@ -194,16 +234,21 @@ class HomeViewModel: ObservableObject {
 
     // MARK: - Smart Helpers
 
-    /// Get mountains that need to leave soon (within 60 minutes of optimal arrival)
-    func getLeaveNowMountains() -> [(mountain: Mountain, arrivalTime: ArrivalTimeRecommendation)] {
-        let now = Date()
+    // Static formatter to avoid expensive instantiation on each call
+    private static let arrivalTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
         formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
+    /// Get mountains that need to leave soon (within 60 minutes of optimal arrival)
+    func getLeaveNowMountains() -> [(mountain: Mountain, arrivalTime: ArrivalTimeRecommendation)] {
+        let now = Date()
 
         return arrivalTimes.compactMap { (mountainId, arrival) -> (Mountain, ArrivalTimeRecommendation)? in
             guard let mountain = mountainsById[mountainId],
-                  let optimalTime = formatter.date(from: arrival.arrivalWindow.optimal) else {
+                  let optimalTime = Self.arrivalTimeFormatter.date(from: arrival.arrivalWindow.optimal) else {
                 return nil
             }
 
@@ -229,12 +274,30 @@ class HomeViewModel: ObservableObject {
             .max { $0.1.score < $1.1.score }
     }
 
-    /// Get all active weather alerts across favorites
+    /// Get all active weather alerts across favorites (filters out expired alerts)
     func getActiveAlerts() -> [WeatherAlert] {
         let favoriteMountainIds = Set(favoritesManager.favoriteIds)
         return mountainData
             .filter { favoriteMountainIds.contains($0.key) }
             .flatMap { $0.value.alerts }
+            .filter { !$0.isExpired }
+    }
+
+    /// Get active storm alerts (powder-boosting events only)
+    func getActiveStormAlerts() -> [WeatherAlert] {
+        return getActiveAlerts().filter { $0.isPowderBoostEvent }
+    }
+
+    /// Get the most significant active storm alert
+    func getMostSignificantStorm() -> WeatherAlert? {
+        let stormAlerts = getActiveStormAlerts()
+        // Sort by severity (Extreme > Severe > Moderate > Minor)
+        let severityOrder = ["extreme": 0, "severe": 1, "moderate": 2, "minor": 3, "unknown": 4]
+        return stormAlerts.min { a, b in
+            let aOrder = severityOrder[a.severity.lowercased()] ?? 4
+            let bOrder = severityOrder[b.severity.lowercased()] ?? 4
+            return aOrder < bOrder
+        }
     }
 
     /// Generate smart suggestion based on conditions

@@ -16,6 +16,11 @@ struct NowTabView: View {
             if favoritesManager.favoriteIds.isEmpty {
                 emptyState
             } else {
+                // Section 0: Storm Mode Banner (if active storm)
+                if let stormAlert = viewModel.getMostSignificantStorm() {
+                    stormModeSection(alert: stormAlert)
+                }
+
                 // Section 1: Leave Now Cards (if any)
                 if !viewModel.getLeaveNowMountains().isEmpty {
                     leaveNowSection
@@ -24,13 +29,15 @@ struct NowTabView: View {
                 // Section 2: Live Status Grid
                 liveStatusGrid
 
-                // Section 3: Active Weather Alerts
-                if !viewModel.getActiveAlerts().isEmpty {
-                    weatherAlertsSection
+                // Section 3: Active Weather Alerts (non-storm alerts)
+                let nonStormAlerts = viewModel.getActiveAlerts().filter { !$0.isPowderBoostEvent }
+                if !nonStormAlerts.isEmpty {
+                    weatherAlertsSection(alerts: nonStormAlerts)
                 }
 
                 // Empty state if no urgent content
-                if viewModel.getLeaveNowMountains().isEmpty &&
+                if viewModel.getMostSignificantStorm() == nil &&
+                   viewModel.getLeaveNowMountains().isEmpty &&
                    viewModel.getActiveAlerts().isEmpty {
                     noUrgentUpdates
                 }
@@ -76,13 +83,56 @@ struct NowTabView: View {
         }
     }
 
-    private var weatherAlertsSection: some View {
+    @ViewBuilder
+    private func stormModeSection(alert: WeatherAlert) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                Text("Storm Alert")
+                    .font(.headline)
+                Spacer()
+            }
+            .padding(.horizontal, 4)
+
+            // Find the mountain and powder score with storm info
+            if let stormData = findStormDataForAlert(alert) {
+                StormModeBanner(
+                    stormInfo: stormData.stormInfo,
+                    mountainName: stormData.mountainName
+                )
+            } else {
+                // Fallback to basic alert row if no storm info available
+                WeatherAlertRow(alert: alert)
+            }
+        }
+    }
+
+    /// Find storm info from powder scores that matches this alert
+    private func findStormDataForAlert(_ alert: WeatherAlert) -> (stormInfo: StormInfo, mountainName: String)? {
+        for (_, data) in viewModel.mountainData {
+            if let stormInfo = data.powderScore.stormInfo,
+               stormInfo.isActive,
+               stormInfo.eventType?.lowercased() == alert.event.lowercased() {
+                return (stormInfo, data.mountain.name)
+            }
+        }
+        // If no exact match, try to find any active storm
+        for (_, data) in viewModel.mountainData {
+            if let stormInfo = data.powderScore.stormInfo, stormInfo.isActive {
+                return (stormInfo, data.mountain.name)
+            }
+        }
+        return nil
+    }
+
+    private func weatherAlertsSection(alerts: [WeatherAlert]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Active Alerts")
                 .font(.headline)
                 .padding(.horizontal, 4)
 
-            ForEach(viewModel.getActiveAlerts()) { alert in
+            ForEach(alerts) { alert in
                 WeatherAlertRow(alert: alert)
             }
         }
