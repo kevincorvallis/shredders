@@ -20,11 +20,16 @@ struct MountainCardRow: View {
 
             // Info column
             VStack(alignment: .leading, spacing: .spacingS) {
-                // Name + Region
+                // Name + Region + Pass Badge
                 HStack(spacing: .spacingS) {
                     Text(mountain.shortName)
                         .font(.headline)
                         .foregroundColor(.primary)
+
+                    // Cute pass badge
+                    if let passType = mountain.passType, passType != .independent {
+                        PassBadge(passType: passType, compact: true)
+                    }
 
                     Text(mountain.region.uppercased())
                         .badge()

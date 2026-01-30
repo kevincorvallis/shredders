@@ -53,7 +53,7 @@ struct EnhancedMountainCard: View {
     // MARK: - Header
 
     private var headerSection: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
             // Logo background
             MountainLogoView(
                 logoUrl: mountain.logo,
@@ -73,6 +73,20 @@ struct EnhancedMountainCard: View {
                 )
             )
 
+            // Pass badge in bottom left
+            VStack {
+                Spacer()
+                HStack {
+                    if let passType = mountain.passType, passType != .independent {
+                        PassBadge(passType: passType)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                    Spacer()
+                }
+                .padding(8)
+            }
+
+            // Top right controls
             VStack(alignment: .trailing, spacing: 8) {
                 // Favorite button with haptic feedback and bounce animation
                 Button {
@@ -97,6 +111,7 @@ struct EnhancedMountainCard: View {
                 // Live status badges
                 statusBadges
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
         }
     }
 
@@ -248,14 +263,18 @@ struct EnhancedMountainCard: View {
 
     // MARK: - Helpers
 
+    // Static formatter to avoid expensive instantiation in computed property
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter
+    }()
+
     private var shouldShowLeaveNowBadge: Bool {
         guard let arrivalTime = arrivalTime else { return false }
 
         // Parse arrival time and check if we're in the "leave now" window
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-
-        guard let targetTime = formatter.date(from: arrivalTime.recommendedArrivalTime) else {
+        guard let targetTime = Self.timeFormatter.date(from: arrivalTime.recommendedArrivalTime) else {
             return false
         }
 
@@ -339,5 +358,86 @@ struct InfoPill: View {
                 .font(.caption)
         }
         .foregroundStyle(.secondary)
+    }
+}
+
+// MARK: - Pass Badge
+
+struct PassBadge: View {
+    let passType: PassType
+    var compact: Bool = false
+
+    private var passColor: Color {
+        switch passType {
+        case .epic:
+            return Color(red: 0.5, green: 0.2, blue: 0.8) // Purple
+        case .ikon:
+            return Color(red: 1.0, green: 0.5, blue: 0.0) // Orange
+        case .independent:
+            return Color(red: 0.3, green: 0.6, blue: 0.9) // Blue
+        }
+    }
+
+    private var passIcon: String {
+        switch passType {
+        case .epic:
+            return "mountain.2.fill" // Mountains for Epic
+        case .ikon:
+            return "snowflake" // Snowflake for Ikon
+        case .independent:
+            return "star.fill" // Star for independent
+        }
+    }
+
+    private var passName: String {
+        switch passType {
+        case .epic:
+            return "EPIC"
+        case .ikon:
+            return "IKON"
+        case .independent:
+            return "INDIE"
+        }
+    }
+
+    var body: some View {
+        if compact {
+            // Compact version - just icon with subtle background
+            Image(systemName: passIcon)
+                .font(.caption2)
+                .fontWeight(.bold)
+                .foregroundColor(passColor)
+                .padding(4)
+                .background(
+                    Circle()
+                        .fill(passColor.opacity(0.15))
+                )
+                .accessibilityLabel("\(passType.rawValue.capitalized) Pass")
+        } else {
+            // Full badge with text
+            HStack(spacing: 3) {
+                Image(systemName: passIcon)
+                    .font(.system(size: 8, weight: .bold))
+
+                Text(passName)
+                    .font(.system(size: 9, weight: .heavy))
+                    .tracking(0.5)
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [passColor, passColor.opacity(0.8)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .shadow(color: passColor.opacity(0.4), radius: 2, y: 1)
+            )
+            .accessibilityLabel("\(passType.rawValue.capitalized) Pass")
+        }
     }
 }
