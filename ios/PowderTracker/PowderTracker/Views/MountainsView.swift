@@ -1,670 +1,1257 @@
 import SwiftUI
+import CoreLocation
 
-/// Redesigned Mountains tab - Visual grid with sorting/filtering
+// MARK: - Redesigned Mountains View
+
+/// Discovery-focused Mountains tab with smart sections, regions, and visual hierarchy
+/// Inspired by Apple's Weather app and App Store design patterns
 struct MountainsView: View {
-    @Environment(\.colorScheme) private var colorScheme
     @StateObject private var viewModel = MountainSelectionViewModel()
     @StateObject private var favoritesManager = FavoritesManager.shared
-    @State private var sortBy: SortOption = .distance
-    @State private var filterPass: PassFilter = .all
+
     @State private var searchText = ""
-    @State private var isMapExpanded = false
-    @State private var isInitialLoad = true
-    @State private var showScrollToTop = false
-    @State private var stickyRegions: Set<String> = []
-    @Namespace private var heroNamespace
+    @State private var isSearching = false
+    @State private var selectedRegion: MountainRegion?
+    @State private var viewMode: ViewMode = .discover
+    @State private var showFilters = false
+    @State private var selectedFilters: Set<QuickFilter> = []
+    @State private var compareMode = false
+    @State private var selectedForComparison: Set<String> = []
+
+    @Namespace private var namespace
+
+    enum ViewMode: String, CaseIterable {
+        case discover = "Discover"
+        case list = "List"
+        case map = "Map"
+
+        var icon: String {
+            switch self {
+            case .discover: return "sparkles"
+            case .list: return "list.bullet"
+            case .map: return "map"
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
-                ZStack(alignment: .bottomTrailing) {
-                    ScrollView {
-                        VStack(spacing: .spacingL) {
-                            // Anchor for scroll-to-top
-                            Color.clear
-                                .frame(height: 1)
-                                .id("top")
+            ZStack {
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
 
-                            searchAndFiltersSection
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Search header
+                        searchSection
+                            .padding(.horizontal)
+                            .padding(.bottom, .spacingM)
 
-                            // Map section
-                            MapSectionView(
-                                mountains: filteredMountains,
-                                scores: mountainScores,
-                                isExpanded: $isMapExpanded,
-                                onMountainSelected: navigateToMountain
-                            )
-                            .padding(.horizontal, .spacingL)
-
-                            // Best powder today card
-                            bestPowderTodaySection
-
-                            mountainsGridSection
+                        if isSearching && !searchText.isEmpty {
+                            searchResultsView
+                        } else {
+                            mainContentView
                         }
-                        .padding(.vertical, .spacingS)
-                        .background(
-                            GeometryReader { geo in
-                                Color.clear
-                                    .preference(
-                                        key: ScrollOffsetPreferenceKey.self,
-                                        value: geo.frame(in: .named("scroll")).minY
-                                    )
+                    }
+                }
+                .refreshable {
+                    await viewModel.loadMountains()
+                }
+
+                // Comparison bar
+                if compareMode && !selectedForComparison.isEmpty {
+                    comparisonBar
+                }
+            }
+            .navigationTitle("Mountains")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("View", selection: $viewMode) {
+                            ForEach(ViewMode.allCases, id: \.self) { mode in
+                                Label(mode.rawValue, systemImage: mode.icon)
                             }
-                        )
-                    }
-                    .coordinateSpace(name: "scroll")
-                    .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            showScrollToTop = offset < -300
                         }
-                    }
 
-                    // Scroll to top button
-                    if showScrollToTop {
+                        Divider()
+
                         Button {
-                            HapticFeedback.light.trigger()
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                proxy.scrollTo("top", anchor: .top)
+                            withAnimation(.spring(response: 0.3)) {
+                                compareMode.toggle()
+                                if !compareMode {
+                                    selectedForComparison.removeAll()
+                                }
                             }
                         } label: {
-                            Image(systemName: "arrow.up")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(width: 44, height: 44)
-                                .background(Circle().fill(Color.blue))
-                                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
-                        }
-                        .padding(.trailing, .spacingL)
-                        .padding(.bottom, .spacingXL)
-                        .transition(.scale.combined(with: .opacity))
-                    }
-                }
-            }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Mountains")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        HapticFeedback.selection.trigger()
-                        withAnimation(.bouncy) {
-                            isMapExpanded.toggle()
+                            Label(
+                                compareMode ? "Exit Compare" : "Compare Mountains",
+                                systemImage: compareMode ? "xmark.circle" : "square.on.square"
+                            )
                         }
                     } label: {
-                        Image(systemName: isMapExpanded ? "map.fill" : "map")
-                            .symbolRenderingMode(.hierarchical)
-                            .foregroundColor(.blue)
+                        Image(systemName: "ellipsis.circle")
+                            .font(.title3)
                     }
-                    .accessibilityLabel(isMapExpanded ? "Collapse map" : "Expand map")
                 }
-            }
-            .refreshable {
-                await viewModel.loadMountains()
             }
             .task {
                 await viewModel.loadMountains()
-                isInitialLoad = false
             }
         }
     }
 
-    // MARK: - Best Powder Today
+    // MARK: - Search Section
 
-    @ViewBuilder
-    private var bestPowderTodaySection: some View {
-        if let bestMountain = bestPowderMountain {
-            NavigationLink {
-                MountainDetailView(mountain: bestMountain)
-            } label: {
-                BestPowderTodayCard(
-                    mountain: bestMountain,
-                    conditions: viewModel.getConditions(for: bestMountain),
-                    powderScore: viewModel.getScore(for: bestMountain).map { Int($0) },
-                    arrivalTime: nil, // Will load dynamically
-                    parking: nil,
-                    viewModel: nil
-                )
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal)
-        }
-    }
-
-    private var bestPowderMountain: Mountain? {
-        filteredMountains
-            .filter { viewModel.getScore(for: $0) != nil }
-            .max { m1, m2 in
-                (viewModel.getScore(for: m1) ?? 0) < (viewModel.getScore(for: m2) ?? 0)
-            }
-    }
-
-    private var searchAndFiltersSection: some View {
+    private var searchSection: some View {
         VStack(spacing: .spacingM) {
-            searchBar
-            filterChipsRow
-        }
-        .padding(.horizontal, .spacingL)
-    }
-
-    private var searchBar: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-
-            TextField("Search mountains...", text: $searchText)
-                .textFieldStyle(.plain)
-
-            if !searchText.isEmpty {
-                Button {
-                    searchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
+            // Search bar
+            HStack(spacing: .spacingM) {
+                HStack {
+                    Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
+
+                    TextField("Search mountains, regions...", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3)) {
+                                isSearching = true
+                            }
+                        }
+
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.spacingM)
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(.cornerRadiusCard)
+
+                if isSearching {
+                    Button("Cancel") {
+                        withAnimation(.spring(response: 0.3)) {
+                            isSearching = false
+                            searchText = ""
+                        }
+                    }
+                    .foregroundColor(.blue)
                 }
             }
+
+            // Quick filters
+            if !isSearching {
+                quickFiltersRow
+            }
         }
-        .padding(.spacingM)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(.cornerRadiusCard)
     }
 
-    private var filterChipsRow: some View {
+    private var quickFiltersRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: .spacingM) {
-                sortMenu
-
-                ForEach(PassFilter.allCases, id: \.self) { passFilter in
-                    Button {
-                        filterPass = passFilter
-                    } label: {
-                        FilterChip(
-                            icon: passFilter.icon,
-                            label: passFilter.rawValue,
-                            isActive: filterPass == passFilter
-                        )
-                    }
+            HStack(spacing: .spacingS) {
+                ForEach(QuickFilter.allCases, id: \.self) { filter in
+                    QuickFilterChip(
+                        filter: filter,
+                        isSelected: selectedFilters.contains(filter),
+                        onTap: {
+                            withAnimation(.spring(response: 0.25)) {
+                                if selectedFilters.contains(filter) {
+                                    selectedFilters.remove(filter)
+                                } else {
+                                    selectedFilters.insert(filter)
+                                }
+                            }
+                        }
+                    )
                 }
             }
             .padding(.horizontal, 4)
         }
     }
 
-    private var sortMenu: some View {
-        Menu {
-            ForEach(SortOption.allCases, id: \.self) { option in
-                Button {
-                    HapticFeedback.selection.trigger()
-                    sortBy = option
-                } label: {
-                    Label(
-                        option.rawValue,
-                        systemImage: sortBy == option ? "checkmark" : ""
-                    )
-                }
-            }
-        } label: {
-            FilterChip(
-                icon: "arrow.up.arrow.down",
-                label: sortBy.rawValue,
-                isActive: true
-            )
-        }
-    }
-
-    private var mountainsGridSection: some View {
-        Group {
-            // Show skeletons only if loading AND no mountains yet (partial data shows as soon as mountains load)
-            if viewModel.isLoading && viewModel.mountains.isEmpty && isInitialLoad {
-                // Show skeletons during initial load
-                LazyVStack(spacing: .spacingM) {
-                    ForEach(0..<3, id: \.self) { _ in
-                        ListItemSkeleton(height: 200)
-                    }
-                }
-                .padding(.horizontal, .spacingL)
-            } else if filteredMountains.isEmpty {
-                let state = emptyStateMessage
-                CardEmptyStateView(
-                    icon: state.icon,
-                    title: state.message,
-                    message: state.description
-                )
-                .padding(.top, .spacingXXL * 2.5)
-            } else {
-                mountainsGrid
-            }
-        }
-    }
-
-    private var emptyStateMessage: (icon: String, message: String, description: String) {
-        switch filterPass {
-        case .epic:
-            return ("ticket.fill", "No Epic Pass mountains found", "Stevens Pass and Whistler Blackcomb honor Epic Pass")
-        case .ikon:
-            return ("star.square.fill", "No Ikon Pass mountains found", "Crystal, Snoqualmie, Bachelor, Schweitzer, Sun Valley, Revelstoke, RED, Cypress, Panorama, and Sun Peaks honor Ikon Pass")
-        case .favorites:
-            return ("star.fill", "No favorites yet", "Tap the star icon on any mountain to add it to your favorites")
-        case .freshPowder:
-            return ("snow", "No fresh powder today", "Check back after the next storm for powder days")
-        default:
-            return ("mountain.2", "No mountains found", "Try adjusting your search or filters")
-        }
-    }
-
-    private var mountainsGrid: some View {
-        LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-            ForEach(mountainsByRegion, id: \.region) { regionGroup in
-                Section {
-                    LazyVStack(spacing: 12) {
-                        ForEach(Array(regionGroup.mountains.enumerated()), id: \.element.id) { index, mountain in
-                            mountainRow(mountain: mountain, index: index)
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, .spacingM)
-                } header: {
-                    RegionSectionHeader(
-                        region: regionGroup.region,
-                        mountainCount: regionGroup.mountains.count,
-                        isSticky: stickyRegions.contains(regionGroup.region)
-                    )
-                    .background(
-                        GeometryReader { geo in
-                            Color.clear
-                                .preference(
-                                    key: StickyHeaderPreferenceKey.self,
-                                    value: [regionGroup.region: geo.frame(in: .global).minY]
-                                )
-                        }
-                    )
-                }
-            }
-        }
-        .onPreferenceChange(StickyHeaderPreferenceKey.self) { values in
-            let newSticky = Set(values.filter { $0.value <= 100 }.keys)
-            if newSticky != stickyRegions {
-                withAnimation(.easeOut(duration: 0.15)) {
-                    stickyRegions = newSticky
-                }
-            }
-        }
-    }
+    // MARK: - Main Content
 
     @ViewBuilder
-    private func mountainRow(mountain: Mountain, index: Int) -> some View {
-        NavigationLink {
-            MountainDetailView(mountain: mountain)
-                .zoomNavigationTransition(sourceID: mountain.id, in: heroNamespace)
-        } label: {
-            MountainCardRow(
-                mountain: mountain,
-                conditions: viewModel.getConditions(for: mountain),
-                powderScore: viewModel.getScore(for: mountain).map { score in
-                    MountainPowderScore(
-                        mountain: MountainInfo(
-                            id: mountain.id,
-                            name: mountain.name,
-                            shortName: mountain.shortName
-                        ),
-                        score: score,
-                        factors: [],
-                        verdict: "",
-                        conditions: MountainPowderScore.ScoreConditions(
-                            snowfall24h: 0,
-                            snowfall48h: 0,
-                            temperature: 0,
-                            windSpeed: 0,
-                            upcomingSnow: 0
-                        ),
-                        stormInfo: nil,
-                        dataAvailable: MountainPowderScore.DataAvailability(
-                            snotel: mountain.hasSnotel,
-                            noaa: true
-                        )
-                    )
-                },
-                isFavorite: favoritesManager.isFavorite(mountain.id),
-                onFavoriteToggle: {
-                    toggleFavorite(mountain.id)
+    private var mainContentView: some View {
+        switch viewMode {
+        case .discover:
+            discoverView
+        case .list:
+            listView
+        case .map:
+            mapView
+        }
+    }
+
+    // MARK: - Discover View
+
+    private var discoverView: some View {
+        LazyVStack(spacing: .spacingXL) {
+            // Conditions Summary Card
+            conditionsSummaryCard
+                .padding(.horizontal)
+
+            // Best Conditions Now
+            if !bestConditionsMountains.isEmpty {
+                DiscoverySection(
+                    title: "Best Conditions Now",
+                    subtitle: "Top powder scores today",
+                    icon: "sparkles",
+                    iconColor: .yellow
+                ) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: .spacingM) {
+                            ForEach(bestConditionsMountains.prefix(5)) { mountain in
+                                NavigationLink {
+                                    MountainDetailView(mountain: mountain)
+                                } label: {
+                                    ConditionCard(
+                                        mountain: mountain,
+                                        score: viewModel.getScore(for: mountain),
+                                        conditions: viewModel.getConditions(for: mountain),
+                                        isFavorite: favoritesManager.isFavorite(mountain.id),
+                                        compareMode: compareMode,
+                                        isSelectedForComparison: selectedForComparison.contains(mountain.id),
+                                        onFavoriteToggle: { toggleFavorite(mountain.id) },
+                                        onCompareToggle: { toggleComparison(mountain.id) }
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
                 }
+            }
+
+            // Nearest to You
+            if !nearestMountains.isEmpty {
+                DiscoverySection(
+                    title: "Nearest to You",
+                    subtitle: "Quick day trips",
+                    icon: "location.fill",
+                    iconColor: .blue
+                ) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: .spacingM) {
+                            ForEach(nearestMountains.prefix(5)) { mountain in
+                                NavigationLink {
+                                    MountainDetailView(mountain: mountain)
+                                } label: {
+                                    NearbyCard(
+                                        mountain: mountain,
+                                        distance: viewModel.getDistance(to: mountain),
+                                        score: viewModel.getScore(for: mountain),
+                                        conditions: viewModel.getConditions(for: mountain)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+            }
+
+            // Browse by Region
+            DiscoverySection(
+                title: "Browse by Region",
+                subtitle: "Explore mountains by area",
+                icon: "map.fill",
+                iconColor: .green
+            ) {
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: .spacingM) {
+                    ForEach(MountainRegion.allCases, id: \.self) { region in
+                        RegionCard(
+                            region: region,
+                            mountainCount: mountainsInRegion(region).count,
+                            topScore: topScoreInRegion(region),
+                            onTap: {
+                                selectedRegion = region
+                            }
+                        )
+                    }
+                }
+                .padding(.horizontal)
+            }
+
+            // Your Favorites
+            if !favoriteMountains.isEmpty {
+                DiscoverySection(
+                    title: "Your Favorites",
+                    subtitle: "Quick access to your mountains",
+                    icon: "star.fill",
+                    iconColor: .yellow
+                ) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: .spacingM) {
+                            ForEach(favoriteMountains) { mountain in
+                                NavigationLink {
+                                    MountainDetailView(mountain: mountain)
+                                } label: {
+                                    FavoriteCard(
+                                        mountain: mountain,
+                                        score: viewModel.getScore(for: mountain),
+                                        conditions: viewModel.getConditions(for: mountain)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+            }
+
+            // All Mountains
+            DiscoverySection(
+                title: "All Mountains",
+                subtitle: "\(filteredMountains.count) resorts",
+                icon: "mountain.2.fill",
+                iconColor: .purple
+            ) {
+                LazyVStack(spacing: .spacingM) {
+                    ForEach(filteredMountains) { mountain in
+                        NavigationLink {
+                            MountainDetailView(mountain: mountain)
+                        } label: {
+                            CompactMountainRow(
+                                mountain: mountain,
+                                score: viewModel.getScore(for: mountain),
+                                distance: viewModel.getDistance(to: mountain),
+                                conditions: viewModel.getConditions(for: mountain),
+                                isFavorite: favoritesManager.isFavorite(mountain.id),
+                                compareMode: compareMode,
+                                isSelectedForComparison: selectedForComparison.contains(mountain.id),
+                                onFavoriteToggle: { toggleFavorite(mountain.id) },
+                                onCompareToggle: { toggleComparison(mountain.id) }
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal)
+            }
+
+            Spacer(minLength: 100)
+        }
+        .sheet(item: $selectedRegion) { region in
+            RegionDetailSheet(
+                region: region,
+                mountains: mountainsInRegion(region),
+                viewModel: viewModel,
+                favoritesManager: favoritesManager
             )
-            .matchedTransitionSourceIfAvailable(id: mountain.id, in: heroNamespace)
         }
-        .buttonStyle(.plain)
-        .opacity(isInitialLoad ? 0 : 1)
-        .offset(y: isInitialLoad ? 20 : 0)
-        .animation(
-            .spring(response: 0.4, dampingFraction: 0.8)
-                .delay(Double(index) * 0.05),
-            value: isInitialLoad
+    }
+
+    // MARK: - List View
+
+    private var listView: some View {
+        LazyVStack(spacing: .spacingM) {
+            ForEach(filteredMountains) { mountain in
+                NavigationLink {
+                    MountainDetailView(mountain: mountain)
+                } label: {
+                    MountainCardRow(
+                        mountain: mountain,
+                        conditions: viewModel.getConditions(for: mountain),
+                        powderScore: viewModel.getScore(for: mountain).map { score in
+                            MountainPowderScore(
+                                mountain: MountainInfo(id: mountain.id, name: mountain.name, shortName: mountain.shortName),
+                                score: score,
+                                factors: [],
+                                verdict: "",
+                                conditions: MountainPowderScore.ScoreConditions(snowfall24h: 0, snowfall48h: 0, temperature: 0, windSpeed: 0, upcomingSnow: 0),
+                                stormInfo: nil,
+                                dataAvailable: MountainPowderScore.DataAvailability(snotel: mountain.hasSnotel, noaa: true)
+                            )
+                        },
+                        isFavorite: favoritesManager.isFavorite(mountain.id),
+                        onFavoriteToggle: { toggleFavorite(mountain.id) }
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    // MARK: - Map View
+
+    private var mapView: some View {
+        MapSectionView(
+            mountains: filteredMountains,
+            scores: mountainScores,
+            isExpanded: .constant(true),
+            onMountainSelected: { _ in }
         )
-        .scrollTransition { content, phase in
-            content
-                .opacity(phase.isIdentity ? 1 : 0.8)
-                .scaleEffect(phase.isIdentity ? 1 : 0.95)
-                .blur(radius: phase.isIdentity ? 0 : 1)
+        .frame(height: UIScreen.main.bounds.height * 0.7)
+        .padding(.horizontal)
+    }
+
+    // MARK: - Search Results
+
+    private var searchResultsView: some View {
+        LazyVStack(spacing: .spacingM) {
+            if searchResults.isEmpty {
+                ContentUnavailableView(
+                    "No Results",
+                    systemImage: "magnifyingglass",
+                    description: Text("Try a different search term")
+                )
+                .padding(.top, 60)
+            } else {
+                ForEach(searchResults) { mountain in
+                    NavigationLink {
+                        MountainDetailView(mountain: mountain)
+                    } label: {
+                        SearchResultRow(
+                            mountain: mountain,
+                            score: viewModel.getScore(for: mountain),
+                            distance: viewModel.getDistance(to: mountain),
+                            searchText: searchText
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
         }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button {
-                HapticFeedback.success.trigger()
-                toggleFavorite(mountain.id)
-            } label: {
-                Label(
-                    favoritesManager.isFavorite(mountain.id) ? "Unfavorite" : "Favorite",
-                    systemImage: favoritesManager.isFavorite(mountain.id) ? "star.slash" : "star.fill"
+        .padding(.horizontal)
+    }
+
+    // MARK: - Conditions Summary Card
+
+    private var conditionsSummaryCard: some View {
+        VStack(spacing: .spacingM) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Today's Conditions")
+                        .font(.headline)
+                    Text(Date(), style: .date)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                // Overall condition indicator
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(overallConditionText)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(overallConditionColor)
+                    Text("\(mountainsWithFreshSnow) with fresh snow")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Divider()
+
+            // Quick stats
+            HStack(spacing: 0) {
+                ConditionStat(
+                    value: "\(mountainsOpen)",
+                    label: "Open",
+                    icon: "checkmark.circle.fill",
+                    color: .green
+                )
+
+                Divider()
+                    .frame(height: 40)
+
+                ConditionStat(
+                    value: avgPowderScore,
+                    label: "Avg Score",
+                    icon: "star.fill",
+                    color: .yellow
+                )
+
+                Divider()
+                    .frame(height: 40)
+
+                ConditionStat(
+                    value: "\(totalFreshSnow)\"",
+                    label: "Max 24h",
+                    icon: "cloud.snow.fill",
+                    color: .blue
                 )
             }
-            .tint(favoritesManager.isFavorite(mountain.id) ? .orange : .yellow)
         }
-        .swipeActions(edge: .leading, allowsFullSwipe: false) {
-            if let url = URL(string: mountain.website) {
-                Link(destination: url) {
-                    Label("Website", systemImage: "safari")
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(.cornerRadiusHero)
+    }
+
+    // MARK: - Comparison Bar
+
+    private var comparisonBar: some View {
+        VStack {
+            Spacer()
+
+            HStack {
+                // Selected mountains
+                HStack(spacing: -8) {
+                    ForEach(Array(selectedForComparison.prefix(3)), id: \.self) { id in
+                        if let mountain = viewModel.mountains.first(where: { $0.id == id }) {
+                            MountainLogoView(
+                                logoUrl: mountain.logo,
+                                color: mountain.color,
+                                size: 36
+                            )
+                            .overlay(
+                                Circle()
+                                    .stroke(Color(.systemBackground), lineWidth: 2)
+                            )
+                        }
+                    }
                 }
-                .tint(.blue)
+
+                Text("\(selectedForComparison.count) selected")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                Button("Compare") {
+                    // TODO: Open comparison view
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(selectedForComparison.count < 2)
+
+                Button {
+                    withAnimation {
+                        selectedForComparison.removeAll()
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
             }
+            .padding()
+            .background(.ultraThinMaterial)
+            .cornerRadius(.cornerRadiusHero)
+            .padding()
+            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
         }
     }
 
-    private struct RegionGroup: Hashable {
-        let region: String
-        let mountains: [Mountain]
-
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(region)
-        }
-
-        static func == (lhs: RegionGroup, rhs: RegionGroup) -> Bool {
-            lhs.region == rhs.region
-        }
-    }
-
-    private var mountainsByRegion: [RegionGroup] {
-        let grouped = Dictionary(grouping: filteredMountains) { $0.region }
-        return grouped
-            .map { RegionGroup(region: $0.key, mountains: $0.value) }
-            .sorted { $0.region < $1.region }
-    }
+    // MARK: - Computed Properties
 
     private var filteredMountains: [Mountain] {
         var mountains = viewModel.mountains
 
-        // Apply pass filter
-        if filterPass != .all {
-            if let passType = filterPass.passTypeKey {
-                mountains = mountains.filter {
-                    ($0.passType ?? .independent) == passType
-                }
-            } else if filterPass == .favorites {
-                // Filter for favorited mountains only
-                mountains = mountains.filter { mountain in
-                    favoritesManager.isFavorite(mountain.id)
-                }
-            } else if filterPass == .freshPowder {
-                // Filter for mountains with 6"+ fresh snow in 24h
-                mountains = mountains.filter { mountain in
-                    guard let conditions = viewModel.getConditions(for: mountain) else { return false }
-                    return conditions.snowfall24h >= 6
-                }
-            } else if filterPass == .alertsActive {
-                // TODO: Filter for mountains with active alerts when alerts data is available
-                // For now, no filtering applied
-            }
-        }
-
-        // Apply search
-        if !searchText.isEmpty {
-            mountains = mountains.filter {
-                $0.name.localizedCaseInsensitiveContains(searchText) ||
-                $0.shortName.localizedCaseInsensitiveContains(searchText) ||
-                $0.region.localizedCaseInsensitiveContains(searchText) ||
-                ($0.passType?.rawValue ?? "").localizedCaseInsensitiveContains(searchText)
-            }
-        }
-
-        // Apply sort
-        mountains = mountains.sorted { m1, m2 in
-            switch sortBy {
-            case .name:
-                return m1.name < m2.name
-            case .distance:
-                let d1 = viewModel.getDistance(to: m1) ?? Double.infinity
-                let d2 = viewModel.getDistance(to: m2) ?? Double.infinity
-                return d1 < d2
-            case .powderScore:
-                let s1 = viewModel.getScore(for: m1) ?? 0
-                let s2 = viewModel.getScore(for: m2) ?? 0
-                return s1 > s2
+        // Apply quick filters
+        for filter in selectedFilters {
+            switch filter {
             case .favorites:
-                let f1 = favoritesManager.isFavorite(m1.id)
-                let f2 = favoritesManager.isFavorite(m2.id)
-                if f1 != f2 { return f1 }
-                return m1.name < m2.name
+                mountains = mountains.filter { favoritesManager.isFavorite($0.id) }
+            case .epic:
+                mountains = mountains.filter { $0.passType == .epic }
+            case .ikon:
+                mountains = mountains.filter { $0.passType == .ikon }
+            case .freshPowder:
+                mountains = mountains.filter {
+                    (viewModel.getConditions(for: $0)?.snowfall24h ?? 0) >= 6
+                }
+            case .open:
+                mountains = mountains.filter {
+                    viewModel.getConditions(for: $0)?.liftStatus?.isOpen ?? false
+                }
             }
         }
 
-        return mountains
+        return mountains.sorted { m1, m2 in
+            let s1 = viewModel.getScore(for: m1) ?? 0
+            let s2 = viewModel.getScore(for: m2) ?? 0
+            return s1 > s2
+        }
+    }
+
+    private var searchResults: [Mountain] {
+        guard !searchText.isEmpty else { return [] }
+        return viewModel.mountains.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.shortName.localizedCaseInsensitiveContains(searchText) ||
+            $0.region.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    private var bestConditionsMountains: [Mountain] {
+        viewModel.mountains
+            .filter { viewModel.getScore(for: $0) != nil }
+            .sorted { (viewModel.getScore(for: $0) ?? 0) > (viewModel.getScore(for: $1) ?? 0) }
+    }
+
+    private var nearestMountains: [Mountain] {
+        viewModel.mountains
+            .filter { viewModel.getDistance(to: $0) != nil }
+            .sorted { (viewModel.getDistance(to: $0) ?? .infinity) < (viewModel.getDistance(to: $1) ?? .infinity) }
+    }
+
+    private var favoriteMountains: [Mountain] {
+        viewModel.mountains.filter { favoritesManager.isFavorite($0.id) }
     }
 
     private var mountainScores: [String: Double] {
-        return Dictionary(uniqueKeysWithValues:
-            filteredMountains.compactMap { mountain in
+        Dictionary(uniqueKeysWithValues:
+            viewModel.mountains.compactMap { mountain in
                 guard let score = viewModel.getScore(for: mountain) else { return nil }
                 return (mountain.id, score)
             }
         )
     }
 
-    private func toggleFavorite(_ mountainId: String) {
-        if favoritesManager.isFavorite(mountainId) {
-            favoritesManager.remove(mountainId)
+    private var mountainsWithFreshSnow: Int {
+        viewModel.mountains.filter {
+            (viewModel.getConditions(for: $0)?.snowfall24h ?? 0) >= 1
+        }.count
+    }
+
+    private var mountainsOpen: Int {
+        viewModel.mountains.filter {
+            viewModel.getConditions(for: $0)?.liftStatus?.isOpen ?? false
+        }.count
+    }
+
+    private var avgPowderScore: String {
+        let scores = viewModel.mountains.compactMap { viewModel.getScore(for: $0) }
+        guard !scores.isEmpty else { return "--" }
+        let avg = scores.reduce(0, +) / Double(scores.count)
+        return String(format: "%.1f", avg)
+    }
+
+    private var totalFreshSnow: Int {
+        viewModel.mountains.compactMap { viewModel.getConditions(for: $0)?.snowfall24h }
+            .max() ?? 0
+    }
+
+    private var overallConditionText: String {
+        let avgScore = viewModel.mountains.compactMap { viewModel.getScore(for: $0) }
+            .reduce(0, +) / max(1, Double(viewModel.mountains.count))
+        if avgScore >= 7 { return "Excellent" }
+        if avgScore >= 5 { return "Good" }
+        if avgScore >= 3 { return "Fair" }
+        return "Variable"
+    }
+
+    private var overallConditionColor: Color {
+        let avgScore = viewModel.mountains.compactMap { viewModel.getScore(for: $0) }
+            .reduce(0, +) / max(1, Double(viewModel.mountains.count))
+        if avgScore >= 7 { return .green }
+        if avgScore >= 5 { return .yellow }
+        if avgScore >= 3 { return .orange }
+        return .red
+    }
+
+    // MARK: - Helpers
+
+    private func mountainsInRegion(_ region: MountainRegion) -> [Mountain] {
+        viewModel.mountains.filter { $0.region.lowercased() == region.rawValue.lowercased() }
+    }
+
+    private func topScoreInRegion(_ region: MountainRegion) -> Double? {
+        mountainsInRegion(region)
+            .compactMap { viewModel.getScore(for: $0) }
+            .max()
+    }
+
+    private func toggleFavorite(_ id: String) {
+        if favoritesManager.isFavorite(id) {
+            favoritesManager.remove(id)
         } else {
-            _ = favoritesManager.add(mountainId)
+            _ = favoritesManager.add(id)
         }
     }
 
-    private func navigateToMountain(_ mountain: Mountain) {
-        // Navigation is handled automatically via NavigationStack
-        // This method exists for future enhancements (e.g., analytics, camera animation)
+    private func toggleComparison(_ id: String) {
+        if selectedForComparison.contains(id) {
+            selectedForComparison.remove(id)
+        } else if selectedForComparison.count < 3 {
+            selectedForComparison.insert(id)
+        }
     }
 }
 
-// MARK: - Mountain Grid Card
+// MARK: - Supporting Types
 
-struct MountainGridCard: View {
-    @Environment(\.colorScheme) private var colorScheme
+enum QuickFilter: String, CaseIterable {
+    case favorites = "Favorites"
+    case epic = "Epic"
+    case ikon = "Ikon"
+    case freshPowder = "Fresh Snow"
+    case open = "Open Now"
 
-    let mountain: Mountain
-    let score: Double?
-    let distance: Double?
-    let isFavorite: Bool
-    let onFavoriteToggle: () -> Void
+    var icon: String {
+        switch self {
+        case .favorites: return "star.fill"
+        case .epic: return "e.square.fill"
+        case .ikon: return "i.square.fill"
+        case .freshPowder: return "snowflake"
+        case .open: return "checkmark.circle.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .favorites: return .yellow
+        case .epic: return .purple
+        case .ikon: return .orange
+        case .freshPowder: return .blue
+        case .open: return .green
+        }
+    }
+}
+
+enum MountainRegion: String, CaseIterable, Identifiable {
+    case washington = "washington"
+    case oregon = "oregon"
+    case idaho = "idaho"
+    case britishColumbia = "british columbia"
+    case montana = "montana"
+    case california = "california"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .washington: return "Washington"
+        case .oregon: return "Oregon"
+        case .idaho: return "Idaho"
+        case .britishColumbia: return "British Columbia"
+        case .montana: return "Montana"
+        case .california: return "California"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .washington: return "w.square.fill"
+        case .oregon: return "o.square.fill"
+        case .idaho: return "i.square.fill"
+        case .britishColumbia: return "b.square.fill"
+        case .montana: return "m.square.fill"
+        case .california: return "c.square.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .washington: return .blue
+        case .oregon: return .green
+        case .idaho: return .orange
+        case .britishColumbia: return .red
+        case .montana: return .purple
+        case .california: return .yellow
+        }
+    }
+}
+
+// MARK: - Component Views
+
+struct QuickFilterChip: View {
+    let filter: QuickFilter
+    let isSelected: Bool
+    let onTap: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header with logo and favorite
+        Button(action: onTap) {
+            HStack(spacing: 6) {
+                Image(systemName: filter.icon)
+                    .font(.caption)
+                Text(filter.rawValue)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(isSelected ? .white : filter.color)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(isSelected ? filter.color : filter.color.opacity(0.15))
+            .cornerRadius(.cornerRadiusPill)
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: isSelected)
+    }
+}
+
+struct DiscoverySection<Content: View>: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let iconColor: Color
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: .spacingM) {
+            HStack(spacing: .spacingS) {
+                Image(systemName: icon)
+                    .foregroundColor(iconColor)
+                    .font(.title3)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.headline)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal)
+
+            content()
+        }
+    }
+}
+
+struct ConditionCard: View {
+    let mountain: Mountain
+    let score: Double?
+    let conditions: MountainConditions?
+    let isFavorite: Bool
+    let compareMode: Bool
+    let isSelectedForComparison: Bool
+    let onFavoriteToggle: () -> Void
+    let onCompareToggle: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: .spacingS) {
+            // Header
             ZStack(alignment: .topTrailing) {
-                // Logo background
                 MountainLogoView(
                     logoUrl: mountain.logo,
                     color: mountain.color,
-                    size: 80
+                    size: 60
                 )
                 .frame(maxWidth: .infinity)
-                .frame(height: 100)
+                .frame(height: 80)
                 .background(
                     LinearGradient(
                         colors: [
-                            Color(hex: mountain.color)?.opacity(0.2) ?? .blue.opacity(0.2),
-                            Color(hex: mountain.color)?.opacity(0.05) ?? .blue.opacity(0.05)
+                            Color(hex: mountain.color)?.opacity(0.3) ?? .blue.opacity(0.3),
+                            Color(hex: mountain.color)?.opacity(0.1) ?? .blue.opacity(0.1)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
 
-                // Favorite button with haptic feedback and bounce animation
-                Button {
-                    HapticFeedback.medium.trigger()
-                    onFavoriteToggle()
-                } label: {
-                    Image(systemName: isFavorite ? "star.fill" : "star")
-                        .font(.title3)
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundColor(isFavorite ? .yellow : .white)
-                        .symbolEffect(.bounce, value: isFavorite)
-                        .shadow(radius: 2)
-                        .padding(8)
-                        .contentShape(Rectangle())
+                if compareMode {
+                    Button(action: onCompareToggle) {
+                        Image(systemName: isSelectedForComparison ? "checkmark.circle.fill" : "circle")
+                            .font(.title2)
+                            .foregroundColor(isSelectedForComparison ? .blue : .white)
+                            .shadow(radius: 2)
+                    }
+                    .padding(8)
+                } else {
+                    Button(action: onFavoriteToggle) {
+                        Image(systemName: isFavorite ? "star.fill" : "star")
+                            .foregroundColor(isFavorite ? .yellow : .white)
+                            .shadow(radius: 2)
+                    }
+                    .padding(8)
                 }
-                .buttonStyle(.plain)
-                .accessibleButton(
-                    label: isFavorite ? "Remove from favorites" : "Add to favorites"
-                )
             }
 
-            // Info section
-            VStack(alignment: .leading, spacing: 8) {
-                // Name
+            VStack(alignment: .leading, spacing: 6) {
                 Text(mountain.shortName)
                     .font(.headline)
-                    .foregroundColor(.primary)
                     .lineLimit(1)
 
-                // Region
-                Text(mountain.region.uppercased())
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color(.tertiarySystemBackground))
-                    .cornerRadius(.cornerRadiusTiny)
-
-                Spacer()
-
-                // Stats row
-                HStack(spacing: .spacingM) {
-                    // Powder score
-                    if let score = score {
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(scoreColor(score))
-                                .frame(width: 8, height: 8)
-
-                            Text(String(format: "%.1f", score))
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(scoreColor(score))
-                        }
-                    }
-
-                    Spacer()
-
-                    // Distance
-                    if let distance = distance {
-                        HStack(spacing: 4) {
-                            Image(systemName: "location.fill")
-                                .font(.caption2)
-
-                            Text("\(Int(distance))mi")
-                                .font(.caption)
-                        }
-                        .foregroundColor(.secondary)
+                if let score = score {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(scoreColor(score))
+                            .frame(width: 8, height: 8)
+                        Text(String(format: "%.1f", score))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(scoreColor(score))
                     }
                 }
+
+                if let conditions = conditions {
+                    HStack(spacing: 4) {
+                        Image(systemName: "cloud.snow.fill")
+                            .font(.caption2)
+                        Text("\(conditions.snowfall24h)\" 24h")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.secondary)
+                }
             }
-            .padding(.spacingM)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, .spacingM)
+            .padding(.bottom, .spacingM)
         }
-        .frame(height: 200)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusHero))
-        .adaptiveShadow(colorScheme: colorScheme, radius: 8, y: 4)
-        .accessibleCard(
-            label: "\(mountain.shortName), \(mountain.region). \(score.map { "Powder score \(String(format: "%.1f", $0))" } ?? "No score available"). \(distance.map { "\(Int($0)) miles away" } ?? "")",
-            hint: "Double tap to view mountain details"
+        .frame(width: 140)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(.cornerRadiusHero)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(isSelectedForComparison ? Color.blue : Color.clear, lineWidth: 2)
         )
     }
 
     private func scoreColor(_ score: Double) -> Color {
         if score >= 7 { return .green }
         if score >= 5 { return .yellow }
-        if score >= 3 { return .orange }
-        return .red
+        return .orange
     }
 }
 
-// MARK: - Filter Chip
-
-struct FilterChip: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let icon: String
-    let label: String
-    let isActive: Bool
+struct NearbyCard: View {
+    let mountain: Mountain
+    let distance: Double?
+    let score: Double?
+    let conditions: MountainConditions?
 
     var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.caption)
-                .symbolRenderingMode(.hierarchical)
+        VStack(alignment: .leading, spacing: .spacingS) {
+            HStack {
+                MountainLogoView(
+                    logoUrl: mountain.logo,
+                    color: mountain.color,
+                    size: 44
+                )
 
-            Text(label)
-                .font(.subheadline)
-                .fontWeight(.medium)
-        }
-        .foregroundColor(isActive ? .white : .primary)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background {
-            if isActive {
-                Capsule().fill(Color.blue)
-            } else {
-                Capsule().fill(.ultraThinMaterial)
+                Spacer()
+
+                if let distance = distance {
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.caption2)
+                        Text("\(Int(distance)) mi")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(.cornerRadiusButton)
+                }
+            }
+
+            Text(mountain.shortName)
+                .font(.headline)
+                .lineLimit(1)
+
+            HStack {
+                if let score = score {
+                    Text(String(format: "%.1f", score))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(score >= 7 ? .green : score >= 5 ? .yellow : .orange)
+                }
+
+                Spacer()
+
+                if let conditions = conditions {
+                    Text("\(conditions.snowfall24h)\" new")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
         }
-        .adaptiveShadow(colorScheme: colorScheme, radius: isActive ? 4 : 2, y: 2)
-        .accessibilityLabel("\(label) filter")
-        .accessibilityAddTraits(isActive ? [.isSelected] : [])
+        .padding()
+        .frame(width: 160)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(.cornerRadiusHero)
     }
 }
 
+struct FavoriteCard: View {
+    let mountain: Mountain
+    let score: Double?
+    let conditions: MountainConditions?
 
-// MARK: - Sort and Filter Options
+    var body: some View {
+        HStack(spacing: .spacingM) {
+            MountainLogoView(
+                logoUrl: mountain.logo,
+                color: mountain.color,
+                size: 50
+            )
 
-enum SortOption: String, CaseIterable {
-    case distance = "Distance"
-    case powderScore = "Powder Score"
-    case name = "Name"
-    case favorites = "Favorites"
+            VStack(alignment: .leading, spacing: 4) {
+                Text(mountain.shortName)
+                    .font(.headline)
+
+                if let conditions = conditions {
+                    Text("\(conditions.snowfall24h)\" 24h")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            if let score = score {
+                Text(String(format: "%.1f", score))
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(score >= 7 ? .green : score >= 5 ? .yellow : .orange)
+            }
+        }
+        .padding()
+        .frame(width: 200)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(.cornerRadiusHero)
+    }
 }
 
-enum PassFilter: String, CaseIterable {
-    case all = "All"
-    case epic = "Epic"
-    case ikon = "Ikon"
-    case favorites = "Favorites"
-    case freshPowder = "Fresh Powder"
-    case alertsActive = "Alerts"
+struct RegionCard: View {
+    let region: MountainRegion
+    let mountainCount: Int
+    let topScore: Double?
+    let onTap: () -> Void
 
-    var icon: String {
-        switch self {
-        case .all: return "mountain.2.fill"
-        case .epic: return "e.square.fill"
-        case .ikon: return "i.square.fill"
-        case .favorites: return "star.fill"
-        case .freshPowder: return "snow"
-        case .alertsActive: return "exclamationmark.triangle.fill"
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: .spacingS) {
+                HStack {
+                    Image(systemName: region.icon)
+                        .font(.title2)
+                        .foregroundColor(region.color)
+
+                    Spacer()
+
+                    if let score = topScore {
+                        HStack(spacing: 4) {
+                            Image(systemName: "star.fill")
+                                .font(.caption2)
+                            Text(String(format: "%.1f", score))
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.yellow)
+                    }
+                }
+
+                Text(region.displayName)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text("\(mountainCount) mountains")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(region.color.opacity(0.1))
+            .cornerRadius(.cornerRadiusHero)
         }
+        .buttonStyle(.plain)
     }
+}
 
-    var passTypeKey: PassType? {
-        switch self {
-        case .all: return nil
-        case .epic: return .epic
-        case .ikon: return .ikon
-        case .favorites, .freshPowder, .alertsActive: return nil
+struct CompactMountainRow: View {
+    let mountain: Mountain
+    let score: Double?
+    let distance: Double?
+    let conditions: MountainConditions?
+    let isFavorite: Bool
+    let compareMode: Bool
+    let isSelectedForComparison: Bool
+    let onFavoriteToggle: () -> Void
+    let onCompareToggle: () -> Void
+
+    var body: some View {
+        HStack(spacing: .spacingM) {
+            if compareMode {
+                Button(action: onCompareToggle) {
+                    Image(systemName: isSelectedForComparison ? "checkmark.circle.fill" : "circle")
+                        .font(.title2)
+                        .foregroundColor(isSelectedForComparison ? .blue : .secondary)
+                }
+            }
+
+            MountainLogoView(
+                logoUrl: mountain.logo,
+                color: mountain.color,
+                size: 44
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(mountain.shortName)
+                    .font(.headline)
+
+                HStack(spacing: .spacingS) {
+                    Text(mountain.region.capitalized)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    if let distance = distance {
+                        Text("•")
+                            .foregroundColor(.secondary)
+                        Text("\(Int(distance)) mi")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 4) {
+                if let score = score {
+                    Text(String(format: "%.1f", score))
+                        .font(.headline)
+                        .foregroundColor(score >= 7 ? .green : score >= 5 ? .yellow : .orange)
+                }
+
+                if let conditions = conditions, conditions.snowfall24h > 0 {
+                    Text("\(conditions.snowfall24h)\"")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+            }
+
+            if !compareMode {
+                Button(action: onFavoriteToggle) {
+                    Image(systemName: isFavorite ? "star.fill" : "star")
+                        .foregroundColor(isFavorite ? .yellow : .secondary)
+                }
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(.cornerRadiusCard)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSelectedForComparison ? Color.blue : Color.clear, lineWidth: 2)
+        )
+    }
+}
+
+struct SearchResultRow: View {
+    let mountain: Mountain
+    let score: Double?
+    let distance: Double?
+    let searchText: String
+
+    var body: some View {
+        HStack(spacing: .spacingM) {
+            MountainLogoView(
+                logoUrl: mountain.logo,
+                color: mountain.color,
+                size: 44
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(mountain.name)
+                    .font(.headline)
+
+                Text(mountain.region.capitalized)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            if let distance = distance {
+                Text("\(Int(distance)) mi")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(.cornerRadiusCard)
+    }
+}
+
+struct ConditionStat: View {
+    let value: String
+    let label: String
+    let icon: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundColor(color)
+                Text(value)
+                    .font(.headline)
+            }
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct RegionDetailSheet: View {
+    let region: MountainRegion
+    let mountains: [Mountain]
+    let viewModel: MountainSelectionViewModel
+    let favoritesManager: FavoritesManager
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List(mountains) { mountain in
+                NavigationLink {
+                    MountainDetailView(mountain: mountain)
+                } label: {
+                    HStack {
+                        MountainLogoView(
+                            logoUrl: mountain.logo,
+                            color: mountain.color,
+                            size: 40
+                        )
+
+                        VStack(alignment: .leading) {
+                            Text(mountain.name)
+                                .font(.headline)
+                            if let score = viewModel.getScore(for: mountain) {
+                                Text(String(format: "Score: %.1f", score))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Spacer()
+
+                        if favoritesManager.isFavorite(mountain.id) {
+                            Image(systemName: "star.fill")
+                                .foregroundColor(.yellow)
+                        }
+                    }
+                }
+            }
+            .navigationTitle(region.displayName)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 
