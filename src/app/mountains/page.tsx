@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { MountainMap } from '@/components/MountainMapLoader';
 import { MountainCard, MountainCardSkeleton } from '@/components/MountainCard';
 import { getAllMountains, getMountainsSortedByDistance, type MountainConfig } from '@shredders/shared';
@@ -83,11 +84,11 @@ export default function MountainsPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <a href="/" className="text-gray-400 hover:text-white transition-colors">
+              <Link href="/" className="text-gray-400 hover:text-white transition-colors">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-              </a>
+              </Link>
               <h1 className="text-xl font-bold text-white">PNW Mountains</h1>
             </div>
             <div className="flex items-center gap-2">

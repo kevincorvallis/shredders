@@ -82,9 +82,6 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    let userId: string;
-    let userEmail: string;
-
     // Try to sign up - this will fail if user already exists
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -165,8 +162,8 @@ export async function POST(request: Request) {
       );
     }
 
-    userId = authData.user.id;
-    userEmail = authData.user.email || email;
+    const userId = authData.user.id;
+    const userEmail = authData.user.email || email;
 
     // Check if a profile already exists (double-check)
     const { data: existingProfile } = await adminClient
