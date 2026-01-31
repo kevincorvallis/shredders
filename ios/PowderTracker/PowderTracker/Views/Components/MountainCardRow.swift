@@ -297,19 +297,7 @@ struct MountainCardRow: View {
     }
 
     private func scoreColor(_ score: Double) -> Color {
-        Color.statusColor(for: score, greenThreshold: 7, yellowThreshold: 5)
-    }
-
-    // Deprecated - keeping for backwards compatibility
-    private func scoreColorOld(_ score: Double) -> Color {
-        switch score {
-        case 7...10:
-            return .green
-        case 5..<7:
-            return .yellow
-        default:
-            return .red
-        }
+        Color.forPowderScore(score)
     }
 }
 
@@ -425,6 +413,7 @@ struct MountainCardRow: View {
                     windSpeed: 10,
                     upcomingSnow: 0
                 ),
+                stormInfo: nil,
                 dataAvailable: MountainPowderScore.DataAvailability(snotel: true, noaa: true)
             )
         )

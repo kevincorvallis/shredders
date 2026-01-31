@@ -158,10 +158,7 @@ struct SnowSummarySection: View {
     }
 
     private func scoreColor(_ score: Double) -> Color {
-        if score >= 7 { return .green }
-        if score >= 5 { return .yellow }
-        if score >= 3 { return .orange }
-        return .red
+        Color.forPowderScore(score)
     }
 }
 
@@ -201,6 +198,8 @@ struct SnowMetricCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(.cornerRadiusCard)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value), \(subtitle)")
     }
 }
 
@@ -233,6 +232,7 @@ struct SnowMetricCard: View {
         factors: [],
         verdict: "SEND IT! Epic powder conditions!",
         conditions: nil,
+        stormInfo: nil,
         dataAvailable: nil
     )
 

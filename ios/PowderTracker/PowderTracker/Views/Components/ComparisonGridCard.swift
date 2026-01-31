@@ -17,9 +17,7 @@ struct ComparisonGridCard: View {
 
     private var scoreColor: Color {
         guard let score = powderScore?.score else { return .gray }
-        if score >= 7.0 { return .green }
-        else if score >= 5.0 { return .yellow }
-        else { return .red }
+        return Color.forPowderScore(score)
     }
 
     var body: some View {
@@ -59,6 +57,8 @@ struct ComparisonGridCard: View {
                             )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("View \(mountain.shortName) webcams")
+                    .accessibilityHint("Opens webcam viewer")
                 }
 
                 // Powder Score Badge
@@ -299,6 +299,7 @@ extension MountainConditions.DataSources {
                 factors: [],
                 verdict: "Excellent powder",
                 conditions: nil,
+                stormInfo: nil,
                 dataAvailable: nil
             ),
             trend: .improving,
@@ -328,6 +329,7 @@ extension MountainConditions.DataSources {
                 factors: [],
                 verdict: "Good conditions",
                 conditions: nil,
+                stormInfo: nil,
                 dataAvailable: nil
             ),
             trend: .stable,
