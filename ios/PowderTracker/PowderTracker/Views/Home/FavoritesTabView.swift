@@ -4,11 +4,11 @@ import SwiftUI
 /// Shows complete list of favorite mountains with detailed information
 struct FavoritesTabView: View {
     @ObservedObject var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @StateObject private var favoritesService = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: .spacingM) {
-            if favoritesManager.favoriteIds.isEmpty {
+            if favoritesService.favoriteIds.isEmpty {
                 emptyState
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
             } else {
@@ -31,7 +31,7 @@ struct FavoritesTabView: View {
 
                 Spacer()
 
-                Text("\(favoritesManager.favoriteIds.count)")
+                Text("\(favoritesService.favoriteIds.count)")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
@@ -42,7 +42,7 @@ struct FavoritesTabView: View {
             }
 
             // All favorites (no "See All" toggle - this is a dedicated tab)
-            ForEach(favoritesManager.favoriteIds, id: \.self) { mountainId in
+            ForEach(favoritesService.favoriteIds, id: \.self) { mountainId in
                 if let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
                    let data = viewModel.mountainData[mountainId] {
                     MountainDetailRow(

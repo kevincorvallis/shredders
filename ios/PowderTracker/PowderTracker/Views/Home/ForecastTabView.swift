@@ -4,7 +4,7 @@ import SwiftUI
 /// Follows the Phase 4 layout improvements
 struct ForecastTabView: View {
     @ObservedObject var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @StateObject private var favoritesService = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: 12) {
@@ -134,7 +134,7 @@ struct ForecastTabView: View {
             SectionHeaderView(title: "3-Day Outlook")
 
             // Use forecast data directly instead of powder day plans
-            let mountainsWithForecast = favoritesManager.favoriteIds.compactMap { mountainId -> (mountain: Mountain, forecast: [ForecastDay])? in
+            let mountainsWithForecast = favoritesService.favoriteIds.compactMap { mountainId -> (mountain: Mountain, forecast: [ForecastDay])? in
                 guard let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
                       let data = viewModel.mountainData[mountainId],
                       !data.forecast.isEmpty else {

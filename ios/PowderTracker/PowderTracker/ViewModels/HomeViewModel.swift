@@ -27,7 +27,7 @@ class HomeViewModel: ObservableObject {
     private var mountainsById: [String: Mountain] = [:]
 
     private let apiClient = APIClient.shared
-    private let favoritesManager = FavoritesService.shared
+    private let favoritesService = FavoritesService.shared
 
     // MARK: - Data Loading
 
@@ -47,11 +47,11 @@ class HomeViewModel: ObservableObject {
         error = nil
 
         #if DEBUG
-        print("📡 [HomeVM] loadFavoritesData starting for: \(favoritesManager.favoriteIds)")
+        print("📡 [HomeVM] loadFavoritesData starting for: \(favoritesService.favoriteIds)")
         #endif
 
         await withTaskGroup(of: (String, MountainBatchedResponse?).self) { group in
-            for mountainId in favoritesManager.favoriteIds {
+            for mountainId in favoritesService.favoriteIds {
                 group.addTask {
                     do {
                         let data = try await self.apiClient.fetchMountainData(for: mountainId)
@@ -113,7 +113,7 @@ class HomeViewModel: ObservableObject {
 
     /// Get all favorite mountains with their complete data
     func getFavoritesWithData() -> [(mountain: Mountain, data: MountainBatchedResponse)] {
-        return favoritesManager.favoriteIds.compactMap { mountainId in
+        return favoritesService.favoriteIds.compactMap { mountainId in
             guard let mountain = mountainsById[mountainId],
                   let data = mountainData[mountainId] else {
                 return nil
@@ -126,12 +126,12 @@ class HomeViewModel: ObservableObject {
     func getFavoritesWithForecast() -> [(mountain: Mountain, forecast: [ForecastDay])] {
         #if DEBUG
         print("🔍 [HomeVM] getFavoritesWithForecast called")
-        print("🔍 [HomeVM] favoriteIds: \(favoritesManager.favoriteIds)")
+        print("🔍 [HomeVM] favoriteIds: \(favoritesService.favoriteIds)")
         print("🔍 [HomeVM] mountainsById count: \(mountainsById.count)")
         print("🔍 [HomeVM] mountainData count: \(mountainData.count)")
         #endif
 
-        return favoritesManager.favoriteIds.compactMap { mountainId in
+        return favoritesService.favoriteIds.compactMap { mountainId in
             guard let mountain = mountainsById[mountainId] else {
                 #if DEBUG
                 print("⚠️ [HomeVM] Mountain not found in mountainsById: \(mountainId)")
@@ -164,7 +164,7 @@ class HomeViewModel: ObservableObject {
 
         await withTaskGroup(of: Void.self) { group in
             // Load arrival times
-            for mountainId in favoritesManager.favoriteIds {
+            for mountainId in favoritesService.favoriteIds {
                 group.addTask {
                     do {
                         let arrivalTime = try await self.apiClient.fetchArrivalTime(for: mountainId)
@@ -263,7 +263,7 @@ class HomeViewModel: ObservableObject {
 
     /// Get the mountain with the best powder score today
     func getBestPowderToday() -> (mountain: Mountain, score: MountainPowderScore, data: MountainBatchedResponse)? {
-        let favoriteMountainIds = Set(favoritesManager.favoriteIds)
+        let favoriteMountainIds = Set(favoritesService.favoriteIds)
 
         return mountainData
             .filter { favoriteMountainIds.contains($0.key) }
@@ -276,7 +276,7 @@ class HomeViewModel: ObservableObject {
 
     /// Get all active weather alerts across favorites (filters out expired alerts)
     func getActiveAlerts() -> [WeatherAlert] {
-        let favoriteMountainIds = Set(favoritesManager.favoriteIds)
+        let favoriteMountainIds = Set(favoritesService.favoriteIds)
         return mountainData
             .filter { favoriteMountainIds.contains($0.key) }
             .flatMap { $0.value.alerts }
@@ -302,7 +302,7 @@ class HomeViewModel: ObservableObject {
 
     /// Generate smart suggestion based on conditions
     func generateSmartSuggestion() -> String? {
-        let favoriteMountainIds = Set(favoritesManager.favoriteIds)
+        let favoriteMountainIds = Set(favoritesService.favoriteIds)
 
         // Score each mountain on multiple factors
         let scores = mountainData
@@ -355,7 +355,7 @@ class HomeViewModel: ObservableObject {
         // If top score differs significantly from user's #1 favorite, suggest it
         guard scores.count > 1,
               let topMountain = scores.first,
-              let userFirstFavoriteId = favoritesManager.favoriteIds.first,
+              let userFirstFavoriteId = favoritesService.favoriteIds.first,
               topMountain.mountain.id != userFirstFavoriteId else {
             return nil
         }
@@ -392,7 +392,7 @@ class HomeViewModel: ObservableObject {
 
     /// Get favorite mountains with their data
     func getFavoriteMountains() -> [(mountain: Mountain, data: MountainBatchedResponse)] {
-        favoritesManager.favoriteIds.compactMap { id in
+        favoritesService.favoriteIds.compactMap { id in
             guard let mountain = mountainsById[id],
                   let data = mountainData[id] else {
                 return nil
@@ -476,7 +476,7 @@ class HomeViewModel: ObservableObject {
         if let best = getBestPowderToday(), best.mountain.id == mountainId {
             // Find the second-best mountain
             let sorted = mountainData
-                .filter { favoritesManager.favoriteIds.contains($0.key) }
+                .filter { favoritesService.favoriteIds.contains($0.key) }
                 .filter { $0.key != mountainId }
                 .sorted { $0.value.powderScore.score > $1.value.powderScore.score }
 
@@ -498,14 +498,14 @@ class HomeViewModel: ObservableObject {
     func getAllFavoriteWebcams() -> [(mountain: Mountain, webcam: MountainDetail.Webcam)] {
         var webcams: [(mountain: Mountain, webcam: MountainDetail.Webcam)] = []
 
-        for mountainId in favoritesManager.favoriteIds {
+        for mountainId in favoritesService.favoriteIds {
             guard let mountain = mountainsById[mountainId],
                   let data = mountainData[mountainId] else {
                 continue
             }
 
             // Add the first webcam from each mountain (or first 2 if many favorites)
-            let webcamsToAdd = favoritesManager.favoriteIds.count <= 3 ? 2 : 1
+            let webcamsToAdd = favoritesService.favoriteIds.count <= 3 ? 2 : 1
             for webcam in data.mountain.webcams.prefix(webcamsToAdd) {
                 webcams.append((mountain, webcam))
             }
