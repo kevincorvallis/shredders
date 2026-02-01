@@ -71,12 +71,12 @@ final class MapIntegrationTests: XCTestCase {
         }
     }
 
-    // MARK: - FavoritesManager Integration Tests
+    // MARK: - FavoritesService Integration Tests
 
     @MainActor
-    func testFavoritesManager_AddAndRemove_ShouldWork() {
+    func testFavoritesService_AddAndRemove_ShouldWork() {
         // Given
-        let manager = FavoritesManager.shared
+        let manager = FavoritesService.shared
         let testMountainId = "test-mountain-\(UUID().uuidString)"
 
         // When - Add
@@ -94,9 +94,9 @@ final class MapIntegrationTests: XCTestCase {
     }
 
     @MainActor
-    func testFavoritesManager_Duplicates_ShouldNotBeAdded() {
+    func testFavoritesService_Duplicates_ShouldNotBeAdded() {
         // Given
-        let manager = FavoritesManager.shared
+        let manager = FavoritesService.shared
         let testMountainId = "test-duplicate-\(UUID().uuidString)"
 
         // When
