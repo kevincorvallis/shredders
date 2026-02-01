@@ -4,7 +4,7 @@ import SwiftUI
 /// Each view mode is optimized for a specific user intent
 struct MountainsTabView: View {
     @StateObject private var viewModel = MountainSelectionViewModel()
-    private var favoritesManager: FavoritesManager { FavoritesManager.shared }
+    private var favoritesManager: FavoritesService { FavoritesService.shared }
     @State private var selectedMode: MountainViewMode = .conditions
     @Namespace private var namespace
 
@@ -131,7 +131,7 @@ enum MountainViewMode: String, CaseIterable {
 
 struct ConditionsView: View {
     @ObservedObject var viewModel: MountainSelectionViewModel
-    var favoritesManager: FavoritesManager
+    var favoritesManager: FavoritesService
     @State private var sortBy: ConditionSort = .bestConditions
 
     // Filter states
@@ -448,7 +448,7 @@ struct ConditionsView: View {
 
 struct PlannerView: View {
     @ObservedObject var viewModel: MountainSelectionViewModel
-    var favoritesManager: FavoritesManager
+    var favoritesManager: FavoritesService
     @State private var selectedDay: PlanDay = .saturday
     @State private var compareList: [String] = []
     @State private var showComparison = false
@@ -657,7 +657,7 @@ struct PlannerView: View {
 
 struct ExploreView: View {
     @ObservedObject var viewModel: MountainSelectionViewModel
-    var favoritesManager: FavoritesManager
+    var favoritesManager: FavoritesService
     @State private var searchText = ""
     @State private var selectedRegion: ExploreRegion?
     @State private var selectedCategory: ExploreCategory?
@@ -977,7 +977,7 @@ struct ExploreView: View {
 
 struct MyPassView: View {
     @ObservedObject var viewModel: MountainSelectionViewModel
-    var favoritesManager: FavoritesManager
+    var favoritesManager: FavoritesService
     @State private var selectedPass: PassSelection = .all
 
     enum PassSelection: String, CaseIterable {
@@ -1707,7 +1707,7 @@ struct RegionSheet: View {
     let region: ExploreRegion
     let mountains: [Mountain]
     @ObservedObject var viewModel: MountainSelectionViewModel
-    var favoritesManager: FavoritesManager
+    var favoritesManager: FavoritesService
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -1759,7 +1759,7 @@ struct CategorySheet: View {
     let category: ExploreCategory
     let mountains: [Mountain]
     @ObservedObject var viewModel: MountainSelectionViewModel
-    var favoritesManager: FavoritesManager
+    var favoritesManager: FavoritesService
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

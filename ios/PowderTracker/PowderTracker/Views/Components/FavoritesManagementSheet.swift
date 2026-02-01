@@ -3,7 +3,7 @@ import SwiftUI
 /// Sheet for managing favorite mountains
 struct FavoritesManagementSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
     @StateObject private var viewModel = MountainSelectionViewModel()
     @State private var searchText = ""
 

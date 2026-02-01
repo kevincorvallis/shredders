@@ -106,11 +106,11 @@ struct MountainDetailView: View {
                     Section("Quick Actions") {
                         Button {
                             HapticFeedback.light.trigger()
-                            _ = FavoritesManager.shared.toggleFavorite(mountain.id)
+                            _ = FavoritesService.shared.toggleFavorite(mountain.id)
                         } label: {
                             Label(
-                                FavoritesManager.shared.isFavorite(mountain.id) ? "Remove from Favorites" : "Add to Favorites",
-                                systemImage: FavoritesManager.shared.isFavorite(mountain.id) ? "star.slash" : "star.fill"
+                                FavoritesService.shared.isFavorite(mountain.id) ? "Remove from Favorites" : "Add to Favorites",
+                                systemImage: FavoritesService.shared.isFavorite(mountain.id) ? "star.slash" : "star.fill"
                             )
                         }
 

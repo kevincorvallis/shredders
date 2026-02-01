@@ -4,8 +4,8 @@ import Combine
 /// Manages user achievements with local storage and CloudKit sync
 @MainActor
 @Observable
-final class AchievementManager: @unchecked Sendable {
-    static let shared = AchievementManager()
+final class AchievementService: @unchecked Sendable {
+    static let shared = AchievementService()
 
     private(set) var achievements: [Achievement]
     private(set) var recentlyUnlocked: Achievement?

@@ -5,8 +5,8 @@ import Supabase
 
 @MainActor
 @Observable
-class PushNotificationManager: NSObject {
-    static let shared = PushNotificationManager()
+class PushNotificationService: NSObject {
+    static let shared = PushNotificationService()
 
     private let supabase = SupabaseClientManager.shared.client
     private let apiClient = APIClient.shared

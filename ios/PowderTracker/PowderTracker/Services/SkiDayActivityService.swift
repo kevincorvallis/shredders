@@ -25,8 +25,8 @@ struct SkiDayAttributes: ActivityAttributes {
 /// Manages Live Activities for ski days
 @available(iOS 16.2, *)
 @MainActor
-class SkiDayActivityManager: ObservableObject {
-    static let shared = SkiDayActivityManager()
+class SkiDayActivityService: ObservableObject {
+    static let shared = SkiDayActivityService()
 
     @Published private(set) var currentActivity: Activity<SkiDayAttributes>?
 
@@ -180,7 +180,7 @@ enum SkiDayActivityError: LocalizedError {
 // MARK: - Convenience Extension
 
 @available(iOS 16.2, *)
-extension SkiDayActivityManager {
+extension SkiDayActivityService {
     /// Start activity with mountain and conditions data
     func startActivity(
         for mountain: Mountain,

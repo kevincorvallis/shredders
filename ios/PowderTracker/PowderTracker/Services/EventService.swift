@@ -118,7 +118,7 @@ class EventService {
 
         // Format date
         // Phase 6 optimization: Use static DateFormatter
-        let eventDateString = DateFormatters.eventDate.string(from: eventDate)
+        let eventDateString = DateFormatters.dateParser.string(from: eventDate)
 
         let requestBody = CreateEventRequest(
             mountainId: mountainId,
@@ -182,7 +182,7 @@ class EventService {
         if let notes = notes { body["notes"] = notes }
         if let eventDate = eventDate {
             // Phase 6 optimization: Use static DateFormatter
-            body["eventDate"] = DateFormatters.eventDate.string(from: eventDate)
+            body["eventDate"] = DateFormatters.dateParser.string(from: eventDate)
         }
         if let departureTime = departureTime { body["departureTime"] = departureTime }
         if let departureLocation = departureLocation { body["departureLocation"] = departureLocation }

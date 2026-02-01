@@ -4,7 +4,7 @@ import SwiftUI
 /// Shows complete list of favorite mountains with detailed information
 struct FavoritesTabView: View {
     @ObservedObject var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: .spacingM) {

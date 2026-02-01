@@ -919,6 +919,62 @@ extension LinearGradient {
     }
 }
 
+// MARK: - PookieBSnow Branding
+
+extension LinearGradient {
+    /// PookieBSnow signature gradient (pink → purple → cyan)
+    /// Named after Pookie (Beryl) and Brock the golden doodle
+    static let pookieBSnow = LinearGradient(
+        colors: [
+            Color(red: 1.0, green: 0.5, blue: 0.7),   // Pink
+            Color(red: 0.7, green: 0.4, blue: 0.9),   // Purple
+            Color(red: 0.4, green: 0.75, blue: 1.0)   // Cyan
+        ],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+
+    /// Warm golden doodle gradient (inspired by Brock's fur)
+    static let brockGolden = LinearGradient(
+        colors: [
+            Color(red: 1.0, green: 0.88, blue: 0.5),  // Light golden
+            Color(red: 1.0, green: 0.75, blue: 0.35)  // Warm golden
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    /// Cozy winter sunset (warm colors for a cold day)
+    static let winterSunset = LinearGradient(
+        colors: [
+            Color(red: 1.0, green: 0.65, blue: 0.45), // Peach
+            Color(red: 0.95, green: 0.45, blue: 0.6), // Rose
+            Color(red: 0.65, green: 0.35, blue: 0.85) // Purple
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    /// Deep winter night (background for intro/welcome)
+    static let winterNight = LinearGradient(
+        colors: [
+            Color(red: 0.08, green: 0.12, blue: 0.22),
+            Color(red: 0.12, green: 0.18, blue: 0.28),
+            Color(red: 0.18, green: 0.24, blue: 0.38)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+}
+
+extension Color {
+    /// PookieBSnow brand colors
+    static let pookiePink = Color(red: 1.0, green: 0.5, blue: 0.7)
+    static let pookiePurple = Color(red: 0.7, green: 0.4, blue: 0.9)
+    static let pookieCyan = Color(red: 0.4, green: 0.75, blue: 1.0)
+    static let brockGold = Color(red: 1.0, green: 0.85, blue: 0.5)
+}
+
 // MARK: - Animated Number Transitions
 
 extension View {
@@ -2135,8 +2191,8 @@ final class ShareAnalyticsTracker {
             defaults.set(encoded, forKey: shareHistoryKey)
         }
 
-        // Notify achievement manager
-        AchievementManager.shared.trackShare()
+        // Notify achievement service
+        AchievementService.shared.trackShare()
     }
 
     /// Get share history

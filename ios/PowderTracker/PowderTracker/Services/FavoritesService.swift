@@ -2,8 +2,8 @@ import Foundation
 import Combine
 
 @MainActor
-class FavoritesManager: ObservableObject {
-    static let shared = FavoritesManager()
+class FavoritesService: ObservableObject {
+    static let shared = FavoritesService()
 
     private let maxFavorites = 5
     private let storageKey = "favoriteMountainIds"

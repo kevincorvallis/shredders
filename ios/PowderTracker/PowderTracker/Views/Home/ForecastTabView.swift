@@ -4,7 +4,7 @@ import SwiftUI
 /// Follows the Phase 4 layout improvements
 struct ForecastTabView: View {
     @ObservedObject var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: 12) {

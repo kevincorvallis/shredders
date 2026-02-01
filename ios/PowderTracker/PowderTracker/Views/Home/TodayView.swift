@@ -4,7 +4,7 @@ import SwiftUI
 /// Shows today's conditions, recommendations, and quick access to favorites
 struct TodayView: View {
     @ObservedObject var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
     @State private var showingManageFavorites = false
     @State private var showingRegionPicker = false
     @State private var alertsDismissed = false

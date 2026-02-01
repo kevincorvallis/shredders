@@ -1,8 +1,8 @@
 //
-//  ProfileImagePicker.swift
+//  AvatarEditorView.swift
 //  PowderTracker
 //
-//  PHPickerViewController wrapper for selecting profile images.
+//  Avatar editor view with PHPickerViewController for selecting profile images.
 //  No camera permissions needed - uses iOS 14+ limited photo picker.
 //
 
@@ -71,6 +71,8 @@ struct AvatarEditorView: View {
     let onSave: (UIImage) async throws -> Void
 
     @State private var showingImagePicker = false
+    @State private var showingCropper = false
+    @State private var rawImageForCropping: UIImage?
     @State private var isUploading = false
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
@@ -194,7 +196,29 @@ struct AvatarEditorView: View {
                 }
             }
             .sheet(isPresented: $showingImagePicker) {
-                ProfileImagePicker(selectedImage: $selectedImage)
+                ProfileImagePicker(selectedImage: $rawImageForCropping)
+            }
+            .onChange(of: rawImageForCropping) { _, newImage in
+                if newImage != nil {
+                    showingCropper = true
+                }
+            }
+            .fullScreenCover(isPresented: $showingCropper) {
+                if let rawImage = rawImageForCropping {
+                    CircularImageCropper(
+                        image: rawImage,
+                        onCrop: { croppedImage in
+                            selectedImage = croppedImage
+                            showingCropper = false
+                            rawImageForCropping = nil
+                            HapticFeedback.success.trigger()
+                        },
+                        onCancel: {
+                            showingCropper = false
+                            rawImageForCropping = nil
+                        }
+                    )
+                }
             }
         }
     }

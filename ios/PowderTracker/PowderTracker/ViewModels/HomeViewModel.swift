@@ -27,7 +27,7 @@ class HomeViewModel: ObservableObject {
     private var mountainsById: [String: Mountain] = [:]
 
     private let apiClient = APIClient.shared
-    private let favoritesManager = FavoritesManager.shared
+    private let favoritesManager = FavoritesService.shared
 
     // MARK: - Data Loading
 

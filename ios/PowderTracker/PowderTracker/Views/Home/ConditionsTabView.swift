@@ -3,7 +3,7 @@ import SwiftUI
 /// Real-time conditions tab showing live status and weather alerts
 struct ConditionsTabView: View {
     @ObservedObject var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: .spacingM) {

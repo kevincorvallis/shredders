@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - Lift Status Card
+
 /// Creative lift status card showing live data from DynamoDB
 struct LiftStatusCard: View {
     @Environment(\.colorScheme) private var colorScheme
@@ -122,6 +124,8 @@ struct LiftStatusCard: View {
         }
     }
 
+    // MARK: - Computed Properties
+
     private var statusColor: Color {
         liftStatus.isOpen ? .green : .red
     }
@@ -152,6 +156,8 @@ struct LiftStatusCard: View {
         }
     }
 }
+
+// MARK: - Circular Progress View
 
 /// Circular progress ring with count display
 struct CircularProgressView: View {
@@ -210,6 +216,8 @@ struct CircularProgressView: View {
         }
     }
 }
+
+// MARK: - Lift Status Badge
 
 /// Compact lift status badge for list views
 struct LiftStatusBadge: View {

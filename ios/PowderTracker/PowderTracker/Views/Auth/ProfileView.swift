@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @Environment(AuthService.self) private var authService
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
     @State private var showingSettings = false
     @State private var showingLogin = false
     @State private var showingManageFavorites = false

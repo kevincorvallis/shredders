@@ -30,7 +30,7 @@ struct AlertSettingsView: View {
                                 .foregroundStyle(.blue)
                             Text("Enable Push Notifications")
                             Spacer()
-                            if PushNotificationManager.shared.isRegistered {
+                            if PushNotificationService.shared.isRegistered {
                                 Image(systemName: "checkmark")
                                     .foregroundStyle(.green)
                             }

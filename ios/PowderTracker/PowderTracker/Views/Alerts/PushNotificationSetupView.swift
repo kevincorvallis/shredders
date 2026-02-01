@@ -2,7 +2,7 @@ import SwiftUI
 import UserNotifications
 
 struct PushNotificationSetupView: View {
-    @State private var pushManager = PushNotificationManager.shared
+    @State private var pushManager = PushNotificationService.shared
     @State private var authStatus: UNAuthorizationStatus = .notDetermined
     @State private var isRequesting = false
 

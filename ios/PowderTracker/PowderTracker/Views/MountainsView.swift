@@ -83,7 +83,7 @@ struct FilterChip: View {
 /// Inspired by Apple's Weather app and App Store design patterns
 struct MountainsView: View {
     @StateObject private var viewModel = MountainSelectionViewModel()
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
 
     @State private var searchText = ""
     @State private var isSearching = false
@@ -1282,7 +1282,7 @@ struct RegionDetailSheet: View {
     let region: MountainRegion
     let mountains: [Mountain]
     let viewModel: MountainSelectionViewModel
-    let favoritesManager: FavoritesManager
+    let favoritesManager: FavoritesService
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

@@ -3,7 +3,7 @@ import SwiftUI
 /// Enhanced Homepage with time-based tabs and smart alerts
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
     @StateObject private var scrollSync = TimelineScrollSync()
     @State private var selectedTab: HomeTab = .forecast
     @State private var showingManageFavorites = false
@@ -124,7 +124,7 @@ class FavoritesViewModel: ObservableObject {
     @Published var isLoading = false
 
     private let apiClient = APIClient.shared
-    private let favoritesManager = FavoritesManager.shared
+    private let favoritesManager = FavoritesService.shared
 
     func loadData() async {
         isLoading = true

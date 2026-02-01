@@ -4,7 +4,7 @@ import MapKit
 struct MountainMapView: View {
     @StateObject private var viewModel = MountainSelectionViewModel()
     @StateObject private var locationManager = LocationManager.shared
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
     @StateObject private var overlayState = MapOverlayState()
     @AppStorage("selectedMountainId") private var persistedMountainId = "baker"
     @State private var mapRegion = MKCoordinateRegion(

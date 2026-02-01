@@ -91,7 +91,7 @@ struct AvalancheCoordinate: Codable {
 
 // MARK: - Avalanche Danger Level
 
-enum AvalancheDangerLevel: Int {
+enum DangerLevel: Int {
     case noRating = -1
     case noAvalancheInfo = 0
     case low = 1
@@ -214,7 +214,7 @@ enum AvalancheServiceError: Error, LocalizedError {
 
 class AvalanchePolygon: MKPolygon {
     var feature: AvalancheFeature?
-    var dangerLevel: AvalancheDangerLevel = .noRating
+    var dangerLevel: DangerLevel = .noRating
     var fillColor: UIColor = .systemGray
     var strokeColor: UIColor = .blue
 }
@@ -231,7 +231,7 @@ extension AvalancheFeature {
 
                 let polygon = AvalanchePolygon(coordinates: coordinates, count: coordinates.count)
                 polygon.feature = self
-                polygon.dangerLevel = AvalancheDangerLevel(rawValue: properties.dangerLevel) ?? .noRating
+                polygon.dangerLevel = DangerLevel(rawValue: properties.dangerLevel) ?? .noRating
                 polygon.fillColor = UIColor(hex: properties.color) ?? .systemGray
                 polygon.strokeColor = UIColor(hex: properties.stroke) ?? .blue
                 polygon.title = properties.name

@@ -16,8 +16,21 @@ struct PowderTrackerApp: App {
         ProcessInfo.processInfo.arguments.contains("UI_TESTING")
     }
 
+    /// Check if state should be reset (for UI testing)
+    private var shouldResetState: Bool {
+        ProcessInfo.processInfo.arguments.contains("RESET_STATE")
+    }
+
     /// Skip intro screen during UI tests for faster test execution
     @State private var showIntro: Bool = !ProcessInfo.processInfo.arguments.contains("UI_TESTING")
+
+    init() {
+        // Reset state during UI tests if requested
+        if ProcessInfo.processInfo.arguments.contains("RESET_STATE") {
+            // Clear Keychain tokens
+            KeychainHelper.clearTokens()
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -31,7 +44,7 @@ struct PowderTrackerApp: App {
                     .environment(authService)
 
                 if showIntro {
-                    IntroView(showIntro: $showIntro)
+                    PookieBSnowIntroView(showIntro: $showIntro)
                         .transition(.opacity)
                 }
             }
@@ -128,18 +141,34 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // Configure Nuke image caching
+        // CRITICAL - Configure image caching first for fast first frame
         ImageCacheConfig.configure()
+        ImageCacheConfig.registerForLifecycleNotifications()
 
         // Set notification delegate
         UNUserNotificationCenter.current().delegate = self
 
-        // Check push notification authorization status
-        Task { @MainActor in
-            await PushNotificationManager.shared.checkAuthorizationStatus()
+        // DEFERRED - Non-critical services after launch
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.initializeNonCriticalServices()
         }
 
         return true
+    }
+
+    /// Initialize services that are not needed for first frame
+    private func initializeNonCriticalServices() {
+        Task { @MainActor in
+            await PushNotificationService.shared.checkAuthorizationStatus()
+        }
+
+        // Pre-warm Supabase connection in background
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 1.0) {
+            Task { @MainActor in
+                // Light API call to warm connection
+                _ = try? await APIClient.shared.fetchMountains()
+            }
+        }
     }
 
     // MARK: - Push Notification Registration
@@ -149,7 +178,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         Task { @MainActor in
-            PushNotificationManager.shared.didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
+            PushNotificationService.shared.didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
         }
     }
 
@@ -158,7 +187,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
         Task { @MainActor in
-            PushNotificationManager.shared.didFailToRegisterForRemoteNotifications(withError: error)
+            PushNotificationService.shared.didFailToRegisterForRemoteNotifications(withError: error)
         }
     }
 
@@ -175,7 +204,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
         // Handle the notification on main actor
         Task { @MainActor in
-            PushNotificationManager.shared.didReceiveNotification(notification)
+            PushNotificationService.shared.didReceiveNotification(notification)
         }
     }
 
@@ -188,7 +217,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         let notification = response.notification
 
         Task { @MainActor in
-            PushNotificationManager.shared.didReceiveNotification(notification)
+            PushNotificationService.shared.didReceiveNotification(notification)
 
             // Handle deep linking based on notification type
             let userInfo = notification.request.content.userInfo

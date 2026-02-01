@@ -1,12 +1,19 @@
 import SwiftUI
 
+// MARK: - Comment List View
+
 struct CommentListView: View {
+
+    // MARK: - Target Type
+
     enum TargetType {
         case mountain(String)
         case webcam(String)
         case photo(String)
         case checkIn(String)
     }
+
+    // MARK: - Properties
 
     let target: TargetType
     let limit: Int
@@ -19,10 +26,14 @@ struct CommentListView: View {
     @State private var newCommentText = ""
     @State private var showingCommentInput = false
 
+    // MARK: - Initialization
+
     init(target: TargetType, limit: Int = 50) {
         self.target = target
         self.limit = limit
     }
+
+    // MARK: - Body
 
     var body: some View {
         VStack(spacing: 0) {
@@ -82,6 +93,8 @@ struct CommentListView: View {
             await loadComments()
         }
     }
+
+    // MARK: - Subviews
 
     private var loadingView: some View {
         VStack(spacing: 16) {
@@ -155,6 +168,8 @@ struct CommentListView: View {
         .scrollDismissesKeyboard(.interactively)
     }
 
+    // MARK: - Helpers
+
     private var parentComments: [Comment] {
         comments.filter { $0.parentCommentId == nil }
     }
@@ -162,6 +177,8 @@ struct CommentListView: View {
     private func getReplies(for parentId: String) -> [Comment] {
         comments.filter { $0.parentCommentId == parentId }
     }
+
+    // MARK: - Data Methods
 
     private func loadComments() async {
         isLoading = true

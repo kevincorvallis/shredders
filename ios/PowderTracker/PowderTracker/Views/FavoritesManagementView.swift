@@ -2,7 +2,7 @@ import SwiftUI
 
 struct FavoritesManagementView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var favoritesManager = FavoritesService.shared
     let mountains: [Mountain]
 
     @State private var showMaxFavoritesAlert = false
