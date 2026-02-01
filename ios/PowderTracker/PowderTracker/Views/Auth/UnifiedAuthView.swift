@@ -9,6 +9,7 @@ import AuthenticationServices
 struct UnifiedAuthView: View {
     @Environment(AuthService.self) private var authService
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var email = ""
     @State private var password = ""
@@ -126,6 +127,7 @@ struct UnifiedAuthView: View {
                     .autocapitalization(.none)
                     .focused($focusedField, equals: .email)
                     .submitLabel(.next)
+                    .tint(colorScheme == .dark ? .white : .blue)
                     .onSubmit {
                         if isSignupMode {
                             focusedField = .displayName
@@ -144,6 +146,7 @@ struct UnifiedAuthView: View {
                         .textContentType(.name)
                         .focused($focusedField, equals: .displayName)
                         .submitLabel(.next)
+                        .tint(colorScheme == .dark ? .white : .blue)
                         .onSubmit {
                             focusedField = .password
                         }
@@ -158,6 +161,7 @@ struct UnifiedAuthView: View {
                     .textContentType(isSignupMode ? .newPassword : .password)
                     .focused($focusedField, equals: .password)
                     .submitLabel(isSignupMode ? .continue : .go)
+                    .tint(colorScheme == .dark ? .white : .blue)
                     .onSubmit {
                         handleSubmit()
                     }

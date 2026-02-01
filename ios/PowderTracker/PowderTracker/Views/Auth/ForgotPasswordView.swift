@@ -3,6 +3,7 @@ import SwiftUI
 /// View for requesting a password reset email
 struct ForgotPasswordView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var email = ""
     @State private var isLoading = false
@@ -41,6 +42,7 @@ struct ForgotPasswordView: View {
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
+                        .tint(colorScheme == .dark ? .white : .blue)
                 } header: {
                     Text("Email Address")
                 }

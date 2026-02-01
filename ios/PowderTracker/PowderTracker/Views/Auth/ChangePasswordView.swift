@@ -3,6 +3,7 @@ import SwiftUI
 /// View for changing password while logged in
 struct ChangePasswordView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var currentPassword = ""
     @State private var newPassword = ""
@@ -47,6 +48,7 @@ struct ChangePasswordView: View {
                 Section {
                     SecureField("Current Password", text: $currentPassword)
                         .textContentType(.password)
+                        .tint(colorScheme == .dark ? .white : .blue)
                 } header: {
                     Text("Current Password")
                 } footer: {
@@ -57,9 +59,11 @@ struct ChangePasswordView: View {
                 Section {
                     SecureField("New Password", text: $newPassword)
                         .textContentType(.newPassword)
+                        .tint(colorScheme == .dark ? .white : .blue)
 
                     SecureField("Confirm New Password", text: $confirmPassword)
                         .textContentType(.newPassword)
+                        .tint(colorScheme == .dark ? .white : .blue)
 
                     // Password requirements
                     if !newPassword.isEmpty {

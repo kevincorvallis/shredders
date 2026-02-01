@@ -551,6 +551,8 @@ struct CustomTextField: View {
     var focusedField: FocusState<EnhancedUnifiedAuthView.Field?>.Binding
     var fieldType: EnhancedUnifiedAuthView.Field
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
@@ -564,6 +566,7 @@ struct CustomTextField: View {
                 .autocapitalization(.none)
                 .focused(focusedField, equals: fieldType)
                 .submitLabel(.next)
+                .tint(colorScheme == .dark ? .white : .blue)
         }
         .padding(16)
         .background(Color(.secondarySystemBackground))
@@ -572,6 +575,7 @@ struct CustomTextField: View {
             RoundedRectangle(cornerRadius: .cornerRadiusButton)
                 .stroke(focusedField.wrappedValue == fieldType ? Color.blue : Color.clear, lineWidth: 2)
         )
+        .contentShape(Rectangle())
     }
 }
 
@@ -583,6 +587,7 @@ struct CustomSecureField: View {
     var focusedField: FocusState<EnhancedUnifiedAuthView.Field?>.Binding
     var fieldType: EnhancedUnifiedAuthView.Field
 
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isVisible = false
 
     var body: some View {
@@ -597,10 +602,12 @@ struct CustomSecureField: View {
                     .textContentType(textContentType)
                     .autocapitalization(.none)
                     .focused(focusedField, equals: fieldType)
+                    .tint(colorScheme == .dark ? .white : .blue)
             } else {
                 SecureField(placeholder, text: $text)
                     .textContentType(textContentType)
                     .focused(focusedField, equals: fieldType)
+                    .tint(colorScheme == .dark ? .white : .blue)
             }
 
             Button {
@@ -618,6 +625,7 @@ struct CustomSecureField: View {
             RoundedRectangle(cornerRadius: .cornerRadiusButton)
                 .stroke(focusedField.wrappedValue == fieldType ? Color.blue : Color.clear, lineWidth: 2)
         )
+        .contentShape(Rectangle())
     }
 }
 
