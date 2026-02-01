@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00EBDB0D09194F1D871C1D8D /* ExperienceLevelButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E1C4ACFF5FE4F3AAE32AF8D /* ExperienceLevelButton.swift */; };
+		00TERR4IN01MOND1C0N5W1FT /* TerrainDiamondIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2A3B4C5D6E7F809A1B2C3D /* TerrainDiamondIcon.swift */; };
 		02D9CE2DF4A3EB4899971BF1 /* LiftsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07BF540F4EE15A6577D7E3B1 /* LiftsTab.swift */; };
 		02E9A4C2422E4E68957461DE /* EventActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97AA6DBA23C74B8889FFD6A1 /* EventActivity.swift */; };
 		030F5B74F5BF29320F6B352B /* SafetyTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BB4D6DD0E6679DB9E7D922B /* SafetyTab.swift */; };
@@ -478,6 +479,7 @@
 		6D44F484D65A54371D3F7C7D /* MountainDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MountainDetailView.swift; sourceTree = "<group>"; };
 		6DB7C31FDFD74D49C0A4CDD2 /* ChartDetailCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChartDetailCard.swift; sourceTree = "<group>"; };
 		6E1C4ACFF5FE4F3AAE32AF8D /* ExperienceLevelButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperienceLevelButton.swift; sourceTree = "<group>"; };
+		7E2A3B4C5D6E7F809A1B2C3D /* TerrainDiamondIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerrainDiamondIcon.swift; sourceTree = "<group>"; };
 		700C16C168D55DAD8DA084D6 /* FavoritesEmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesEmptyState.swift; sourceTree = "<group>"; };
 		712519F9BC0B41379C85169C /* OnboardingPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPreferencesView.swift; sourceTree = "<group>"; };
 		721BE6423E3E69906D9D0677 /* StormModeBanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StormModeBanner.swift; sourceTree = "<group>"; };
@@ -778,6 +780,7 @@
 				3BC46EA0035049C7AB858181 /* AvatarPickerView.swift */,
 				66409DA14F1240A8BF891CEC /* OnboardingProgressView.swift */,
 				6E1C4ACFF5FE4F3AAE32AF8D /* ExperienceLevelButton.swift */,
+				7E2A3B4C5D6E7F809A1B2C3D /* TerrainDiamondIcon.swift */,
 				425F8FC1565E42078B581A94 /* TerrainToggleButton.swift */,
 			);
 			path = Components;
@@ -1732,6 +1735,7 @@
 				DAA52575B63E43E686086E20 /* AvatarPickerView.swift in Sources */,
 				D0C1E932B0EE487CA4678E5F /* OnboardingProgressView.swift in Sources */,
 				00EBDB0D09194F1D871C1D8D /* ExperienceLevelButton.swift in Sources */,
+				00TERR4IN01MOND1C0N5W1FT /* TerrainDiamondIcon.swift in Sources */,
 				5297EC4108CC4C859644A5CE /* TerrainToggleButton.swift in Sources */,
 				3B2F39CD9B1F458D9CD4C970 /* AvatarService.swift in Sources */,
 				659278676E6E4229BC417EB6 /* EventPhoto.swift in Sources */,

@@ -45,12 +45,23 @@ enum ExperienceLevel: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// Primary color for UI elements - matches traditional ski slope colors
     var color: Color {
         switch self {
-        case .beginner: return .green
-        case .intermediate: return .blue
-        case .advanced: return .orange
-        case .expert: return .red
+        case .beginner: return Color(hex: "22C55E") ?? .green     // Green circle
+        case .intermediate: return Color(hex: "3B82F6") ?? .blue  // Blue square
+        case .advanced: return .black                              // Black diamond
+        case .expert: return .black                                // Double black
+        }
+    }
+
+    /// Secondary color for backgrounds and accents (lighter versions for visibility)
+    var backgroundColor: Color {
+        switch self {
+        case .beginner: return Color(hex: "22C55E") ?? .green
+        case .intermediate: return Color(hex: "3B82F6") ?? .blue
+        case .advanced: return Color(hex: "374151") ?? .gray       // Dark gray for better visibility
+        case .expert: return Color(hex: "1F2937") ?? .gray         // Darker gray
         }
     }
 }
