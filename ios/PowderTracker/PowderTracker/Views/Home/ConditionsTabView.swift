@@ -59,7 +59,7 @@ struct ConditionsTabView: View {
             SectionHeaderView(title: "Active Alerts", icon: "exclamationmark.triangle.fill")
 
             ForEach(viewModel.getActiveAlerts()) { alert in
-                WeatherAlertRow(alert: alert)
+                WeatherAlertRowView(alert: alert)
             }
         }
     }

@@ -110,7 +110,7 @@ struct MountainMapView: View {
                                     }
                                 }
                             } label: {
-                                FilterChip(icon: "arrow.up.arrow.down", label: sortBy.rawValue, isActive: true)
+                                FilterChipView(icon: "arrow.up.arrow.down", label: sortBy.rawValue, isActive: true)
                             }
 
                             // Pass filters
@@ -118,7 +118,7 @@ struct MountainMapView: View {
                                 Button {
                                     filterPass = passFilter
                                 } label: {
-                                    FilterChip(
+                                    FilterChipView(
                                         icon: passFilter.icon,
                                         label: passFilter.rawValue,
                                         isActive: filterPass == passFilter

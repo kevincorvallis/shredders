@@ -59,7 +59,7 @@ struct WeatherSummarySection: View {
                     // Wind and snow
                     HStack(spacing: 20) {
                         if let wind = conditions.wind {
-                            WeatherMetric(
+                            WeatherMetricView(
                                 icon: "wind",
                                 label: "Wind",
                                 value: "\(wind.speed) mph \(wind.direction)"
@@ -68,7 +68,7 @@ struct WeatherSummarySection: View {
 
                         Spacer()
 
-                        WeatherMetric(
+                        WeatherMetricView(
                             icon: "snowflake",
                             label: "24hr Snow",
                             value: "\(conditions.snowfall24h)\""

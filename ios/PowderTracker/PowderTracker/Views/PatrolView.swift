@@ -25,13 +25,13 @@ struct PatrolView: View {
                         }
                     } else if let data = safetyData {
                         // Safety Assessment
-                        SafetyAssessmentCard(data: data)
+                        SafetyAssessmentCardView(data: data)
 
                         // Extended Weather
-                        ExtendedWeatherCard(data: data)
+                        ExtendedWeatherCardView(data: data)
 
                         // Visibility
-                        VisibilityCard(data: data)
+                        VisibilityCardView(data: data)
 
                         // Wind Assessment
                         WindAssessmentCard(data: data)
@@ -71,7 +71,7 @@ struct PatrolView: View {
 }
 
 // MARK: - Safety Assessment Card
-struct SafetyAssessmentCard: View {
+struct SafetyAssessmentCardView: View {
     let data: SafetyData
 
     var body: some View {
@@ -131,7 +131,7 @@ struct SafetyAssessmentCard: View {
 }
 
 // MARK: - Extended Weather Card
-struct ExtendedWeatherCard: View {
+struct ExtendedWeatherCardView: View {
     let data: SafetyData
 
     var body: some View {
@@ -141,19 +141,19 @@ struct ExtendedWeatherCard: View {
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 if let temp = data.weather.temperature {
-                    WeatherMetric(icon: "thermometer", label: "Temperature", value: "\(temp)°F")
+                    WeatherMetricView(icon: "thermometer", label: "Temperature", value: "\(temp)°F")
                 }
                 if let feelsLike = data.weather.feelsLike {
-                    WeatherMetric(icon: "thermometer.sun", label: "Feels Like", value: "\(feelsLike)°F")
+                    WeatherMetricView(icon: "thermometer.sun", label: "Feels Like", value: "\(feelsLike)°F")
                 }
                 if let humidity = data.weather.humidity {
-                    WeatherMetric(icon: "humidity", label: "Humidity", value: "\(humidity)%")
+                    WeatherMetricView(icon: "humidity", label: "Humidity", value: "\(humidity)%")
                 }
                 if let pressure = data.weather.pressure {
-                    WeatherMetric(icon: "barometer", label: "Pressure", value: "\(Int(pressure)) mb")
+                    WeatherMetricView(icon: "barometer", label: "Pressure", value: "\(Int(pressure)) mb")
                 }
                 if let uv = data.weather.uvIndex {
-                    WeatherMetric(icon: "sun.max", label: "UV Index", value: "\(uv)")
+                    WeatherMetricView(icon: "sun.max", label: "UV Index", value: "\(uv)")
                 }
             }
         }
@@ -164,7 +164,7 @@ struct ExtendedWeatherCard: View {
     }
 }
 
-struct WeatherMetric: View {
+struct WeatherMetricView: View {
     let icon: String
     let label: String
     let value: String
@@ -188,7 +188,7 @@ struct WeatherMetric: View {
 }
 
 // MARK: - Visibility Card
-struct VisibilityCard: View {
+struct VisibilityCardView: View {
     let data: SafetyData
 
     var body: some View {

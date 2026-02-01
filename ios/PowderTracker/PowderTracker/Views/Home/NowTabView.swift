@@ -103,7 +103,7 @@ struct NowTabView: View {
                 )
             } else {
                 // Fallback to basic alert row if no storm info available
-                WeatherAlertRow(alert: alert)
+                WeatherAlertRowView(alert: alert)
             }
         }
     }
@@ -133,7 +133,7 @@ struct NowTabView: View {
                 .padding(.horizontal, 4)
 
             ForEach(alerts) { alert in
-                WeatherAlertRow(alert: alert)
+                WeatherAlertRowView(alert: alert)
             }
         }
     }
@@ -178,7 +178,7 @@ struct NowTabView: View {
 
 // MARK: - Weather Alert Row
 
-struct WeatherAlertRow: View {
+struct WeatherAlertRowView: View {
     let alert: WeatherAlert
 
     private var severityColor: Color {

@@ -57,7 +57,7 @@ enum PassFilter: String, CaseIterable {
 
 // MARK: - Filter Chip Component
 
-struct FilterChip: View {
+struct FilterChipView: View {
     let icon: String
     let label: String
     var isActive: Bool = false
@@ -230,7 +230,7 @@ struct MountainsView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: .spacingS) {
                 ForEach(QuickFilter.allCases, id: \.self) { filter in
-                    QuickFilterChip(
+                    QuickFilterChipView(
                         filter: filter,
                         isSelected: selectedFilters.contains(filter),
                         onTap: {
@@ -285,7 +285,7 @@ struct MountainsView: View {
                                 NavigationLink {
                                     MountainDetailView(mountain: mountain)
                                 } label: {
-                                    ConditionCard(
+                                    ConditionCardView(
                                         mountain: mountain,
                                         score: viewModel.getScore(for: mountain),
                                         conditions: viewModel.getConditions(for: mountain),
@@ -318,7 +318,7 @@ struct MountainsView: View {
                                 NavigationLink {
                                     MountainDetailView(mountain: mountain)
                                 } label: {
-                                    NearbyCard(
+                                    NearbyCardView(
                                         mountain: mountain,
                                         distance: viewModel.getDistance(to: mountain),
                                         score: viewModel.getScore(for: mountain),
@@ -345,7 +345,7 @@ struct MountainsView: View {
                     GridItem(.flexible())
                 ], spacing: .spacingM) {
                     ForEach(MountainRegion.allCases, id: \.self) { region in
-                        RegionCard(
+                        RegionCardView(
                             region: region,
                             mountainCount: mountainsInRegion(region).count,
                             topScore: topScoreInRegion(region),
@@ -372,7 +372,7 @@ struct MountainsView: View {
                                 NavigationLink {
                                     MountainDetailView(mountain: mountain)
                                 } label: {
-                                    FavoriteCard(
+                                    FavoriteCardView(
                                         mountain: mountain,
                                         score: viewModel.getScore(for: mountain),
                                         conditions: viewModel.getConditions(for: mountain)
@@ -398,7 +398,7 @@ struct MountainsView: View {
                         NavigationLink {
                             MountainDetailView(mountain: mountain)
                         } label: {
-                            CompactMountainRow(
+                            CompactMountainRowView(
                                 mountain: mountain,
                                 score: viewModel.getScore(for: mountain),
                                 distance: viewModel.getDistance(to: mountain),
@@ -419,7 +419,7 @@ struct MountainsView: View {
             Spacer(minLength: 100)
         }
         .sheet(item: $selectedRegion) { region in
-            RegionDetailSheet(
+            RegionDetailSheetView(
                 region: region,
                 mountains: mountainsInRegion(region),
                 viewModel: viewModel,
@@ -489,7 +489,7 @@ struct MountainsView: View {
                     NavigationLink {
                         MountainDetailView(mountain: mountain)
                     } label: {
-                        SearchResultRow(
+                        SearchResultRowView(
                             mountain: mountain,
                             score: viewModel.getScore(for: mountain),
                             distance: viewModel.getDistance(to: mountain),
@@ -534,7 +534,7 @@ struct MountainsView: View {
 
             // Quick stats
             HStack(spacing: 0) {
-                ConditionStat(
+                ConditionStatView(
                     value: "\(mountainsOpen)",
                     label: "Open",
                     icon: "checkmark.circle.fill",
@@ -544,7 +544,7 @@ struct MountainsView: View {
                 Divider()
                     .frame(height: 40)
 
-                ConditionStat(
+                ConditionStatView(
                     value: avgPowderScore,
                     label: "Avg Score",
                     icon: "star.fill",
@@ -554,7 +554,7 @@ struct MountainsView: View {
                 Divider()
                     .frame(height: 40)
 
-                ConditionStat(
+                ConditionStatView(
                     value: "\(totalFreshSnow)\"",
                     label: "Max 24h",
                     icon: "cloud.snow.fill",
@@ -833,7 +833,7 @@ enum MountainRegion: String, CaseIterable, Identifiable {
 
 // MARK: - Component Views
 
-struct QuickFilterChip: View {
+struct QuickFilterChipView: View {
     let filter: QuickFilter
     let isSelected: Bool
     let onTap: () -> Void
@@ -889,7 +889,7 @@ struct DiscoverySection<Content: View>: View {
     }
 }
 
-struct ConditionCard: View {
+struct ConditionCardView: View {
     let mountain: Mountain
     let score: Double?
     let conditions: MountainConditions?
@@ -985,7 +985,7 @@ struct ConditionCard: View {
     }
 }
 
-struct NearbyCard: View {
+struct NearbyCardView: View {
     let mountain: Mountain
     let distance: Double?
     let score: Double?
@@ -1046,7 +1046,7 @@ struct NearbyCard: View {
     }
 }
 
-struct FavoriteCard: View {
+struct FavoriteCardView: View {
     let mountain: Mountain
     let score: Double?
     let conditions: MountainConditions?
@@ -1086,7 +1086,7 @@ struct FavoriteCard: View {
     }
 }
 
-struct RegionCard: View {
+struct RegionCardView: View {
     let region: MountainRegion
     let mountainCount: Int
     let topScore: Double?
@@ -1131,7 +1131,7 @@ struct RegionCard: View {
     }
 }
 
-struct CompactMountainRow: View {
+struct CompactMountainRowView: View {
     let mountain: Mountain
     let score: Double?
     let distance: Double?
@@ -1214,7 +1214,7 @@ struct CompactMountainRow: View {
     }
 }
 
-struct SearchResultRow: View {
+struct SearchResultRowView: View {
     let mountain: Mountain
     let score: Double?
     let distance: Double?
@@ -1255,7 +1255,7 @@ struct SearchResultRow: View {
     }
 }
 
-struct ConditionStat: View {
+struct ConditionStatView: View {
     let value: String
     let label: String
     let icon: String
@@ -1278,7 +1278,7 @@ struct ConditionStat: View {
     }
 }
 
-struct RegionDetailSheet: View {
+struct RegionDetailSheetView: View {
     let region: MountainRegion
     let mountains: [Mountain]
     let viewModel: MountainSelectionViewModel
