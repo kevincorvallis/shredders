@@ -6,16 +6,9 @@ import Supabase
 class CommentService {
     static let shared = CommentService()
 
-    private let supabase: SupabaseClient
+    private let supabase = SupabaseClientManager.shared.client
 
-    private init() {
-        // URL is hardcoded in AppConfig - safe to force unwrap
-        let supabaseURL = URL(string: AppConfig.supabaseURL)!
-        self.supabase = SupabaseClient(
-            supabaseURL: supabaseURL,
-            supabaseKey: AppConfig.supabaseAnonKey
-        )
-    }
+    private init() {}
 
     /// Fetch comments for a target (mountain, webcam, photo, or check-in)
     func fetchComments(
@@ -27,12 +20,17 @@ class CommentService {
         limit: Int = 50,
         offset: Int = 0
     ) async throws -> [Comment] {
+        // Phase 4 optimization: Select specific columns instead of *
         var query = supabase.from("comments")
             .select("""
-                *,
+                id,
+                content,
+                created_at,
+                updated_at,
+                parent_comment_id,
+                is_deleted,
                 user:user_id (
                     id,
-                    username,
                     display_name,
                     avatar_url
                 )
@@ -82,8 +80,8 @@ class CommentService {
             throw CommentError.contentTooLong
         }
 
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             throw CommentError.notAuthenticated
         }
 
@@ -104,7 +102,7 @@ class CommentService {
         }
 
         let commentData = CommentInsert(
-            user_id: user.id.uuidString,
+            user_id: userId,
             content: content.trimmingCharacters(in: .whitespacesAndNewlines),
             mountain_id: mountainId,
             webcam_id: webcamId,
@@ -142,8 +140,8 @@ class CommentService {
             throw CommentError.contentTooLong
         }
 
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             throw CommentError.notAuthenticated
         }
 
@@ -155,7 +153,7 @@ class CommentService {
             .execute()
             .value
 
-        guard existingComment.userId == user.id.uuidString else {
+        guard existingComment.userId == userId else {
             throw CommentError.notOwner
         }
 
@@ -171,7 +169,7 @@ class CommentService {
 
         let updateData = CommentUpdate(
             content: content.trimmingCharacters(in: .whitespacesAndNewlines),
-            updated_at: ISO8601DateFormatter().string(from: Date())
+            updated_at: DateFormatters.iso8601.string(from: Date())
         )
 
         let response: Comment = try await supabase.from("comments")
@@ -195,8 +193,8 @@ class CommentService {
 
     /// Delete a comment (owner only) - soft delete
     func deleteComment(id: String) async throws {
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             throw CommentError.notAuthenticated
         }
 
@@ -208,7 +206,7 @@ class CommentService {
             .execute()
             .value
 
-        guard existingComment.userId == user.id.uuidString else {
+        guard existingComment.userId == userId else {
             throw CommentError.notOwner
         }
 
@@ -226,7 +224,7 @@ class CommentService {
         let deleteData = CommentDelete(
             is_deleted: true,
             content: "[deleted]",
-            updated_at: ISO8601DateFormatter().string(from: Date())
+            updated_at: DateFormatters.iso8601.string(from: Date())
         )
 
         try await supabase.from("comments")

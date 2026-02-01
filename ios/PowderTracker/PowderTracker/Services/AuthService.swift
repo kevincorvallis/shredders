@@ -38,8 +38,8 @@ enum AuthError: Error, LocalizedError {
 class AuthService {
     static let shared = AuthService()
 
-    private let supabase: SupabaseClient
-    private let apiBaseURL: String
+    private let supabase = SupabaseClientManager.shared.client
+    private let apiBaseURL = AppConfig.apiBaseURL
 
     var currentUser: Supabase.User?
     var userProfile: UserProfile?
@@ -47,28 +47,76 @@ class AuthService {
     var isLoading = false
     var error: String?
 
-    private init() {
-        // Initialize Supabase client (for real-time features only)
-        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
-            fatalError("Invalid Supabase URL configuration: \(AppConfig.supabaseURL)")
-        }
-        supabase = SupabaseClient(
-            supabaseURL: supabaseURL,
-            supabaseKey: AppConfig.supabaseAnonKey
-        )
+    // MARK: - Cached User (Phase 2 optimization)
+    private(set) var cachedUserId: String?
+    private(set) var cachedUser: Supabase.User?
 
-        apiBaseURL = AppConfig.apiBaseURL
+    // MARK: - Auth Listener (Phase 7 optimization)
+    private var authListenerTask: Task<Void, Never>?
+
+    /// Check if running in UI testing mode with state reset
+    private static var shouldResetState: Bool {
+        ProcessInfo.processInfo.arguments.contains("RESET_STATE")
+    }
+
+    private init() {
+        // CRITICAL: Clear tokens BEFORE any auth checks when UI testing with RESET_STATE
+        if Self.shouldResetState {
+            KeychainHelper.clearTokens()
+        }
+
+        // Skip session restoration during UI tests with RESET_STATE
+        guard !Self.shouldResetState else { return }
 
         Task {
             await checkSession()
+            await cacheCurrentUser()
 
             // Auto-login in DEBUG builds if credentials are provided via environment variables
             #if DEBUG
             await performDebugAutoLogin()
             #endif
 
-            await listenForAuthChanges()
+            startAuthListener()
         }
+    }
+
+    /// Start listening for auth state changes (Phase 7)
+    private func startAuthListener() {
+        authListenerTask = Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            await self.listenForAuthChanges()
+        }
+    }
+
+    /// Stop the auth listener to prevent memory leaks (Phase 7)
+    func stopAuthListener() {
+        authListenerTask?.cancel()
+        authListenerTask = nil
+    }
+
+    // MARK: - Cached User Access (Phase 2)
+
+    /// Cache the current user for fast synchronous access
+    func cacheCurrentUser() async {
+        do {
+            let user = try await supabase.auth.session.user
+            cachedUserId = user.id.uuidString
+            cachedUser = user
+        } catch {
+            cachedUserId = nil
+            cachedUser = nil
+        }
+    }
+
+    /// Fast synchronous access to current user ID
+    func getCurrentUserId() -> String? {
+        return cachedUserId
+    }
+
+    /// Fast synchronous access to current user
+    func getCurrentUser() -> Supabase.User? {
+        return cachedUser
     }
 
     // MARK: - Debug Auto-Login
@@ -120,11 +168,15 @@ class AuthService {
             case .signedIn:
                 if let session = session {
                     currentUser = session.user
+                    cachedUserId = session.user.id.uuidString
+                    cachedUser = session.user
                     await fetchUserProfile(userId: session.user.id.uuidString)
                 }
             case .signedOut:
                 currentUser = nil
                 userProfile = nil
+                cachedUserId = nil
+                cachedUser = nil
             default:
                 break
             }
@@ -198,7 +250,7 @@ class AuthService {
             // Update last login time
             try await supabase
                 .from("users")
-                .update(["last_login_at": ISO8601DateFormatter().string(from: Date())])
+                .update(["last_login_at": DateFormatters.iso8601.string(from: Date())])
                 .eq("auth_user_id", value: session.user.id.uuidString)
                 .execute()
 
@@ -294,8 +346,14 @@ class AuthService {
             // Clear JWT tokens from Keychain
             KeychainHelper.clearTokens()
 
+            // Clear cached user (Phase 2)
             currentUser = nil
             userProfile = nil
+            cachedUserId = nil
+            cachedUser = nil
+
+            // Note: Don't stop auth listener here - it will handle the signedOut event
+            // and continue listening for future sign-ins
         } catch {
             self.error = error.localizedDescription
             throw error
@@ -422,8 +480,9 @@ class AuthService {
 
         struct SignupResponse: Decodable {
             let user: UserResponse
-            let accessToken: String
-            let refreshToken: String
+            let accessToken: String?
+            let refreshToken: String?
+            let needsEmailVerification: Bool?
             let message: String?
 
             struct UserResponse: Decodable {
@@ -474,11 +533,23 @@ class AuthService {
 
             let signupResponse = try JSONDecoder().decode(SignupResponse.self, from: data)
 
+            // Check if email verification is required
+            if signupResponse.needsEmailVerification == true {
+                // Account created but user needs to verify email before signing in
+                throw AuthError.emailNotVerified
+            }
+
+            // Ensure we have tokens (email verification not required)
+            guard let accessToken = signupResponse.accessToken,
+                  let refreshToken = signupResponse.refreshToken else {
+                throw AuthError.serverError("Signup succeeded but no tokens received")
+            }
+
             // Store tokens securely
             do {
                 try KeychainHelper.saveTokens(
-                    accessToken: signupResponse.accessToken,
-                    refreshToken: signupResponse.refreshToken,
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
                     expiresIn: 15 * 60
                 )
             } catch {
@@ -602,7 +673,7 @@ class AuthService {
             display_name: displayName,
             bio: bio,
             home_mountain_id: homeMountainId,
-            updated_at: ISO8601DateFormatter().string(from: Date())
+            updated_at: DateFormatters.iso8601.string(from: Date())
         )
 
         do {
@@ -658,7 +729,7 @@ class AuthService {
             preferred_terrain: profile.preferredTerrain.map { $0.rawValue },
             season_pass_type: profile.seasonPassType?.rawValue,
             home_mountain_id: profile.homeMountainId,
-            updated_at: ISO8601DateFormatter().string(from: Date())
+            updated_at: DateFormatters.iso8601.string(from: Date())
         )
 
         do {
@@ -693,7 +764,7 @@ class AuthService {
             let updated_at: String
         }
 
-        let now = ISO8601DateFormatter().string(from: Date())
+        let now = DateFormatters.iso8601.string(from: Date())
         let updates = CompletionUpdate(
             has_completed_onboarding: true,
             onboarding_completed_at: now,
@@ -731,7 +802,7 @@ class AuthService {
             let updated_at: String
         }
 
-        let now = ISO8601DateFormatter().string(from: Date())
+        let now = DateFormatters.iso8601.string(from: Date())
         let updates = SkipUpdate(
             onboarding_skipped_at: now,
             updated_at: now

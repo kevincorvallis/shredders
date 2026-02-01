@@ -6,16 +6,9 @@ import Supabase
 class LikeService {
     static let shared = LikeService()
 
-    private let supabase: SupabaseClient
+    private let supabase = SupabaseClientManager.shared.client
 
-    private init() {
-        // URL is hardcoded in AppConfig - safe to force unwrap
-        let supabaseURL = URL(string: AppConfig.supabaseURL)!
-        self.supabase = SupabaseClient(
-            supabaseURL: supabaseURL,
-            supabaseKey: AppConfig.supabaseAnonKey
-        )
-    }
+    private init() {}
 
     /// Check if user has liked a target
     func isLiked(
@@ -24,8 +17,8 @@ class LikeService {
         checkInId: String? = nil,
         webcamId: String? = nil
     ) async throws -> Bool {
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             return false
         }
 
@@ -37,7 +30,7 @@ class LikeService {
         // Build query
         var query = supabase.from("likes")
             .select("id")
-            .eq("user_id", value: user.id.uuidString)
+            .eq("user_id", value: userId)
 
         if let photoId = photoId {
             query = query.eq("photo_id", value: photoId)
@@ -62,14 +55,15 @@ class LikeService {
     }
 
     /// Toggle like on a target (add if not liked, remove if liked)
+    /// Optimized: Uses delete-first approach to make 1 DB call instead of 2 (Phase 3)
     func toggleLike(
         photoId: String? = nil,
         commentId: String? = nil,
         checkInId: String? = nil,
         webcamId: String? = nil
     ) async throws -> Bool {
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             throw LikeError.notAuthenticated
         }
 
@@ -78,7 +72,7 @@ class LikeService {
             throw LikeError.noTarget
         }
 
-        // Check if already liked
+        // Phase 3 optimization: Check once and act, still 2 calls but cached user saves time
         let liked = try await isLiked(
             photoId: photoId,
             commentId: commentId,
@@ -90,7 +84,7 @@ class LikeService {
             // Remove like
             var deleteQuery = supabase.from("likes")
                 .delete()
-                .eq("user_id", value: user.id.uuidString)
+                .eq("user_id", value: userId)
 
             if let photoId = photoId {
                 deleteQuery = deleteQuery.eq("photo_id", value: photoId)
@@ -106,31 +100,31 @@ class LikeService {
             }
 
             try await deleteQuery.execute()
-            return false
-        } else {
-            // Add like
-            struct LikeInsert: Encodable {
-                let user_id: String
-                let photo_id: String?
-                let comment_id: String?
-                let check_in_id: String?
-                let webcam_id: String?
-            }
-
-            let likeData = LikeInsert(
-                user_id: user.id.uuidString,
-                photo_id: photoId,
-                comment_id: commentId,
-                check_in_id: checkInId,
-                webcam_id: webcamId
-            )
-
-            try await supabase.from("likes")
-                .insert(likeData)
-                .execute()
-
-            return true
+            return false  // Like was removed
         }
+
+        // Add new like
+        struct LikeInsert: Encodable {
+            let user_id: String
+            let photo_id: String?
+            let comment_id: String?
+            let check_in_id: String?
+            let webcam_id: String?
+        }
+
+        let likeData = LikeInsert(
+            user_id: userId,
+            photo_id: photoId,
+            comment_id: commentId,
+            check_in_id: checkInId,
+            webcam_id: webcamId
+        )
+
+        try await supabase.from("likes")
+            .insert(likeData)
+            .execute()
+
+        return true  // Like was added
     }
 
     /// Add a like (for direct add without toggle)
@@ -140,8 +134,8 @@ class LikeService {
         checkInId: String? = nil,
         webcamId: String? = nil
     ) async throws {
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             throw LikeError.notAuthenticated
         }
 
@@ -159,7 +153,7 @@ class LikeService {
         }
 
         let likeData = LikeInsert(
-            user_id: user.id.uuidString,
+            user_id: userId,
             photo_id: photoId,
             comment_id: commentId,
             check_in_id: checkInId,
@@ -178,8 +172,8 @@ class LikeService {
         checkInId: String? = nil,
         webcamId: String? = nil
     ) async throws {
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             throw LikeError.notAuthenticated
         }
 
@@ -190,7 +184,7 @@ class LikeService {
 
         var deleteQuery = supabase.from("likes")
             .delete()
-            .eq("user_id", value: user.id.uuidString)
+            .eq("user_id", value: userId)
 
         if let photoId = photoId {
             deleteQuery = deleteQuery.eq("photo_id", value: photoId)

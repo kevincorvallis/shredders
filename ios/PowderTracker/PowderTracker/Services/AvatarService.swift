@@ -29,17 +29,9 @@ class AvatarService: ObservableObject {
 
     // MARK: - Private
 
-    private let supabase: SupabaseClient
+    private let supabase = SupabaseClientManager.shared.client
 
-    private init() {
-        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
-            fatalError("Invalid Supabase URL configuration")
-        }
-        supabase = SupabaseClient(
-            supabaseURL: supabaseURL,
-            supabaseKey: AppConfig.supabaseAnonKey
-        )
-    }
+    private init() {}
 
     // MARK: - Public Methods
 

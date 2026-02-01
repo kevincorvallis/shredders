@@ -7,20 +7,13 @@ import Storage
 class PhotoService: ObservableObject {
     static let shared = PhotoService()
 
-    private let supabase: SupabaseClient
+    private let supabase = SupabaseClientManager.shared.client
 
     @Published var isUploading = false
     @Published var uploadProgress: Double = 0.0
     @Published var error: String?
 
-    private init() {
-        // URL is hardcoded in AppConfig - safe to force unwrap
-        let supabaseURL = URL(string: AppConfig.supabaseURL)!
-        supabase = SupabaseClient(
-            supabaseURL: supabaseURL,
-            supabaseKey: AppConfig.supabaseAnonKey
-        )
-    }
+    private init() {}
 
     // MARK: - Upload Photo
 
@@ -39,8 +32,12 @@ class PhotoService: ObservableObject {
             uploadProgress = 0.0
         }
 
-        // Get current user
-        let user = try await supabase.auth.session.user
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
+            throw NSError(domain: "PhotoService", code: -1, userInfo: [
+                NSLocalizedDescriptionKey: "You must be signed in to upload photos"
+            ])
+        }
 
         // Compress image to JPEG
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
@@ -59,7 +56,7 @@ class PhotoService: ObservableObject {
         // Generate unique filename
         let timestamp = Int(Date().timeIntervalSince1970 * 1000)
         let randomStr = UUID().uuidString.prefix(8)
-        let fileName = "\(user.id.uuidString)/\(mountainId)/\(timestamp)-\(randomStr).jpg"
+        let fileName = "\(userId)/\(mountainId)/\(timestamp)-\(randomStr).jpg"
 
         uploadProgress = 0.3
 
@@ -101,7 +98,7 @@ class PhotoService: ObservableObject {
         }
 
         let photoRecord = PhotoInsert(
-            user_id: user.id.uuidString,
+            user_id: userId,
             mountain_id: mountainId,
             webcam_id: webcamId,
             s3_key: fileName,
@@ -109,7 +106,7 @@ class PhotoService: ObservableObject {
             cloudfront_url: publicURL.absoluteString,
             thumbnail_url: publicURL.absoluteString,
             caption: caption,
-            taken_at: ISO8601DateFormatter().string(from: Date()),
+            taken_at: DateFormatters.iso8601.string(from: Date()),
             file_size_bytes: imageData.count,
             mime_type: "image/jpeg"
         )
@@ -176,9 +173,9 @@ class PhotoService: ObservableObject {
             .execute()
             .value
 
-        // Verify ownership
-        let currentUser = try await supabase.auth.session.user
-        guard photo.userId == currentUser.id.uuidString else {
+        // Verify ownership using cached user (Phase 2 optimization)
+        guard let currentUserId = AuthService.shared.getCurrentUserId(),
+              photo.userId == currentUserId else {
             throw NSError(domain: "PhotoService", code: -1, userInfo: [
                 NSLocalizedDescriptionKey: "You can only delete your own photos"
             ])

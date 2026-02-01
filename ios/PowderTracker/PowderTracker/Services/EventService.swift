@@ -8,18 +8,11 @@ class EventService {
 
     private let baseURL: String
     private let decoder: JSONDecoder
-    private let supabase: SupabaseClient
+    private let supabase = SupabaseClientManager.shared.client
 
     private init() {
         self.baseURL = AppConfig.apiBaseURL
         self.decoder = JSONDecoder()
-        guard let supabaseURL = URL(string: AppConfig.supabaseURL) else {
-            fatalError("Invalid Supabase URL configuration: \(AppConfig.supabaseURL)")
-        }
-        self.supabase = SupabaseClient(
-            supabaseURL: supabaseURL,
-            supabaseKey: AppConfig.supabaseAnonKey
-        )
     }
 
     // MARK: - List Events
@@ -124,10 +117,8 @@ class EventService {
         }
 
         // Format date
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        let eventDateString = dateFormatter.string(from: eventDate)
+        // Phase 6 optimization: Use static DateFormatter
+        let eventDateString = DateFormatters.eventDate.string(from: eventDate)
 
         let requestBody = CreateEventRequest(
             mountainId: mountainId,
@@ -190,10 +181,8 @@ class EventService {
         if let title = title { body["title"] = title }
         if let notes = notes { body["notes"] = notes }
         if let eventDate = eventDate {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-            body["eventDate"] = dateFormatter.string(from: eventDate)
+            // Phase 6 optimization: Use static DateFormatter
+            body["eventDate"] = DateFormatters.eventDate.string(from: eventDate)
         }
         if let departureTime = departureTime { body["departureTime"] = departureTime }
         if let departureLocation = departureLocation { body["departureLocation"] = departureLocation }

@@ -8,21 +8,14 @@ import Supabase
 class PushNotificationManager: NSObject {
     static let shared = PushNotificationManager()
 
-    private let supabase: SupabaseClient
-    private let apiClient: APIClient
+    private let supabase = SupabaseClientManager.shared.client
+    private let apiClient = APIClient.shared
 
     var isRegistered = false
     var deviceToken: String?
     var authorizationStatus: UNAuthorizationStatus = .notDetermined
 
     private override init() {
-        // URL is hardcoded in AppConfig - safe to force unwrap
-        let supabaseURL = URL(string: AppConfig.supabaseURL)!
-        self.supabase = SupabaseClient(
-            supabaseURL: supabaseURL,
-            supabaseKey: AppConfig.supabaseAnonKey
-        )
-        self.apiClient = APIClient.shared
         super.init()
     }
 

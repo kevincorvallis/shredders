@@ -6,16 +6,9 @@ import Supabase
 class CheckInService {
     static let shared = CheckInService()
 
-    private let supabase: SupabaseClient
+    private let supabase = SupabaseClientManager.shared.client
 
-    private init() {
-        // URL is hardcoded in AppConfig - safe to force unwrap
-        let supabaseURL = URL(string: AppConfig.supabaseURL)!
-        self.supabase = SupabaseClient(
-            supabaseURL: supabaseURL,
-            supabaseKey: AppConfig.supabaseAnonKey
-        )
-    }
+    private init() {}
 
     /// Fetch check-ins for a mountain
     func fetchCheckIns(
@@ -23,12 +16,19 @@ class CheckInService {
         limit: Int = 20,
         offset: Int = 0
     ) async throws -> [CheckIn] {
+        // Phase 4 optimization: Select specific columns instead of *
         let response: [CheckIn] = try await supabase.from("check_ins")
             .select("""
-                *,
+                id,
+                check_in_time,
+                rating,
+                crowd_level,
+                conditions_rating,
+                trip_report,
+                snow_quality,
+                is_public,
                 user:user_id (
                     id,
-                    username,
                     display_name,
                     avatar_url
                 )
@@ -49,12 +49,20 @@ class CheckInService {
         limit: Int = 20,
         offset: Int = 0
     ) async throws -> [CheckIn] {
+        // Phase 4 optimization: Select specific columns instead of *
         let response: [CheckIn] = try await supabase.from("check_ins")
             .select("""
-                *,
+                id,
+                check_in_time,
+                rating,
+                crowd_level,
+                conditions_rating,
+                trip_report,
+                snow_quality,
+                is_public,
+                mountain_id,
                 user:user_id (
                     id,
-                    username,
                     display_name,
                     avatar_url
                 )
@@ -77,8 +85,8 @@ class CheckInService {
         crowdLevel: String?,
         isPublic: Bool = true
     ) async throws -> CheckIn {
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             throw CheckInError.notAuthenticated
         }
 
@@ -105,9 +113,9 @@ class CheckInService {
         }
 
         let checkInData = CheckInInsert(
-            user_id: user.id.uuidString,
+            user_id: userId,
             mountain_id: mountainId,
-            check_in_time: ISO8601DateFormatter().string(from: Date()),
+            check_in_time: DateFormatters.iso8601.string(from: Date()),
             trip_report: tripReport,
             rating: rating,
             snow_quality: snowQuality,
@@ -142,8 +150,8 @@ class CheckInService {
         crowdLevel: String?,
         isPublic: Bool?
     ) async throws -> CheckIn {
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             throw CheckInError.notAuthenticated
         }
 
@@ -155,7 +163,7 @@ class CheckInService {
             .execute()
             .value
 
-        guard existingCheckIn.userId == user.id.uuidString else {
+        guard existingCheckIn.userId == userId else {
             throw CheckInError.notOwner
         }
 
@@ -221,8 +229,8 @@ class CheckInService {
 
     /// Delete a check-in (owner only)
     func deleteCheckIn(id: String) async throws {
-        // Get current user
-        guard let user = try? await supabase.auth.session.user else {
+        // Use cached user (Phase 2 optimization)
+        guard let userId = AuthService.shared.getCurrentUserId() else {
             throw CheckInError.notAuthenticated
         }
 
@@ -234,7 +242,7 @@ class CheckInService {
             .execute()
             .value
 
-        guard existingCheckIn.userId == user.id.uuidString else {
+        guard existingCheckIn.userId == userId else {
             throw CheckInError.notOwner
         }
 
