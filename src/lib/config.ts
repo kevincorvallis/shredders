@@ -126,74 +126,149 @@ function validateEnv(): Config {
 }
 
 /**
+ * Lazy-loaded configuration cache
+ * Prevents validation errors during Next.js build phase
+ */
+let _config: Config | null = null;
+
+/**
+ * Get validated configuration object (lazy initialization)
+ * Validates on first access, caches result for subsequent calls
+ * This prevents build-time errors when env vars aren't available
+ */
+function getConfig(): Config {
+  if (_config === null) {
+    _config = validateEnv();
+  }
+  return _config;
+}
+
+/**
  * Validated configuration object
  * Use this throughout your application for type-safe config access
+ * Note: Uses getter for lazy validation - won't throw at import time
  */
-export const config = validateEnv();
+export const config: Config = new Proxy({} as Config, {
+  get(_, prop: keyof Config) {
+    return getConfig()[prop];
+  },
+  ownKeys() {
+    return Reflect.ownKeys(getConfig());
+  },
+  getOwnPropertyDescriptor(_, prop) {
+    return Object.getOwnPropertyDescriptor(getConfig(), prop);
+  },
+});
 
 /**
  * Helper functions for common config checks
+ * These are functions to ensure lazy evaluation (won't fail at build time)
  */
-export const isProduction = config.NODE_ENV === 'production';
-export const isDevelopment = config.NODE_ENV === 'development';
-export const isTest = config.NODE_ENV === 'test';
+export function isProduction(): boolean {
+  return getConfig().NODE_ENV === 'production';
+}
+
+export function isDevelopment(): boolean {
+  return getConfig().NODE_ENV === 'development';
+}
+
+export function isTest(): boolean {
+  return getConfig().NODE_ENV === 'test';
+}
 
 /**
- * JWT Configuration
+ * JWT Configuration (lazy-loaded)
  */
 export const jwtConfig = {
-  accessSecret: config.JWT_ACCESS_SECRET,
-  refreshSecret: config.JWT_REFRESH_SECRET,
-  accessExpiry: config.JWT_ACCESS_EXPIRY,
-  refreshExpiry: config.JWT_REFRESH_EXPIRY,
+  get accessSecret() {
+    return getConfig().JWT_ACCESS_SECRET;
+  },
+  get refreshSecret() {
+    return getConfig().JWT_REFRESH_SECRET;
+  },
+  get accessExpiry() {
+    return getConfig().JWT_ACCESS_EXPIRY;
+  },
+  get refreshExpiry() {
+    return getConfig().JWT_REFRESH_EXPIRY;
+  },
 };
 
 /**
- * Supabase Configuration
+ * Supabase Configuration (lazy-loaded)
  */
 export const supabaseConfig = {
-  url: config.NEXT_PUBLIC_SUPABASE_URL,
-  anonKey: config.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  serviceRoleKey: config.SUPABASE_SERVICE_ROLE_KEY,
+  get url() {
+    return getConfig().NEXT_PUBLIC_SUPABASE_URL;
+  },
+  get anonKey() {
+    return getConfig().NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  },
+  get serviceRoleKey() {
+    return getConfig().SUPABASE_SERVICE_ROLE_KEY;
+  },
 };
 
 /**
- * Application Configuration
+ * Application Configuration (lazy-loaded)
  */
 export const appConfig = {
-  siteUrl: config.NEXT_PUBLIC_SITE_URL,
-  enableTokenRotation: config.ENABLE_TOKEN_ROTATION,
-  enableMFA: config.ENABLE_MFA,
-  enableSessionTracking: config.ENABLE_SESSION_TRACKING,
+  get siteUrl() {
+    return getConfig().NEXT_PUBLIC_SITE_URL;
+  },
+  get enableTokenRotation() {
+    return getConfig().ENABLE_TOKEN_ROTATION;
+  },
+  get enableMFA() {
+    return getConfig().ENABLE_MFA;
+  },
+  get enableSessionTracking() {
+    return getConfig().ENABLE_SESSION_TRACKING;
+  },
 };
 
 /**
- * Rate Limiting Configuration
+ * Rate Limiting Configuration (lazy-loaded)
  */
 export const rateLimitConfig = {
-  login: parseInt(config.RATE_LIMIT_LOGIN, 10),
-  signup: parseInt(config.RATE_LIMIT_SIGNUP, 10),
-  refresh: parseInt(config.RATE_LIMIT_REFRESH, 10),
+  get login() {
+    return parseInt(getConfig().RATE_LIMIT_LOGIN, 10);
+  },
+  get signup() {
+    return parseInt(getConfig().RATE_LIMIT_SIGNUP, 10);
+  },
+  get refresh() {
+    return parseInt(getConfig().RATE_LIMIT_REFRESH, 10);
+  },
 };
 
 /**
- * Redis Configuration
+ * Redis Configuration (lazy-loaded)
  */
 export const redisConfig = {
-  url: config.REDIS_URL,
-  token: config.REDIS_TOKEN,
-  enabled: !!config.REDIS_URL,
+  get url() {
+    return getConfig().REDIS_URL;
+  },
+  get token() {
+    return getConfig().REDIS_TOKEN;
+  },
+  get enabled() {
+    return !!getConfig().REDIS_URL;
+  },
 };
 
 /**
- * Monitoring Configuration
+ * Monitoring Configuration (lazy-loaded)
  */
 export const monitoringConfig = {
-  sentry: {
-    dsn: config.SENTRY_DSN,
-    org: config.SENTRY_ORG,
-    project: config.SENTRY_PROJECT,
-    enabled: !!config.SENTRY_DSN,
+  get sentry() {
+    const cfg = getConfig();
+    return {
+      dsn: cfg.SENTRY_DSN,
+      org: cfg.SENTRY_ORG,
+      project: cfg.SENTRY_PROJECT,
+      enabled: !!cfg.SENTRY_DSN,
+    };
   },
 };
 
@@ -201,7 +276,7 @@ export const monitoringConfig = {
  * Print configuration summary (safe - doesn't expose secrets)
  */
 export function printConfigSummary() {
-  if (isDevelopment) {
+  if (isDevelopment()) {
     console.log('\n🔧 Configuration Summary:');
     console.log('  Environment:', config.NODE_ENV);
     console.log('  Site URL:', config.NEXT_PUBLIC_SITE_URL);
@@ -222,13 +297,14 @@ export function printConfigSummary() {
  */
 export function validateSecurityConfig() {
   const warnings: string[] = [];
+  const isProd = isProduction();
 
   // Check JWT secret strength
-  if (config.JWT_ACCESS_SECRET.length < 64 && isProduction) {
+  if (config.JWT_ACCESS_SECRET.length < 64 && isProd) {
     warnings.push('⚠️  JWT_ACCESS_SECRET should be at least 64 characters in production');
   }
 
-  if (config.JWT_REFRESH_SECRET.length < 64 && isProduction) {
+  if (config.JWT_REFRESH_SECRET.length < 64 && isProd) {
     warnings.push('⚠️  JWT_REFRESH_SECRET should be at least 64 characters in production');
   }
 
@@ -238,17 +314,17 @@ export function validateSecurityConfig() {
   }
 
   // Check HTTPS in production
-  if (isProduction && !config.NEXT_PUBLIC_SITE_URL.startsWith('https://')) {
+  if (isProd && !config.NEXT_PUBLIC_SITE_URL.startsWith('https://')) {
     warnings.push('⚠️  NEXT_PUBLIC_SITE_URL should use HTTPS in production');
   }
 
   // Check Redis in production
-  if (isProduction && !redisConfig.enabled) {
+  if (isProd && !redisConfig.enabled) {
     warnings.push('⚠️  Redis recommended in production for distributed rate limiting');
   }
 
   // Check Sentry in production
-  if (isProduction && !monitoringConfig.sentry.enabled) {
+  if (isProd && !monitoringConfig.sentry.enabled) {
     warnings.push('⚠️  Sentry recommended in production for error monitoring');
   }
 
@@ -261,11 +337,6 @@ export function validateSecurityConfig() {
   return warnings;
 }
 
-// Validate and print configuration on module load
-if (isDevelopment) {
-  printConfigSummary();
-}
-
-if (isProduction) {
-  validateSecurityConfig();
-}
+// Note: Configuration validation and printing now happens lazily on first access
+// to avoid build-time errors when environment variables aren't available.
+// Call printConfigSummary() or validateSecurityConfig() explicitly at runtime if needed.
