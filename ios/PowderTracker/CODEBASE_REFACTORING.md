@@ -26,7 +26,7 @@ Comprehensive cleanup, organization, and optimization checklist for PowderTracke
 - **Phase 2.2**: Added "View" suffix to 15 components (FilterChip, ConditionCard, WeatherMetric, etc.)
 - **Phase 2.3**: Renamed `AvalancheDangerLevel` → `DangerLevel`
 - **Phase 2.4**: Fixed ProfileImagePicker.swift → AvatarEditorView.swift mismatch
-- **Phase 8.1**: Removed dead code (duplicate DateFormatters, unused DataCache, PerformanceMonitor)
+- **Phase 8.1**: Removed dead code (duplicate DateFormatters, unused DataCache, PerformanceMonitor, AlertTypes.swift, RoadCondition struct)
 - **Phase 8.2**: Added MARK comments to large files (CommentListView, LiftStatusCard)
 - **Phase 10.1**: Verified clean build succeeds
 

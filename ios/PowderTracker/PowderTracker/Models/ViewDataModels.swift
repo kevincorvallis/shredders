@@ -23,12 +23,3 @@ struct SnowDataPoint: Identifiable {
     }
 }
 
-// MARK: - Road Condition Data
-
-struct RoadCondition: Identifiable {
-    let id = UUID()
-    let name: String
-    let status: String
-    let conditions: String?
-    let chainsRequired: Bool
-}

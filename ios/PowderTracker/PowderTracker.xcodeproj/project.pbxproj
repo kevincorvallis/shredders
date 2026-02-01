@@ -14,7 +14,6 @@
 		030F5B74F5BF29320F6B352B /* SafetyTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BB4D6DD0E6679DB9E7D922B /* SafetyTab.swift */; };
 		053D709016954A16BC3A581B /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9E2A79949E148269723FBF9 /* OnboardingContainerView.swift */; };
 		062B45B4B9AC1078F41D1620 /* OpenSnowStyleSnowfallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C27CECD6A64ACBF25AA7373 /* OpenSnowStyleSnowfallView.swift */; };
-		07326B5088476D19693F2463 /* AlertTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A4F9FCA3AB0AE9D9EF16D8F /* AlertTypes.swift */; };
 		0A9EDF972F2DD81900F5A01D /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 13BC4782E65FE08C160BE842 /* SnapshotTesting */; };
 		0AE38B66F59CD266A70A949B /* ForecastSkeleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C99BBDF11000479A8EFC01F /* ForecastSkeleton.swift */; };
 		0AE5B6842F2780DC001D53AD /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AE5B6832F2780DC001D53AD /* OnboardingView.swift */; };
@@ -475,7 +474,6 @@
 		66366364323163322D396534362D346666642D616531642D /* ConditionsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionsTabView.swift; sourceTree = "<group>"; };
 		66409DA14F1240A8BF891CEC /* OnboardingProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProgressView.swift; sourceTree = "<group>"; };
 		6843B6F4EA6B85F3B4DC8597 /* MountainResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainResponses.swift; sourceTree = "<group>"; };
-		6A4F9FCA3AB0AE9D9EF16D8F /* AlertTypes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertTypes.swift; sourceTree = "<group>"; };
 		6B4F39F25F5B27C454530529 /* MockData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockData.swift; sourceTree = "<group>"; };
 		6BCCAE9BA654D3D06756BB11 /* LiftData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftData.swift; sourceTree = "<group>"; };
 		6C035FF0AFCB501E42FBF56C /* PowderTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PowderTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1212,7 +1210,6 @@
 				7794D7C364504D30AF31523F /* OnboardingProfile.swift */,
 				ADF5DB6D86B16DE941572D61 /* ViewDataModels.swift */,
 				41A8124AD9CA7DD28E45F4D3 /* ForecastNarrative.swift */,
-				6A4F9FCA3AB0AE9D9EF16D8F /* AlertTypes.swift */,
 				7FF38EB80FCBE1EC4BC59E87 /* DataFreshness.swift */,
 				0DD6D5640E4A93441D3E8578 /* MapOverlay.swift */,
 			);
@@ -1714,7 +1711,6 @@
 				6587ACEA0E9370F39924055B /* MountainDetailView.swift in Sources */,
 				CEC2AB28F88C3490C148AF30 /* StickyTabBar.swift in Sources */,
 				A59EBF53ADD81A568582DF82 /* ForecastNarrative.swift in Sources */,
-				07326B5088476D19693F2463 /* AlertTypes.swift in Sources */,
 				DB1600F1A3F094023ABA3B3C /* DataFreshness.swift in Sources */,
 				B40FC759826EA5A5C32A1DE2 /* MapOverlay.swift in Sources */,
 				6A87A96B9B90DDA7118DCB1D /* DataSourceBadge.swift in Sources */,
