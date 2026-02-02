@@ -64,3 +64,6 @@ ios/PowderTracker/build/
 
 # iOS local credentials
 ios/PowderTracker/.env.local
+
+# Xcode Archives
+ios/PowderTracker/Archives/
