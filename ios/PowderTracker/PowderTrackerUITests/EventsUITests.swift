@@ -10,9 +10,14 @@ import XCTest
 final class EventsUITests: XCTestCase {
     var app: XCUIApplication!
 
-    // Test credentials - verified working account
-    private let testEmail = "testuser123@gmail.com"
-    private let testPassword = "TestPassword123!"
+    // Test credentials - read from environment variables for security
+    // Set UI_TEST_EMAIL and UI_TEST_PASSWORD in your scheme's environment variables
+    private var testEmail: String {
+        ProcessInfo.processInfo.environment["UI_TEST_EMAIL"] ?? "testuser@example.com"
+    }
+    private var testPassword: String {
+        ProcessInfo.processInfo.environment["UI_TEST_PASSWORD"] ?? "TestPassword123!"
+    }
 
     override func setUp() {
         super.setUp()
@@ -54,7 +59,9 @@ final class EventsUITests: XCTestCase {
         let eventsTab = app.tabBars.buttons["Events"]
         XCTAssertTrue(eventsTab.waitForExistence(timeout: 5), "Events tab should exist")
         eventsTab.tap()
-        sleep(1) // Wait for tab switch
+
+        // Wait for tab content to load
+        _ = app.scrollViews.firstMatch.waitForExistence(timeout: 3)
 
         // Should show events view - could be:
         // 1. Navigation bar with "Ski Events" title
@@ -1628,7 +1635,7 @@ final class EventsUITests: XCTestCase {
         let eventsTab = app.tabBars.buttons["Events"]
         if eventsTab.waitForExistence(timeout: 5) {
             eventsTab.tap()
-            sleep(1) // Give time for the tab switch
+            Thread.sleep(forTimeInterval: 1) // Give time for the tab switch
         }
         // Wait for events view to load - could be authenticated view with create button,
         // or unauthenticated view with sign-in prompt, or just the scroll view
@@ -1644,21 +1651,63 @@ final class EventsUITests: XCTestCase {
     @MainActor
     private func ensureLoggedIn() {
         let profileTab = app.tabBars.buttons["Profile"]
-        guard profileTab.waitForExistence(timeout: 5) else { return }
+        guard profileTab.waitForExistence(timeout: 5) else {
+            XCTFail("Profile tab not found")
+            return
+        }
         profileTab.tap()
+        Thread.sleep(forTimeInterval: 1)
+
+        let scrollView = app.scrollViews.firstMatch
+
+        // Scroll down to check for sign-out button (at bottom in Settings section)
+        if scrollView.waitForExistence(timeout: 3) {
+            for _ in 0..<10 {
+                if app.buttons["profile_sign_out_button"].exists { break }
+                scrollView.swipeUp()
+                Thread.sleep(forTimeInterval: 0.3)
+            }
+        }
 
         // Check if already logged in
         if app.buttons["profile_sign_out_button"].waitForExistence(timeout: 2) {
+            // Scroll back to top
+            if scrollView.exists {
+                scrollView.swipeDown()
+                scrollView.swipeDown()
+                scrollView.swipeDown()
+            }
+            return // Already logged in
+        }
+
+        // Scroll back to top to find sign-in button
+        if scrollView.exists {
+            scrollView.swipeDown()
+            scrollView.swipeDown()
+            scrollView.swipeDown()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        // Need to log in
+        let signInButton = app.buttons["profile_sign_in_button"]
+        guard signInButton.waitForExistence(timeout: 5) else {
+            XCTFail("Sign in button not found - cannot log in")
             return
         }
 
-        // Log in
-        let signInButton = app.buttons["profile_sign_in_button"]
-        guard signInButton.waitForExistence(timeout: 3) else { return }
+        guard signInButton.isHittable else {
+            XCTFail("Sign in button exists but is not hittable")
+            return
+        }
+
         signInButton.tap()
 
         let emailField = app.textFields["auth_email_field"]
-        guard emailField.waitForExistence(timeout: 5) else { return }
+        guard emailField.waitForExistence(timeout: 5) else {
+            XCTFail("Email field not found after tapping sign in")
+            return
+        }
+
         emailField.tap()
         emailField.typeText(testEmail)
 
@@ -1668,6 +1717,32 @@ final class EventsUITests: XCTestCase {
 
         app.buttons["auth_sign_in_button"].tap()
 
-        _ = app.buttons["profile_sign_out_button"].waitForExistence(timeout: 15)
+        // Wait for login to complete
+        Thread.sleep(forTimeInterval: 2)
+
+        // Navigate back to profile to verify login
+        profileTab.tap()
+        Thread.sleep(forTimeInterval: 1)
+
+        // Scroll down to find sign-out button
+        if scrollView.exists {
+            for _ in 0..<10 {
+                if app.buttons["profile_sign_out_button"].exists { break }
+                scrollView.swipeUp()
+                Thread.sleep(forTimeInterval: 0.3)
+            }
+        }
+
+        guard app.buttons["profile_sign_out_button"].waitForExistence(timeout: 10) else {
+            XCTFail("Login failed - sign out button not found after login attempt")
+            return
+        }
+
+        // Scroll back to top
+        if scrollView.exists {
+            scrollView.swipeDown()
+            scrollView.swipeDown()
+            scrollView.swipeDown()
+        }
     }
 }

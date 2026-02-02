@@ -16,6 +16,23 @@ final class OnboardingSnapshotTests: XCTestCase {
         super.setUp()
     }
 
+    // MARK: - PookieBSnow Intro View Tests (New App Intro with Brock)
+
+    func testPookieBSnowIntroView() {
+        // Note: This view has heavy animations, snapshot captures initial state
+        let view = PookieBSnowIntroView(showIntro: .constant(true))
+            .snapshotContainer()
+
+        assertViewSnapshot(view)
+    }
+
+    func testPookieBSnowIntroView_darkMode() {
+        let view = PookieBSnowIntroView(showIntro: .constant(true))
+            .snapshotContainer()
+
+        assertDarkModeSnapshot(view)
+    }
+
     // MARK: - Welcome View Tests
 
     func testOnboardingWelcomeView() {

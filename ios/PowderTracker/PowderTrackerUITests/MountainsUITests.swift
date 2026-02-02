@@ -39,22 +39,49 @@ final class MountainsUITests: XCTestCase {
     @MainActor
     private func tapFirstMountainCard() -> Bool {
         // Wait for content to load
-        sleep(2)
+        _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
 
-        // Mountains are displayed as cards with chevron.right indicators
-        // Look for any tappable element that looks like a mountain card
-        let mountainCard = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed' OR label CONTAINS[c] 'mi'")).firstMatch
+        // First ensure the Mountains tab is actually selected
+        let mountainsTab = app.tabBars.buttons["Mountains"]
+        if mountainsTab.exists && !mountainsTab.isSelected {
+            mountainsTab.tap()
+            _ = app.scrollViews.firstMatch.waitForExistence(timeout: 3)
+        }
 
-        if mountainCard.waitForExistence(timeout: 5) {
+        // Mountains are displayed as cards - look for mountain names
+        // Exclude "Today's pick" which is from the Today tab
+        // Look for actual mountain names like "Mt. Baker", "Crystal Mountain", "Stevens Pass"
+        let mountainCardPredicate = NSPredicate(format: "(label CONTAINS[c] 'Mt.' OR label CONTAINS[c] 'Mountain' OR label CONTAINS[c] 'Pass' OR label CONTAINS[c] 'Basin' OR label CONTAINS[c] 'Resort') AND NOT (label CONTAINS[c] 'Today')")
+        let mountainCard = app.buttons.matching(mountainCardPredicate).firstMatch
+
+        if mountainCard.waitForExistence(timeout: 5) && mountainCard.isHittable {
             mountainCard.tap()
             return true
         }
 
-        // Fallback: try tapping in the scroll view content area
+        // Try looking for cards with status indicators (Open/Closed) but not Today's pick
+        let statusCardPredicate = NSPredicate(format: "(label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed') AND NOT (label CONTAINS[c] 'Today')")
+        let statusCard = app.buttons.matching(statusCardPredicate).firstMatch
+
+        if statusCard.waitForExistence(timeout: 3) && statusCard.isHittable {
+            statusCard.tap()
+            return true
+        }
+
+        // Fallback: scroll down a bit and try tapping in the scroll view
         let scrollView = app.scrollViews.firstMatch
-        if scrollView.waitForExistence(timeout: 5) {
-            // Tap in the middle-upper area where cards should be
-            let coordinate = scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
+        if scrollView.waitForExistence(timeout: 3) {
+            scrollView.swipeUp()
+            _ = mountainCard.waitForExistence(timeout: 2)
+
+            // Try finding a mountain card again after scrolling
+            if mountainCard.exists && mountainCard.isHittable {
+                mountainCard.tap()
+                return true
+            }
+
+            // Last resort: tap in the content area
+            let coordinate = scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
             coordinate.tap()
             return true
         }

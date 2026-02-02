@@ -1,6 +1,22 @@
 # App Store Submission Checklist - PowderTracker
 
-## App Icon - READY ✓
+**Last Updated:** January 30, 2026
+
+## Quick Status
+
+| Item | Status |
+|------|--------|
+| App Icons | ✅ Ready |
+| Screenshots | ✅ Ready |
+| Metadata | ✅ Ready |
+| Privacy Policy | ✅ Ready |
+| Archive | ✅ Ready |
+| Distribution Certificate | ⚠️ Need Apple Distribution cert |
+| App Store Connect Listing | 🔲 Pending |
+
+---
+
+## App Icon - READY ✅
 
 ### Generated Files
 All required iOS app icon sizes have been generated and are App Store compliant:
@@ -21,7 +37,7 @@ All required iOS app icon sizes have been generated and are App Store compliant:
 **App Store:**
 - 1024pt (@1x) - App Store Marketing Icon
 
-### Technical Requirements - VERIFIED ✓
+### Technical Requirements - VERIFIED ✅
 - [x] All icons are PNG format
 - [x] RGB color space (sRGB)
 - [x] NO alpha channel/transparency
@@ -30,94 +46,159 @@ All required iOS app icon sizes have been generated and are App Store compliant:
 - [x] Icons are in AppIcon.appiconset
 - [x] Contents.json properly configured
 
-### Design Specifications
-**Logo Design:**
-- Dark blue/navy background (#1a2332)
-- Layered mountain design showing depth
-- White snow-capped peak
-- Bright green/cyan ski trail representing movement
-- Clean, modern, professional appearance
-- Scales well from 20pt to 1024pt
+---
 
 ## App Store Submission Requirements
 
-### Required Before Submission
+### 1. App Information - READY ✅
 
-#### 1. App Information
-- [ ] App name (PowderTracker or Shredders)
-- [ ] Subtitle (max 30 characters)
-- [ ] Privacy policy URL
-- [ ] Support URL
-- [ ] Marketing URL (optional)
-- [ ] App category (Weather or Sports)
-- [ ] Age rating completed
+| Field | Value | Status |
+|-------|-------|--------|
+| App name | PowderTracker | ✅ |
+| Subtitle | Ski Conditions & Powder Alerts | ✅ |
+| Privacy policy URL | https://shredders-bay.vercel.app/privacy | ✅ |
+| Support URL | https://shredders-bay.vercel.app/support | ✅ |
+| Marketing URL | https://shredders-bay.vercel.app | ✅ |
+| Primary Category | Weather | ✅ |
+| Secondary Category | Sports | ✅ |
+| Age Rating | 4+ | ✅ |
 
-#### 2. App Screenshots
-- [ ] iPhone screenshots (6.7", 6.5", or 5.5" required)
-- [ ] iPad screenshots (12.9" or 12.9" 2nd gen required)
-- [ ] App preview videos (optional but recommended)
+**Files:** `ios/PowderTracker/AppStore/APP_STORE_METADATA.md`
 
-#### 3. App Description
-- [ ] Description (max 4,000 characters)
-- [ ] Keywords (max 100 characters)
-- [ ] Promotional text (optional, max 170 characters)
+### 2. App Screenshots - READY ✅
 
-#### 4. Build Requirements
+| Device | Resolution | Status |
+|--------|------------|--------|
+| iPhone 6.7" | 1290 x 2796 | ✅ Captured |
+| iPad 12.9" | 2048 x 2732 | ✅ Captured |
+
+**Files:** `ios/PowderTracker/AppStore/Screenshots/`
+
+**To capture more screenshots:**
+```bash
+cd ios/PowderTracker
+./scripts/capture_appstore_screenshots.sh
+```
+
+### 3. App Description - READY ✅
+
+- [x] Description (~1,850 characters)
+- [x] Keywords (97 characters)
+- [x] Promotional text (156 characters)
+- [x] What's new in this version
+
+**Files:** `ios/PowderTracker/AppStore/APP_STORE_METADATA.md`
+
+### 4. Build Requirements - READY ✅
+
+- [x] Archive created (v1.0.0, build 1)
+- [x] No compiler errors
+- [x] No critical warnings
 - [ ] Build uploaded to App Store Connect
-- [ ] Build processed and shows "Ready to Submit"
-- [ ] No missing compliance issues
+- [ ] Build processed and ready
 - [ ] Export compliance completed
-- [ ] TestFlight testing completed (recommended)
 
-#### 5. App Privacy
-- [ ] PrivacyInfo.xcprivacy file included
+**Archive location:** `ios/PowderTracker/Archives/`
+
+**To create new archive:**
+```bash
+cd ios/PowderTracker
+./scripts/archive_for_appstore.sh
+```
+
+### 5. App Privacy - READY ✅
+
+- [x] PrivacyInfo.xcprivacy file included
+- [x] Privacy policy written
+- [x] Data collection practices documented
+- [x] Third-party SDKs documented
 - [ ] Privacy details filled in App Store Connect
-- [ ] Data collection practices declared
-- [ ] Third-party SDKs disclosed (Claude API, weather APIs)
 
-#### 6. Version Information
-- [ ] Version number (e.g., 1.0.0)
-- [ ] Copyright text
-- [ ] What's new in this version
+**Files:**
+- `ios/PowderTracker/PowderTracker/PrivacyInfo.xcprivacy`
+- `ios/PowderTracker/AppStore/PRIVACY_POLICY.md`
 
-#### 7. Technical Requirements
-- [ ] App built with latest Xcode stable release
-- [ ] Minimum iOS version set appropriately
-- [ ] All device orientations work correctly
-- [ ] App works on all supported devices
-- [ ] No crash issues
-- [ ] Performance tested
+**Data Collected:**
+| Data Type | Linked | Tracking |
+|-----------|--------|----------|
+| Email | Yes | No |
+| User ID | Yes | No |
+| Coarse Location | No | No |
+| Crash Data | No | No |
+| Usage Data | No | No |
 
-## Current Status
+### 6. Version Information - READY ✅
 
-### COMPLETED ✓
-1. App icon generated and optimized
-2. All required icon sizes created
-3. Icons placed in Assets.xcassets
-4. Alpha channel removed (App Store compliant)
-5. Contents.json configured correctly
+- [x] Version number: 1.0.0
+- [x] Build number: 1
+- [x] Copyright: © 2026 Shredders
+- [x] What's new written
 
-### NEXT STEPS
-1. Take screenshots on required device sizes
-2. Write app description and keywords
-3. Set up privacy policy
-4. Create App Store Connect listing
-5. Archive and upload build
-6. Complete app privacy questionnaire
-7. Submit for review
+### 7. Technical Requirements - READY ✅
 
-## Icon Files Location
+- [x] App built with Xcode 26
+- [x] Minimum iOS: 17.0
+- [x] All device orientations work
+- [x] App works on iPhone and iPad
+- [x] No crash issues
+- [x] Build succeeds without errors
+
+---
+
+## Signing Configuration
+
+**Current Status:**
+- ✅ Apple Development certificate: Kevin Lee (7YU96FM828)
+- ⚠️ Apple Distribution certificate: **NEEDED**
+- Team ID: 4F8Q446767
+- Bundle ID: com.shredders.powdertracker
+
+**To create Distribution certificate:**
+1. Go to [developer.apple.com/account/resources/certificates](https://developer.apple.com/account/resources/certificates)
+2. Click **+** to create new certificate
+3. Select **Apple Distribution**
+4. Follow CSR creation steps
+5. Download and install
+
+---
+
+## Files Reference
+
 ```
-ios/PowderTracker/PowderTracker/Assets.xcassets/AppIcon.appiconset/
+ios/PowderTracker/
+├── AppStore/
+│   ├── APP_STORE_METADATA.md      # All text content
+│   ├── PRIVACY_POLICY.md          # Privacy policy
+│   ├── APP_STORE_CONNECT_GUIDE.md # Step-by-step guide
+│   └── Screenshots/
+│       ├── 6.7-inch/              # iPhone screenshots
+│       └── 12.9-inch/             # iPad screenshots
+├── Archives/
+│   └── PowderTracker_*.xcarchive  # Build archive
+└── scripts/
+    ├── archive_for_appstore.sh    # Create archive
+    └── capture_appstore_screenshots.sh
 ```
 
-## Master Logo File
-```
-logo_master.png (1024x1024) - Use this for marketing materials
-```
+---
+
+## Next Steps
+
+1. **Create Apple Distribution certificate** (if not present)
+2. **Open Xcode Organizer** (Cmd+Shift+O)
+3. **Select archive** and click "Distribute App"
+4. **Upload to App Store Connect**
+5. **Complete listing** using `APP_STORE_CONNECT_GUIDE.md`
+6. **Submit for review**
+
+See `ios/PowderTracker/AppStore/APP_STORE_CONNECT_GUIDE.md` for detailed instructions.
+
+---
 
 ## Notes
+
 - Icons have been tested and verified to meet App Store requirements
 - All icons are RGB with no transparency
 - Design is optimized for visibility at all sizes
 - Color palette works well in both light and dark mode
+- Screenshots captured on iPhone 16 Pro Max and iPad Pro 13"

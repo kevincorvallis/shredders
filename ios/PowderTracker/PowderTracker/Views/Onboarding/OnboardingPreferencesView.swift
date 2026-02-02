@@ -42,10 +42,11 @@ struct OnboardingPreferencesView: View {
                     Text("Your Preferences")
                         .font(.title2)
                         .fontWeight(.bold)
+                        .foregroundStyle(.white)
 
                     Text("Help us show you relevant content")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.7))
                 }
                 .padding(.top, .spacingXL)
 
@@ -54,30 +55,35 @@ struct OnboardingPreferencesView: View {
                     Text("Home Mountain")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(.white.opacity(0.8))
 
                     Button {
                         showMountainPicker = true
                     } label: {
                         HStack {
                             Image(systemName: "mountain.2.fill")
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(.cyan)
 
                             if let mountain = selectedMountain {
                                 Text(mountain.name)
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(.white)
                             } else {
                                 Text("Select your home mountain")
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.white.opacity(0.5))
                             }
 
                             Spacer()
 
                             Image(systemName: "chevron.right")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.white.opacity(0.4))
                         }
                         .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(.cornerRadiusButton)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
                     }
                 }
                 .padding(.horizontal, .spacingL)
@@ -87,6 +93,7 @@ struct OnboardingPreferencesView: View {
                     Text("Season Pass")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(.white.opacity(0.8))
 
                     VStack(spacing: .spacingS) {
                         ForEach(SeasonPassType.allCases) { passType in
@@ -105,42 +112,52 @@ struct OnboardingPreferencesView: View {
                 }
                 .padding(.horizontal, .spacingL)
 
-                Spacer(minLength: .spacingXXL)
-
-                // Buttons
-                VStack(spacing: .spacingM) {
-                    Button {
-                        onComplete()
-                    } label: {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                            Text("Complete Setup")
-                        }
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            LinearGradient(
-                                colors: [.blue, .cyan],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .foregroundStyle(.white)
-                        .cornerRadius(.cornerRadiusButton)
-                    }
-
-                    Button {
-                        onSkip()
-                    } label: {
-                        Text("Skip for now")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.horizontal, .spacingL)
-                .padding(.bottom, .spacingXL)
             }
+            .padding(.bottom, .spacingL)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom) {
+            // Buttons pinned to bottom
+            VStack(spacing: .spacingM) {
+                Button {
+                    onComplete()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                        Text("Complete Setup")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 1.0, green: 0.5, blue: 0.72),
+                                Color(red: 0.8, green: 0.42, blue: 0.88),
+                                Color(red: 0.5, green: 0.7, blue: 1.0)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .shadow(color: .purple.opacity(0.4), radius: 16, y: 8)
+                    .shadow(color: .cyan.opacity(0.25), radius: 24, y: 12)
+                }
+
+                Button {
+                    onSkip()
+                } label: {
+                    Text("Skip for now")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+            }
+            .padding(.horizontal, .spacingL)
+            .padding(.vertical, .spacingM)
+            .background(.ultraThinMaterial)
         }
         .sheet(isPresented: $showMountainPicker) {
             OnboardingMountainPickerSheet(
@@ -163,33 +180,33 @@ private struct SeasonPassRow: View {
         Button(action: action) {
             HStack(spacing: .spacingM) {
                 Image(systemName: passType.icon)
-                    .foregroundStyle(isSelected ? .white : .blue)
+                    .foregroundStyle(isSelected ? .white : .cyan)
                     .frame(width: 32, height: 32)
-                    .background(isSelected ? Color.blue : Color.blue.opacity(0.1))
+                    .background(isSelected ? Color.cyan : Color.cyan.opacity(0.2))
                     .cornerRadius(8)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(passType.displayName)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.white)
 
                     Text(passType.description)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.6))
                 }
 
                 Spacer()
 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(isSelected ? .blue : .secondary)
+                    .foregroundStyle(isSelected ? .cyan : .white.opacity(0.4))
             }
             .padding()
-            .background(isSelected ? Color.blue.opacity(0.1) : Color(.secondarySystemBackground))
-            .cornerRadius(.cornerRadiusButton)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: .cornerRadiusButton)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(isSelected ? Color.cyan.opacity(0.6) : Color.white.opacity(0.15), lineWidth: isSelected ? 2 : 1)
             )
         }
     }

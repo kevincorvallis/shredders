@@ -70,4 +70,51 @@ class ImageCacheConfig {
         print("All image caches cleared")
         #endif
     }
+
+    // MARK: - Memory Warning Handling
+
+    /// Handle app entering background - trim caches to save memory
+    static func handleAppBackground() {
+        // Trim memory cache to half capacity when backgrounded
+        ImageCache.shared.trim(toCost: ImageCache.shared.costLimit / 2)
+        ImageCache.shared.trim(toCount: ImageCache.shared.countLimit / 2)
+
+        #if DEBUG
+        print("App backgrounded - trimmed image cache to 50%")
+        #endif
+    }
+
+    /// Handle memory warning - aggressively clear caches
+    static func handleMemoryWarning() {
+        // Clear memory cache completely
+        ImageCache.shared.removeAll()
+
+        // Also clear URL cache
+        URLCache.shared.removeAllCachedResponses()
+
+        #if DEBUG
+        print("Memory warning - cleared all image caches")
+        #endif
+    }
+
+    // MARK: - Lifecycle Registration
+
+    /// Register for UIApplication lifecycle notifications
+    static func registerForLifecycleNotifications() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            handleAppBackground()
+        }
+
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            handleMemoryWarning()
+        }
+    }
 }

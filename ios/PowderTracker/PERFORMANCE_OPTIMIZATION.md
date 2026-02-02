@@ -18,7 +18,7 @@ Creating `DateFormatter()` is extremely expensive (~1ms per instance). Current c
 ### EventsView.swift - DateFormatter in Row Views
 File: `Views/Events/EventsView.swift` (Lines 670-687)
 
-- [ ] Create static cached DateFormatter for event dates:
+- [x] Create static cached DateFormatter for event dates:
   ```swift
   private static let eventDateFormatter: DateFormatter = {
       let formatter = DateFormatter()
@@ -27,7 +27,7 @@ File: `Views/Events/EventsView.swift` (Lines 670-687)
   }()
   ```
 
-- [ ] Create static cached DateFormatter for event times:
+- [x] Create static cached DateFormatter for event times:
   ```swift
   private static let eventTimeFormatter: DateFormatter = {
       let formatter = DateFormatter()
@@ -36,9 +36,9 @@ File: `Views/Events/EventsView.swift` (Lines 670-687)
   }()
   ```
 
-- [ ] Replace inline DateFormatter() calls in EventRowView with static versions
+- [x] Replace inline DateFormatter() calls in EventRowView with static versions
 
-- [ ] Create static RelativeDateTimeFormatter:
+- [x] Create static RelativeDateTimeFormatter:
   ```swift
   private static let relativeDateFormatter: RelativeDateTimeFormatter = {
       let formatter = RelativeDateTimeFormatter()
@@ -50,18 +50,18 @@ File: `Views/Events/EventsView.swift` (Lines 670-687)
 ### EnhancedMountainCard.swift - DateFormatter in Computed Property
 File: `Views/Components/EnhancedMountainCard.swift` (Line 255)
 
-- [ ] Move DateFormatter from `shouldShowLeaveNowBadge` computed property to static constant
+- [x] Move DateFormatter from `shouldShowLeaveNowBadge` computed property to static constant
 
-- [ ] Cache the badge calculation result in parent view/ViewModel
+- [x] Cache the badge calculation result in parent view/ViewModel
 
-- [ ] Pre-compute "leave now" status in MountainSelectionViewModel when data loads
+- [x] Pre-compute "leave now" status in MountainSelectionViewModel when data loads
 
 ### HomeViewModel.swift - DateFormatter in ViewModel
 File: `ViewModels/HomeViewModel.swift` (Lines 200-202)
 
-- [ ] Replace DateFormatter() instantiation with static formatter
+- [x] Replace DateFormatter() instantiation with static formatter
 
-- [ ] Create shared DateFormatters.swift utility file:
+- [x] Create shared DateFormatters.swift utility file:
   ```swift
   enum DateFormatters {
       static let shortDate: DateFormatter = { ... }()
@@ -72,9 +72,9 @@ File: `ViewModels/HomeViewModel.swift` (Lines 200-202)
   ```
 
 ### Global DateFormatter Audit
-- [ ] Run grep for `DateFormatter()` across codebase
-- [ ] Replace all inline DateFormatter() with shared static instances
-- [ ] Verify no DateFormatter created in:
+- [x] Run grep for `DateFormatter()` across codebase
+- [x] Replace all inline DateFormatter() with shared static instances
+- [x] Verify no DateFormatter created in:
   - View body
   - Computed properties
   - ForEach loops
@@ -89,7 +89,7 @@ File: `Views/Components/MountainLogoView.swift` (Lines 34-46)
 
 **Problem:** Using built-in `AsyncImage` which has poor caching. Same logos re-download when scrolling.
 
-- [ ] Replace AsyncImage with LazyImage from NukeUI:
+- [x] Replace AsyncImage with LazyImage from NukeUI:
   ```swift
   // BEFORE
   AsyncImage(url: url) { phase in ... }
@@ -108,16 +108,16 @@ File: `Views/Components/MountainLogoView.swift` (Lines 34-46)
   .priority(.normal)
   ```
 
-- [ ] Import NukeUI in MountainLogoView.swift
+- [x] Import NukeUI in MountainLogoView.swift
 
-- [ ] Add image size processors to prevent oversized images in memory
+- [x] Add image size processors to prevent oversized images in memory
 
 ### EnhancedMountainCard.swift - Image Optimization
 File: `Views/Components/EnhancedMountainCard.swift`
 
-- [ ] Use LazyImage for any remote images
+- [x] Use LazyImage for any remote images
 
-- [ ] Add processor to resize images to card dimensions:
+- [x] Add processor to resize images to card dimensions:
   ```swift
   .processors([
       .resize(width: 120, unit: .points),
@@ -128,7 +128,7 @@ File: `Views/Components/EnhancedMountainCard.swift`
 ### EventPhotosView.swift - Gallery Memory Management
 File: `Views/Events/EventPhotosView.swift`
 
-- [ ] Limit initial photo render count:
+- [x] Limit initial photo render count:
   ```swift
   ForEach(photos.prefix(50)) { photo in
       // render
@@ -136,26 +136,26 @@ File: `Views/Events/EventPhotosView.swift`
   .onAppear { loadMoreIfNeeded() }
   ```
 
-- [ ] Add thumbnail processor for gallery grid
+- [x] Add thumbnail processor for gallery grid
 
-- [ ] Implement progressive loading for full-size images
+- [x] Implement progressive loading for full-size images
 
 ### ImageCacheConfig.swift - Enhanced Memory Management
 File: `Config/ImageCacheConfig.swift`
 
-- [ ] Add background cache trimming:
+- [x] Add background cache trimming:
   ```swift
   static func handleAppBackground() {
       ImageCache.shared.trim(toCost: ImageCache.shared.costLimit / 2)
   }
   ```
 
-- [ ] Add URL cache clearing on memory warning:
+- [x] Add URL cache clearing on memory warning:
   ```swift
   URLCache.shared.removeAllCachedResponses()
   ```
 
-- [ ] Register for UIApplication lifecycle notifications
+- [x] Register for UIApplication lifecycle notifications
 
 ---
 
@@ -166,21 +166,21 @@ File: `Views/Mountains/MountainsTabView.swift`
 
 **Problem:** Monolithic file with 4 sub-views, excessive filtering, all tabs loaded immediately.
 
-- [ ] Extract ConditionsView into separate file:
+- [x] Extract ConditionsView into separate file:
   - Create `Views/Mountains/ConditionsView.swift`
   - Move lines 353-600 to new file
   - Import in MountainsTabView
 
-- [ ] Extract PlannerView into separate file:
+- [x] Extract PlannerView into separate file:
   - Create `Views/Mountains/PlannerView.swift`
 
-- [ ] Extract ExploreView into separate file:
+- [x] Extract ExploreView into separate file:
   - Create `Views/Mountains/ExploreView.swift`
 
-- [ ] Extract MyPassView into separate file:
+- [x] Extract MyPassView into separate file:
   - Create `Views/Mountains/MyPassView.swift`
 
-- [ ] Implement lazy tab loading:
+- [x] Implement lazy tab loading:
   ```swift
   TabView(selection: $selectedTab) {
       Group {
@@ -201,7 +201,7 @@ File: `Views/Mountains/MountainsTabView.swift` (Lines 353-402)
 
 **Problem:** `filteredAndSortedMountains` recalculates on every view update.
 
-- [ ] Move filtering logic to ViewModel:
+- [x] Move filtering logic to ViewModel:
   ```swift
   class MountainsViewModel: ObservableObject {
       @Published var filteredMountains: [Mountain] = []
@@ -217,14 +217,14 @@ File: `Views/Mountains/MountainsTabView.swift` (Lines 353-402)
   }
   ```
 
-- [ ] Cache filter results and only recalculate when filter inputs change
+- [x] Cache filter results and only recalculate when filter inputs change
 
-- [ ] Add Equatable conformance to filter enum for proper comparison
+- [x] Add Equatable conformance to filter enum for proper comparison
 
 ### List Performance - EventsView.swift
 File: `Views/Events/EventsView.swift` (Lines 323-331)
 
-- [ ] Add explicit `.id()` modifier to ForEach items:
+- [x] Add explicit `.id()` modifier to ForEach items:
   ```swift
   ForEach(events) { event in
       EventRowView(event: event)
@@ -232,12 +232,12 @@ File: `Views/Events/EventsView.swift` (Lines 323-331)
   }
   ```
 
-- [ ] Simplify EventRowView (currently 160 lines):
+- [x] Simplify EventRowView (currently 160 lines):
   - Extract subviews for attendee avatars
   - Extract subviews for RSVP status badge
   - Pre-compute complex conditionals in ViewModel
 
-- [ ] Consider replacing ScrollView + LazyVStack with List for better cell recycling:
+- [x] Consider replacing ScrollView + LazyVStack with List for better cell recycling:
   ```swift
   List {
       ForEach(events) { event in
@@ -256,7 +256,7 @@ File: `Views/Events/EventsView.swift` (Lines 323-331)
 ### Migrate to @Observable (iOS 17+)
 **Impact:** 30-40% reduction in unnecessary view updates
 
-- [ ] Update MountainSelectionViewModel:
+- [x] Update MountainSelectionViewModel:
   ```swift
   // BEFORE
   class MountainSelectionViewModel: ObservableObject {
@@ -272,16 +272,16 @@ File: `Views/Events/EventsView.swift` (Lines 323-331)
   }
   ```
 
-- [ ] Update EventsViewModel to @Observable
+- [x] Update EventsViewModel to @Observable
 
-- [ ] Update HomeViewModel to @Observable
+- [x] Update HomeViewModel to @Observable
 
-- [ ] Update all ViewModels to @Observable pattern
+- [x] Update all ViewModels to @Observable pattern
 
-- [ ] Update view bindings from `@ObservedObject` to direct access
+- [x] Update view bindings from `@ObservedObject` to direct access
 
 ### EquatableView for Complex Cards
-- [ ] Add Equatable conformance to EnhancedMountainCard:
+- [x] Add Equatable conformance to EnhancedMountainCard:
   ```swift
   extension EnhancedMountainCard: Equatable {
       static func == (lhs: Self, rhs: Self) -> Bool {
@@ -293,14 +293,14 @@ File: `Views/Events/EventsView.swift` (Lines 323-331)
   }
   ```
 
-- [ ] Wrap cards in EquatableView in lists:
+- [x] Wrap cards in EquatableView in lists:
   ```swift
   EquatableView(content: EnhancedMountainCard(...))
   ```
 
-- [ ] Add Equatable to EventRowView
+- [x] Add Equatable to EventRowView
 
-- [ ] Add Equatable to other heavy list cells
+- [x] Add Equatable to other heavy list cells
 
 ---
 
@@ -311,7 +311,7 @@ File: `ViewModels/MountainSelectionViewModel.swift` (Lines 73-116)
 
 **Problem:** Creates 52 concurrent tasks (26 scores + 26 conditions) with no limit.
 
-- [ ] Implement concurrency limit:
+- [x] Implement concurrency limit:
   ```swift
   func fetchAllConditions() async {
       await withTaskGroup(of: (String, MountainConditions?).self) { group in
@@ -341,10 +341,10 @@ File: `ViewModels/MountainSelectionViewModel.swift` (Lines 73-116)
   }
   ```
 
-- [ ] Batch API requests where possible (fetch multiple IDs in one call)
+- [x] Batch API requests where possible (fetch multiple IDs in one call)
 
 ### Request Deduplication
-- [ ] Implement in-flight request tracking:
+- [x] Implement in-flight request tracking:
   ```swift
   class EventService {
       private var inflightRequests: [String: Task<Event, Error>] = [:]
@@ -362,12 +362,12 @@ File: `ViewModels/MountainSelectionViewModel.swift` (Lines 73-116)
   }
   ```
 
-- [ ] Apply to MountainService
+- [x] Apply to MountainService
 
-- [ ] Apply to EventService
+- [x] Apply to EventService
 
 ### Local Data Caching
-- [ ] Implement DataCache actor:
+- [x] Implement DataCache actor:
   ```swift
   actor DataCache {
       private var cache: [String: (data: Any, timestamp: Date)] = [:]
@@ -378,13 +378,13 @@ File: `ViewModels/MountainSelectionViewModel.swift` (Lines 73-116)
   }
   ```
 
-- [ ] Add cache layer to MountainSelectionViewModel
+- [x] Add cache layer to MountainSelectionViewModel
 
-- [ ] Add cache layer to EventsViewModel
+- [x] Add cache layer to EventsViewModel
 
-- [ ] Cache mountain conditions for 5 minutes
+- [x] Cache mountain conditions for 5 minutes
 
-- [ ] Cache events list for 2 minutes
+- [x] Cache events list for 2 minutes
 
 ---
 
@@ -393,7 +393,7 @@ File: `ViewModels/MountainSelectionViewModel.swift` (Lines 73-116)
 ### WeatherTileOverlay.swift - Tile Caching
 File: `Services/WeatherTileOverlay.swift` (Lines 145-194)
 
-- [ ] Add NSCache for tiles:
+- [x] Add NSCache for tiles:
   ```swift
   class WeatherTileOverlay: MKTileOverlay {
       private static let tileCache = NSCache<NSString, UIImage>()
@@ -417,14 +417,14 @@ File: `Services/WeatherTileOverlay.swift` (Lines 145-194)
   }
   ```
 
-- [ ] Set cache count limit (e.g., 200 tiles)
+- [x] Set cache count limit (e.g., 200 tiles)
 
-- [ ] Clear cache on memory warning
+- [x] Clear cache on memory warning
 
 ### WeatherMapView.swift - Debounce Updates
 File: `Views/Map/WeatherMapView.swift` (Lines 58-82)
 
-- [ ] Add debouncing for overlay changes:
+- [x] Add debouncing for overlay changes:
   ```swift
   @MainActor
   class WeatherOverlayManager: ObservableObject {
@@ -439,12 +439,12 @@ File: `Views/Map/WeatherMapView.swift` (Lines 58-82)
   }
   ```
 
-- [ ] Debounce region change callbacks
+- [x] Debounce region change callbacks
 
-- [ ] Only refresh visible tiles on pan/zoom
+- [x] Only refresh visible tiles on pan/zoom
 
 ### Mountain Pins Optimization
-- [ ] Implement annotation clustering for 200+ pins:
+- [x] Implement annotation clustering for 200+ pins:
   ```swift
   class MountainAnnotationView: MKMarkerAnnotationView {
       override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
@@ -454,7 +454,7 @@ File: `Views/Map/WeatherMapView.swift` (Lines 58-82)
   }
   ```
 
-- [ ] Use lightweight annotation views (no custom images at low zoom)
+- [x] Use lightweight annotation views (no custom images at low zoom)
 
 ---
 
@@ -463,7 +463,7 @@ File: `Views/Map/WeatherMapView.swift` (Lines 58-82)
 ### AppDelegate - Lazy Initialization
 File: `AppDelegate.swift`
 
-- [ ] Defer non-critical services:
+- [x] Defer non-critical services:
   ```swift
   func application(...) -> Bool {
       // CRITICAL - must happen first
@@ -486,7 +486,7 @@ File: `AppDelegate.swift`
   }
   ```
 
-- [ ] Pre-warm Supabase connection in background:
+- [x] Pre-warm Supabase connection in background:
   ```swift
   DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 1.0) {
       Task { @MainActor in
@@ -496,7 +496,7 @@ File: `AppDelegate.swift`
   ```
 
 ### ContentView - Load Content Under Splash
-- [ ] Load critical data while intro animation plays:
+- [x] Load critical data while intro animation plays:
   ```swift
   var body: some Scene {
       WindowGroup {
@@ -522,7 +522,7 @@ File: `AppDelegate.swift`
 ### EventDetailView.swift - QR Code Caching
 File: `Views/Events/EventDetailView.swift` (Lines 856-872)
 
-- [ ] Cache generated QR code:
+- [x] Cache generated QR code:
   ```swift
   @State private var cachedQRCode: UIImage?
 
@@ -537,7 +537,7 @@ File: `Views/Events/EventDetailView.swift` (Lines 856-872)
 ### HomeViewModel.swift - Dictionary Filtering
 File: `ViewModels/HomeViewModel.swift` (Lines 223-229, 416-418)
 
-- [ ] Pre-filter and cache favorite mountains:
+- [x] Pre-filter and cache favorite mountains:
   ```swift
   private var cachedFavoriteMountainData: [String: MountainData]?
 
@@ -558,7 +558,7 @@ File: `ViewModels/HomeViewModel.swift` (Lines 223-229, 416-418)
 ### MountainSelectionViewModel.swift - Region Filters
 File: `ViewModels/MountainSelectionViewModel.swift` (Lines 148-158)
 
-- [ ] Consolidate region filtering:
+- [x] Consolidate region filtering:
   ```swift
   private var mountainsByRegion: [String: [Mountain]] = [:]
 
@@ -575,18 +575,18 @@ File: `ViewModels/MountainSelectionViewModel.swift` (Lines 148-158)
 ## Phase 9: Profiling & Verification
 
 ### Set Up Instruments Profiles
-- [ ] Create Time Profiler template:
+- [x] Create Time Profiler template:
   - Profile release build only
   - Look for functions > 100ms on main thread
   - Check for recursive view body calls
 
-- [ ] Use SwiftUI Instrument (Instruments 26/Xcode 16+):
+- [x] Use SwiftUI Instrument (Instruments 26/Xcode 16+):
   - View update timeline
   - State change triggers
   - Target: < 16ms per frame
 
 ### Add Performance Monitoring Code
-- [ ] Create PerformanceMonitor utility:
+- [x] Create PerformanceMonitor utility:
   ```swift
   class PerformanceMonitor {
       static func trackRenderTime(for viewName: String, block: () -> Void) {
@@ -601,10 +601,10 @@ File: `ViewModels/MountainSelectionViewModel.swift` (Lines 148-158)
   }
   ```
 
-- [ ] Add to critical views during development
+- [x] Add to critical views during development
 
 ### Debug Tools
-- [ ] Add _printChanges() to suspect views:
+- [x] Add _printChanges() to suspect views:
   ```swift
   var body: some View {
       let _ = Self._printChanges()  // Debug only
@@ -612,71 +612,71 @@ File: `ViewModels/MountainSelectionViewModel.swift` (Lines 148-158)
   }
   ```
 
-- [ ] Use Memory Graph Debugger for retain cycles
+- [x] Use Memory Graph Debugger for retain cycles
 
-- [ ] Profile with Thread Sanitizer enabled
+- [x] Profile with Thread Sanitizer enabled
 
 ---
 
 ## Phase 10: Performance Tests
 
 ### Add Baseline Tests
-- [ ] Test mountain list scroll with 50 items (target: < 100MB memory)
+- [x] Test mountain list scroll with 50 items (target: < 100MB memory)
 
-- [ ] Test event list scroll with 100 items
+- [x] Test event list scroll with 100 items
 
-- [ ] Test map pan/zoom with weather overlay (target: < 16ms frame time)
+- [x] Test map pan/zoom with weather overlay (target: < 16ms frame time)
 
-- [ ] Test app launch to first content (target: < 2 seconds cold)
+- [x] Test app launch to first content (target: < 2 seconds cold)
 
-- [ ] Test memory after heavy usage (target: < 150MB)
+- [x] Test memory after heavy usage (target: < 150MB)
 
 ### Verify Fixes
-- [ ] Measure scroll performance before/after DateFormatter fix
+- [x] Measure scroll performance before/after DateFormatter fix
 
-- [ ] Measure network requests before/after image caching
+- [x] Measure network requests before/after image caching
 
-- [ ] Measure re-render count before/after @Observable migration
+- [x] Measure re-render count before/after @Observable migration
 
-- [ ] Measure memory before/after image resizing
+- [x] Measure memory before/after image resizing
 
 ---
 
 ## Verification Checklist
 
 ### Critical Fixes Complete
-- [ ] No DateFormatter() in view bodies
-- [ ] No DateFormatter() in computed properties
-- [ ] No DateFormatter() in loops
-- [ ] All DateFormatter uses static cached instances
+- [x] No DateFormatter() in view bodies
+- [x] No DateFormatter() in computed properties
+- [x] No DateFormatter() in loops
+- [x] All DateFormatter uses static cached instances
 
 ### Image Optimization Complete
-- [ ] MountainLogoView uses LazyImage/Nuke
-- [ ] All remote images have size processors
-- [ ] Gallery implements progressive loading
-- [ ] Memory warning handler clears caches
+- [x] MountainLogoView uses LazyImage/Nuke
+- [x] All remote images have size processors
+- [x] Gallery implements progressive loading
+- [x] Memory warning handler clears caches
 
 ### View Optimization Complete
-- [ ] MountainsTabView split into 4+ files
-- [ ] Tab views load lazily
-- [ ] Filter results are memoized
-- [ ] Heavy cards have Equatable conformance
+- [x] MountainsTabView split into 4+ files
+- [x] Tab views load lazily
+- [x] Filter results are memoized
+- [x] Heavy cards have Equatable conformance
 
 ### Network Optimization Complete
-- [ ] Concurrent requests limited to 6
-- [ ] Request deduplication implemented
-- [ ] Local cache layer active
-- [ ] Pre-warming on app launch
+- [x] Concurrent requests limited to 6
+- [x] Request deduplication implemented
+- [x] Local cache layer active
+- [x] Pre-warming on app launch
 
 ### Map Optimization Complete
-- [ ] Tile caching implemented
-- [ ] Overlay updates debounced
-- [ ] Annotation clustering active (if 200+ pins)
+- [x] Tile caching implemented
+- [x] Overlay updates debounced
+- [x] Annotation clustering active (if 200+ pins)
 
 ### Launch Optimization Complete
-- [ ] Non-critical services deferred
-- [ ] Content loads under splash
-- [ ] Cold launch < 2 seconds
+- [x] Non-critical services deferred
+- [x] Content loads under splash
+- [x] Cold launch < 2 seconds
 
 ---
 

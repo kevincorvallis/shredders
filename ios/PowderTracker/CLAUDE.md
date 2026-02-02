@@ -22,10 +22,45 @@ PowderTracker is an iOS app for tracking ski resort conditions, weather overlays
 - OpenWeatherMap key is in `Config/AppConfig.swift`
 - Supabase credentials are in `Config/AppConfig.swift`
 
-## Building
+## Building & Testing
+
+**IMPORTANT: Always use `safe-build.sh` to prevent conflicts when multiple Claude sessions are active.**
+
 ```bash
 cd ios/PowderTracker
-xcodebuild -scheme PowderTracker -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+
+# Build the app (with lock protection)
+./scripts/safe-build.sh build
+
+# Run all tests
+./scripts/safe-build.sh test
+
+# Run UI tests only
+./scripts/safe-build.sh test-ui
+
+# Run unit tests only
+./scripts/safe-build.sh test-unit
+
+# Clean build artifacts
+./scripts/safe-build.sh clean
+
+# Check if another build is running
+./scripts/safe-build.sh status
+
+# Force unlock if stuck
+./scripts/safe-build.sh force-unlock
+```
+
+**Why use safe-build.sh?**
+- Prevents DerivedData corruption from concurrent builds
+- Handles git lock file conflicts in package caches
+- Auto-cleans corrupted state before building
+- Waits for other builds to finish instead of failing
+
+**Legacy commands (avoid when multiple sessions active):**
+```bash
+# Direct xcodebuild - ONLY use if you're sure no other session is building
+xcodebuild -scheme PowderTracker -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6' build
 ```
 
 ## Running E2E Tests
@@ -33,11 +68,8 @@ xcodebuild -scheme PowderTracker -destination 'platform=iOS Simulator,name=iPhon
 ./scripts/e2e_test.sh
 ```
 
-## Running Tests
+## Running Snapshot/Performance Tests
 ```bash
-# Run all tests
-./scripts/run_tests.sh
-
 # Run snapshot tests only
 ./scripts/run_tests.sh snapshots
 

@@ -12,17 +12,19 @@ struct OnboardingContainerView: View {
     @State private var currentStep: OnboardingStep = .welcome
     @State private var profile = OnboardingProfile()
     @State private var isCompleting = false
+    @State private var errorMessage: String?
+    @State private var showError = false
 
     let authService: AuthService
 
     var body: some View {
         ZStack {
-            // Background gradient
+            // PookieBSnow background gradient
             LinearGradient(
                 colors: [
-                    Color.blue.opacity(0.3),
-                    Color.purple.opacity(0.2),
-                    Color.blue.opacity(0.1)
+                    Color(red: 0.1, green: 0.15, blue: 0.25),
+                    Color(red: 0.15, green: 0.2, blue: 0.35),
+                    Color(red: 0.12, green: 0.18, blue: 0.3)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -42,7 +44,7 @@ struct OnboardingContainerView: View {
 
                 // Content
                 TabView(selection: $currentStep) {
-                    OnboardingWelcomeView(onContinue: { goToNext() })
+                    PookieBSnowWelcomeView(onContinue: { goToNext() })
                         .tag(OnboardingStep.welcome)
 
                     OnboardingProfileSetupView(
@@ -55,6 +57,7 @@ struct OnboardingContainerView: View {
 
                     OnboardingAboutYouView(
                         profile: $profile,
+                        authService: authService,
                         onContinue: { goToNext() },
                         onSkip: { skipOnboarding() }
                     )
@@ -71,25 +74,28 @@ struct OnboardingContainerView: View {
                 .animation(.spring(response: 0.4, dampingFraction: 0.8), value: currentStep)
             }
 
-            // Loading overlay
+            // Loading overlay with Brock
             if isCompleting {
                 Color.black.opacity(0.4)
                     .ignoresSafeArea()
 
-                VStack(spacing: .spacingM) {
-                    ProgressView()
-                        .tint(.white)
-                        .scaleEffect(1.5)
-                    Text("Setting up your profile...")
-                        .font(.subheadline)
-                        .foregroundStyle(.white)
-                }
-                .padding(.spacingXL)
-                .background(.ultraThinMaterial)
-                .cornerRadius(.cornerRadiusCard)
+                BrockLoadingView("Setting up your profile...")
+                    .padding(.spacingXL)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(.cornerRadiusCard)
             }
         }
         .interactiveDismissDisabled()
+        .alert("Oops!", isPresented: $showError) {
+            Button("Try Again") {
+                completeOnboarding()
+            }
+            Button("Skip for Now", role: .cancel) {
+                skipOnboarding()
+            }
+        } message: {
+            Text(errorMessage ?? "Something went wrong. Please try again.")
+        }
     }
 
     // MARK: - Navigation
@@ -115,11 +121,26 @@ struct OnboardingContainerView: View {
 
         Task {
             do {
+                #if DEBUG
+                print("📝 Starting onboarding completion...")
+                print("   currentUser: \(authService.currentUser != nil ? "exists (\(authService.currentUser!.id))" : "nil")")
+                print("   userProfile: \(authService.userProfile != nil ? "exists" : "nil")")
+                print("   Profile data: displayName=\(profile.displayName ?? "nil")")
+                #endif
+
                 // Save profile data
                 try await authService.updateOnboardingProfile(profile)
 
+                #if DEBUG
+                print("✅ Profile data saved, marking onboarding complete...")
+                #endif
+
                 // Mark as complete
                 try await authService.completeOnboarding()
+
+                #if DEBUG
+                print("✅ Onboarding marked complete!")
+                #endif
 
                 HapticFeedback.success.trigger()
 
@@ -128,8 +149,32 @@ struct OnboardingContainerView: View {
                     dismiss()
                 }
             } catch {
+                #if DEBUG
+                print("❌ Onboarding completion failed: \(error)")
+                print("   Error type: \(type(of: error))")
+                if let nsError = error as NSError? {
+                    print("   Domain: \(nsError.domain), Code: \(nsError.code)")
+                    print("   User Info: \(nsError.userInfo)")
+                }
+                #endif
+
                 await MainActor.run {
                     isCompleting = false
+
+                    // Parse error for user-friendly message
+                    let errorDesc = error.localizedDescription.lowercased()
+                    if errorDesc.contains("network") || errorDesc.contains("connection") || errorDesc.contains("timeout") {
+                        errorMessage = "Network connection issue. Please check your internet and try again."
+                    } else if errorDesc.contains("no user") || errorDesc.contains("not logged in") {
+                        errorMessage = "Session expired. Please sign in again."
+                    } else {
+                        #if DEBUG
+                        errorMessage = "Error: \(error.localizedDescription)"
+                        #else
+                        errorMessage = "We couldn't save your profile. Please check your connection and try again."
+                        #endif
+                    }
+                    showError = true
                 }
                 HapticFeedback.error.trigger()
             }

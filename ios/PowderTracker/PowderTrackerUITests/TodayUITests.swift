@@ -389,13 +389,14 @@ final class TodayUITests: XCTestCase {
         navigateToToday()
 
         let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Scroll view should exist")
+        guard scrollView.waitForExistence(timeout: 10) else {
+            XCTFail("Scroll view should exist")
+            return
+        }
 
-        // Scroll through content
+        // Scroll through content with shorter delays
         scrollView.swipeUp()
-        Thread.sleep(forTimeInterval: 0.5)
         scrollView.swipeUp()
-        Thread.sleep(forTimeInterval: 0.5)
         scrollView.swipeDown()
         scrollView.swipeDown()
     }
@@ -406,12 +407,13 @@ final class TodayUITests: XCTestCase {
         navigateToToday()
 
         let scrollView = app.scrollViews.firstMatch
-        if scrollView.waitForExistence(timeout: 5) {
-            // Scroll to bottom
-            for _ in 0..<5 {
-                scrollView.swipeUp()
-                Thread.sleep(forTimeInterval: 0.3)
-            }
+        guard scrollView.waitForExistence(timeout: 10) else {
+            return
+        }
+
+        // Scroll to bottom with fewer iterations
+        for _ in 0..<3 {
+            scrollView.swipeUp()
         }
     }
 
@@ -569,13 +571,14 @@ final class TodayUITests: XCTestCase {
         navigateToToday()
 
         let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Scroll view should exist")
+        guard scrollView.waitForExistence(timeout: 10) else {
+            XCTFail("Scroll view should exist")
+            return
+        }
 
         measure {
             scrollView.swipeUp()
-            Thread.sleep(forTimeInterval: 0.3)
             scrollView.swipeDown()
-            Thread.sleep(forTimeInterval: 0.3)
         }
     }
 

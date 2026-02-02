@@ -404,6 +404,7 @@ struct EventsView: View {
 struct EventRowView: View {
     let event: Event
     @State private var showingShareSheet = false
+    @State private var showingMessageCompose = false
 
     var body: some View {
         HStack(alignment: .top, spacing: .spacingM) {
@@ -552,9 +553,9 @@ struct EventRowView: View {
             }
 
             Button {
-                sendViaText()
+                showingMessageCompose = true
             } label: {
-                Label("Send via Text", systemImage: "message.fill")
+                Label("Send via iMessage", systemImage: "message.fill")
             }
         }
         .sheet(isPresented: $showingShareSheet) {
@@ -562,6 +563,10 @@ struct EventRowView: View {
                 ShareSheet(items: [url, shareMessage])
             }
         }
+        .messageComposeSheet(
+            isPresented: $showingMessageCompose,
+            body: messageComposeBody
+        )
     }
 
     // MARK: - Share Helpers
@@ -581,12 +586,9 @@ struct EventRowView: View {
         """
     }
 
-    private func sendViaText() {
-        guard let url = shareURL else { return }
-        let smsURL = URL(string: "sms:&body=\(shareMessage)\n\(url.absoluteString)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")
-        if let smsURL = smsURL {
-            UIApplication.shared.open(smsURL)
-        }
+    private var messageComposeBody: String {
+        guard let url = shareURL else { return shareMessage }
+        return "\(shareMessage)\n\n\(url.absoluteString)"
     }
 
     // MARK: - Skill Level Badge

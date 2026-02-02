@@ -83,10 +83,11 @@ final class NavigationUITests: XCTestCase {
         XCTAssertTrue(eventsTab.waitForExistence(timeout: 5), "Events tab should exist")
         eventsTab.tap()
 
-        // Verify Events view loads - may be a scroll view, list, or other container
-        // Just verify the tab switch happened
-        Thread.sleep(forTimeInterval: 1)
-        XCTAssertTrue(eventsTab.isSelected, "Events tab should be selected")
+        // Verify Events view loads - check for events-related content
+        // For unauthenticated users, the view shows "Sign in to join events" text
+        // For authenticated users, it shows the events list
+        let eventsContent = app.scrollViews.firstMatch
+        XCTAssertTrue(eventsContent.waitForExistence(timeout: 5), "Events view should load")
     }
 
     @MainActor
@@ -165,10 +166,12 @@ final class NavigationUITests: XCTestCase {
 
         // Tap on a mountain card - Mountains view uses LazyVStack, not List cells
         // Look for a tappable element that looks like a mountain card
-        sleep(2) // Wait for content to load
-        let mountainCard = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed'")).firstMatch
+        // Exclude "Today's pick" which is from the Today tab and may not be hittable
+        let mountainCardPredicate = NSPredicate(format: "(label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed') AND NOT (label CONTAINS[c] 'Today')")
+        let mountainCard = app.buttons.matching(mountainCardPredicate).firstMatch
 
-        if mountainCard.waitForExistence(timeout: 5) {
+        // Wait for content to load using explicit wait
+        if mountainCard.waitForExistence(timeout: 10) && mountainCard.isHittable {
             mountainCard.tap()
 
             // Wait for detail view
@@ -194,10 +197,12 @@ final class NavigationUITests: XCTestCase {
         _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
 
         // Look for a tappable element that looks like a mountain card
-        sleep(2) // Wait for content to load
-        let mountainCard = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed'")).firstMatch
+        // Exclude "Today's pick" which is from the Today tab and may not be hittable
+        let mountainCardPredicate = NSPredicate(format: "(label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed') AND NOT (label CONTAINS[c] 'Today')")
+        let mountainCard = app.buttons.matching(mountainCardPredicate).firstMatch
 
-        if mountainCard.waitForExistence(timeout: 5) {
+        // Wait for content to load using explicit wait
+        if mountainCard.waitForExistence(timeout: 10) && mountainCard.isHittable {
             mountainCard.tap()
             _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
 

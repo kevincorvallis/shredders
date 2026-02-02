@@ -80,13 +80,28 @@ struct Event: Codable, Identifiable {
         case isCreator
     }
 
-    var formattedDate: String {
+    // Static formatters to avoid expensive instantiation in computed properties
+    private static let dateParser: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        guard let date = formatter.date(from: eventDate) else { return eventDate }
+        return formatter
+    }()
 
+    private static let eventDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
         formatter.dateFormat = "EEE, MMM d"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private static let dateTimeParser: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        return formatter
+    }()
+
+    var formattedDate: String {
+        guard let date = Self.dateParser.date(from: eventDate) else { return eventDate }
+        return Self.eventDateFormatter.string(from: date)
     }
 
     var formattedTime: String? {
@@ -104,19 +119,14 @@ struct Event: Codable, Identifiable {
 
     /// Whether this event is happening today
     var isToday: Bool {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return eventDate == formatter.string(from: Date())
+        eventDate == Self.dateParser.string(from: Date())
     }
 
     /// Calculates time until departure in seconds
     var timeUntilDeparture: TimeInterval? {
         guard let time = departureTime else { return nil }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm"
-
-        guard let departureDate = formatter.date(from: "\(eventDate) \(time)") else {
+        guard let departureDate = Self.dateTimeParser.date(from: "\(eventDate) \(time)") else {
             return nil
         }
 
@@ -208,13 +218,22 @@ struct EventWithDetails: Codable, Identifiable {
         case inviteToken
     }
 
-    var formattedDate: String {
+    // Static formatters to avoid expensive instantiation in computed properties
+    private static let dateParser: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        guard let date = formatter.date(from: eventDate) else { return eventDate }
+        return formatter
+    }()
 
+    private static let fullDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMMM d, yyyy"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    var formattedDate: String {
+        guard let date = Self.dateParser.date(from: eventDate) else { return eventDate }
+        return Self.fullDateFormatter.string(from: date)
     }
 
     var formattedTime: String? {

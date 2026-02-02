@@ -5,9 +5,12 @@
  * - GET /api/events/[id]/photos
  * - POST /api/events/[id]/photos
  * - DELETE /api/events/[id]/photos/[photoId]
+ *
+ * NOTE: These are integration tests that require a running server.
+ * Set TEST_API_URL environment variable or run `npm run dev` first.
  */
 
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -17,13 +20,39 @@ const TEST_EVENT_ID = process.env.TEST_EVENT_ID || 'test-event-id';
 const TEST_AUTH_TOKEN = process.env.TEST_AUTH_TOKEN || 'test-token';
 const TEST_RSVP_AUTH_TOKEN = process.env.TEST_RSVP_AUTH_TOKEN || 'test-rsvp-token';
 
+// Check if server is reachable before running integration tests
+async function isServerReachable(): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const response = await fetch(`${API_BASE_URL}/api/events`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response.status !== undefined;
+  } catch {
+    return false;
+  }
+}
+
 describe('Event Photos API', () => {
   let uploadedPhotoId: string | null = null;
+  let serverAvailable = false;
+
+  beforeAll(async () => {
+    serverAvailable = await isServerReachable();
+    if (!serverAvailable) {
+      console.warn(
+        `⚠️  Skipping Event Photos API tests: Server not reachable at ${API_BASE_URL}`
+      );
+    }
+  });
 
   // MARK: - GET Photos Tests
 
   describe('GET /api/events/[id]/photos', () => {
-    it('should return 401 without authentication', async () => {
+    it('should return 401 without authentication', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/${TEST_EVENT_ID}/photos`
       );
@@ -33,7 +62,8 @@ describe('Event Photos API', () => {
       expect(data.error).toBeDefined();
     });
 
-    it('should return gated response for non-RSVP user', async () => {
+    it('should return gated response for non-RSVP user', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/${TEST_EVENT_ID}/photos`,
         {
@@ -50,7 +80,8 @@ describe('Event Photos API', () => {
       expect(data.message).toBeDefined();
     });
 
-    it('should return photos for RSVP user', async () => {
+    it('should return photos for RSVP user', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/${TEST_EVENT_ID}/photos`,
         {
@@ -67,7 +98,8 @@ describe('Event Photos API', () => {
       expect(data.photoCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should support pagination', async () => {
+    it('should support pagination', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/${TEST_EVENT_ID}/photos?limit=10&offset=0`,
         {
@@ -85,7 +117,8 @@ describe('Event Photos API', () => {
       expect(typeof data.pagination.hasMore).toBe('boolean');
     });
 
-    it('should return photo URLs', async () => {
+    it('should return photo URLs', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/${TEST_EVENT_ID}/photos`,
         {
@@ -105,7 +138,8 @@ describe('Event Photos API', () => {
       }
     });
 
-    it('should return 404 for non-existent event', async () => {
+    it('should return 404 for non-existent event', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/non-existent-event/photos`,
         {
@@ -122,7 +156,8 @@ describe('Event Photos API', () => {
   // MARK: - POST Photo Tests
 
   describe('POST /api/events/[id]/photos', () => {
-    it('should return 401 without authentication', async () => {
+    it('should return 401 without authentication', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const formData = new FormData();
       formData.append('photo', new Blob(['test']), 'test.jpg');
 
@@ -137,7 +172,8 @@ describe('Event Photos API', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should return 403 for non-RSVP user', async () => {
+    it('should return 403 for non-RSVP user', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const formData = new FormData();
       formData.append('photo', new Blob(['test']), 'test.jpg');
 
@@ -157,7 +193,8 @@ describe('Event Photos API', () => {
       expect(data.error).toContain('RSVP');
     });
 
-    it('should return 400 without photo file', async () => {
+    it('should return 400 without photo file', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const formData = new FormData();
       formData.append('caption', 'Test caption');
 
@@ -177,7 +214,8 @@ describe('Event Photos API', () => {
       expect(data.error).toContain('photo');
     });
 
-    it('should upload photo with caption', async () => {
+    it('should upload photo with caption', async ({ skip }) => {
+      if (!serverAvailable) skip();
       // Create a minimal valid JPEG
       const jpegHeader = new Uint8Array([
         0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
@@ -214,7 +252,8 @@ describe('Event Photos API', () => {
       }
     });
 
-    it('should reject non-image files', async () => {
+    it('should reject non-image files', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const textBlob = new Blob(['This is not an image'], {
         type: 'text/plain',
       });
@@ -236,7 +275,8 @@ describe('Event Photos API', () => {
       expect(response.status).toBe(400);
     });
 
-    it('should reject files that are too large', async () => {
+    it('should reject files that are too large', async ({ skip }) => {
+      if (!serverAvailable) skip();
       // Create a large blob (>10MB)
       const largeBlob = new Blob([new Uint8Array(11 * 1024 * 1024)], {
         type: 'image/jpeg',
@@ -265,7 +305,8 @@ describe('Event Photos API', () => {
   // MARK: - DELETE Photo Tests
 
   describe('DELETE /api/events/[id]/photos/[photoId]', () => {
-    it('should return 401 without authentication', async () => {
+    it('should return 401 without authentication', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/${TEST_EVENT_ID}/photos/some-photo-id`,
         {
@@ -276,7 +317,8 @@ describe('Event Photos API', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should return 404 for non-existent photo', async () => {
+    it('should return 404 for non-existent photo', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/${TEST_EVENT_ID}/photos/non-existent-id`,
         {
@@ -290,7 +332,8 @@ describe('Event Photos API', () => {
       expect(response.status).toBe(404);
     });
 
-    it('should return 403 when deleting another user photo', async () => {
+    it('should return 403 when deleting another user photo', async ({ skip }) => {
+      if (!serverAvailable) skip();
       // This test requires a photo uploaded by a different user
       // Skip if no such photo exists
       const photosResponse = await fetch(
@@ -311,7 +354,8 @@ describe('Event Photos API', () => {
   // MARK: - Photo Metadata Tests
 
   describe('Photo Metadata', () => {
-    it('should return photo dimensions if available', async () => {
+    it('should return photo dimensions if available', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/${TEST_EVENT_ID}/photos`,
         {
@@ -338,7 +382,8 @@ describe('Event Photos API', () => {
       }
     });
 
-    it('should return thumbnail URL if available', async () => {
+    it('should return thumbnail URL if available', async ({ skip }) => {
+      if (!serverAvailable) skip();
       const response = await fetch(
         `${API_BASE_URL}/api/events/${TEST_EVENT_ID}/photos`,
         {

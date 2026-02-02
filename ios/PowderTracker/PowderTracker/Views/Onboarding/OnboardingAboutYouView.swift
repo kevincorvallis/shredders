@@ -9,11 +9,14 @@ import SwiftUI
 
 struct OnboardingAboutYouView: View {
     @Binding var profile: OnboardingProfile
+    let authService: AuthService
     let onContinue: () -> Void
     let onSkip: () -> Void
 
     @State private var bio: String = ""
     private let bioMaxLength = 150
+
+    @FocusState private var isBioFocused: Bool
 
     var body: some View {
         ScrollView {
@@ -23,10 +26,11 @@ struct OnboardingAboutYouView: View {
                     Text("Tell us about you")
                         .font(.title2)
                         .fontWeight(.bold)
+                        .foregroundStyle(.white)
 
                     Text("Help us personalize your experience")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.7))
                 }
                 .padding(.top, .spacingXL)
 
@@ -36,18 +40,25 @@ struct OnboardingAboutYouView: View {
                         Text("Bio")
                             .font(.subheadline)
                             .fontWeight(.medium)
+                            .foregroundStyle(.white.opacity(0.8))
                         Spacer()
                         Text("\(bio.count)/\(bioMaxLength)")
                             .font(.caption)
-                            .foregroundStyle(bio.count > bioMaxLength ? .red : .secondary)
+                            .foregroundStyle(bio.count > bioMaxLength ? .red : .white.opacity(0.5))
                     }
 
                     TextField("Share a bit about yourself...", text: $bio, axis: .vertical)
                         .textFieldStyle(.plain)
                         .lineLimit(3...5)
                         .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(.cornerRadiusButton)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
+                        .focused($isBioFocused)
+                        .submitLabel(.done)
                         .onChange(of: bio) { _, newValue in
                             if newValue.count > bioMaxLength {
                                 bio = String(newValue.prefix(bioMaxLength))
@@ -61,6 +72,7 @@ struct OnboardingAboutYouView: View {
                     Text("Skiing Experience")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(.white.opacity(0.8))
                         .padding(.horizontal, .spacingL)
 
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -87,11 +99,12 @@ struct OnboardingAboutYouView: View {
                     Text("Favorite Terrain")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(.white.opacity(0.8))
                         .padding(.horizontal, .spacingL)
 
                     Text("Select all that apply")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.5))
                         .padding(.horizontal, .spacingL)
 
                     LazyVGrid(
@@ -118,33 +131,50 @@ struct OnboardingAboutYouView: View {
                     .padding(.horizontal, .spacingL)
                 }
 
-                Spacer(minLength: .spacingXXL)
-
-                // Buttons
-                VStack(spacing: .spacingM) {
-                    Button {
-                        saveAndContinue()
-                    } label: {
+            }
+            .padding(.bottom, .spacingL)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom) {
+            // Buttons pinned to bottom
+            VStack(spacing: .spacingM) {
+                Button {
+                    saveAndContinue()
+                } label: {
+                    HStack(spacing: 8) {
                         Text("Continue")
                             .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundStyle(.white)
-                            .cornerRadius(.cornerRadiusButton)
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 14, weight: .semibold))
                     }
-
-                    Button {
-                        onSkip()
-                    } label: {
-                        Text("Skip for now")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 1.0, green: 0.5, blue: 0.72),
+                                Color(red: 0.5, green: 0.7, blue: 1.0)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .shadow(color: .purple.opacity(0.3), radius: 12, y: 6)
                 }
-                .padding(.horizontal, .spacingL)
-                .padding(.bottom, .spacingXL)
+
+                Button {
+                    onSkip()
+                } label: {
+                    Text("Skip for now")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.6))
+                }
             }
+            .padding(.horizontal, .spacingL)
+            .padding(.vertical, .spacingM)
+            .background(.ultraThinMaterial)
         }
         .onAppear {
             bio = profile.bio ?? ""
@@ -170,6 +200,7 @@ struct OnboardingAboutYouView: View {
 #Preview {
     OnboardingAboutYouView(
         profile: .constant(OnboardingProfile()),
+        authService: AuthService.shared,
         onContinue: {},
         onSkip: {}
     )

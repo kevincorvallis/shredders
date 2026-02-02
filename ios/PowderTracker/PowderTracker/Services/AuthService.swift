@@ -47,6 +47,10 @@ class AuthService {
     var isLoading = false
     var error: String?
 
+    // MARK: - Retry Configuration
+    private let maxRetries = 3
+    private let baseRetryDelay: UInt64 = 1_000_000_000 // 1 second in nanoseconds
+
     // MARK: - Cached User (Phase 2 optimization)
     private(set) var cachedUserId: String?
     private(set) var cachedUser: Supabase.User?
@@ -295,15 +299,30 @@ class AuthService {
             }
 
             // Check if user profile exists, create if not
-            let existingProfile = try? await supabase
-                .from("users")
-                .select()
-                .eq("auth_user_id", value: session.user.id.uuidString)
-                .single()
-                .execute()
-                .value as UserProfile?
+            #if DEBUG
+            print("🍎 Apple Sign In: Checking for existing profile for userId: \(session.user.id.uuidString)")
+            #endif
 
-            if existingProfile == nil {
+            var profileExists = false
+            do {
+                let existingProfile: UserProfile = try await supabase
+                    .from("users")
+                    .select()
+                    .eq("auth_user_id", value: session.user.id.uuidString)
+                    .single()
+                    .execute()
+                    .value
+                profileExists = true
+                #if DEBUG
+                print("✅ Apple Sign In: Found existing profile for user: \(existingProfile.displayName ?? "unknown")")
+                #endif
+            } catch {
+                #if DEBUG
+                print("ℹ️ Apple Sign In: No existing profile found, will create one. Error: \(error)")
+                #endif
+            }
+
+            if !profileExists {
                 // Create user profile for new Apple sign-in user
                 struct UserInsert: Encodable {
                     let auth_user_id: String
@@ -312,20 +331,42 @@ class AuthService {
                     let display_name: String
                 }
 
+                let username = session.user.email?.components(separatedBy: "@").first ?? "user_\(session.user.id.uuidString.prefix(8))"
+                let displayName = session.user.userMetadata["full_name"]?.value as? String ?? "Apple User"
+
                 let profile = UserInsert(
                     auth_user_id: session.user.id.uuidString,
-                    username: session.user.email?.components(separatedBy: "@").first ?? "user_\(session.user.id.uuidString.prefix(8))",
+                    username: username,
                     email: session.user.email ?? "",
-                    display_name: session.user.userMetadata["full_name"]?.value as? String ?? "Apple User"
+                    display_name: displayName
                 )
 
-                try await supabase
-                    .from("users")
-                    .insert(profile)
-                    .execute()
+                #if DEBUG
+                print("🍎 Apple Sign In: Creating new profile - username: \(username), displayName: \(displayName)")
+                #endif
+
+                do {
+                    try await supabase
+                        .from("users")
+                        .insert(profile)
+                        .execute()
+                    #if DEBUG
+                    print("✅ Apple Sign In: Profile created successfully")
+                    #endif
+                } catch {
+                    #if DEBUG
+                    print("❌ Apple Sign In: Failed to create profile: \(error)")
+                    #endif
+                    // Don't throw here - let the user continue, but they won't have a profile
+                    // The onboarding will fail later, but at least they're signed in
+                }
             }
 
             await fetchUserProfile(userId: session.user.id.uuidString)
+
+            #if DEBUG
+            print("🍎 Apple Sign In complete. userProfile exists: \(userProfile != nil)")
+            #endif
 
         } catch {
             self.error = error.localizedDescription
@@ -699,9 +740,47 @@ class AuthService {
         return profile.needsOnboarding
     }
 
+    /// Retry helper for network operations with exponential backoff
+    @discardableResult
+    private func withRetry<T>(operation: @escaping () async throws -> T) async throws -> T {
+        var lastError: Error?
+
+        for attempt in 0..<maxRetries {
+            do {
+                return try await operation()
+            } catch {
+                lastError = error
+
+                // Don't retry for non-transient errors
+                if let urlError = error as? URLError {
+                    switch urlError.code {
+                    case .notConnectedToInternet, .timedOut, .networkConnectionLost:
+                        // These are transient - worth retrying
+                        break
+                    default:
+                        throw error
+                    }
+                }
+
+                // Exponential backoff: 1s, 2s, 4s
+                if attempt < maxRetries - 1 {
+                    let delay = baseRetryDelay * UInt64(1 << attempt)
+                    try? await Task.sleep(nanoseconds: delay)
+                }
+            }
+        }
+
+        throw lastError ?? NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Operation failed after retries"])
+    }
+
     /// Update user profile with onboarding data
     func updateOnboardingProfile(_ profile: OnboardingProfile) async throws {
         guard let userId = currentUser?.id.uuidString ?? userProfile?.authUserId else {
+            #if DEBUG
+            print("❌ updateOnboardingProfile: No userId available")
+            print("   currentUser: \(currentUser != nil ? "exists" : "nil")")
+            print("   userProfile: \(userProfile != nil ? "exists" : "nil")")
+            #endif
             throw NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
         }
 
@@ -709,6 +788,68 @@ class AuthService {
         error = nil
 
         defer { isLoading = false }
+
+        // First, ensure user profile exists in database
+        // This handles edge cases where Apple Sign In didn't create the profile
+        if userProfile == nil {
+            #if DEBUG
+            print("⚠️ updateOnboardingProfile: No userProfile found, attempting to create one for userId: \(userId)")
+            #endif
+
+            // Try to fetch first - profile might exist but not be loaded
+            await fetchUserProfile(userId: userId)
+
+            // If still nil, create the profile
+            if userProfile == nil {
+                #if DEBUG
+                print("📝 updateOnboardingProfile: Profile not found after fetch, creating new profile...")
+                #endif
+
+                struct UserInsert: Encodable {
+                    let auth_user_id: String
+                    let username: String
+                    let email: String
+                    let display_name: String
+                }
+
+                let email = currentUser?.email ?? ""
+                let username = email.components(separatedBy: "@").first ?? "user_\(userId.prefix(8))"
+
+                let newProfile = UserInsert(
+                    auth_user_id: userId,
+                    username: username,
+                    email: email,
+                    display_name: profile.displayName ?? username
+                )
+
+                do {
+                    try await supabase
+                        .from("users")
+                        .insert(newProfile)
+                        .execute()
+                    #if DEBUG
+                    print("✅ updateOnboardingProfile: Created missing user profile")
+                    #endif
+
+                    // Fetch the profile we just created
+                    await fetchUserProfile(userId: userId)
+                } catch {
+                    #if DEBUG
+                    print("❌ updateOnboardingProfile: Failed to create user profile: \(error)")
+                    #endif
+                    // Profile might already exist (race condition) - try fetching again
+                    await fetchUserProfile(userId: userId)
+                }
+            }
+
+            // Final check - if we still don't have a profile, something is wrong
+            if userProfile == nil {
+                #if DEBUG
+                print("❌ updateOnboardingProfile: Still no profile after creation attempt")
+                #endif
+                throw NSError(domain: "AuthService", code: -2, userInfo: [NSLocalizedDescriptionKey: "Could not create user profile. Please try signing in again."])
+            }
+        }
 
         struct OnboardingUpdate: Encodable {
             let display_name: String?
@@ -732,16 +873,31 @@ class AuthService {
             updated_at: DateFormatters.iso8601.string(from: Date())
         )
 
+        #if DEBUG
+        print("📝 updateOnboardingProfile called for userId: \(userId)")
+        print("   Profile data: displayName=\(profile.displayName ?? "nil"), bio=\(profile.bio ?? "nil")")
+        print("   Current user exists: \(currentUser != nil), userProfile exists: \(userProfile != nil)")
+        #endif
+
         do {
-            try await supabase
-                .from("users")
-                .update(updates)
-                .eq("auth_user_id", value: userId)
-                .execute()
+            try await withRetry {
+                try await self.supabase
+                    .from("users")
+                    .update(updates)
+                    .eq("auth_user_id", value: userId)
+                    .execute()
+            }
+
+            #if DEBUG
+            print("✅ updateOnboardingProfile succeeded")
+            #endif
 
             await fetchUserProfile(userId: userId)
 
         } catch {
+            #if DEBUG
+            print("❌ updateOnboardingProfile failed: \(error)")
+            #endif
             self.error = error.localizedDescription
             throw error
         }
@@ -750,8 +906,17 @@ class AuthService {
     /// Mark onboarding as complete
     func completeOnboarding() async throws {
         guard let userId = currentUser?.id.uuidString ?? userProfile?.authUserId else {
+            #if DEBUG
+            print("❌ completeOnboarding: No user logged in")
+            print("   currentUser: \(currentUser != nil ? "exists" : "nil")")
+            print("   userProfile: \(userProfile != nil ? "exists" : "nil")")
+            #endif
             throw NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
         }
+
+        #if DEBUG
+        print("📝 completeOnboarding called for userId: \(userId)")
+        #endif
 
         isLoading = true
         error = nil
@@ -772,15 +937,24 @@ class AuthService {
         )
 
         do {
-            try await supabase
-                .from("users")
-                .update(updates)
-                .eq("auth_user_id", value: userId)
-                .execute()
+            try await withRetry {
+                try await self.supabase
+                    .from("users")
+                    .update(updates)
+                    .eq("auth_user_id", value: userId)
+                    .execute()
+            }
+
+            #if DEBUG
+            print("✅ completeOnboarding succeeded")
+            #endif
 
             await fetchUserProfile(userId: userId)
 
         } catch {
+            #if DEBUG
+            print("❌ completeOnboarding failed: \(error)")
+            #endif
             self.error = error.localizedDescription
             throw error
         }
@@ -809,11 +983,13 @@ class AuthService {
         )
 
         do {
-            try await supabase
-                .from("users")
-                .update(updates)
-                .eq("auth_user_id", value: userId)
-                .execute()
+            try await withRetry {
+                try await self.supabase
+                    .from("users")
+                    .update(updates)
+                    .eq("auth_user_id", value: userId)
+                    .execute()
+            }
 
             await fetchUserProfile(userId: userId)
 

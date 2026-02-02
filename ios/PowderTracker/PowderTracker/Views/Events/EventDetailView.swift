@@ -10,6 +10,7 @@ struct EventDetailView: View {
     @State private var error: String?
     @State private var isRSVPing = false
     @State private var showingShareSheet = false
+    @State private var showingMessageCompose = false
     @State private var showingQRCode = false
     @State private var showingEditSheet = false
     @State private var showingCancelAlert = false
@@ -62,6 +63,12 @@ struct EventDetailView: View {
                         }
 
                         Button {
+                            showingMessageCompose = true
+                        } label: {
+                            Label("Send via iMessage", systemImage: "message.fill")
+                        }
+
+                        Button {
                             showingQRCode = true
                         } label: {
                             Label("Show QR Code", systemImage: "qrcode")
@@ -92,6 +99,10 @@ struct EventDetailView: View {
                 QRCodeSheet(url: shareURL(token: token), eventTitle: event?.title ?? "Event")
             }
         }
+        .messageComposeSheet(
+            isPresented: $showingMessageCompose,
+            body: messageComposeBody
+        )
         .sheet(isPresented: $showingEditSheet) {
             if let event = event {
                 EventEditView(event: event) {
@@ -125,6 +136,12 @@ struct EventDetailView: View {
         \(event.formattedTime.map { "⏰ Departing \($0)" } ?? "")
         👥 \(event.goingCount) people going
         """
+    }
+
+    private var messageComposeBody: String {
+        guard let event = event, let token = event.inviteToken else { return shareMessage }
+        let url = shareURL(token: token)
+        return "\(shareMessage)\n\n\(url.absoluteString)"
     }
 
     private func shareURL(token: String) -> URL {

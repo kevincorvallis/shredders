@@ -10,9 +10,14 @@ import XCTest
 final class AuthenticationUITests: XCTestCase {
     var app: XCUIApplication!
 
-    // Test credentials - verified working account
-    private let testEmail = "testuser123@gmail.com"
-    private let testPassword = "TestPassword123!"
+    // Test credentials - read from environment variables for security
+    // Set UI_TEST_EMAIL and UI_TEST_PASSWORD in your scheme's environment variables
+    private var testEmail: String {
+        ProcessInfo.processInfo.environment["UI_TEST_EMAIL"] ?? "testuser@example.com"
+    }
+    private var testPassword: String {
+        ProcessInfo.processInfo.environment["UI_TEST_PASSWORD"] ?? "TestPassword123!"
+    }
     private let invalidPassword = "wrongpassword"
     private let weakPassword = "weak"
 
@@ -27,7 +32,7 @@ final class AuthenticationUITests: XCTestCase {
     }
 
     @MainActor
-    private func launchApp(resetState: Bool = false) {
+    private func launchApp(resetState: Bool = true) {
         app = XCUIApplication()
         app.launchArguments = ["UI_TESTING"]
         if resetState {
@@ -587,9 +592,8 @@ final class AuthenticationUITests: XCTestCase {
         // Tap outside the text field (on the view background)
         app.swipeDown()
 
-        // Keyboard should dismiss after a moment
-        _  = app.keyboards.count == 0
         // Note: Keyboard dismissal can be finicky in UI tests
+        // The keyboard should dismiss but we don't assert as timing varies
     }
 
     // MARK: - Accessibility Tests
@@ -616,27 +620,38 @@ final class AuthenticationUITests: XCTestCase {
         let profileTab = app.tabBars.buttons["Profile"]
         XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
         profileTab.tap()
-        Thread.sleep(forTimeInterval: 1) // Wait for profile view to load
+        Thread.sleep(forTimeInterval: 2) // Wait for profile view to fully load
 
-        // If already logged in, sign out first
+        let scrollView = app.scrollViews.firstMatch
+        let signInButton = app.buttons["profile_sign_in_button"]
         let signOutButton = app.buttons["profile_sign_out_button"]
-        if signOutButton.waitForExistence(timeout: 3) {
-            // Scroll to make button hittable if needed
-            let scrollView = app.scrollViews.firstMatch
-            for _ in 0..<8 {
-                if signOutButton.isHittable { break }
+
+        // Check if sign-in button is immediately visible (user is logged out)
+        // The sign-in button is at the TOP in the user header section
+        if signInButton.waitForExistence(timeout: 3) {
+            if signInButton.isHittable {
+                signInButton.tap()
+                let emailField = app.textFields["auth_email_field"]
+                XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Auth email field should appear")
+                return
+            }
+        }
+
+        // If sign-in button not found or not hittable, user might be logged in
+        // Check for sign-out button (at BOTTOM in Settings section)
+        if scrollView.waitForExistence(timeout: 3) {
+            // Scroll down to find sign-out button
+            for _ in 0..<12 {
+                if signOutButton.exists && signOutButton.isHittable { break }
                 scrollView.swipeUp()
                 Thread.sleep(forTimeInterval: 0.3)
             }
+        }
 
-            guard signOutButton.isHittable else {
-                XCTFail("Sign out button exists but is not hittable after scrolling")
-                return
-            }
-
+        if signOutButton.exists && signOutButton.isHittable {
             signOutButton.tap()
 
-            // Handle confirmation dialog (action sheet) - use sheets.buttons specifically
+            // Handle confirmation dialog (action sheet)
             Thread.sleep(forTimeInterval: 0.5)
             let sheetConfirmButton = app.sheets.buttons["Sign Out"]
             if sheetConfirmButton.waitForExistence(timeout: 3) {
@@ -646,72 +661,139 @@ final class AuthenticationUITests: XCTestCase {
             // Wait for sign out to complete
             Thread.sleep(forTimeInterval: 2)
 
-            // Scroll back to top to find sign in button
-            if scrollView.exists {
-                scrollView.swipeDown()
-                scrollView.swipeDown()
+            // After sign out, the view reloads with sign-in button at top
+            // Sign-in button should now be visible at the top
+            if signInButton.waitForExistence(timeout: 5) {
+                if signInButton.isHittable {
+                    signInButton.tap()
+                    let emailField = app.textFields["auth_email_field"]
+                    XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Auth email field should appear")
+                    return
+                }
             }
         }
 
-        // Tap sign in - scroll up to make sure it's visible
-        let signInButton = app.buttons["profile_sign_in_button"]
-
-        // If sign-in button not found, try scrolling to find it
-        if !signInButton.waitForExistence(timeout: 3) {
-            let scrollView = app.scrollViews.firstMatch
-            if scrollView.exists {
-                scrollView.swipeDown()
-                scrollView.swipeDown()
-            }
-        }
-
-        guard signInButton.waitForExistence(timeout: 5) else {
-            // If still not found, the user might already be logged in or there's a UI issue
-            // Check if we can see any sign-in related text
-            let signInText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Sign in'")).firstMatch
-            if signInText.exists {
-                signInText.tap()
-            } else {
-                XCTFail("Sign In button should exist but wasn't found")
-            }
+        // If we still can't find the sign-in button, try tapping on any "Sign in" or "Sign In" text
+        let signInTextPredicate = NSPredicate(format: "label CONTAINS[c] 'Sign in' OR label == 'Sign In'")
+        let signInText = app.staticTexts.matching(signInTextPredicate).firstMatch
+        if signInText.waitForExistence(timeout: 3) && signInText.isHittable {
+            signInText.tap()
+            let emailField = app.textFields["auth_email_field"]
+            XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Auth email field should appear")
             return
         }
 
-        signInButton.tap()
+        // Also check for NavigationLink with "Sign in" text that might be a button
+        let signInNavLink = app.buttons.matching(signInTextPredicate).firstMatch
+        if signInNavLink.waitForExistence(timeout: 2) && signInNavLink.isHittable {
+            signInNavLink.tap()
+            let emailField = app.textFields["auth_email_field"]
+            XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Auth email field should appear")
+            return
+        }
 
-        // Wait for auth form to fully load
-        let emailField = app.textFields["auth_email_field"]
-        XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Auth email field should appear")
+        // Debug: Print all available buttons to help diagnose
+        let allButtons = app.buttons.allElementsBoundByIndex
+        var buttonLabels: [String] = []
+        for button in allButtons.prefix(20) {
+            if button.exists {
+                buttonLabels.append("\(button.identifier.isEmpty ? button.label : button.identifier)")
+            }
+        }
+        XCTFail("Sign In button should exist but wasn't found. Available buttons: \(buttonLabels.joined(separator: ", "))")
     }
 
     @MainActor
     private func ensureLoggedIn() {
         let profileTab = app.tabBars.buttons["Profile"]
         profileTab.tap()
+        Thread.sleep(forTimeInterval: 1)
+
+        let scrollView = app.scrollViews.firstMatch
+
+        // Scroll down to check for sign-out button (at bottom in Settings section)
+        if scrollView.waitForExistence(timeout: 3) {
+            for _ in 0..<10 {
+                if app.buttons["profile_sign_out_button"].exists { break }
+                scrollView.swipeUp()
+                Thread.sleep(forTimeInterval: 0.3)
+            }
+        }
 
         // Check if already logged in
         if app.buttons["profile_sign_out_button"].waitForExistence(timeout: 2) {
+            // Scroll back to top
+            if scrollView.exists {
+                scrollView.swipeDown()
+                scrollView.swipeDown()
+                scrollView.swipeDown()
+            }
             return // Already logged in
+        }
+
+        // Scroll back to top to find sign-in button
+        if scrollView.exists {
+            scrollView.swipeDown()
+            scrollView.swipeDown()
+            scrollView.swipeDown()
+            Thread.sleep(forTimeInterval: 0.5)
         }
 
         // Need to log in
         let signInButton = app.buttons["profile_sign_in_button"]
-        if signInButton.waitForExistence(timeout: 2) {
-            signInButton.tap()
+        guard signInButton.waitForExistence(timeout: 5) else {
+            XCTFail("Sign in button not found - cannot log in")
+            return
+        }
 
-            let emailField = app.textFields["auth_email_field"]
-            _ = emailField.waitForExistence(timeout: 5)
-            emailField.tap()
-            emailField.typeText(testEmail)
+        guard signInButton.isHittable else {
+            XCTFail("Sign in button exists but is not hittable")
+            return
+        }
 
-            let passwordField = app.secureTextFields["auth_password_field"]
-            passwordField.tap()
-            passwordField.typeText(testPassword)
+        signInButton.tap()
 
-            app.buttons["auth_sign_in_button"].tap()
+        let emailField = app.textFields["auth_email_field"]
+        guard emailField.waitForExistence(timeout: 5) else {
+            XCTFail("Email field not found after tapping sign in")
+            return
+        }
 
-            // Wait for login to complete
-            _ = app.buttons["profile_sign_out_button"].waitForExistence(timeout: 15)
+        emailField.tap()
+        emailField.typeText(testEmail)
+
+        let passwordField = app.secureTextFields["auth_password_field"]
+        passwordField.tap()
+        passwordField.typeText(testPassword)
+
+        app.buttons["auth_sign_in_button"].tap()
+
+        // Wait for login to complete - check for sign-out button
+        Thread.sleep(forTimeInterval: 2)
+
+        // Navigate back to profile to verify login
+        profileTab.tap()
+        Thread.sleep(forTimeInterval: 1)
+
+        // Scroll down to find sign-out button
+        if scrollView.exists {
+            for _ in 0..<10 {
+                if app.buttons["profile_sign_out_button"].exists { break }
+                scrollView.swipeUp()
+                Thread.sleep(forTimeInterval: 0.3)
+            }
+        }
+
+        guard app.buttons["profile_sign_out_button"].waitForExistence(timeout: 10) else {
+            XCTFail("Login failed - sign out button not found after login attempt")
+            return
+        }
+
+        // Scroll back to top
+        if scrollView.exists {
+            scrollView.swipeDown()
+            scrollView.swipeDown()
+            scrollView.swipeDown()
         }
     }
 

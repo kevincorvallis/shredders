@@ -186,6 +186,112 @@ final class AuthServiceTests: XCTestCase {
         XCTAssertTrue(url?.absoluteString.contains("/auth/login") == true, "URL should contain endpoint")
     }
 
+    // MARK: - Signup Response Tests
+
+    func testSignupResponse_DecodesWithTokens() throws {
+        // When email verification is NOT required, response includes tokens
+        let json = """
+        {
+            "user": {"id": "123", "email": "test@example.com"},
+            "accessToken": "access-token-123",
+            "refreshToken": "refresh-token-456",
+            "message": "Account created successfully"
+        }
+        """.data(using: .utf8)!
+
+        struct SignupResponse: Decodable {
+            let user: UserResponse
+            let accessToken: String?
+            let refreshToken: String?
+            let needsEmailVerification: Bool?
+            let message: String?
+
+            struct UserResponse: Decodable {
+                let id: String
+                let email: String?
+            }
+        }
+
+        let response = try JSONDecoder().decode(SignupResponse.self, from: json)
+
+        XCTAssertEqual(response.user.id, "123")
+        XCTAssertEqual(response.user.email, "test@example.com")
+        XCTAssertEqual(response.accessToken, "access-token-123")
+        XCTAssertEqual(response.refreshToken, "refresh-token-456")
+        XCTAssertNil(response.needsEmailVerification)
+        XCTAssertEqual(response.message, "Account created successfully")
+    }
+
+    func testSignupResponse_DecodesWithEmailVerificationRequired() throws {
+        // When email verification IS required, response has needsEmailVerification but no tokens
+        let json = """
+        {
+            "user": {"id": "456", "email": "new@example.com"},
+            "needsEmailVerification": true,
+            "message": "Please check your email to verify your account"
+        }
+        """.data(using: .utf8)!
+
+        struct SignupResponse: Decodable {
+            let user: UserResponse
+            let accessToken: String?
+            let refreshToken: String?
+            let needsEmailVerification: Bool?
+            let message: String?
+
+            struct UserResponse: Decodable {
+                let id: String
+                let email: String?
+            }
+        }
+
+        let response = try JSONDecoder().decode(SignupResponse.self, from: json)
+
+        XCTAssertEqual(response.user.id, "456")
+        XCTAssertEqual(response.user.email, "new@example.com")
+        XCTAssertNil(response.accessToken, "Should not have access token when verification required")
+        XCTAssertNil(response.refreshToken, "Should not have refresh token when verification required")
+        XCTAssertTrue(response.needsEmailVerification ?? false, "Should indicate email verification needed")
+        XCTAssertEqual(response.message, "Please check your email to verify your account")
+    }
+
+    func testSignupResponse_HandlesEmailVerificationFlag() throws {
+        // Test that the needsEmailVerification flag properly indicates when to throw emailNotVerified error
+        let responseWithVerification = """
+        {
+            "user": {"id": "789", "email": "verify@example.com"},
+            "needsEmailVerification": true,
+            "message": "Please verify"
+        }
+        """.data(using: .utf8)!
+
+        struct SignupResponse: Decodable {
+            let user: UserResponse
+            let accessToken: String?
+            let refreshToken: String?
+            let needsEmailVerification: Bool?
+            let message: String?
+
+            struct UserResponse: Decodable {
+                let id: String
+                let email: String?
+            }
+        }
+
+        let response = try JSONDecoder().decode(SignupResponse.self, from: responseWithVerification)
+
+        // Simulate the auth service logic
+        if response.needsEmailVerification == true {
+            // This is expected - should throw emailNotVerified
+            XCTAssertTrue(true, "Should trigger email verification flow")
+        } else if let accessToken = response.accessToken, let refreshToken = response.refreshToken {
+            XCTFail("Should not have tokens when verification required")
+            _ = (accessToken, refreshToken) // Suppress unused warning
+        } else {
+            XCTFail("Should either have verification flag or tokens")
+        }
+    }
+
     // MARK: - BiometricAuthService Tests
 
     func testBiometricAuthService_BiometricType() {

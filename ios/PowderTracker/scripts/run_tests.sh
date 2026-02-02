@@ -7,8 +7,25 @@ set -e
 # Configuration
 PROJECT_DIR="/Users/kevin/Downloads/Projects/shredders/ios/PowderTracker"
 SCHEME="PowderTracker"
-SIMULATOR_NAME="iPhone 15 Pro"
-RESULTS_DIR="/tmp/powdertracker_test_results"
+SIMULATOR_NAME="iPhone 16 Pro"
+SIMULATOR_OS="18.6"
+
+# Use unique results directory per run to avoid conflicts with parallel Claude instances
+RUN_ID="$$_$(date +%s)"
+RESULTS_DIR="/tmp/powdertracker_test_results_${RUN_ID}"
+DERIVED_DATA_DIR="/tmp/powdertracker_derived_data_${RUN_ID}"
+LOCK_FILE="/tmp/powdertracker_test.lock"
+
+# Cleanup function
+cleanup() {
+    # Remove lock if we hold it
+    if [ -f "$LOCK_FILE" ] && [ "$(cat "$LOCK_FILE" 2>/dev/null)" = "$$" ]; then
+        rm -f "$LOCK_FILE"
+    fi
+    # Clean up derived data (can be large)
+    rm -rf "$DERIVED_DATA_DIR" 2>/dev/null || true
+}
+trap cleanup EXIT
 
 # Colors for output
 RED='\033[0;31m'
@@ -25,22 +42,65 @@ TEST_TYPE="${1:-all}"
 RECORD_SNAPSHOTS="${2:-false}"
 
 usage() {
-    echo "Usage: $0 [test_type] [record_snapshots]"
+    echo "Usage: $0 [test_type] [options]"
     echo ""
     echo "Test types:"
     echo "  all         - Run all tests (default)"
+    echo "  unit        - Run only unit tests (excludes snapshots, performance, UI)"
+    echo "  ui          - Run only UI tests"
     echo "  snapshots   - Run only snapshot tests"
     echo "  performance - Run only performance tests"
-    echo "  unit        - Run only unit tests"
     echo ""
     echo "Options:"
     echo "  record      - Record new snapshot reference images (use with 'snapshots')"
     echo ""
+    echo "Environment variables for UI tests:"
+    echo "  UI_TEST_EMAIL    - Test account email (default: testuser@example.com)"
+    echo "  UI_TEST_PASSWORD - Test account password (default: TestPassword123!)"
+    echo ""
     echo "Examples:"
     echo "  $0                    # Run all tests"
+    echo "  $0 unit               # Run unit tests"
+    echo "  $0 ui                 # Run UI tests"
     echo "  $0 snapshots          # Run snapshot tests"
     echo "  $0 snapshots record   # Record new snapshot references"
     echo "  $0 performance        # Run performance tests"
+    echo ""
+    echo "  # Run UI tests with custom credentials:"
+    echo "  UI_TEST_EMAIL=me@test.com UI_TEST_PASSWORD=secret $0 ui"
+}
+
+# Acquire lock with timeout (prevents multiple instances from conflicting)
+acquire_lock() {
+    local timeout=300  # 5 minute timeout
+    local waited=0
+
+    while [ $waited -lt $timeout ]; do
+        if (set -C; echo "$$" > "$LOCK_FILE") 2>/dev/null; then
+            return 0
+        fi
+
+        # Check if lock holder is still running
+        local holder=$(cat "$LOCK_FILE" 2>/dev/null)
+        if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
+            # Lock holder is dead, steal the lock
+            rm -f "$LOCK_FILE"
+            continue
+        fi
+
+        echo -e "${YELLOW}⏳ Waiting for another test run to finish (PID: $holder)...${NC}"
+        sleep 5
+        waited=$((waited + 5))
+    done
+
+    echo -e "${RED}❌ Timeout waiting for lock after ${timeout}s${NC}"
+    return 1
+}
+
+release_lock() {
+    if [ -f "$LOCK_FILE" ] && [ "$(cat "$LOCK_FILE" 2>/dev/null)" = "$$" ]; then
+        rm -f "$LOCK_FILE"
+    fi
 }
 
 # Function to get or boot simulator
@@ -56,7 +116,7 @@ get_or_boot_simulator() {
 
     if [ -z "$status" ]; then
         echo -e "${YELLOW}Booting simulator...${NC}"
-        xcrun simctl boot "$sim_id"
+        xcrun simctl boot "$sim_id" 2>/dev/null || true  # May already be booting
         sleep 5
     fi
 
@@ -70,7 +130,8 @@ run_tests() {
 
     local cmd="xcodebuild test \
         -scheme $SCHEME \
-        -destination 'platform=iOS Simulator,name=$SIMULATOR_NAME' \
+        -destination 'platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS' \
+        -derivedDataPath '$DERIVED_DATA_DIR' \
         -resultBundlePath '$result_path'"
 
     if [ -n "$test_filter" ]; then
@@ -82,8 +143,18 @@ run_tests() {
 
 echo -e "${YELLOW}🏔️  PowderTracker Test Runner${NC}"
 echo "================================"
+echo -e "${BLUE}Run ID: ${RUN_ID}${NC}"
 
 cd "$PROJECT_DIR"
+
+# Acquire lock to prevent concurrent test runs from conflicting
+echo -e "${YELLOW}Acquiring test lock...${NC}"
+if ! acquire_lock; then
+    echo -e "${RED}❌ Could not acquire lock. Another test may be stuck.${NC}"
+    echo "Remove $LOCK_FILE manually if no other tests are running."
+    exit 1
+fi
+echo -e "${GREEN}✓ Lock acquired${NC}"
 
 case "$TEST_TYPE" in
     "snapshots")
@@ -144,17 +215,58 @@ case "$TEST_TYPE" in
         rm -rf "$RESULT_PATH"
 
         echo -e "\n${YELLOW}Building and running unit tests...${NC}"
-        # Exclude Snapshots and Performance directories
+        # Exclude Snapshots, Performance, and UI tests
         if xcodebuild test \
             -scheme "$SCHEME" \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS" \
+            -derivedDataPath "$DERIVED_DATA_DIR" \
             -resultBundlePath "$RESULT_PATH" \
             -skip-testing:PowderTrackerTests/Snapshots \
-            -skip-testing:PowderTrackerTests/Performance 2>&1; then
+            -skip-testing:PowderTrackerTests/Performance \
+            -skip-testing:PowderTrackerUITests 2>&1; then
             echo -e "\n${GREEN}✓ Unit tests passed${NC}"
         else
             echo -e "\n${RED}❌ Unit tests failed${NC}"
             echo "Results saved to: $RESULT_PATH"
+            exit 1
+        fi
+        ;;
+
+    "ui")
+        echo -e "\n${BLUE}Running UI Tests${NC}"
+
+        # Check for test credentials
+        if [ -n "$UI_TEST_EMAIL" ]; then
+            echo -e "${GREEN}✓ Using custom test email: $UI_TEST_EMAIL${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Using default test email (set UI_TEST_EMAIL for custom)${NC}"
+        fi
+
+        SIM_ID=$(get_or_boot_simulator)
+        echo -e "${GREEN}✓ Simulator ready: $SIM_ID${NC}"
+
+        RESULT_PATH="$RESULTS_DIR/UITestResults.xcresult"
+        rm -rf "$RESULT_PATH"
+
+        echo -e "\n${YELLOW}Building and running UI tests...${NC}"
+        echo -e "${YELLOW}Note: UI tests require the app to launch. This may take a while.${NC}"
+
+        # Run UI tests with environment variables for credentials
+        if xcodebuild test \
+            -scheme "$SCHEME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS" \
+            -derivedDataPath "$DERIVED_DATA_DIR" \
+            -resultBundlePath "$RESULT_PATH" \
+            -only-testing:PowderTrackerUITests \
+            UI_TEST_EMAIL="${UI_TEST_EMAIL:-}" \
+            UI_TEST_PASSWORD="${UI_TEST_PASSWORD:-}" 2>&1; then
+            echo -e "\n${GREEN}✓ UI tests passed${NC}"
+        else
+            echo -e "\n${RED}❌ UI tests failed${NC}"
+            echo "Results saved to: $RESULT_PATH"
+            echo ""
+            echo -e "${YELLOW}Tip: Open the .xcresult file in Xcode to see screenshots and failure details:${NC}"
+            echo "  open '$RESULT_PATH'"
             exit 1
         fi
         ;;
@@ -190,6 +302,10 @@ case "$TEST_TYPE" in
         ;;
 esac
 
+# Release lock before final output
+release_lock
+
 echo -e "\n================================"
 echo -e "${GREEN}🎉 Test run complete!${NC}"
 echo "Results saved to: $RESULTS_DIR"
+echo -e "${YELLOW}Note: Results directory is unique to this run and can be cleaned up.${NC}"
