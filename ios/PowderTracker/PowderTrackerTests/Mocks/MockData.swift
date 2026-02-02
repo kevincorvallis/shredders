@@ -571,3 +571,208 @@ struct MockMountainConditions {
         )
     }
 }
+
+// MARK: - Event Activity Mocks
+
+extension ActivityMetadata {
+    init(milestone: Int? = nil, label: String? = nil, commentId: String? = nil, preview: String? = nil, isReply: Bool? = nil, previousStatus: String? = nil) {
+        // Use a custom initializer via JSON decoding workaround
+        let json: [String: Any?] = [
+            "milestone": milestone,
+            "label": label,
+            "comment_id": commentId,
+            "preview": preview,
+            "is_reply": isReply,
+            "previous_status": previousStatus
+        ]
+        let data = try! JSONSerialization.data(withJSONObject: json.compactMapValues { $0 })
+        self = try! JSONDecoder().decode(ActivityMetadata.self, from: data)
+    }
+}
+
+extension EventActivity {
+    static func mock(
+        id: String = "activity-1",
+        eventId: String = "event-1",
+        userId: String? = "user-1",
+        activityType: ActivityType = .rsvpGoing,
+        metadata: ActivityMetadata = ActivityMetadata(),
+        username: String = "testuser",
+        displayName: String? = "Test User",
+        avatarUrl: String? = nil
+    ) -> EventActivity {
+        // Build JSON and decode to handle the Codable requirements
+        let userDict: [String: Any?] = [
+            "id": userId ?? "user-1",
+            "username": username,
+            "displayName": displayName,
+            "avatarUrl": avatarUrl
+        ]
+
+        let activityDict: [String: Any] = [
+            "id": id,
+            "eventId": eventId,
+            "userId": userId as Any,
+            "activityType": activityType.rawValue,
+            "metadata": [String: Any](),
+            "createdAt": ISO8601DateFormatter().string(from: Date()),
+            "user": userDict.compactMapValues { $0 }
+        ]
+
+        let data = try! JSONSerialization.data(withJSONObject: activityDict)
+        return try! JSONDecoder().decode(EventActivity.self, from: data)
+    }
+
+    static func mockRSVPGoing() -> EventActivity {
+        mock(activityType: .rsvpGoing)
+    }
+
+    static func mockRSVPMaybe() -> EventActivity {
+        mock(activityType: .rsvpMaybe)
+    }
+
+    static func mockComment() -> EventActivity {
+        mock(activityType: .commentPosted)
+    }
+
+    static func mockMilestone(count: Int = 10) -> EventActivity {
+        mock(activityType: .milestoneReached)
+    }
+
+    static func mockList(count: Int = 10) -> [EventActivity] {
+        let types: [ActivityType] = [.rsvpGoing, .rsvpMaybe, .commentPosted, .milestoneReached]
+        return (0..<count).map { i in
+            mock(
+                id: "activity-\(i)",
+                activityType: types[i % types.count]
+            )
+        }
+    }
+}
+
+// MARK: - Attendee Mocks
+
+extension EventAttendee {
+    static func mock(
+        id: String = "attendee-1",
+        userId: String = "user-1",
+        status: RSVPStatus = .going,
+        isDriver: Bool = false,
+        needsRide: Bool = false,
+        pickupLocation: String? = nil,
+        username: String = "attendee",
+        displayName: String? = "Test Attendee",
+        avatarUrl: String? = nil
+    ) -> EventAttendee {
+        EventAttendee(
+            id: id,
+            userId: userId,
+            status: status,
+            isDriver: isDriver,
+            needsRide: needsRide,
+            pickupLocation: pickupLocation,
+            respondedAt: ISO8601DateFormatter().string(from: Date()),
+            user: EventUser(
+                id: userId,
+                username: username,
+                displayName: displayName,
+                avatarUrl: avatarUrl
+            )
+        )
+    }
+
+    static func mockGoingList(count: Int = 5) -> [EventAttendee] {
+        (0..<count).map { i in
+            mock(
+                id: "attendee-\(i)",
+                userId: "user-\(i)",
+                status: .going,
+                username: "user\(i)"
+            )
+        }
+    }
+
+    static func mockMixedList() -> [EventAttendee] {
+        [
+            mock(id: "a1", status: .going, username: "going1"),
+            mock(id: "a2", status: .going, username: "going2"),
+            mock(id: "a3", status: .maybe, username: "maybe1"),
+            mock(id: "a4", status: .notGoing, username: "notgoing1")
+        ]
+    }
+
+    static func mockDriver() -> EventAttendee {
+        mock(isDriver: true, username: "driver", displayName: "The Driver")
+    }
+
+    static func mockNeedsRide() -> EventAttendee {
+        mock(needsRide: true, pickupLocation: "Downtown Seattle", username: "rider")
+    }
+}
+
+// MARK: - Weather Alert Mocks
+
+extension WeatherAlert {
+    static func mock(
+        id: String = "alert-1",
+        event: String = "Winter Storm Warning",
+        headline: String = "Heavy snow expected",
+        severity: String = "Severe",
+        urgency: String = "Expected",
+        certainty: String = "Likely",
+        onset: String? = nil,
+        expires: String? = nil,
+        description: String = "Heavy snow with accumulations of 8-12 inches expected.",
+        instruction: String? = "Travel will be difficult. Consider postponing non-essential travel.",
+        areaDesc: String = "Cascade Mountains"
+    ) -> WeatherAlert {
+        let formatter = ISO8601DateFormatter()
+        let expiresDate = expires ?? formatter.string(from: Date().addingTimeInterval(24 * 3600))
+        let onsetDate = onset ?? formatter.string(from: Date().addingTimeInterval(-2 * 3600))
+
+        return WeatherAlert(
+            id: id,
+            event: event,
+            headline: headline,
+            severity: severity,
+            urgency: urgency,
+            certainty: certainty,
+            onset: onsetDate,
+            expires: expiresDate,
+            description: description,
+            instruction: instruction,
+            areaDesc: areaDesc
+        )
+    }
+
+    static func mockExpired() -> WeatherAlert {
+        let formatter = ISO8601DateFormatter()
+        let pastDate = formatter.string(from: Date().addingTimeInterval(-24 * 3600))
+        return mock(id: "expired-alert", expires: pastDate)
+    }
+
+    static func mockWinterStormWarning() -> WeatherAlert {
+        mock(
+            event: "Winter Storm Warning",
+            headline: "Winter Storm Warning in effect",
+            severity: "Severe"
+        )
+    }
+
+    static func mockWindAdvisory() -> WeatherAlert {
+        mock(
+            id: "wind-alert",
+            event: "Wind Advisory",
+            headline: "High winds expected",
+            severity: "Moderate"
+        )
+    }
+}
+
+// Note: TripAdviceResponse.mock is defined in TripPlanning.swift
+
+// MARK: - TrendIndicator Tests Helper
+
+extension TrendIndicator {
+    static let allCases: [TrendIndicator] = [.improving, .stable, .declining]
+}
