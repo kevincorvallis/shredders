@@ -52,8 +52,8 @@ struct EventDetailView: View {
                 }
             }
 
-            // Share menu
-            if let event = event, event.inviteToken != nil {
+            // Share menu - always available for all users
+            if event != nil {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button {
@@ -89,14 +89,13 @@ struct EventDetailView: View {
             await loadEvent()
         }
         .sheet(isPresented: $showingShareSheet) {
-            if let token = event?.inviteToken {
-                let url = shareURL(token: token)
-                ShareSheet(items: [url, shareMessage])
+            if let event = event {
+                ShareSheet(items: [eventShareURL, shareMessage])
             }
         }
         .sheet(isPresented: $showingQRCode) {
-            if let token = event?.inviteToken {
-                QRCodeSheet(url: shareURL(token: token), eventTitle: event?.title ?? "Event")
+            if let event = event {
+                QRCodeSheet(url: eventShareURL, eventTitle: event.title)
             }
         }
         .messageComposeSheet(
@@ -139,13 +138,17 @@ struct EventDetailView: View {
     }
 
     private var messageComposeBody: String {
-        guard let event = event, let token = event.inviteToken else { return shareMessage }
-        let url = shareURL(token: token)
-        return "\(shareMessage)\n\n\(url.absoluteString)"
+        guard event != nil else { return shareMessage }
+        return "\(shareMessage)\n\n\(eventShareURL.absoluteString)"
     }
 
-    private func shareURL(token: String) -> URL {
-        URL(string: "\(AppConfig.apiBaseURL.replacingOccurrences(of: "/api", with: ""))/events/invite/\(token)")!
+    /// Shareable URL - uses invite token if available, otherwise falls back to event ID
+    private var eventShareURL: URL {
+        let baseURL = AppConfig.apiBaseURL.replacingOccurrences(of: "/api", with: "")
+        if let token = event?.inviteToken {
+            return URL(string: "\(baseURL)/events/invite/\(token)")!
+        }
+        return URL(string: "\(baseURL)/events/\(event?.id ?? "")")!
     }
 
     // MARK: - Subviews
@@ -729,8 +732,8 @@ extension EventDetailView {
     // MARK: - Actions
 
     private func copyLinkToClipboard() {
-        guard let token = event?.inviteToken else { return }
-        UIPasteboard.general.url = shareURL(token: token)
+        guard event != nil else { return }
+        UIPasteboard.general.url = eventShareURL
         HapticFeedback.success.trigger()
         toast = ToastMessage(
             type: .success,

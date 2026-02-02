@@ -83,6 +83,9 @@ struct LastMinuteEventCard: View {
 
                     Spacer()
 
+                    // Share button
+                    QuickShareButton(event: event)
+
                     // Quick join button
                     if event.userRSVPStatus != .going {
                         Button(action: {
