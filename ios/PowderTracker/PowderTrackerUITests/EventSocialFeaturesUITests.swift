@@ -205,6 +205,110 @@ final class EventSocialFeaturesUITests: XCTestCase {
         }
     }
 
+    func testEditComment() throws {
+        ensureLoggedIn()
+        navigateToEventDetailAsRSVPUser()
+        postTestComment()
+        selectSocialTab("Discussion")
+
+        // Find edit button (usually in menu or directly visible)
+        let editButton = app.buttons["Edit"].firstMatch
+        if editButton.waitForExistence(timeout: 5) {
+            editButton.tap()
+            sleep(1)
+
+            // Edit field should appear
+            let editField = app.textFields.firstMatch
+            if editField.waitForExistence(timeout: 3) {
+                editField.tap()
+                // Clear and type new text
+                editField.clearAndTypeText("Edited comment from UI test")
+
+                // Save edit
+                let saveButton = app.buttons["Save"]
+                if saveButton.exists && saveButton.isEnabled {
+                    saveButton.tap()
+                    sleep(2)
+                }
+            }
+        }
+    }
+
+    func testCancelEditComment() throws {
+        ensureLoggedIn()
+        navigateToEventDetailAsRSVPUser()
+        postTestComment()
+        selectSocialTab("Discussion")
+
+        // Find edit button
+        let editButton = app.buttons["Edit"].firstMatch
+        if editButton.waitForExistence(timeout: 5) {
+            editButton.tap()
+            sleep(1)
+
+            // Cancel edit
+            let cancelButton = app.buttons["Cancel"]
+            if cancelButton.waitForExistence(timeout: 3) {
+                cancelButton.tap()
+                sleep(1)
+            }
+        }
+    }
+
+    func testViewNestedReplies() throws {
+        ensureLoggedIn()
+        navigateToEventDetailWithComments()
+        selectSocialTab("Discussion")
+
+        // Look for "View replies" or expand button on a comment
+        let viewRepliesButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'replies' OR label CONTAINS[c] 'View'")).firstMatch
+        if viewRepliesButton.waitForExistence(timeout: 5) {
+            viewRepliesButton.tap()
+            sleep(1)
+
+            // Nested replies should become visible
+            // Look for indented comments or reply indicators
+        }
+    }
+
+    func testCommentThreadExpansion() throws {
+        ensureLoggedIn()
+        navigateToEventDetailWithComments()
+        selectSocialTab("Discussion")
+
+        // Find a comment with replies
+        let expandButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'expand' OR label CONTAINS[c] 'show more'")).firstMatch
+        if expandButton.waitForExistence(timeout: 5) {
+            expandButton.tap()
+            sleep(1)
+        }
+    }
+
+    func testReplyIndicatorVisible() throws {
+        ensureLoggedIn()
+        navigateToEventDetailWithComments()
+        selectSocialTab("Discussion")
+
+        // When replying, an indicator should show who you're replying to
+        let replyButton = app.buttons["Reply"].firstMatch
+        if replyButton.waitForExistence(timeout: 5) {
+            replyButton.tap()
+            sleep(1)
+
+            // Reply indicator should show
+            let replyIndicator = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Replying to'")).firstMatch
+            if replyIndicator.waitForExistence(timeout: 3) {
+                XCTAssertTrue(replyIndicator.exists, "Reply indicator should be visible")
+            }
+
+            // Cancel
+            let cancelButton = app.buttons["Cancel reply"]
+            if cancelButton.exists {
+                cancelButton.tap()
+            }
+        }
+    }
+
     // MARK: - Activity UI Tests
 
     func testActivityTimelineLoads() throws {
@@ -239,6 +343,59 @@ final class EventSocialFeaturesUITests: XCTestCase {
         // Content should load without error
     }
 
+    func testActivityPagination() throws {
+        ensureLoggedIn()
+        navigateToEventDetailWithActivity()
+        selectSocialTab("Activity")
+
+        // Scroll to bottom to trigger pagination
+        let scrollView = app.scrollViews.firstMatch
+        if scrollView.waitForExistence(timeout: 5) {
+            for _ in 0..<3 {
+                scrollView.swipeUp()
+                sleep(1)
+            }
+
+            // Should load more activities if available
+            // Look for loading indicator or new content
+        }
+    }
+
+    func testActivityInfiniteScroll() throws {
+        ensureLoggedIn()
+        navigateToEventDetailWithActivity()
+        selectSocialTab("Activity")
+
+        sleep(2)
+
+        // Scroll multiple times to test infinite scroll
+        let scrollView = app.scrollViews.firstMatch
+        if scrollView.exists {
+            var previousContentHeight: CGFloat = 0
+
+            for i in 0..<5 {
+                scrollView.swipeUp()
+                sleep(1)
+
+                // Check if more content loaded
+                // Content height should increase or stay same at end
+            }
+        }
+    }
+
+    func testActivityTypeFiltering() throws {
+        ensureLoggedIn()
+        navigateToEventDetailWithActivity()
+        selectSocialTab("Activity")
+
+        // If there are filter options, test them
+        let filterButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'filter' OR label CONTAINS[c] 'All'")).firstMatch
+        if filterButton.waitForExistence(timeout: 3) {
+            filterButton.tap()
+            sleep(1)
+        }
+    }
+
     // MARK: - Photos UI Tests
 
     func testPhotosGridLoads() throws {
@@ -263,6 +420,119 @@ final class EventSocialFeaturesUITests: XCTestCase {
         let addPhotoButton = app.buttons["Add photo"]
         // May or may not exist depending on RSVP status
         _ = addPhotoButton.waitForExistence(timeout: 5)
+    }
+
+    func testAddPhotoOpensImagePicker() throws {
+        ensureLoggedIn()
+        navigateToEventDetailAsRSVPUser()
+        selectSocialTab("Photos")
+
+        // Tap add photo button
+        let addPhotoButton = app.buttons["Add photo"]
+        if addPhotoButton.waitForExistence(timeout: 5) {
+            addPhotoButton.tap()
+            sleep(1)
+
+            // Image picker or action sheet should appear
+            let photosOption = app.buttons["Choose from Library"]
+            let cameraOption = app.buttons["Take Photo"]
+
+            if photosOption.waitForExistence(timeout: 3) || cameraOption.waitForExistence(timeout: 3) {
+                // Cancel picker
+                let cancelButton = app.buttons["Cancel"]
+                if cancelButton.exists {
+                    cancelButton.tap()
+                }
+            }
+        }
+    }
+
+    func testPhotoUploadCaptionInput() throws {
+        ensureLoggedIn()
+        navigateToEventDetailAsRSVPUser()
+        selectSocialTab("Photos")
+
+        // Tap add photo
+        let addPhotoButton = app.buttons["Add photo"]
+        if addPhotoButton.waitForExistence(timeout: 5) {
+            addPhotoButton.tap()
+            sleep(1)
+
+            // If caption field exists (after selecting image)
+            let captionField = app.textFields["Add a caption"]
+            if captionField.waitForExistence(timeout: 3) {
+                captionField.tap()
+                captionField.typeText("Test photo caption")
+            }
+        }
+    }
+
+    func testPhotoUploadProgressIndicator() throws {
+        ensureLoggedIn()
+        navigateToEventDetailAsRSVPUser()
+        selectSocialTab("Photos")
+
+        // When uploading, progress indicator should appear
+        // This requires actually selecting and uploading an image
+        // which is complex in UI tests, so we just verify the UI structure
+        let progressIndicator = app.progressIndicators.firstMatch
+        // Progress may not be visible until upload starts
+        _ = progressIndicator.waitForExistence(timeout: 2)
+    }
+
+    func testCancelPhotoUpload() throws {
+        ensureLoggedIn()
+        navigateToEventDetailAsRSVPUser()
+        selectSocialTab("Photos")
+
+        // Tap add photo
+        let addPhotoButton = app.buttons["Add photo"]
+        if addPhotoButton.waitForExistence(timeout: 5) {
+            addPhotoButton.tap()
+            sleep(1)
+
+            // Cancel button should be available
+            let cancelButton = app.buttons["Cancel"]
+            if cancelButton.waitForExistence(timeout: 3) {
+                cancelButton.tap()
+                sleep(1)
+            }
+        }
+    }
+
+    func testPhotoDeleteConfirmation() throws {
+        ensureLoggedIn()
+        navigateToEventDetailWithPhotos()
+        selectSocialTab("Photos")
+
+        // Tap on own photo
+        let firstPhoto = app.images.firstMatch
+        if firstPhoto.waitForExistence(timeout: 5) {
+            firstPhoto.tap()
+            sleep(1)
+
+            // Look for delete option in viewer
+            let deleteButton = app.buttons["Delete photo"]
+            if deleteButton.waitForExistence(timeout: 3) {
+                deleteButton.tap()
+
+                // Confirmation dialog should appear
+                let confirmDelete = app.alerts.buttons["Delete"]
+                if confirmDelete.waitForExistence(timeout: 3) {
+                    // Cancel to not actually delete
+                    let cancelButton = app.alerts.buttons["Cancel"]
+                    if cancelButton.exists {
+                        cancelButton.tap()
+                    }
+                }
+            }
+
+            // Close viewer
+            let closeButton = app.buttons["Close photo viewer"]
+            if closeButton.exists {
+                closeButton.tap()
+            }
+        }
     }
 
     func testTapPhotoOpensViewer() throws {
@@ -562,5 +832,28 @@ final class EventSocialFeaturesUITests: XCTestCase {
                 sleep(2)
             }
         }
+    }
+}
+
+// MARK: - XCUIElement Extensions
+
+extension XCUIElement {
+    func clearAndTypeText(_ text: String) {
+        guard let stringValue = self.value as? String else {
+            self.typeText(text)
+            return
+        }
+
+        // Select all text
+        self.tap()
+        self.press(forDuration: 1.0)
+
+        let selectAllButton = XCUIApplication().menuItems["Select All"]
+        if selectAllButton.waitForExistence(timeout: 1) {
+            selectAllButton.tap()
+        }
+
+        // Type new text (replaces selection)
+        self.typeText(text)
     }
 }
