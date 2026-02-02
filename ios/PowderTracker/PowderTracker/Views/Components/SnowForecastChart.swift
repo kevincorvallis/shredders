@@ -1,6 +1,13 @@
 import SwiftUI
 import Charts
 
+/// Wrapper for chart detail presentation to avoid blank sheet issue
+struct ChartDetailItem: Identifiable {
+    let id: String
+    let mountain: Mountain
+    let forecast: [ForecastDay]
+}
+
 /// 7-day snow forecast chart showing all favorite mountains overlaid
 /// Uses Swift Charts with multi-line visualization
 /// Includes powder day highlighting and interactive tooltips
@@ -22,9 +29,8 @@ struct SnowForecastChart: View {
     @State private var showingHourlySheet: Bool = false
     @State private var selectedDate: Date? = nil
 
-    // Chart detail view state
-    @State private var showingChartDetail: Bool = false
-    @State private var selectedMountainForDetail: Mountain? = nil
+    // Chart detail view state - use a wrapper struct for sheet(item:)
+    @State private var chartDetailItem: ChartDetailItem? = nil
 
     // Interactive legend state
     @State private var hiddenMountains: Set<String> = []
@@ -267,15 +273,15 @@ struct SnowForecastChart: View {
                 )
             }
         }
-        .sheet(isPresented: $showingChartDetail) {
-            if let mountain = selectedMountainForDetail,
-               let forecast = favorites.first(where: { $0.mountain.id == mountain.id })?.forecast {
-                ChartDetailView(
-                    mountain: mountain,
-                    forecast: forecast,
-                    isPresented: $showingChartDetail
+        .sheet(item: $chartDetailItem) { item in
+            ChartDetailView(
+                mountain: item.mountain,
+                forecast: item.forecast,
+                isPresented: Binding(
+                    get: { chartDetailItem != nil },
+                    set: { if !$0 { chartDetailItem = nil } }
                 )
-            }
+            )
         }
         .onChange(of: selectedRange) { _, _ in
             // Reset legend state and animate chart redraw when range changes
@@ -312,10 +318,13 @@ struct SnowForecastChart: View {
             .frame(width: 140)
 
             // Expand button to open chart detail view
-            if let firstMountain = visibleFavorites.first?.mountain {
+            if let firstFavorite = visibleFavorites.first {
                 Button {
-                    selectedMountainForDetail = firstMountain
-                    showingChartDetail = true
+                    chartDetailItem = ChartDetailItem(
+                        id: firstFavorite.mountain.id,
+                        mountain: firstFavorite.mountain,
+                        forecast: firstFavorite.forecast
+                    )
                     HapticFeedback.light.trigger()
                 } label: {
                     Image(systemName: "arrow.up.left.and.arrow.down.right")
@@ -912,9 +921,12 @@ struct SnowForecastChart: View {
                     )
                     .onTapGesture(count: 2) {
                         // Double-tap to open chart detail view
-                        if let firstMountain = visibleFavorites.first?.mountain {
-                            selectedMountainForDetail = firstMountain
-                            showingChartDetail = true
+                        if let firstFavorite = visibleFavorites.first {
+                            chartDetailItem = ChartDetailItem(
+                                id: firstFavorite.mountain.id,
+                                mountain: firstFavorite.mountain,
+                                forecast: firstFavorite.forecast
+                            )
                             HapticFeedback.medium.trigger()
                         }
                     }
