@@ -22,6 +22,7 @@ struct ProfileView: View {
     // User preferences from AppStorage
     @AppStorage("homeRegion") private var homeRegion = "washington"
     @AppStorage("seasonPass") private var seasonPass = "none"
+    @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
 
     var body: some View {
         NavigationStack {
@@ -119,7 +120,7 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingPatrolReports) {
                 NavigationStack {
-                    PatrolView()
+                    PatrolView(mountainId: selectedMountainId)
                 }
             }
             .sheet(isPresented: $showingWeatherAlerts) {

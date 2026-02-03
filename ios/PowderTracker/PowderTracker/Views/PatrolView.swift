@@ -3,19 +3,28 @@ import SwiftUI
 struct PatrolView: View {
     var mountainId: String? = nil  // Optional parameter from parent
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
+    @StateObject private var mountainService = MountainService.shared
     @State private var safetyData: SafetyData?
     @State private var isLoading = true
     @State private var error: String?
+    @State private var pickerMountainId: String?
 
-    // Use passed mountainId if available, otherwise fall back to AppStorage
+    // Use picker selection, then passed mountainId, then fall back to AppStorage
     private var effectiveMountainId: String {
-        mountainId ?? selectedMountainId
+        pickerMountainId ?? mountainId ?? selectedMountainId
+    }
+
+    private var currentMountainName: String {
+        mountainService.mountain(byId: effectiveMountainId)?.name ?? effectiveMountainId
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    // Mountain Picker
+                    mountainPicker
+
                     if isLoading {
                         ProgressView("Loading safety data...")
                             .frame(maxWidth: .infinity, minHeight: 300)
@@ -53,7 +62,45 @@ struct PatrolView: View {
             .task(id: effectiveMountainId) {
                 await loadData()
             }
+            .task {
+                await mountainService.fetchMountains()
+            }
         }
+    }
+
+    // MARK: - Mountain Picker
+
+    private var mountainPicker: some View {
+        Menu {
+            ForEach(mountainService.allMountains) { mountain in
+                Button {
+                    pickerMountainId = mountain.id
+                } label: {
+                    HStack {
+                        Text(mountain.name)
+                        if mountain.id == effectiveMountainId {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack {
+                Image(systemName: "mountain.2.fill")
+                    .foregroundColor(.blue)
+                Text(currentMountainName)
+                    .fontWeight(.semibold)
+                Image(systemName: "chevron.down")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color(.systemBackground))
+            .cornerRadius(10)
+            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
     }
 
     private func loadData() async {

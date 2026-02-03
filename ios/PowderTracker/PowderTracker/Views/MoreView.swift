@@ -14,7 +14,7 @@ struct MoreView: View {
                     }
 
                     NavigationLink {
-                        PatrolView()
+                        PatrolView(mountainId: selectedMountainId)
                     } label: {
                         Label("Patrol Reports", systemImage: "shield")
                     }

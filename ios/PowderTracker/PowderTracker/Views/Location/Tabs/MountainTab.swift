@@ -183,7 +183,7 @@ struct MountainTab: View {
 
             // Link to Patrol View for detailed safety info
             NavigationLink {
-                PatrolView()
+                PatrolView(mountainId: mountain.id)
             } label: {
                 HStack {
                     Image(systemName: "person.badge.shield.checkmark")
