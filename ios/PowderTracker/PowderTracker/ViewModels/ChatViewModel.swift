@@ -56,17 +56,20 @@ class ChatViewModel {
                 throw ChatError.serverError
             }
 
-            // Process streaming response
+            // Process streaming response (Vercel AI SDK format)
             var responseText = ""
             for try await line in bytes.lines {
-                // Parse SSE format
-                if line.hasPrefix("0:") {
-                    // Text chunk
-                    let jsonStr = String(line.dropFirst(2))
+                // Parse SSE format: "data: {...}"
+                if line.hasPrefix("data: ") {
+                    let jsonStr = String(line.dropFirst(6))
                     if let data = jsonStr.data(using: .utf8),
-                       let text = try? JSONDecoder().decode(String.self, from: data) {
-                        responseText += text
-                        updateLastMessage(responseText)
+                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        // Handle text-delta messages
+                        if let type = json["type"] as? String, type == "text-delta",
+                           let delta = json["delta"] as? String {
+                            responseText += delta
+                            updateLastMessage(responseText)
+                        }
                     }
                 }
             }
