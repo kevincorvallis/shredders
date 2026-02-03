@@ -61,37 +61,43 @@ struct ComparisonGridCard: View {
     // MARK: - Header Section
 
     private var headerSection: some View {
-        HStack(spacing: .spacingS) {
+        HStack(spacing: .spacingXS) {
             MountainLogoView(
                 logoUrl: mountain.logo,
                 color: mountain.color,
-                size: 28
+                size: .iconMedium
             )
 
             Text(mountain.shortName)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .foregroundColor(.primary)
+                .layoutPriority(1)
 
-            Spacer()
+            Spacer(minLength: .spacingXS)
 
-            // Alert count badge (if alerts > 0)
-            if alertCount > 0 {
-                CompactAlertBadge(alertCount: alertCount)
+            // Compact badges row
+            HStack(spacing: .spacingXS) {
+                // Alert count badge (if alerts > 0)
+                if alertCount > 0 {
+                    CompactAlertBadge(alertCount: alertCount)
+                }
+
+                // Webcam quick-view button
+                if webcamCount > 0 {
+                    webcamButton
+                }
+
+                // Powder Score Badge
+                if let score = powderScore?.score {
+                    powderScoreBadge(score: score)
+                }
             }
-
-            // Webcam quick-view button
-            if webcamCount > 0 {
-                webcamButton
-            }
-
-            // Powder Score Badge
-            if let score = powderScore?.score {
-                powderScoreBadge(score: score)
-            }
+            .fixedSize(horizontal: true, vertical: false)
         }
-        .padding(.horizontal, .spacingM)
+        .padding(.horizontal, .spacingS)
         .padding(.vertical, .spacingS)
         .background(
             Color(.tertiarySystemBackground)
@@ -105,9 +111,9 @@ struct ComparisonGridCard: View {
             onWebcamTap?()
         } label: {
             Image(systemName: "video.fill")
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 10, weight: .medium))
                 .foregroundColor(.secondary)
-                .frame(width: 26, height: 26)
+                .frame(width: 22, height: 22)
                 .background(
                     Circle()
                         .fill(.ultraThinMaterial)
@@ -120,15 +126,15 @@ struct ComparisonGridCard: View {
 
     private func powderScoreBadge(score: Double) -> some View {
         Text(String(format: "%.1f", score))
-            .font(.caption)
-            .fontWeight(.bold)
+            .font(.system(size: 11, weight: .bold))
             .foregroundColor(.white)
-            .padding(.horizontal, .spacingS)
-            .padding(.vertical, .spacingXS)
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 4)
             .background(
                 Capsule()
                     .fill(scoreColor)
-                    .shadow(color: scoreColor.opacity(0.4), radius: 4, y: 2)
+                    .shadow(color: scoreColor.opacity(0.4), radius: 3, y: 1)
             )
             .contentTransition(.numericText())
     }
