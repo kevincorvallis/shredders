@@ -9,6 +9,20 @@ struct ProfileView: View {
     @State private var showingAlertPreferences = false
     @State private var showingSignOutConfirmation = false
 
+    // New sheet states
+    @State private var showingRegionPicker = false
+    @State private var showingPassPicker = false
+    @State private var showingUnitsSettings = false
+    @State private var showingAbout = false
+    @State private var showingChat = false
+    @State private var showingSnowHistory = false
+    @State private var showingPatrolReports = false
+    @State private var showingWeatherAlerts = false
+
+    // User preferences from AppStorage
+    @AppStorage("homeRegion") private var homeRegion = "washington"
+    @AppStorage("seasonPass") private var seasonPass = "none"
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -71,7 +85,62 @@ struct ProfileView: View {
             } message: {
                 Text("Are you sure you want to sign out?")
             }
+            // New sheets
+            .sheet(isPresented: $showingRegionPicker) {
+                RegionPickerView()
+            }
+            .sheet(isPresented: $showingPassPicker) {
+                SeasonPassPickerView()
+            }
+            .sheet(isPresented: $showingUnitsSettings) {
+                UnitsSettingsView()
+            }
+            .sheet(isPresented: $showingAbout) {
+                AboutView()
+            }
+            .sheet(isPresented: $showingChat) {
+                NavigationStack {
+                    ChatView()
+                }
+            }
+            .sheet(isPresented: $showingSnowHistory) {
+                NavigationStack {
+                    HistoryChartContainer()
+                        .navigationTitle("Snow History")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") {
+                                    showingSnowHistory = false
+                                }
+                            }
+                        }
+                }
+            }
+            .sheet(isPresented: $showingPatrolReports) {
+                NavigationStack {
+                    PatrolView()
+                }
+            }
+            .sheet(isPresented: $showingWeatherAlerts) {
+                WeatherAlertsSettingsView()
+            }
         }
+    }
+
+    // MARK: - Computed Properties
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+
+    @AppStorage("temperatureUnit") private var temperatureUnit = "F"
+    @AppStorage("distanceUnit") private var distanceUnit = "mi"
+
+    private var unitsSubtitle: String {
+        let temp = temperatureUnit == "F" ? "°F" : "°C"
+        let dist = distanceUnit == "mi" ? "miles" : "km"
+        return "\(temp), \(dist)"
     }
 
     // MARK: - User Header Section
@@ -190,9 +259,9 @@ struct ProfileView: View {
                     icon: "location.fill",
                     iconColor: .blue,
                     title: "Home Region",
-                    subtitle: "Washington"
+                    subtitle: HomeRegion(rawValue: homeRegion)?.displayName ?? "Not Set"
                 ) {
-                    // TODO: Show region picker
+                    showingRegionPicker = true
                 }
 
                 Divider().padding(.leading, 44)
@@ -202,9 +271,9 @@ struct ProfileView: View {
                     icon: "ticket.fill",
                     iconColor: .purple,
                     title: "Season Pass",
-                    subtitle: "Ikon Pass"
+                    subtitle: SeasonPassType(rawValue: seasonPass)?.displayName ?? "No Pass"
                 ) {
-                    // TODO: Show pass picker
+                    showingPassPicker = true
                 }
             }
             .background(Color(.secondarySystemBackground))
@@ -257,7 +326,7 @@ struct ProfileView: View {
                     title: "Weather Alerts",
                     subtitle: "Storms, road closures"
                 ) {
-                    // TODO: Weather alert settings
+                    showingWeatherAlerts = true
                 }
             }
             .background(Color(.secondarySystemBackground))
@@ -279,7 +348,7 @@ struct ProfileView: View {
                     title: "Powder Chat",
                     subtitle: "Get AI-powered recommendations"
                 ) {
-                    // TODO: Open chat view
+                    showingChat = true
                 }
 
                 Divider().padding(.leading, 44)
@@ -291,7 +360,7 @@ struct ProfileView: View {
                     title: "Snow History",
                     subtitle: "View historical snowfall data"
                 ) {
-                    // TODO: Open snow history
+                    showingSnowHistory = true
                 }
 
                 Divider().padding(.leading, 44)
@@ -303,7 +372,7 @@ struct ProfileView: View {
                     title: "Ski Patrol Reports",
                     subtitle: "View incident and safety reports"
                 ) {
-                    // TODO: Open patrol reports
+                    showingPatrolReports = true
                 }
             }
             .background(Color(.secondarySystemBackground))
@@ -361,9 +430,9 @@ struct ProfileView: View {
                     icon: "ruler",
                     iconColor: .gray,
                     title: "Units",
-                    subtitle: "Imperial (inches, °F)"
+                    subtitle: unitsSubtitle
                 ) {
-                    // TODO: Units settings
+                    showingUnitsSettings = true
                 }
 
                 Divider().padding(.leading, 44)
@@ -373,9 +442,9 @@ struct ProfileView: View {
                     icon: "info.circle.fill",
                     iconColor: .blue,
                     title: "About PowderTracker",
-                    subtitle: "Version 1.0.0"
+                    subtitle: "Version \(appVersion)"
                 ) {
-                    // TODO: About screen
+                    showingAbout = true
                 }
 
                 if authService.isAuthenticated {

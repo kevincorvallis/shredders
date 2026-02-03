@@ -7,7 +7,6 @@ import SwiftUI
 struct AccountSettingsView: View {
     @Environment(AuthService.self) private var authService
     @Environment(\.dismiss) private var dismiss
-    @State private var showSignOutConfirmation = false
     @State private var showDeleteAccountConfirmation = false
     @State private var showChangePassword = false
     @State private var isDeletingAccount = false
@@ -22,9 +21,6 @@ struct AccountSettingsView: View {
                 // Security Section
                 securitySection
 
-                // Account Actions
-                accountActionsSection
-
                 // Danger Zone
                 dangerZoneSection
             }
@@ -36,21 +32,6 @@ struct AccountSettingsView: View {
                         dismiss()
                     }
                 }
-            }
-            .confirmationDialog(
-                "Sign Out",
-                isPresented: $showSignOutConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button("Sign Out", role: .destructive) {
-                    Task {
-                        try? await authService.signOut()
-                        dismiss()
-                    }
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("Are you sure you want to sign out?")
             }
             .confirmationDialog(
                 "Delete Account",
@@ -123,26 +104,6 @@ struct AccountSettingsView: View {
             }
         } header: {
             Text("Security")
-        }
-    }
-
-    private var accountActionsSection: some View {
-        Section {
-            // Sign Out button
-            Button(role: .destructive) {
-                showSignOutConfirmation = true
-            } label: {
-                HStack {
-                    Spacer()
-                    Text("Sign Out")
-                        .fontWeight(.semibold)
-                    Spacer()
-                }
-            }
-        } footer: {
-            Text("You can always sign back in with your credentials")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 

@@ -53,6 +53,10 @@ export const RATE_LIMITS = {
   refresh: { limit: 10, windowMs: 60 * 1000 }, // 10 attempts per minute
   passwordReset: { limit: 3, windowMs: 60 * 60 * 1000 }, // 3 attempts per hour
   default: { limit: 60, windowMs: 60 * 1000 }, // 60 requests per minute
+  // Event-related rate limits (Phase 5: Security)
+  createEvent: { limit: 10, windowMs: 60 * 60 * 1000 }, // 10 events per hour
+  rsvpEvent: { limit: 20, windowMs: 60 * 60 * 1000 }, // 20 RSVPs per hour
+  postComment: { limit: 30, windowMs: 60 * 60 * 1000 }, // 30 comments per hour
 };
 
 /**

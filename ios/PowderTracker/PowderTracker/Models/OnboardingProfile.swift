@@ -138,6 +138,16 @@ enum SeasonPassType: String, Codable, CaseIterable, Identifiable {
         case .other: return "creditcard"
         }
     }
+
+    var color: Color {
+        switch self {
+        case .none: return .gray
+        case .ikon: return .orange
+        case .epic: return .purple
+        case .mountainSpecific: return .blue
+        case .other: return .green
+        }
+    }
 }
 
 // MARK: - Onboarding Profile

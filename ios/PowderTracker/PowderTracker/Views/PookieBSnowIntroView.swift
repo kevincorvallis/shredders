@@ -79,8 +79,8 @@ struct PookieBSnowIntroView: View {
     // Timer reference for cleanup (prevents memory leak)
     @State private var heartTimer: Timer?
 
-    // 60 FPS timer for smooth particles
-    private let particleTimer = Timer.publish(every: 1.0/60.0, on: .main, in: .common).autoconnect()
+    // 60 FPS timer for smooth particles - uses TimelineView instead of Timer.publish to avoid memory leak
+    @State private var particleTimerActive = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -98,14 +98,19 @@ struct PookieBSnowIntroView: View {
                     starsLayer
                 }
 
-                // Layer 4: Falling snowflakes
+                // Layer 4 & 5: Particles with TimelineView for 60fps updates
                 if !reduceMotion {
-                    snowflakesLayer
-                }
-
-                // Layer 5: Floating hearts
-                if !reduceMotion {
-                    heartsLayer
+                    TimelineView(.animation(minimumInterval: 1.0/60.0, paused: !particleTimerActive)) { context in
+                        ZStack {
+                            snowflakesLayer
+                            heartsLayer
+                        }
+                        .onChange(of: context.date) { _, _ in
+                            if particleTimerActive {
+                                updateParticles()
+                            }
+                        }
+                    }
                 }
 
                 // Layer 6: Main content
@@ -118,11 +123,13 @@ struct PookieBSnowIntroView: View {
                 } else {
                     startAnimationSequence()
                     generateParticles()
+                    particleTimerActive = true
                 }
             }
-            .onReceive(particleTimer) { _ in
-                guard showIntro && !reduceMotion else { return }
-                updateParticles()
+            .onChange(of: showIntro) { _, newValue in
+                if !newValue {
+                    particleTimerActive = false
+                }
             }
         }
         .ignoresSafeArea()
@@ -238,9 +245,15 @@ struct PookieBSnowIntroView: View {
 
     private var starsLayer: some View {
         Canvas { context, size in
+            // Guard against division by zero during initial layout
+            guard size.width > 0, size.height > 0 else { return }
+
+            let width = Int(size.width)
+            let height = max(1, Int(size.height * 0.5))
+
             for i in 0..<40 {
-                let x = CGFloat((i * 67 + 13) % Int(size.width))
-                let y = CGFloat((i * 43 + 7) % Int(size.height * 0.5))
+                let x = CGFloat((i * 67 + 13) % width)
+                let y = CGFloat((i * 43 + 7) % height)
                 let starSize = CGFloat((i % 4) + 1)
                 let opacity = Double((i % 6) + 2) / 10.0
 
@@ -256,7 +269,7 @@ struct PookieBSnowIntroView: View {
     private var snowflakesLayer: some View {
         Canvas { context, size in
             for flake in snowflakes {
-                let symbol = context.resolveSymbol(id: "snowflake")!
+                guard let symbol = context.resolveSymbol(id: "snowflake") else { continue }
                 context.opacity = flake.opacity
                 context.translateBy(x: flake.x, y: flake.y)
                 context.rotate(by: .degrees(flake.rotation))
@@ -295,7 +308,7 @@ struct PookieBSnowIntroView: View {
 
     private var mainContent: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 40)
+            Spacer()
 
             // Brock the Golden Doodle
             brockSection
@@ -303,11 +316,10 @@ struct PookieBSnowIntroView: View {
             // Title section
             titleSection
 
-            Spacer(minLength: 40)
+            Spacer()
 
             // Made with love
             madeWithLoveSection
-                .frame(maxWidth: .infinity)
 
             // Tap hint
             tapHintSection
@@ -342,7 +354,7 @@ struct PookieBSnowIntroView: View {
                 // The good boy himself
                 Text("🐕")
                     .font(.system(size: 110))
-                    .scaleEffect(x: brockBlink ? 1.0 : 1.0, y: brockBlink ? 0.85 : 1.0)
+                    .scaleEffect(y: brockBlink ? 0.85 : 1.0)
                     .scaleEffect(brockBreath)
                     .rotationEffect(.degrees(brockTilt))
                     .offset(y: brockBounce)
@@ -472,6 +484,7 @@ struct PookieBSnowIntroView: View {
                 .foregroundStyle(.white.opacity(0.35))
                 .italic()
         }
+        .frame(maxWidth: .infinity)
         .opacity(showMadeWith ? 1.0 : 0)
         .padding(.bottom, 16)
     }
@@ -558,11 +571,7 @@ struct PookieBSnowIntroView: View {
             }
         }
 
-        // Auto-dismiss after 4.5 seconds (gives time to enjoy)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.5) {
-            guard showIntro else { return }
-            dismissWithHaptic()
-        }
+        // User must tap to dismiss - no auto-dismiss
     }
 
     private func startAuroraAnimations() {
@@ -640,11 +649,7 @@ struct PookieBSnowIntroView: View {
         showMadeWith = true
         showTapHint = true
 
-        // Still auto-dismiss after viewing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            guard showIntro else { return }
-            showIntro = false
-        }
+        // User must tap to dismiss - no auto-dismiss
     }
 
     // MARK: - Particle System (60 FPS)

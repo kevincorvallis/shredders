@@ -9,6 +9,7 @@ struct EventsView: View {
     @State private var showingCreateSheet = false
     @State private var navigationPath = NavigationPath()
     @State private var toast: ToastMessage?
+    @State private var searchText = ""
 
     enum EventFilter: String, CaseIterable, RawRepresentable {
         case all = "All"
@@ -235,9 +236,14 @@ struct EventsView: View {
                 EventDetailView(eventId: eventId)
             }
             .toast($toast)
+            .searchable(text: $searchText, prompt: "Search events...")
         }
         .task {
             await loadEvents()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("EventCancelled"))) { _ in
+            // Refresh events when an event is cancelled
+            Task { await loadEvents() }
         }
     }
 
@@ -319,15 +325,21 @@ struct EventsView: View {
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                 } else {
-                    // Regular events list
-                    ForEach(events) { event in
-                        NavigationLink(destination: EventDetailView(eventId: event.id)) {
-                            EventRowView(event: event)
+                    // Regular events list (filtered by search)
+                    if filteredEvents.isEmpty && !searchText.isEmpty {
+                        ContentUnavailableView.search(text: searchText)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    } else {
+                        ForEach(filteredEvents) { event in
+                            NavigationLink(destination: EventDetailView(eventId: event.id)) {
+                                EventRowView(event: event)
+                            }
+                            .buttonStyle(.plain)
+                            .listRowInsets(EdgeInsets(top: .spacingS, leading: .spacingL, bottom: .spacingS, trailing: .spacingL))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                         }
-                        .buttonStyle(.plain)
-                        .listRowInsets(EdgeInsets(top: .spacingS, leading: .spacingL, bottom: .spacingS, trailing: .spacingL))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
                     }
                 }
             }
@@ -340,6 +352,18 @@ struct EventsView: View {
     /// Events happening today with departure times
     private var todayEvents: [Event] {
         events.filter { $0.isToday && $0.departureTime != nil }
+    }
+
+    /// Filtered events based on search text
+    private var filteredEvents: [Event] {
+        guard !searchText.isEmpty else { return events }
+        let query = searchText.lowercased()
+        return events.filter { event in
+            event.title.lowercased().contains(query) ||
+            (event.mountainName ?? "").lowercased().contains(query) ||
+            (event.notes ?? "").lowercased().contains(query) ||
+            (event.departureLocation ?? "").lowercased().contains(query)
+        }
     }
 
     /// Quick RSVP to join an event

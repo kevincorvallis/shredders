@@ -8,6 +8,8 @@ class LocationViewModel: ObservableObject {
     @Published var liftData: LiftGeoJSON?
     @Published var snowComparison: SnowComparisonResponse?
     @Published var safetyData: SafetyData?
+    @Published var snowHistory: [SnowHistoryPoint] = []
+    @Published var snowHistoryLoading = false
 
     let mountain: Mountain
 
@@ -34,10 +36,11 @@ class LocationViewModel: ObservableObject {
             locationData = data
             isLoading = false
 
-            // Fetch lift data, snow comparison, and safety data (don't block on errors)
+            // Fetch lift data, snow comparison, safety data, and snow history (don't block on errors)
             await fetchLiftData()
             await fetchSnowComparison()
             await fetchSafetyData()
+            await fetchSnowHistory()
         } catch {
             // Ignore cancellation errors
             if (error as NSError).code == NSURLErrorCancelled {
@@ -84,6 +87,24 @@ class LocationViewModel: ObservableObject {
             safetyData = safety
         } catch {
             // Safety data is optional, silently fail
+        }
+    }
+
+    func fetchSnowHistory(days: Int = 30) async {
+        guard let url = URL(string: "\(AppConfig.apiBaseURL)/mountains/\(mountain.id)/history?days=\(days)") else { return }
+
+        snowHistoryLoading = true
+        defer { snowHistoryLoading = false }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(SnowHistoryResponse.self, from: data)
+            snowHistory = response.history
+        } catch {
+            // Keep empty - charts will show fallback data
+            #if DEBUG
+            print("Failed to fetch snow history: \(error)")
+            #endif
         }
     }
 
@@ -146,10 +167,27 @@ class LocationViewModel: ObservableObject {
     // MARK: - Historical Data for Chart
 
     var historicalSnowData: [HistoricalDataPoint] {
+        // Use real API data if available
+        if !snowHistory.isEmpty {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+
+            return snowHistory.compactMap { point -> HistoricalDataPoint? in
+                guard let depth = point.snowDepth else { return nil }
+                guard let date = formatter.date(from: point.date) else { return nil }
+
+                // Create a short label from the date
+                let labelFormatter = DateFormatter()
+                labelFormatter.dateFormat = "M/d"
+                let label = labelFormatter.string(from: date)
+
+                return HistoricalDataPoint(date: date, depth: Double(depth), label: label)
+            }.sorted { $0.date < $1.date }
+        }
+
+        // Fallback to generated data based on current depth
         var dataPoints: [HistoricalDataPoint] = []
 
-        // For now, create simple mock historical data based on current depth
-        // TODO: Add actual historical data endpoint
         if let currentDepth = currentSnowDepth {
             // Create approximate historical data points
             dataPoints.append(HistoricalDataPoint(

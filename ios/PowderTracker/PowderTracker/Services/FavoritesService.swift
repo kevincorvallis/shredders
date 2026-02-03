@@ -7,6 +7,7 @@ class FavoritesService: ObservableObject {
 
     private let maxFavorites = 5
     private let storageKey = "favoriteMountainIds"
+    private var isSyncing = false
 
     // Default favorites for first-time users
     static let defaultFavorites = ["baker", "crystal", "stevens"]
@@ -46,12 +47,14 @@ class FavoritesService: ObservableObject {
 
         favoriteIds.append(mountainId)
         saveFavorites()
+        Task { await syncToBackend() }
         return true
     }
 
     func remove(_ mountainId: String) {
         favoriteIds.removeAll { $0 == mountainId }
         saveFavorites()
+        Task { await syncToBackend() }
     }
 
     func reorder(from source: IndexSet, to destination: Int) {
@@ -102,6 +105,91 @@ class FavoritesService: ObservableObject {
         } else {
             // No legacy selection - use all defaults
             Self.defaultFavorites.forEach { _ = add($0) }
+        }
+    }
+
+    // MARK: - Backend Sync
+
+    /// Sync favorites to backend (call after local changes)
+    func syncToBackend() async {
+        guard !isSyncing else { return }
+        guard AuthService.shared.isAuthenticated else { return }
+
+        isSyncing = true
+        defer { isSyncing = false }
+
+        guard let url = URL(string: "\(AppConfig.apiBaseURL)/auth/user/preferences") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // Add auth header - try JWT token first, then Supabase session
+        if let token = KeychainHelper.getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        } else if let session = try? await SupabaseClientManager.shared.client.auth.session {
+            request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+        } else {
+            return
+        }
+
+        let body = ["favoriteMountainIds": favoriteIds]
+        request.httpBody = try? JSONEncoder().encode(body)
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                #if DEBUG
+                print("✅ Favorites synced to backend")
+                #endif
+            }
+        } catch {
+            #if DEBUG
+            print("⚠️ Failed to sync favorites: \(error)")
+            #endif
+        }
+    }
+
+    /// Fetch favorites from backend (call on app launch)
+    func fetchFromBackend() async {
+        guard AuthService.shared.isAuthenticated else { return }
+
+        guard let url = URL(string: "\(AppConfig.apiBaseURL)/auth/user/preferences") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        // Add auth header - try JWT token first, then Supabase session
+        if let token = KeychainHelper.getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        } else if let session = try? await SupabaseClientManager.shared.client.auth.session {
+            request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+        } else {
+            return
+        }
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                struct PreferencesResponse: Codable {
+                    let favoriteMountainIds: [String]
+                    let unitsPreference: String
+                }
+                let prefs = try JSONDecoder().decode(PreferencesResponse.self, from: data)
+
+                // Update local storage if backend has data
+                if !prefs.favoriteMountainIds.isEmpty {
+                    favoriteIds = prefs.favoriteMountainIds
+                    saveFavorites()
+                    #if DEBUG
+                    print("✅ Favorites loaded from backend: \(favoriteIds)")
+                    #endif
+                }
+            }
+        } catch {
+            #if DEBUG
+            print("⚠️ Failed to fetch favorites: \(error)")
+            #endif
         }
     }
 }

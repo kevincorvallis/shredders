@@ -10,7 +10,7 @@ export type EventStatus = 'active' | 'cancelled' | 'completed';
 
 export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert' | 'all';
 
-export type RSVPStatus = 'invited' | 'going' | 'maybe' | 'declined';
+export type RSVPStatus = 'invited' | 'going' | 'maybe' | 'declined' | 'waitlist';
 
 // ============================================
 // Database Row Types
@@ -28,12 +28,14 @@ export interface EventRow {
   skill_level: SkillLevel | null;
   carpool_available: boolean;
   carpool_seats: number | null;
+  max_attendees: number | null;
   status: EventStatus;
   created_at: string;
   updated_at: string;
   attendee_count: number;
   going_count: number;
   maybe_count: number;
+  waitlist_count: number;
 }
 
 export interface EventAttendeeRow {
@@ -45,6 +47,7 @@ export interface EventAttendeeRow {
   needs_ride: boolean;
   pickup_location: string | null;
   passengers_count: number;
+  waitlist_position: number | null;
   responded_at: string | null;
   invited_at: string;
   created_at: string;
@@ -77,6 +80,7 @@ export interface EventInsert {
   skill_level?: SkillLevel | null;
   carpool_available?: boolean;
   carpool_seats?: number | null;
+  max_attendees?: number | null;
 }
 
 export interface EventAttendeeInsert {
@@ -110,6 +114,7 @@ export interface EventUpdate {
   skill_level?: SkillLevel | null;
   carpool_available?: boolean;
   carpool_seats?: number | null;
+  max_attendees?: number | null;
   status?: EventStatus;
 }
 
@@ -136,6 +141,7 @@ export interface CreateEventRequest {
   skillLevel?: SkillLevel;
   carpoolAvailable?: boolean;
   carpoolSeats?: number;
+  maxAttendees?: number; // Optional capacity limit (1-1000)
 }
 
 export interface UpdateEventRequest {
@@ -147,6 +153,7 @@ export interface UpdateEventRequest {
   skillLevel?: SkillLevel | null;
   carpoolAvailable?: boolean;
   carpoolSeats?: number | null;
+  maxAttendees?: number | null; // Optional capacity limit (1-1000, null = unlimited)
 }
 
 export interface RSVPRequest {
@@ -174,6 +181,7 @@ export interface EventAttendee {
   isDriver: boolean;
   needsRide: boolean;
   pickupLocation: string | null;
+  waitlistPosition: number | null;
   respondedAt: string | null;
   user: EventUser;
 }
@@ -204,12 +212,14 @@ export interface Event {
   skillLevel: SkillLevel | null;
   carpoolAvailable: boolean;
   carpoolSeats: number | null;
+  maxAttendees: number | null;
   status: EventStatus;
   createdAt: string;
   updatedAt: string;
   attendeeCount: number;
   goingCount: number;
   maybeCount: number;
+  waitlistCount: number;
   commentCount?: number;
   photoCount?: number;
   creator: EventUser;
@@ -250,7 +260,11 @@ export interface RSVPResponse {
     goingCount: number;
     maybeCount: number;
     attendeeCount: number;
+    waitlistCount?: number;
+    maxAttendees?: number | null;
   };
+  message?: string;
+  wasWaitlisted?: boolean;
 }
 
 // ============================================
@@ -296,4 +310,85 @@ export interface EventsQueryParams {
   attendingOnly?: boolean;
   limit?: number;
   offset?: number;
+}
+
+// ============================================
+// Comment Types
+// ============================================
+
+export interface EventComment {
+  id: string;
+  event_id: string;
+  user_id: string;
+  content: string;
+  parent_id: string | null;
+  created_at: string;
+  updated_at: string;
+  user: EventUser;
+  replies?: EventComment[];
+}
+
+export interface CommentsResponse {
+  comments: EventComment[];
+  commentCount: number;
+  gated: boolean;
+  message?: string;
+}
+
+export interface CreateCommentRequest {
+  content: string;
+  parentId?: string;
+}
+
+export interface CreateCommentResponse {
+  comment: EventComment;
+}
+
+// ============================================
+// Activity Types
+// ============================================
+
+export type ActivityType =
+  | 'rsvp_going'
+  | 'rsvp_maybe'
+  | 'rsvp_declined'
+  | 'comment_posted'
+  | 'milestone_reached'
+  | 'event_created'
+  | 'event_updated';
+
+export interface ActivityMetadata {
+  milestone?: number;
+  label?: string;
+  comment_id?: string;
+  preview?: string;
+  is_reply?: boolean;
+  previous_status?: string;
+}
+
+export interface EventActivity {
+  id: string;
+  eventId: string;
+  userId: string | null;
+  activityType: ActivityType;
+  metadata: ActivityMetadata;
+  createdAt: string;
+  user?: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  } | null;
+}
+
+export interface ActivityResponse {
+  activities: EventActivity[];
+  activityCount: number;
+  gated: boolean;
+  message?: string;
+  pagination?: {
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
 }

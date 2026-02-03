@@ -200,6 +200,18 @@ class PushNotificationService: NSObject {
                 handleWeatherAlert(userInfo)
             case "powder-alert":
                 handlePowderAlert(userInfo)
+            case "event-update":
+                handleEventUpdate(userInfo)
+            case "event-cancelled":
+                handleEventCancelled(userInfo)
+            case "new-rsvp":
+                handleNewRSVP(userInfo)
+            case "rsvp-change":
+                handleRSVPChange(userInfo)
+            case "event-comment":
+                handleEventComment(userInfo)
+            case "comment-reply":
+                handleCommentReply(userInfo)
             default:
                 #if DEBUG
                 print("Unknown notification type:", type)
@@ -247,6 +259,99 @@ class PushNotificationService: NSObject {
             name: NSNotification.Name("PowderAlertReceived"),
             object: nil,
             userInfo: ["mountainId": mountainId, "snowfallInches": snowfallInches]
+        )
+    }
+
+    // MARK: - Event Notification Handlers
+
+    /// Handle event update notification (date/time/location changed)
+    private func handleEventUpdate(_ userInfo: [AnyHashable: Any]) {
+        guard let eventId = userInfo["eventId"] as? String else { return }
+
+        #if DEBUG
+        print("Event updated:", eventId)
+        #endif
+
+        NotificationCenter.default.post(
+            name: NSNotification.Name("DeepLinkToEvent"),
+            object: nil,
+            userInfo: ["eventId": eventId]
+        )
+    }
+
+    /// Handle event cancellation notification
+    private func handleEventCancelled(_ userInfo: [AnyHashable: Any]) {
+        guard let eventId = userInfo["eventId"] as? String else { return }
+
+        #if DEBUG
+        print("Event cancelled:", eventId)
+        #endif
+
+        // Post notification to refresh events list and show cancellation
+        NotificationCenter.default.post(
+            name: NSNotification.Name("EventCancelled"),
+            object: nil,
+            userInfo: ["eventId": eventId]
+        )
+    }
+
+    /// Handle new RSVP notification (someone RSVPed to your event)
+    private func handleNewRSVP(_ userInfo: [AnyHashable: Any]) {
+        guard let eventId = userInfo["eventId"] as? String else { return }
+
+        #if DEBUG
+        print("New RSVP for event:", eventId)
+        #endif
+
+        NotificationCenter.default.post(
+            name: NSNotification.Name("DeepLinkToEvent"),
+            object: nil,
+            userInfo: ["eventId": eventId]
+        )
+    }
+
+    /// Handle RSVP change notification (someone changed their RSVP status)
+    private func handleRSVPChange(_ userInfo: [AnyHashable: Any]) {
+        guard let eventId = userInfo["eventId"] as? String else { return }
+
+        #if DEBUG
+        print("RSVP changed for event:", eventId)
+        #endif
+
+        NotificationCenter.default.post(
+            name: NSNotification.Name("DeepLinkToEvent"),
+            object: nil,
+            userInfo: ["eventId": eventId]
+        )
+    }
+
+    /// Handle new comment notification (someone commented on your event)
+    private func handleEventComment(_ userInfo: [AnyHashable: Any]) {
+        guard let eventId = userInfo["eventId"] as? String else { return }
+
+        #if DEBUG
+        print("New comment on event:", eventId)
+        #endif
+
+        NotificationCenter.default.post(
+            name: NSNotification.Name("DeepLinkToEvent"),
+            object: nil,
+            userInfo: ["eventId": eventId, "scrollToComments": true]
+        )
+    }
+
+    /// Handle comment reply notification (someone replied to your comment)
+    private func handleCommentReply(_ userInfo: [AnyHashable: Any]) {
+        guard let eventId = userInfo["eventId"] as? String else { return }
+
+        #if DEBUG
+        print("Comment reply on event:", eventId)
+        #endif
+
+        NotificationCenter.default.post(
+            name: NSNotification.Name("DeepLinkToEvent"),
+            object: nil,
+            userInfo: ["eventId": eventId, "scrollToComments": true]
         )
     }
 

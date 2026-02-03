@@ -270,8 +270,10 @@ class WeatherOverlayManager: ObservableObject {
             return
         }
 
-        // For radar overlays, we need a valid timestamp from RainViewer
-        if overlayType == .radar || (overlayType == .snowfall && timestamp == nil) || (overlayType == .snowDepth && timestamp == nil) {
+        // For RainViewer-based overlays (radar, snowfall, snowDepth), we ALWAYS need
+        // a valid timestamp from the RainViewer API - arbitrary timestamps won't work
+        let usesRainViewer = overlayType == .radar || overlayType == .snowfall || overlayType == .snowDepth
+        if usesRainViewer {
             Task {
                 do {
                     let validTimestamp = try await RainViewerService.shared.getMostRecentTimestamp()
@@ -282,7 +284,7 @@ class WeatherOverlayManager: ObservableObject {
                     #if DEBUG
                     print("Failed to fetch RainViewer timestamp: \(error)")
                     #endif
-                    // Try with nil timestamp as fallback
+                    // Try with nil timestamp as fallback (will use current time)
                     await MainActor.run {
                         self.addOverlayToMap(overlayType, timestamp: nil)
                     }

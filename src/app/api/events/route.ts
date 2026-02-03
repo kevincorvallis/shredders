@@ -3,6 +3,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
 import { getMountain } from '@shredders/shared';
 import { randomBytes } from 'crypto';
+import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 import type {
   CreateEventRequest,
   Event,
@@ -24,6 +25,14 @@ import type {
  *   - attendingOnly: Only show events I'm attending (requires auth)
  *   - limit: Number of results (default: 20, max: 100)
  *   - offset: Pagination offset (default: 0)
+ *   - dateFrom: Filter events on or after this date (YYYY-MM-DD)
+ *   - dateTo: Filter events on or before this date (YYYY-MM-DD)
+ *   - skillLevel: Filter by skill level (beginner, intermediate, advanced, expert, all)
+ *   - carpoolAvailable: Filter events with carpool offered (true/false)
+ *   - hasAvailableSeats: Filter events with available carpool seats (true/false)
+ *   - search: Text search on event title and notes
+ *   - sortBy: Sort order (date, popularity) - default: date
+ *   - thisWeekend: Shortcut filter for this weekend's events (true/false)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -37,6 +46,16 @@ export async function GET(request: NextRequest) {
     const attendingOnly = searchParams.get('attendingOnly') === 'true';
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
     const offset = parseInt(searchParams.get('offset') || '0');
+
+    // Phase 3: Enhanced Search & Discovery filters
+    const dateFrom = searchParams.get('dateFrom');
+    const dateTo = searchParams.get('dateTo');
+    const skillLevel = searchParams.get('skillLevel');
+    const carpoolAvailable = searchParams.get('carpoolAvailable');
+    const hasAvailableSeats = searchParams.get('hasAvailableSeats') === 'true';
+    const search = searchParams.get('search')?.trim();
+    const sortBy = searchParams.get('sortBy') || 'date';
+    const thisWeekend = searchParams.get('thisWeekend') === 'true';
 
     // Check auth for user-specific queries
     const authUser = await getDualAuthUser(request);
@@ -69,51 +88,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Build base query
-    let query = supabase
-      .from('events')
-      .select(`
-        *,
-        creator:user_id (
-          id,
-          username,
-          display_name,
-          avatar_url
-        )
-      `, { count: 'exact' })
-      .eq('status', status)
-      .order('event_date', { ascending: true })
-      .range(offset, offset + limit - 1);
-
-    // Apply filters
-    if (mountainId) {
-      query = query.eq('mountain_id', mountainId);
-    }
-
-    if (upcoming) {
-      const today = new Date().toISOString().split('T')[0];
-      query = query.gte('event_date', today);
-    }
-
-    if (createdByMe && userProfileId) {
-      query = query.eq('user_id', userProfileId);
-    }
-
-    const { data: events, error, count } = await query;
-
-    if (error) {
-      console.error('Error fetching events:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch events' },
-        { status: 500 }
-      );
-    }
-
-    // If filtering by attending, we need a different query
-    let filteredEvents = events || [];
+    // OPTIMIZATION: Skip base query when attendingOnly=true (it's not needed)
+    let filteredEvents: any[] = [];
+    let count: number | null = null;
 
     if (attendingOnly && userProfileId && !createdByMe) {
-      // Fetch events where user is an attendee
+      // Directly fetch events where user is an attendee (skip base query)
       const { data: attendeeEvents, error: attendeeError } = await supabase
         .from('event_attendees')
         .select(`
@@ -139,12 +119,163 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      // Filter by status, upcoming, and Phase 3 filters, then apply pagination
+      const today = new Date().toISOString().split('T')[0];
+
+      // Calculate weekend dates if needed
+      let weekendStart = '';
+      let weekendEnd = '';
+      if (thisWeekend) {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const daysUntilSaturday = (6 - dayOfWeek + 7) % 7 || 7;
+        const saturday = new Date(now);
+        saturday.setDate(now.getDate() + (dayOfWeek === 6 ? 0 : daysUntilSaturday));
+        const sunday = new Date(saturday);
+        sunday.setDate(saturday.getDate() + 1);
+        weekendStart = saturday.toISOString().split('T')[0];
+        weekendEnd = sunday.toISOString().split('T')[0];
+      }
+
       filteredEvents = (attendeeEvents || [])
-        .filter((a: any) => a.event && a.event.status === 'active')
+        .filter((a: any) => {
+          if (!a.event) return false;
+          if (a.event.status !== status) return false;
+          if (mountainId && a.event.mountain_id !== mountainId) return false;
+
+          // Date filtering
+          if (thisWeekend) {
+            if (a.event.event_date < weekendStart || a.event.event_date > weekendEnd) return false;
+          } else {
+            if (dateFrom && a.event.event_date < dateFrom) return false;
+            if (dateTo && a.event.event_date > dateTo) return false;
+            if (upcoming && !dateFrom && a.event.event_date < today) return false;
+          }
+
+          // Skill level filter
+          if (skillLevel && a.event.skill_level !== skillLevel) return false;
+
+          // Carpool filters
+          if (carpoolAvailable === 'true' && !a.event.carpool_available) return false;
+          if (hasAvailableSeats && (!a.event.carpool_available || !a.event.carpool_seats || a.event.carpool_seats <= 0)) return false;
+
+          // Text search
+          if (search) {
+            const searchLower = search.toLowerCase();
+            const titleMatch = a.event.title?.toLowerCase().includes(searchLower);
+            const notesMatch = a.event.notes?.toLowerCase().includes(searchLower);
+            if (!titleMatch && !notesMatch) return false;
+          }
+
+          return true;
+        })
         .map((a: any) => ({
           ...a.event,
           userRSVPStatus: a.status,
-        }));
+        }))
+        .sort((a: any, b: any) => {
+          if (sortBy === 'popularity') {
+            return (b.going_count || 0) - (a.going_count || 0);
+          }
+          return a.event_date.localeCompare(b.event_date);
+        });
+
+      // Apply pagination manually for attendingOnly
+      count = filteredEvents.length;
+      filteredEvents = filteredEvents.slice(offset, offset + limit);
+    } else {
+      // Build base query for non-attendingOnly requests
+      let query = supabase
+        .from('events')
+        .select(`
+          *,
+          creator:user_id (
+            id,
+            username,
+            display_name,
+            avatar_url
+          )
+        `, { count: 'exact' })
+        .eq('status', status)
+        .range(offset, offset + limit - 1);
+
+      // Apply filters
+      if (mountainId) {
+        query = query.eq('mountain_id', mountainId);
+      }
+
+      // Date filters
+      if (thisWeekend) {
+        // Calculate this weekend's date range (Saturday-Sunday)
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const daysUntilSaturday = (6 - dayOfWeek + 7) % 7 || 7; // If today is Saturday, show this weekend
+        const saturday = new Date(now);
+        saturday.setDate(now.getDate() + (dayOfWeek === 6 ? 0 : daysUntilSaturday));
+        const sunday = new Date(saturday);
+        sunday.setDate(saturday.getDate() + 1);
+
+        const saturdayStr = saturday.toISOString().split('T')[0];
+        const sundayStr = sunday.toISOString().split('T')[0];
+        query = query.gte('event_date', saturdayStr).lte('event_date', sundayStr);
+      } else {
+        if (dateFrom) {
+          query = query.gte('event_date', dateFrom);
+        } else if (upcoming) {
+          const today = new Date().toISOString().split('T')[0];
+          query = query.gte('event_date', today);
+        }
+
+        if (dateTo) {
+          query = query.lte('event_date', dateTo);
+        }
+      }
+
+      // Skill level filter
+      if (skillLevel) {
+        query = query.eq('skill_level', skillLevel);
+      }
+
+      // Carpool filters
+      if (carpoolAvailable === 'true') {
+        query = query.eq('carpool_available', true);
+      }
+
+      if (hasAvailableSeats) {
+        // Filter events with available carpool seats
+        query = query.eq('carpool_available', true).gt('carpool_seats', 0);
+      }
+
+      // Text search on title and notes
+      if (search) {
+        // Use ilike for case-insensitive partial match
+        query = query.or(`title.ilike.%${search}%,notes.ilike.%${search}%`);
+      }
+
+      if (createdByMe && userProfileId) {
+        query = query.eq('user_id', userProfileId);
+      }
+
+      // Apply sorting
+      if (sortBy === 'popularity') {
+        query = query.order('going_count', { ascending: false });
+      } else {
+        // Default: sort by date
+        query = query.order('event_date', { ascending: true });
+      }
+
+      const { data: events, error, count: queryCount } = await query;
+
+      if (error) {
+        console.error('Error fetching events:', error);
+        return NextResponse.json(
+          { error: 'Failed to fetch events' },
+          { status: 500 }
+        );
+      }
+
+      filteredEvents = events || [];
+      count = queryCount;
     }
 
     // Transform to API response format
@@ -163,12 +294,14 @@ export async function GET(request: NextRequest) {
         skillLevel: event.skill_level,
         carpoolAvailable: event.carpool_available,
         carpoolSeats: event.carpool_seats,
+        maxAttendees: event.max_attendees ?? null,
         status: event.status,
         createdAt: event.created_at,
         updatedAt: event.updated_at,
         attendeeCount: event.attendee_count,
         goingCount: event.going_count,
         maybeCount: event.maybe_count,
+        waitlistCount: event.waitlist_count ?? 0,
         creator: event.creator,
         userRSVPStatus: event.userRSVPStatus || null,
         isCreator: userProfileId ? event.user_id === userProfileId : false,
@@ -210,6 +343,7 @@ export async function GET(request: NextRequest) {
  *   - skillLevel: beginner/intermediate/advanced/expert/all (optional)
  *   - carpoolAvailable: Whether driver can offer rides (default: false)
  *   - carpoolSeats: Number of available seats (optional, 0-8)
+ *   - maxAttendees: Maximum capacity for the event (optional, 1-1000)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -225,6 +359,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Rate limiting: 10 events per hour per user
+    const rateLimitKey = createRateLimitKey(authUser.userId, 'createEvent');
+    const rateLimit = rateLimitEnhanced(rateLimitKey, 'createEvent');
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded. Please try again later.',
+          retryAfter: rateLimit.retryAfter,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateLimit.retryAfter || 3600) },
+        }
+      );
+    }
+
     const body: CreateEventRequest = await request.json();
     const {
       mountainId,
@@ -236,6 +387,7 @@ export async function POST(request: NextRequest) {
       skillLevel,
       carpoolAvailable = false,
       carpoolSeats,
+      maxAttendees,
     } = body;
 
     // Validate required fields
@@ -309,6 +461,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate max attendees
+    if (maxAttendees !== undefined && maxAttendees !== null && (maxAttendees < 1 || maxAttendees > 1000)) {
+      return NextResponse.json(
+        { error: 'Max attendees must be between 1 and 1000' },
+        { status: 400 }
+      );
+    }
+
     // Validate departure time format (HH:MM)
     if (departureTime && !/^\d{2}:\d{2}$/.test(departureTime)) {
       return NextResponse.json(
@@ -347,6 +507,7 @@ export async function POST(request: NextRequest) {
         skill_level: skillLevel || null,
         carpool_available: carpoolAvailable,
         carpool_seats: carpoolSeats || null,
+        max_attendees: maxAttendees || null,
       })
       .select(`
         *,
@@ -399,12 +560,14 @@ export async function POST(request: NextRequest) {
       skillLevel: event.skill_level,
       carpoolAvailable: event.carpool_available,
       carpoolSeats: event.carpool_seats,
+      maxAttendees: event.max_attendees,
       status: event.status,
       createdAt: event.created_at,
       updatedAt: event.updated_at,
       attendeeCount: event.attendee_count,
       goingCount: event.going_count,
       maybeCount: event.maybe_count,
+      waitlistCount: event.waitlist_count ?? 0,
       creator: event.creator,
       isCreator: true,
     };

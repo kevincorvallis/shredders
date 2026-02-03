@@ -9,6 +9,10 @@ import type {
   EventAttendee,
   EventConditions,
 } from '@/types/event';
+import {
+  sendEventCancellationNotification,
+  sendEventUpdateNotification,
+} from '@/lib/push/event-notifications';
 
 /**
  * GET /api/events/[id]
@@ -468,7 +472,7 @@ export async function DELETE(
     // Check if event exists and user is the creator
     const { data: existingEvent, error: fetchError } = await supabase
       .from('events')
-      .select('user_id')
+      .select('user_id, title, mountain_id, event_date')
       .eq('id', id)
       .single();
 
@@ -513,6 +517,16 @@ export async function DELETE(
         { status: 500 }
       );
     }
+
+    // Send cancellation notifications to attendees (async, don't block response)
+    const mountain = getMountain(existingEvent.mountain_id);
+    sendEventCancellationNotification({
+      eventId: id,
+      eventTitle: existingEvent.title,
+      mountainName: mountain?.name || existingEvent.mountain_id,
+      eventDate: existingEvent.event_date,
+      cancelledByUserId: userProfile.id,
+    }).catch((err) => console.error('Failed to send cancellation notifications:', err));
 
     return NextResponse.json({ message: 'Event cancelled successfully' });
   } catch (error) {

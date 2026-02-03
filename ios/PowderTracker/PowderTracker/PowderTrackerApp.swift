@@ -21,8 +21,8 @@ struct PowderTrackerApp: App {
         ProcessInfo.processInfo.arguments.contains("RESET_STATE")
     }
 
-    /// Skip intro screen during UI tests for faster test execution
-    @State private var showIntro: Bool = !ProcessInfo.processInfo.arguments.contains("UI_TESTING")
+    /// Show loading screen while initial data loads (skip during UI tests)
+    @State private var isLoadingInitialData: Bool = !ProcessInfo.processInfo.arguments.contains("UI_TESTING")
 
     init() {
         // Reset state during UI tests if requested
@@ -40,15 +40,18 @@ struct PowderTrackerApp: App {
                     deepLinkEventId: $deepLinkEventId,
                     deepLinkInviteToken: $deepLinkInviteToken
                 )
-                    .opacity(showIntro ? 0.3 : 1)
+                    .opacity(isLoadingInitialData ? 0.3 : 1)
                     .environment(authService)
 
-                if showIntro {
-                    PookieBSnowIntroView(showIntro: $showIntro)
+                if isLoadingInitialData {
+                    BrockSkiingLoadingView()
                         .transition(.opacity)
                 }
             }
-            .animation(.easeInOut(duration: 0.5), value: showIntro)
+            .animation(.smooth(duration: 0.5), value: isLoadingInitialData)
+            .task {
+                await loadInitialData()
+            }
             .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
                 // Check if user needs onboarding after authentication
                 if isAuthenticated && authService.needsOnboarding {
@@ -131,6 +134,32 @@ struct PowderTrackerApp: App {
                     userInfo: ["mountainId": mountainId]
                 )
             }
+        }
+    }
+
+    /// Load initial app data and dismiss loading screen when ready
+    private func loadInitialData() async {
+        // Start timing
+        let startTime = Date()
+
+        // Fetch initial mountains data (this also warms the API connection)
+        _ = try? await APIClient.shared.fetchMountains()
+
+        // Sync favorites if authenticated
+        if authService.isAuthenticated {
+            await FavoritesService.shared.fetchFromBackend()
+        }
+
+        // Ensure minimum display time for smooth UX (1.5 seconds)
+        let elapsed = Date().timeIntervalSince(startTime)
+        let minimumDisplayTime: TimeInterval = 1.5
+        if elapsed < minimumDisplayTime {
+            try? await Task.sleep(nanoseconds: UInt64((minimumDisplayTime - elapsed) * 1_000_000_000))
+        }
+
+        // Dismiss loading screen
+        withAnimation(.smooth(duration: 0.5)) {
+            isLoadingInitialData = false
         }
     }
 }
@@ -221,8 +250,16 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
             // Handle deep linking based on notification type
             let userInfo = notification.request.content.userInfo
-            if let mountainId = userInfo["mountainId"] as? String {
-                // Post notification to trigger deep link
+
+            if let eventId = userInfo["eventId"] as? String {
+                // Post notification to trigger event deep link
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("DeepLinkToEvent"),
+                    object: nil,
+                    userInfo: ["eventId": eventId]
+                )
+            } else if let mountainId = userInfo["mountainId"] as? String {
+                // Post notification to trigger mountain deep link
                 NotificationCenter.default.post(
                     name: NSNotification.Name("DeepLinkToMountain"),
                     object: nil,

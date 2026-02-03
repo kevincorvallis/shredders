@@ -118,6 +118,7 @@
 		4AAF035757211E427D9A5FC2 /* ForecastViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04359DE47F38AAA25B08299F /* ForecastViewModel.swift */; };
 		4CDA61EB709ED6AA3C47B1D5 /* MountainResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6843B6F4EA6B85F3B4DC8597 /* MountainResponses.swift */; };
 		4D39AAD8F10F309D4EF756A7 /* WeatherAlertsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7589D250B7FAD02B8E5B51 /* WeatherAlertsSettingsView.swift */; };
+		4E39EED8F10F310D4EF857A8 /* EventNotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7689E250C7FBE02C8F6C52 /* EventNotificationSettingsView.swift */; };
 		4DBB8873B3ACCD08D29DD95A /* ConfidenceIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD7CAF1F883F5EE61510513 /* ConfidenceIndicator.swift */; };
 		4DC92B298FE4F2EFEADE125D /* MountainTimelineCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF6C823233438A205E0D04D /* MountainTimelineCard.swift */; };
 		4E1641794FD3249B322D4287 /* WeatherSummarySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE80755401A861C5905500E /* WeatherSummarySection.swift */; };
@@ -623,6 +624,7 @@
 		CAFF6360AEE7053811C58E49 /* DataOperationPerformanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataOperationPerformanceTests.swift; sourceTree = "<group>"; };
 		CC2E94B6E9A8A6943688239E /* FavoritesManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesManagementView.swift; sourceTree = "<group>"; };
 		CD7589D250B7FAD02B8E5B51 /* WeatherAlertsSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WeatherAlertsSettingsView.swift; path = Settings/WeatherAlertsSettingsView.swift; sourceTree = "<group>"; };
+		CE7689E250C7FBE02C8F6C52 /* EventNotificationSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EventNotificationSettingsView.swift; path = Settings/EventNotificationSettingsView.swift; sourceTree = "<group>"; };
 		CF1EAEA7F838517C4BA69F27 /* CheckInFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInFormView.swift; sourceTree = "<group>"; };
 		CFA0983271CF0644AA24FB60 /* BiometricAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthService.swift; sourceTree = "<group>"; };
 		CFF0F98B22E5EC2A1BBC1318 /* ArrivalTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrivalTime.swift; sourceTree = "<group>"; };
@@ -843,6 +845,7 @@
 				6256C7DE3307CB8012D27B46 /* AboutView.swift */,
 				33D33506244161B3826BFE46 /* UnitsSettingsView.swift */,
 				CD7589D250B7FAD02B8E5B51 /* WeatherAlertsSettingsView.swift */,
+				CE7689E250C7FBE02C8F6C52 /* EventNotificationSettingsView.swift */,
 			);
 			name = Settings;
 			sourceTree = "<group>";
@@ -1817,6 +1820,7 @@
 				7F8DFBDE174BDECC9923504D /* AboutView.swift in Sources */,
 				278F30783F83D03DB2DCD69C /* UnitsSettingsView.swift in Sources */,
 				4D39AAD8F10F309D4EF756A7 /* WeatherAlertsSettingsView.swift in Sources */,
+				4E39EED8F10F310D4EF857A8 /* EventNotificationSettingsView.swift in Sources */,
 				62DD0ECCF4FF020995542B00 /* CarpoolCoordinationView.swift in Sources */,
 				06A93BF0AEF982B3F36CC479 /* CalendarService.swift in Sources */,
 			);

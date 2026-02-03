@@ -693,7 +693,7 @@ class AuthService {
         }
     }
 
-    func updateProfile(displayName: String?, bio: String?, homeMountainId: String?) async throws {
+    func updateProfile(displayName: String?, bio: String?, homeMountainId: String?, avatarUrl: String? = nil) async throws {
         guard let userId = currentUser?.id.uuidString else {
             throw NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
         }
@@ -707,6 +707,7 @@ class AuthService {
             let display_name: String?
             let bio: String?
             let home_mountain_id: String?
+            let avatar_url: String?
             let updated_at: String
         }
 
@@ -714,6 +715,7 @@ class AuthService {
             display_name: displayName,
             bio: bio,
             home_mountain_id: homeMountainId,
+            avatar_url: avatarUrl,
             updated_at: DateFormatters.iso8601.string(from: Date())
         )
 

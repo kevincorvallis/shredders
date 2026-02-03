@@ -78,56 +78,7 @@ struct MoreView: View {
     }
 }
 
-struct AboutView: View {
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                Image(systemName: "mountain.2.fill")
-                    .font(.system(size: 80))
-                    .foregroundColor(.blue)
-
-                VStack(spacing: 8) {
-                    Text("PowderTracker")
-                        .font(.title)
-                        .fontWeight(.bold)
-
-                    Text("Your ultimate ski conditions companion")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-
-                VStack(alignment: .leading, spacing: 16) {
-                    InfoRow(title: "Version", value: "1.0.0")
-                    InfoRow(title: "Data Sources", value: "SNOTEL, NOAA, WSDOT")
-                    InfoRow(title: "Coverage", value: "15 Pacific Northwest mountains")
-                }
-                .padding()
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(.cornerRadiusCard)
-
-                VStack(spacing: 12) {
-                    Text("Data provided by:")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    HStack(spacing: 16) {
-                        Text("USDA SNOTEL")
-                        Text("•")
-                        Text("NOAA")
-                        Text("•")
-                        Text("WSDOT")
-                    }
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                }
-            }
-            .padding()
-        }
-        .navigationTitle("About")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
+// AboutView moved to Views/Settings/AboutView.swift
 
 struct SettingsView: View {
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
@@ -149,23 +100,41 @@ struct SettingsView: View {
             }
 
             Section("Notifications") {
-                Toggle("Powder Alerts", isOn: .constant(false))
-                    .disabled(true)
-                Toggle("Weather Alerts", isOn: .constant(false))
-                    .disabled(true)
-                Text("Notifications coming soon!")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                NavigationLink {
+                    WeatherAlertsSettingsView()
+                } label: {
+                    Label("Weather Alerts", systemImage: "cloud.snow.fill")
+                }
+
+                NavigationLink {
+                    EventNotificationSettingsView()
+                } label: {
+                    Label("Event Notifications", systemImage: "calendar.badge.clock")
+                }
             }
 
             Section("Data") {
                 Button("Clear Cache") {
-                    // TODO: Implement cache clearing
+                    clearCache()
                 }
                 .foregroundColor(.blue)
             }
         }
         .navigationTitle("Settings")
+    }
+
+    private func clearCache() {
+        // Clear URL cache
+        URLCache.shared.removeAllCachedResponses()
+
+        // Clear image cache (Nuke uses shared URLCache by default)
+        // Additional cleanup for any custom caches
+        let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        if let cacheURL = cacheURL {
+            try? FileManager.default.removeItem(at: cacheURL.appendingPathComponent("com.apple.nsurlsessiond"))
+        }
+
+        HapticFeedback.success.trigger()
     }
 }
 

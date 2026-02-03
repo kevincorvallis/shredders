@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
+import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 import type { RSVPRequest, RSVPResponse, RSVPStatus } from '@/types/event';
+import { sendNewRSVPNotification, sendRSVPChangeNotification } from '@/lib/push/event-notifications';
 
 /**
  * POST /api/events/[id]/rsvp
@@ -32,10 +34,27 @@ export async function POST(
       );
     }
 
+    // Rate limiting: 20 RSVPs per hour per user
+    const rateLimitKey = createRateLimitKey(authUser.userId, 'rsvpEvent');
+    const rateLimit = rateLimitEnhanced(rateLimitKey, 'rsvpEvent');
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded. Please try again later.',
+          retryAfter: rateLimit.retryAfter,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateLimit.retryAfter || 3600) },
+        }
+      );
+    }
+
     // Verify event exists and is active
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, status, event_date, user_id')
+      .select('id, status, event_date, user_id, title, max_attendees, going_count')
       .eq('id', eventId)
       .single();
 
@@ -90,27 +109,71 @@ export async function POST(
       );
     }
 
+    // Check capacity and determine if user should be waitlisted
+    let effectiveStatus: RSVPStatus = status;
+    let waitlistPosition: number | null = null;
+    const isAtCapacity = event.max_attendees !== null && event.going_count >= event.max_attendees;
+
+    if (status === 'going' && isAtCapacity) {
+      // Event is at capacity - check if user is already going (allow update) or needs to be waitlisted
+      const { data: existingRSVPCheck } = await supabase
+        .from('event_attendees')
+        .select('id, status')
+        .eq('event_id', eventId)
+        .eq('user_id', userProfile.id)
+        .single();
+
+      // If user is not already going, put them on waitlist
+      if (!existingRSVPCheck || existingRSVPCheck.status !== 'going') {
+        effectiveStatus = 'waitlist';
+        // Get next waitlist position
+        const { data: maxPosition } = await adminClient
+          .from('event_attendees')
+          .select('waitlist_position')
+          .eq('event_id', eventId)
+          .eq('status', 'waitlist')
+          .order('waitlist_position', { ascending: false })
+          .limit(1)
+          .single();
+
+        waitlistPosition = (maxPosition?.waitlist_position || 0) + 1;
+      }
+    }
+
     // Check if user already has an RSVP
     const { data: existingRSVP } = await supabase
       .from('event_attendees')
-      .select('id')
+      .select('id, status')
       .eq('event_id', eventId)
       .eq('user_id', userProfile.id)
       .single();
+
+    const oldStatus = existingRSVP?.status || null;
+    const isNewRSVP = !existingRSVP;
 
     let attendeeData;
 
     if (existingRSVP) {
       // Update existing RSVP
+      // If changing from waitlist to something else, clear waitlist_position
+      const updateData: Record<string, unknown> = {
+        status: effectiveStatus,
+        is_driver: isDriver ?? false,
+        needs_ride: needsRide ?? false,
+        pickup_location: pickupLocation?.trim() || null,
+        responded_at: new Date().toISOString(),
+      };
+
+      // Set or clear waitlist_position based on effective status
+      if (effectiveStatus === 'waitlist') {
+        updateData.waitlist_position = waitlistPosition;
+      } else {
+        updateData.waitlist_position = null;
+      }
+
       const { data, error: updateError } = await adminClient
         .from('event_attendees')
-        .update({
-          status,
-          is_driver: isDriver ?? false,
-          needs_ride: needsRide ?? false,
-          pickup_location: pickupLocation?.trim() || null,
-          responded_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', existingRSVP.id)
         .select(`
           *,
@@ -139,10 +202,11 @@ export async function POST(
         .insert({
           event_id: eventId,
           user_id: userProfile.id,
-          status,
+          status: effectiveStatus,
           is_driver: isDriver ?? false,
           needs_ride: needsRide ?? false,
           pickup_location: pickupLocation?.trim() || null,
+          waitlist_position: effectiveStatus === 'waitlist' ? waitlistPosition : null,
           responded_at: new Date().toISOString(),
         })
         .select(`
@@ -170,12 +234,39 @@ export async function POST(
     // Fetch updated event counts
     const { data: updatedEvent, error: countError } = await supabase
       .from('events')
-      .select('going_count, maybe_count, attendee_count')
+      .select('going_count, maybe_count, attendee_count, waitlist_count, max_attendees')
       .eq('id', eventId)
       .single();
 
     if (countError) {
       console.error('Error fetching updated counts:', countError);
+    }
+
+    // Send notification to event creator (async, don't block response)
+    // Only notify if user is not the event creator
+    if (event.user_id !== userProfile.id && (status === 'going' || status === 'maybe')) {
+      const attendeeName = attendeeData.user?.display_name || attendeeData.user?.username || 'Someone';
+
+      if (isNewRSVP) {
+        // New RSVP notification
+        sendNewRSVPNotification({
+          eventId,
+          eventTitle: event.title,
+          creatorUserId: event.user_id,
+          attendeeName,
+          rsvpStatus: status as 'going' | 'maybe',
+        }).catch((err) => console.error('Failed to send RSVP notification:', err));
+      } else if (oldStatus && oldStatus !== status) {
+        // RSVP status changed notification
+        sendRSVPChangeNotification({
+          eventId,
+          eventTitle: event.title,
+          creatorUserId: event.user_id,
+          attendeeName,
+          oldStatus,
+          newStatus: status,
+        }).catch((err) => console.error('Failed to send RSVP change notification:', err));
+      }
     }
 
     const response: RSVPResponse = {
@@ -186,6 +277,7 @@ export async function POST(
         isDriver: attendeeData.is_driver,
         needsRide: attendeeData.needs_ride,
         pickupLocation: attendeeData.pickup_location,
+        waitlistPosition: attendeeData.waitlist_position,
         respondedAt: attendeeData.responded_at,
         user: attendeeData.user,
       },
@@ -194,8 +286,19 @@ export async function POST(
         goingCount: updatedEvent?.going_count ?? 0,
         maybeCount: updatedEvent?.maybe_count ?? 0,
         attendeeCount: updatedEvent?.attendee_count ?? 0,
+        waitlistCount: updatedEvent?.waitlist_count ?? 0,
+        maxAttendees: updatedEvent?.max_attendees ?? null,
       },
     };
+
+    // If user was waitlisted, add a message
+    if (effectiveStatus === 'waitlist' && status === 'going') {
+      return NextResponse.json({
+        ...response,
+        message: `Event is at capacity. You've been added to the waitlist at position ${waitlistPosition}.`,
+        wasWaitlisted: true,
+      });
+    }
 
     return NextResponse.json(response);
   } catch (error) {

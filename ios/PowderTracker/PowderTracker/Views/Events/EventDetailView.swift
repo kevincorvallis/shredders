@@ -17,6 +17,8 @@ struct EventDetailView: View {
     @State private var currentUserRSVPStatus: RSVPStatus?
     @State private var toast: ToastMessage?
     @State private var selectedSocialTab: EventSocialTab = .discussion
+    @State private var showingRSVPSheet = false
+    @State private var isAddingToCalendar = false
 
     var body: some View {
         Group {
@@ -79,6 +81,15 @@ struct EventDetailView: View {
                         } label: {
                             Label("Copy Link", systemImage: "doc.on.doc")
                         }
+
+                        Divider()
+
+                        Button {
+                            Task { await addToCalendar() }
+                        } label: {
+                            Label("Add to Calendar", systemImage: "calendar.badge.plus")
+                        }
+                        .disabled(isAddingToCalendar)
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
@@ -118,6 +129,16 @@ struct EventDetailView: View {
             Text("Are you sure you want to cancel this event? All attendees will be notified and the event will be removed.")
         }
         .toast($toast)
+        .sheet(isPresented: $showingRSVPSheet) {
+            if let event = event {
+                RSVPCarpoolSheet(
+                    eventId: eventId,
+                    currentStatus: currentUserRSVPStatus
+                ) {
+                    Task { await loadEvent() }
+                }
+            }
+        }
         .task {
             await loadEvent()
         }
@@ -186,6 +207,20 @@ struct EventDetailView: View {
 
                 // Attendees Card
                 attendeesCard(event: event)
+
+                // Carpool Coordination (if carpool is available)
+                if event.carpoolAvailable {
+                    CarpoolCoordinationView(
+                        attendees: event.attendees,
+                        carpoolSeats: event.carpoolSeats,
+                        onOfferRide: {
+                            showingRSVPSheet = true
+                        },
+                        onNeedRide: {
+                            showingRSVPSheet = true
+                        }
+                    )
+                }
 
                 // Social Sections (Discussion & Activity)
                 socialSections(event: event)
@@ -690,42 +725,52 @@ extension EventDetailView {
     }
 
     private func rsvpButtons(event: EventWithDetails) -> some View {
-        HStack(spacing: 16) {
-            Button {
-                Task { await rsvp(status: .going) }
-            } label: {
-                HStack {
-                    if currentUserRSVPStatus == .going {
-                        Image(systemName: "checkmark.circle.fill")
+        VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                Button {
+                    if event.carpoolAvailable {
+                        showingRSVPSheet = true
+                    } else {
+                        Task { await rsvp(status: .going) }
                     }
-                    Text("I'm In!")
-                        .fontWeight(.semibold)
+                } label: {
+                    HStack {
+                        if currentUserRSVPStatus == .going {
+                            Image(systemName: "checkmark.circle.fill")
+                        }
+                        Text("I'm In!")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(currentUserRSVPStatus == .going ? .green : .green.opacity(0.2))
+                    .foregroundStyle(currentUserRSVPStatus == .going ? .white : .green)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(currentUserRSVPStatus == .going ? .green : .green.opacity(0.2))
-                .foregroundStyle(currentUserRSVPStatus == .going ? .white : .green)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-            .disabled(isRSVPing)
+                .disabled(isRSVPing)
 
-            Button {
-                Task { await rsvp(status: .maybe) }
-            } label: {
-                HStack {
-                    if currentUserRSVPStatus == .maybe {
-                        Image(systemName: "questionmark.circle.fill")
+                Button {
+                    if event.carpoolAvailable {
+                        showingRSVPSheet = true
+                    } else {
+                        Task { await rsvp(status: .maybe) }
                     }
-                    Text("Maybe")
-                        .fontWeight(.semibold)
+                } label: {
+                    HStack {
+                        if currentUserRSVPStatus == .maybe {
+                            Image(systemName: "questionmark.circle.fill")
+                        }
+                        Text("Maybe")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(currentUserRSVPStatus == .maybe ? .orange : .orange.opacity(0.2))
+                    .foregroundStyle(currentUserRSVPStatus == .maybe ? .white : .orange)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(currentUserRSVPStatus == .maybe ? .orange : .orange.opacity(0.2))
-                .foregroundStyle(currentUserRSVPStatus == .maybe ? .white : .orange)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .disabled(isRSVPing)
             }
-            .disabled(isRSVPing)
         }
     }
 
@@ -740,6 +785,51 @@ extension EventDetailView {
             title: "Link Copied",
             message: "Share link copied to clipboard"
         )
+    }
+
+    private func addToCalendar() async {
+        guard let event = event else { return }
+        guard let startDate = event.eventStartDate else {
+            toast = ToastMessage(
+                type: .error,
+                title: "Invalid Date",
+                message: "Could not parse event date"
+            )
+            return
+        }
+
+        isAddingToCalendar = true
+        defer { isAddingToCalendar = false }
+
+        do {
+            _ = try await CalendarService.shared.addEventToCalendar(
+                title: event.title,
+                startDate: startDate,
+                location: event.departureLocation,
+                notes: event.calendarNotes,
+                mountainName: event.mountainName
+            )
+            HapticFeedback.success.trigger()
+            toast = ToastMessage(
+                type: .success,
+                title: "Added to Calendar",
+                message: "Event has been added to your calendar"
+            )
+        } catch CalendarServiceError.accessDenied {
+            HapticFeedback.error.trigger()
+            toast = ToastMessage(
+                type: .error,
+                title: "Calendar Access Denied",
+                message: "Please enable calendar access in Settings"
+            )
+        } catch {
+            HapticFeedback.error.trigger()
+            toast = ToastMessage(
+                type: .error,
+                title: "Couldn't Add to Calendar",
+                message: error.localizedDescription
+            )
+        }
     }
 
     private func loadEvent() async {

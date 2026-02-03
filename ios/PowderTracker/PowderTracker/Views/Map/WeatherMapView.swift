@@ -58,9 +58,11 @@ struct WeatherMapView: UIViewRepresentable {
         let currentOverlay = overlayState.activeOverlay
         let currentTimeOffset = overlayState.selectedTimeOffset
 
-        // Check if overlay changed
-        if currentOverlay != coordinator.lastOverlayType ||
-           currentTimeOffset != coordinator.lastTimeOffset {
+        // Only update if overlay type actually changed, or if time offset changed for time-based overlays
+        let overlayTypeChanged = currentOverlay != coordinator.lastOverlayType
+        let timeOffsetChanged = currentTimeOffset != coordinator.lastTimeOffset && (currentOverlay?.isTimeBased == true)
+
+        if overlayTypeChanged || timeOffsetChanged {
 
             #if DEBUG
             print("WeatherMapView.updateUIView - overlay changed from \(coordinator.lastOverlayType?.rawValue ?? "none") to \(currentOverlay?.rawValue ?? "none")")
@@ -70,12 +72,9 @@ struct WeatherMapView: UIViewRepresentable {
             coordinator.lastTimeOffset = currentTimeOffset
 
             if let overlayType = currentOverlay {
-                // Calculate timestamp for time-based overlays
-                var timestamp: Int? = nil
-                if overlayType.isTimeBased {
-                    timestamp = Int(Date().timeIntervalSince1970 + currentTimeOffset)
-                }
-                coordinator.overlayManager.showOverlay(overlayType, timestamp: timestamp)
+                // For RainViewer overlays (radar, snowfall, snowDepth), the overlay manager
+                // will fetch the correct timestamp from the API - we don't pass arbitrary ones
+                coordinator.overlayManager.showOverlay(overlayType, timestamp: nil)
             } else {
                 coordinator.overlayManager.removeCurrentOverlay()
             }

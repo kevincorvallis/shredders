@@ -292,11 +292,11 @@ export async function POST(
       );
     }
 
-    // If parent comment specified, verify it exists and belongs to this event
+    // If parent comment specified, verify it exists, belongs to this event, and check nesting depth
     if (parentId) {
       const { data: parentComment, error: parentError } = await supabase
         .from('event_comments')
-        .select('id, event_id')
+        .select('id, event_id, parent_id')
         .eq('id', parentId)
         .eq('event_id', eventId)
         .single();
@@ -305,6 +305,15 @@ export async function POST(
         return NextResponse.json(
           { error: 'Parent comment not found' },
           { status: 404 }
+        );
+      }
+
+      // Limit nesting depth to 2 levels (top-level and one reply level)
+      // If parent already has a parent, we're at max depth
+      if (parentComment.parent_id) {
+        return NextResponse.json(
+          { error: 'Cannot reply to a reply. Maximum comment depth is 2 levels.' },
+          { status: 400 }
         );
       }
     }
