@@ -194,6 +194,7 @@ export async function GET(
       needsRide: a.needs_ride,
       pickupLocation: a.pickup_location,
       respondedAt: a.responded_at,
+      waitlistPosition: a.waitlist_position,
       user: a.user,
     }));
 
@@ -211,12 +212,14 @@ export async function GET(
       skillLevel: event.skill_level,
       carpoolAvailable: event.carpool_available,
       carpoolSeats: event.carpool_seats,
+      maxAttendees: event.max_attendees,
       status: event.status,
       createdAt: event.created_at,
       updatedAt: event.updated_at,
       attendeeCount: event.attendee_count,
       goingCount: event.going_count,
       maybeCount: event.maybe_count,
+      waitlistCount: event.waitlist_count ?? 0,
       commentCount: commentCount ?? 0,
       photoCount: photoCount ?? 0,
       creator: event.creator,
@@ -265,9 +268,10 @@ export async function PATCH(
     }
 
     // Check if event exists and user is the creator
+    // Fetch additional fields needed for change detection
     const { data: existingEvent, error: fetchError } = await supabase
       .from('events')
-      .select('user_id')
+      .select('user_id, title, mountain_id, event_date, departure_time, departure_location')
       .eq('id', id)
       .single();
 
@@ -411,6 +415,39 @@ export async function PATCH(
     }
 
     const mountain = getMountain(updatedEvent.mountain_id);
+
+    // Send update notifications for important changes (async, don't block response)
+    const dateChanged = existingEvent.event_date !== updatedEvent.event_date;
+    const timeChanged = existingEvent.departure_time !== updatedEvent.departure_time;
+    const locationChanged = existingEvent.departure_location !== updatedEvent.departure_location;
+
+    if (dateChanged || timeChanged || locationChanged) {
+      // Build a human-readable change description
+      const changes: string[] = [];
+      if (dateChanged) {
+        const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+        const newDate = new Date(updatedEvent.event_date + 'T12:00:00');
+        changes.push(`Date changed to ${dateFormatter.format(newDate)}`);
+      }
+      if (timeChanged && updatedEvent.departure_time) {
+        const [hours, minutes] = updatedEvent.departure_time.split(':');
+        const hour = parseInt(hours, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        changes.push(`Time updated to ${hour12}:${minutes} ${ampm}`);
+      }
+      if (locationChanged && updatedEvent.departure_location) {
+        changes.push(`Location changed to ${updatedEvent.departure_location}`);
+      }
+
+      sendEventUpdateNotification({
+        eventId: id,
+        eventTitle: updatedEvent.title,
+        mountainName: mountain?.name || updatedEvent.mountain_id,
+        changeDescription: changes.join(', '),
+        updatedByUserId: userProfile.id,
+      }).catch((err) => console.error('Failed to send update notifications:', err));
+    }
 
     return NextResponse.json({
       event: {

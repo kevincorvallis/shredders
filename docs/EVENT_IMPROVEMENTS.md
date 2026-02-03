@@ -34,7 +34,7 @@ A phased approach to improving the event system in Shredders.
   - [ ] Send email notification (optional)
 - [x] Notify attendees when event date/time changes
   - [x] Create notification function (`sendEventUpdateNotification`)
-  - [x] API integration ready (needs PATCH endpoint integration)
+  - [x] Integrated into PATCH endpoint for date/time/location changes
 - [x] Notify event creator when someone RSVPs
   - [x] Add activity record (already exists)
   - [x] Send push notification (`sendNewRSVPNotification`, `sendRSVPChangeNotification`)
@@ -122,7 +122,7 @@ A phased approach to improving the event system in Shredders.
 - [x] Add `POST /api/events/[id]/reactivate` endpoint
   - [x] Only allow if event date is in future
   - [x] Change status from 'cancelled' to 'active'
-  - [ ] Notify previous attendees (requires Phase 2)
+  - [x] Notify previous attendees via sendEventUpdateNotification
 - [ ] Add "Reactivate" button for cancelled events
 
 ### Auto-Complete Events
@@ -199,11 +199,11 @@ A phased approach to improving the event system in Shredders.
 | Phase | Status | Completion |
 |-------|--------|------------|
 | Phase 1: Performance | ✅ Complete | 100% |
-| Phase 2: Notifications | 🟡 In Progress | 75% |
+| Phase 2: Notifications | 🟡 In Progress | 85% |
 | Phase 3: Search & Discovery | ✅ Complete | 100% |
 | Phase 4: Carpool Matching | 🟡 In Progress | 40% |
 | Phase 5: Security | ✅ Complete | 100% |
-| Phase 6: Lifecycle Features | 🟡 In Progress | 60% |
+| Phase 6: Lifecycle Features | 🟡 In Progress | 70% |
 | Phase 7: Capacity & Waitlist | 🟡 In Progress | 80% |
 | Phase 8: Recurring Events | 🟡 In Progress | 90% |
 | Phase 9: UX Polish | 🟡 In Progress | 45% |

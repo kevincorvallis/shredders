@@ -3,6 +3,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
 import { getMountain } from '@shredders/shared';
 import type { Event } from '@/types/event';
+import { sendEventUpdateNotification } from '@/lib/push/event-notifications';
 
 /**
  * POST /api/events/[id]/reactivate
@@ -107,6 +108,15 @@ export async function POST(
 
     const mountain = getMountain(updatedEvent.mountain_id);
 
+    // Notify previous attendees that the event is back on (async, don't block response)
+    sendEventUpdateNotification({
+      eventId,
+      eventTitle: updatedEvent.title,
+      mountainName: mountain?.name || updatedEvent.mountain_id,
+      changeDescription: 'Event has been reactivated - it\'s back on!',
+      updatedByUserId: userProfile.id,
+    }).catch((err) => console.error('Failed to send reactivation notifications:', err));
+
     const transformedEvent: Event = {
       id: updatedEvent.id,
       creatorId: updatedEvent.user_id,
@@ -120,12 +130,14 @@ export async function POST(
       skillLevel: updatedEvent.skill_level,
       carpoolAvailable: updatedEvent.carpool_available,
       carpoolSeats: updatedEvent.carpool_seats,
+      maxAttendees: updatedEvent.max_attendees,
       status: updatedEvent.status,
       createdAt: updatedEvent.created_at,
       updatedAt: updatedEvent.updated_at,
       attendeeCount: updatedEvent.attendee_count,
       goingCount: updatedEvent.going_count,
       maybeCount: updatedEvent.maybe_count,
+      waitlistCount: updatedEvent.waitlist_count ?? 0,
       creator: updatedEvent.creator,
       isCreator: true,
     };

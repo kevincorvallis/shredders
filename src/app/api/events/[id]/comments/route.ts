@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
+import {
+  sendNewCommentNotification,
+  sendCommentReplyNotification,
+} from '@/lib/push/event-notifications';
 
 /**
  * Helper: Check if user has RSVP'd to an event (going or maybe)
@@ -230,7 +234,7 @@ export async function POST(
     // Check if event exists
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, user_id')
+      .select('id, user_id, title')
       .eq('id', eventId)
       .single();
 
@@ -241,10 +245,10 @@ export async function POST(
       );
     }
 
-    // Look up user's internal profile ID
+    // Look up user's internal profile ID and display name
     const { data: userProfile } = await adminClient
       .from('users')
-      .select('id')
+      .select('id, display_name, username')
       .eq('auth_user_id', authUser.userId)
       .single();
 
@@ -352,6 +356,40 @@ export async function POST(
       .select('id, username, display_name, avatar_url')
       .eq('id', userProfile.id)
       .single();
+
+    // Send notifications (async, don't block response)
+    const commenterName = userProfile.display_name || userProfile.username || 'Someone';
+    const commentPreview = content.trim().substring(0, 50) + (content.length > 50 ? '...' : '');
+
+    if (parentId) {
+      // This is a reply - notify the parent comment author
+      const { data: parentComment } = await adminClient
+        .from('event_comments')
+        .select('user_id')
+        .eq('id', parentId)
+        .single();
+
+      if (parentComment) {
+        sendCommentReplyNotification({
+          eventId,
+          eventTitle: event.title,
+          parentCommentAuthorId: parentComment.user_id,
+          replierUserId: userProfile.id,
+          replierName: commenterName,
+          replyPreview: commentPreview,
+        }).catch((err) => console.error('Failed to send reply notification:', err));
+      }
+    } else {
+      // Top-level comment - notify the event creator
+      sendNewCommentNotification({
+        eventId,
+        eventTitle: event.title,
+        creatorUserId: event.user_id,
+        commenterUserId: userProfile.id,
+        commenterName,
+        commentPreview,
+      }).catch((err) => console.error('Failed to send comment notification:', err));
+    }
 
     return NextResponse.json({
       comment: {
