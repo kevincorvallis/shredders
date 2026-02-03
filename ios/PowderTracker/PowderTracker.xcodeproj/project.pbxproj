@@ -286,6 +286,7 @@
 		E5F60718293041556677889C /* EventPhotosViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6071829304155667788990D /* EventPhotosViewModel.swift */; };
 		E69BB1533CC1D39D0B6F2919 /* OverviewTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6182FD94747D0564A2D1F4EF /* OverviewTab.swift */; };
 		E819ECB5A63694338E3D1CBF /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 0524243B9CDAF233E9AD7E4E /* Realtime */; };
+		E91CF78CBB3DB2BF388DFF57 /* EventAPIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCA5D6A59E63EE191FFA1602 /* EventAPIIntegrationTests.swift */; };
 		E92140971229B56D1BF6A125 /* ParkingPrediction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50A334E4A4AAB2ADFBF1DBB4 /* ParkingPrediction.swift */; };
 		EAA4DB3C31946039AB7FCCF4 /* ArrivalTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF0F98B22E5EC2A1BBC1318 /* ArrivalTime.swift */; };
 		EAF4C924CB45FC9FACEAB8D7 /* PowderScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C3CB15FF3167CB1E8BE3A /* PowderScore.swift */; };
@@ -652,6 +653,7 @@
 		DA99777600ABDFE0C215DA1F /* SeasonPassPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SeasonPassPickerView.swift; path = Settings/SeasonPassPickerView.swift; sourceTree = "<group>"; };
 		DC3D2F7F114BE8CCD915D75C /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		DC3F056B936355A99172B5F0 /* SnowfallTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowfallTableView.swift; sourceTree = "<group>"; };
+		DCA5D6A59E63EE191FFA1602 /* EventAPIIntegrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventAPIIntegrationTests.swift; sourceTree = "<group>"; };
 		DDA2A6F3230D579774B04EA6 /* SnowTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowTimelineView.swift; sourceTree = "<group>"; };
 		DE8486E070C8588EE3B6AA22 /* DashboardViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DashboardViewModelTests.swift; sourceTree = "<group>"; };
 		DF8A1B2C3E4F5A6D7B8C9E0F /* DateFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatters.swift; sourceTree = "<group>"; };
@@ -707,7 +709,17 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0AE5B68E2F2A0A9A001D53AD /* PowderTrackerUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PowderTrackerUITests; sourceTree = "<group>"; };
+		0AE5B68E2F2A0A9A001D53AD /* PowderTrackerUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = PowderTrackerUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1291,6 +1303,7 @@
 				F4448AF224525FB27A329FF5 /* EventModelTests.swift */,
 				1A73005CBB7DC41DA9B8F5C7 /* MapOverlayStateTests.swift */,
 				572454A553A27D7A2C87B582 /* Performance */,
+				DCA5D6A59E63EE191FFA1602 /* EventAPIIntegrationTests.swift */,
 			);
 			path = PowderTrackerTests;
 			sourceTree = "<group>";
@@ -1880,6 +1893,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E91CF78CBB3DB2BF388DFF57 /* EventAPIIntegrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
