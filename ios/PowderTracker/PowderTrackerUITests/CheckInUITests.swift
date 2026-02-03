@@ -8,9 +8,10 @@
 
 import XCTest
 
+@MainActor
 final class CheckInUITests: XCTestCase {
 
-    var app: XCUIApplication!
+    nonisolated(unsafe) var app: XCUIApplication!
     private let testEmail = "test@example.com"
     private let testPassword = "password123"
 

@@ -8,20 +8,20 @@
 
 import XCTest
 
+@MainActor
 final class OnboardingUITests: XCTestCase {
-    var app: XCUIApplication!
+    nonisolated(unsafe) var app: XCUIApplication!
 
-    override func setUp() {
-        super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
         continueAfterFailure = false
     }
 
-    override func tearDown() {
+    override func tearDownWithError() throws {
         app = nil
-        super.tearDown()
+        try super.tearDownWithError()
     }
 
-    @MainActor
     private func launchAppForOnboarding() {
         app = XCUIApplication()
         app.launchArguments = ["UI_TESTING", "SHOW_ONBOARDING"]
@@ -30,7 +30,6 @@ final class OnboardingUITests: XCTestCase {
 
     // MARK: - Critical Flow Tests
 
-    @MainActor
     func testCompleteOnboardingFlow() throws {
         launchAppForOnboarding()
 
@@ -53,7 +52,6 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Should see main app after onboarding")
     }
 
-    @MainActor
     func testSkipOnboarding() throws {
         launchAppForOnboarding()
 
@@ -76,7 +74,6 @@ final class OnboardingUITests: XCTestCase {
         }
     }
 
-    @MainActor
     func testOnboardingProfileSetup() throws {
         launchAppForOnboarding()
 
@@ -97,7 +94,6 @@ final class OnboardingUITests: XCTestCase {
         }
     }
 
-    @MainActor
     func testOnboardingProgressesThroughSteps() throws {
         launchAppForOnboarding()
 
