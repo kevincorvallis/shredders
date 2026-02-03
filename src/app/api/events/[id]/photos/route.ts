@@ -107,17 +107,13 @@ export async function GET(
       });
     }
 
-    // OPTIMIZATION: Use cached profileId from auth when available
-    let userProfileId = authUser.profileId;
-
-    if (!userProfileId) {
-      const { data: profile } = await adminClient
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.userId)
-        .single();
-      userProfileId = profile?.id;
-    }
+    // Look up user's profile ID from auth_user_id
+    const { data: profile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+    const userProfileId = profile?.id;
 
     if (!userProfileId) {
       return NextResponse.json({
@@ -267,24 +263,20 @@ export async function POST(
       );
     }
 
-    // OPTIMIZATION: Use cached profileId from auth when available
-    let userProfileId: string | undefined = authUser.profileId;
+    // Look up user's profile ID from auth_user_id
+    const { data: profile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
 
-    if (!userProfileId) {
-      const { data: profile } = await adminClient
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.userId)
-        .single();
-
-      if (!profile) {
-        return NextResponse.json(
-          { error: 'User profile not found' },
-          { status: 404 }
-        );
-      }
-      userProfileId = profile.id;
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      );
     }
+    const userProfileId = profile.id;
 
     // TypeScript narrowing: at this point userProfileId is guaranteed to be a string
     const userProfile = { id: userProfileId as string };
