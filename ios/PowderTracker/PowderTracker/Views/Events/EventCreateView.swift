@@ -26,6 +26,11 @@ struct EventCreateView: View {
     @State private var isLoadingForecast = false
     @State private var bestPowderDay: ForecastDay?
 
+    // Mountain suggestions (multiple for leaderboard)
+    @State private var mountainComparisons: [(id: String, name: String, forecast: ForecastDay)] = []
+    @State private var bestMountain: (id: String, name: String, forecast: ForecastDay)?
+    @State private var isLoadingMountainSuggestion = false
+
     // All mountains from the app config (IDs must match backend)
     private let mountains: [(id: String, name: String)] = [
         ("baker", "Mt. Baker"),
@@ -91,37 +96,6 @@ struct EventCreateView: View {
                 if !selectedMountainId.isEmpty {
                     Section {
                         forecastPreviewCard
-
-                        // Best Powder Day Suggestion
-                        if let bestDay = bestPowderDay, bestDay.date != forecastPreview?.date {
-                            Button {
-                                selectBestPowderDay(bestDay)
-                            } label: {
-                                HStack {
-                                    Image(systemName: "wand.and.stars")
-                                        .foregroundStyle(.cyan)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Best Powder Day")
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
-                                            .foregroundStyle(.primary)
-                                        Text("\(bestDay.dayOfWeek) - \(bestDay.snowfall)\" expected")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                    Text("Switch")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .foregroundStyle(.cyan)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 4)
-                                        .background(.cyan.opacity(0.12))
-                                        .clipShape(Capsule())
-                                }
-                            }
-                            .buttonStyle(.plain)
-                        }
                     } header: {
                         HStack {
                             Text("Forecast Preview")
@@ -129,6 +103,35 @@ struct EventCreateView: View {
                             if isLoadingForecast {
                                 ProgressView()
                                     .scaleEffect(0.7)
+                            }
+                        }
+                    }
+
+                    // Enhanced Powder Day Suggestions
+                    if !allForecasts.isEmpty {
+                        Section {
+                            PowderDaySuggestionCard(
+                                forecasts: allForecasts,
+                                selectedDate: eventDate,
+                                selectedMountainId: selectedMountainId,
+                                mountainName: mountains.first { $0.id == selectedMountainId }?.name ?? "",
+                                onSelectDate: { day in
+                                    selectBestPowderDay(day)
+                                },
+                                onSelectMountain: { mountain in
+                                    selectBestMountain(mountain)
+                                },
+                                mountainComparisons: mountainComparisons,
+                                isLoadingComparisons: isLoadingMountainSuggestion
+                            )
+                        } header: {
+                            HStack {
+                                Text("Powder Day Finder")
+                                Spacer()
+                                if isLoadingMountainSuggestion {
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                }
                             }
                         }
                     }
@@ -393,6 +396,7 @@ struct EventCreateView: View {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd"
             let eventDateStr = formatter.string(from: eventDate)
+            let todayStr = formatter.string(from: Date())
 
             // Find the forecast for the selected date
             forecastPreview = forecast.first { $0.date == eventDateStr }
@@ -407,10 +411,28 @@ struct EventCreateView: View {
                 }
             }
 
-            // Find best powder day (most snowfall, >6" to qualify)
-            bestPowderDay = forecast
-                .filter { $0.snowfall >= 6 }
-                .max(by: { $0.snowfall < $1.snowfall })
+            // Find best powder day from FUTURE dates only (fix for past dates bug)
+            // Lower threshold to 3" for more frequent suggestions
+            // Also consider days with good snow conditions (fresh snow + cold temps)
+            let futureDays = forecast.filter { day in
+                day.date >= todayStr && day.date != eventDateStr
+            }
+
+            // Primary: Find day with most snowfall (3"+ threshold)
+            if let snowDay = futureDays.filter({ $0.snowfall >= 3 }).max(by: { $0.snowfall < $1.snowfall }) {
+                bestPowderDay = snowDay
+            } else {
+                // Secondary: Find best conditions day (cold temps, any snow expected)
+                bestPowderDay = futureDays
+                    .filter { $0.snowfall > 0 || $0.precipProbability >= 60 }
+                    .sorted { day1, day2 in
+                        // Score: snowfall + precip probability bonus + cold temp bonus
+                        let score1 = day1.snowfall * 10 + (day1.precipProbability > 70 ? 5 : 0) + (day1.high < 32 ? 3 : 0)
+                        let score2 = day2.snowfall * 10 + (day2.precipProbability > 70 ? 5 : 0) + (day2.high < 32 ? 3 : 0)
+                        return score1 > score2
+                    }
+                    .first
+            }
 
         } catch {
             // Silently fail - forecast is optional
@@ -420,6 +442,125 @@ struct EventCreateView: View {
         }
 
         isLoadingForecast = false
+
+        // Also check for better mountains (in background)
+        await loadBestMountainSuggestion()
+    }
+
+    /// Check other mountains for better conditions on the selected date
+    /// Populates mountainComparisons for the leaderboard
+    private func loadBestMountainSuggestion() async {
+        isLoadingMountainSuggestion = true
+        mountainComparisons = []
+        bestMountain = nil
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let eventDateStr = formatter.string(from: eventDate)
+        let todayStr = formatter.string(from: Date())
+
+        // Only suggest if the date is today or in the future
+        guard eventDateStr >= todayStr else {
+            isLoadingMountainSuggestion = false
+            return
+        }
+
+        // Check a subset of popular mountains (to avoid too many API calls)
+        let mountainsToCheck = mountains.filter { $0.id != selectedMountainId }.prefix(6)
+
+        var allComparisons: [(id: String, name: String, forecast: ForecastDay, score: Int)] = []
+
+        // Score the currently selected mountain's forecast
+        var currentScore = 0
+        if let currentForecast = forecastPreview {
+            currentScore = scoreForecast(currentForecast)
+        }
+
+        // Fetch forecasts for other mountains concurrently
+        // Note: Using a local scoring function to avoid actor isolation issues
+        let scoreFn: @Sendable (ForecastDay) -> Int = { day in
+            var score = 0
+            score += day.snowfall * 10
+            if day.snowfall >= 6 { score += 20 }
+            if day.snowfall >= 12 { score += 30 }
+            if day.high < 32 { score += 10 }
+            if day.high < 28 { score += 5 }
+            if day.precipProbability >= 70 && day.precipType == "snow" { score += 15 }
+            if day.wind.gust > 40 { score -= 10 }
+            if day.wind.gust > 50 { score -= 15 }
+            return score
+        }
+
+        await withTaskGroup(of: (String, String, ForecastDay, Int)?.self) { group in
+            for mountain in mountainsToCheck {
+                // Capture values explicitly for Sendable closure
+                let mountainId = mountain.id
+                let mountainName = mountain.name
+                let dateStr = eventDateStr
+
+                group.addTask { [scoreFn] in
+                    do {
+                        let response = try await APIClient.shared.fetchForecast(for: mountainId)
+
+                        // Find forecast for the selected date
+                        if let dayForecast = response.forecast.first(where: { $0.date == dateStr }) {
+                            let score = scoreFn(dayForecast)
+                            return (mountainId, mountainName, dayForecast, score)
+                        }
+                    } catch {
+                        // Skip this mountain on error
+                    }
+                    return nil
+                }
+            }
+
+            for await result in group {
+                if let result = result {
+                    allComparisons.append((id: result.0, name: result.1, forecast: result.2, score: result.3))
+                }
+            }
+        }
+
+        // Sort by score descending and take top 3 that are better than current
+        let betterMountains = allComparisons
+            .filter { $0.score > currentScore }
+            .sorted { $0.score > $1.score }
+            .prefix(3)
+            .map { (id: $0.id, name: $0.name, forecast: $0.forecast) }
+
+        mountainComparisons = Array(betterMountains)
+
+        // Set best mountain (first one if any)
+        bestMountain = mountainComparisons.first
+
+        isLoadingMountainSuggestion = false
+    }
+
+    /// Score a forecast day for comparison (higher = better skiing conditions)
+    private func scoreForecast(_ day: ForecastDay) -> Int {
+        var score = 0
+
+        // Snowfall is most important (10 points per inch)
+        score += day.snowfall * 10
+
+        // Fresh snow bonus
+        if day.snowfall >= 6 { score += 20 }
+        if day.snowfall >= 12 { score += 30 }
+
+        // Cold temps preserve snow quality
+        if day.high < 32 { score += 10 }
+        if day.high < 28 { score += 5 }
+
+        // High precip probability when expecting snow
+        if day.precipProbability >= 70 && day.precipType == "snow" {
+            score += 15
+        }
+
+        // Penalize high winds (safety concern)
+        if day.wind.gust > 40 { score -= 10 }
+        if day.wind.gust > 50 { score -= 15 }
+
+        return score
     }
 
     private func selectBestPowderDay(_ day: ForecastDay) {
@@ -430,7 +571,46 @@ struct EventCreateView: View {
             eventDate = date
             forecastPreview = day
             HapticFeedback.selection.trigger()
+
+            // Clear best powder day since we just selected it
+            bestPowderDay = nil
+
+            // Re-check for mountain suggestion with new date
+            Task { await loadBestMountainSuggestion() }
         }
+    }
+
+    private func selectBestMountain(_ mountain: (id: String, name: String, forecast: ForecastDay)) {
+        selectedMountainId = mountain.id
+        forecastPreview = mountain.forecast
+        bestMountain = nil
+        HapticFeedback.selection.trigger()
+
+        // Reload forecast for new mountain
+        Task { await loadForecast() }
+    }
+
+    /// Generate a description for the powder day suggestion
+    private func powderDayDescription(_ day: ForecastDay) -> String {
+        var parts: [String] = []
+
+        parts.append(day.dayOfWeek)
+
+        if day.snowfall >= 6 {
+            parts.append("\(day.snowfall)\" expected")
+        } else if day.snowfall > 0 {
+            parts.append("\(day.snowfall)\" snow")
+        }
+
+        if day.precipProbability >= 70 && day.snowfall == 0 {
+            parts.append("\(day.precipProbability)% chance of snow")
+        }
+
+        if day.high < 28 {
+            parts.append("great snow quality")
+        }
+
+        return parts.joined(separator: " - ")
     }
 
     // MARK: - Actions

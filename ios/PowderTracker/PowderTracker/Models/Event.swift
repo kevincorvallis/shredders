@@ -46,12 +46,14 @@ struct Event: Codable, Identifiable {
     let skillLevel: SkillLevel?
     let carpoolAvailable: Bool
     let carpoolSeats: Int?
+    let maxAttendees: Int?
     let status: EventStatus
     let createdAt: String
     let updatedAt: String
     let attendeeCount: Int
     let goingCount: Int
     let maybeCount: Int
+    let waitlistCount: Int?
     let creator: EventUser
     let userRSVPStatus: RSVPStatus?
     let isCreator: Bool?
@@ -69,12 +71,14 @@ struct Event: Codable, Identifiable {
         case skillLevel
         case carpoolAvailable
         case carpoolSeats
+        case maxAttendees
         case status
         case createdAt
         case updatedAt
         case attendeeCount
         case goingCount
         case maybeCount
+        case waitlistCount
         case creator
         case userRSVPStatus
         case isCreator
@@ -120,6 +124,14 @@ struct Event: Codable, Identifiable {
     /// Whether this event is happening today
     var isToday: Bool {
         eventDate == Self.dateParser.string(from: Date())
+    }
+
+    /// Whether this event is happening tomorrow
+    var isTomorrow: Bool {
+        guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) else {
+            return false
+        }
+        return eventDate == Self.dateParser.string(from: tomorrow)
     }
 
     /// Calculates time until departure in seconds
@@ -174,12 +186,14 @@ struct EventWithDetails: Codable, Identifiable {
     let skillLevel: SkillLevel?
     let carpoolAvailable: Bool
     let carpoolSeats: Int?
+    let maxAttendees: Int?
     let status: EventStatus
     let createdAt: String
     let updatedAt: String
     let attendeeCount: Int
     let goingCount: Int
     let maybeCount: Int
+    let waitlistCount: Int?
     let commentCount: Int?
     let photoCount: Int?
     let creator: EventUser
@@ -202,12 +216,14 @@ struct EventWithDetails: Codable, Identifiable {
         case skillLevel
         case carpoolAvailable
         case carpoolSeats
+        case maxAttendees
         case status
         case createdAt
         case updatedAt
         case attendeeCount
         case goingCount
         case maybeCount
+        case waitlistCount
         case commentCount
         case photoCount
         case creator
@@ -273,6 +289,7 @@ struct EventAttendee: Codable, Identifiable {
     let isDriver: Bool
     let needsRide: Bool
     let pickupLocation: String?
+    let waitlistPosition: Int?
     let respondedAt: String?
     let user: EventUser
 
@@ -283,6 +300,7 @@ struct EventAttendee: Codable, Identifiable {
         case isDriver
         case needsRide
         case pickupLocation
+        case waitlistPosition
         case respondedAt
         case user
     }
@@ -334,6 +352,7 @@ enum RSVPStatus: String, Codable {
     case going
     case maybe
     case declined
+    case waitlist
 
     var displayName: String {
         switch self {
@@ -341,6 +360,7 @@ enum RSVPStatus: String, Codable {
         case .going: return "Going"
         case .maybe: return "Maybe"
         case .declined: return "Not Going"
+        case .waitlist: return "Waitlisted"
         }
     }
 
@@ -348,6 +368,7 @@ enum RSVPStatus: String, Codable {
         switch self {
         case .going: return "green"
         case .maybe: return "yellow"
+        case .waitlist: return "orange"
         case .invited, .declined: return "gray"
         }
     }
@@ -387,6 +408,8 @@ struct RSVPEventUpdate: Codable {
     let goingCount: Int
     let maybeCount: Int
     let attendeeCount: Int
+    let waitlistCount: Int?
+    let maxAttendees: Int?
 }
 
 struct InviteResponse: Codable {

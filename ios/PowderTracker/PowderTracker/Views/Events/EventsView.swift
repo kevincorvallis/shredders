@@ -3,9 +3,11 @@ import SwiftUI
 struct EventsView: View {
     @Environment(AuthService.self) private var authService
     @State private var events: [Event] = []
+    @State private var mountains: [Mountain] = []
     @State private var isLoading = true
     @State private var error: String?
     @AppStorage("eventsFilter") private var filter: EventFilter = .all
+    @AppStorage("eventsViewMode") private var viewMode: EventViewMode = .list
     @State private var showingCreateSheet = false
     @State private var navigationPath = NavigationPath()
     @State private var toast: ToastMessage?
@@ -16,6 +18,18 @@ struct EventsView: View {
         case lastMinute = "Last Minute"
         case mine = "My Events"
         case attending = "Attending"
+    }
+
+    enum EventViewMode: String, CaseIterable {
+        case list = "list"
+        case map = "map"
+
+        var icon: String {
+            switch self {
+            case .list: return "list.bullet"
+            case .map: return "map"
+            }
+        }
     }
 
     var body: some View {
@@ -209,11 +223,36 @@ struct EventsView: View {
                 } else if events.isEmpty {
                     emptyView
                 } else {
-                    eventsList
+                    switch viewMode {
+                    case .list:
+                        eventsList
+                    case .map:
+                        EventsMapView(
+                            events: events,
+                            mountains: mountains,
+                            onEventSelected: { event in
+                                navigationPath.append(event.id)
+                            }
+                        )
+                        .ignoresSafeArea(edges: .bottom)
+                    }
                 }
             }
             .navigationTitle("Ski Events")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            viewMode = viewMode == .list ? .map : .list
+                        }
+                        HapticFeedback.selection.trigger()
+                    } label: {
+                        Image(systemName: viewMode == .list ? "map" : "list.bullet")
+                            .font(.body)
+                            .contentTransition(.symbolEffect(.replace))
+                    }
+                    .accessibilityLabel(viewMode == .list ? "Show map view" : "Show list view")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingCreateSheet = true
@@ -239,6 +278,10 @@ struct EventsView: View {
             .searchable(text: $searchText, prompt: "Search events...")
         }
         .task {
+            // Load mountains for map view
+            if mountains.isEmpty {
+                mountains = MountainService.shared.allMountains
+            }
             await loadEvents()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("EventCancelled"))) { _ in
@@ -719,6 +762,7 @@ struct EventRowView: View {
         case .maybe: return "questionmark.circle.fill"
         case .invited: return "envelope.fill"
         case .declined: return "xmark.circle.fill"
+        case .waitlist: return "hourglass"
         }
     }
 
@@ -728,6 +772,7 @@ struct EventRowView: View {
         case .maybe: return .orange
         case .invited: return .blue
         case .declined: return .secondary
+        case .waitlist: return .purple
         }
     }
 

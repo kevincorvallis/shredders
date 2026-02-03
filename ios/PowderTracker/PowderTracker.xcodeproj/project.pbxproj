@@ -171,6 +171,7 @@
 		76C52EABFDBB3D9357F126DC /* AccountSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E4418A36D2C2F24739A573 /* AccountSettingsView.swift */; };
 		76EB3DCC4E8007348B85C0B9 /* SnowHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D95E11B228FCBF1BECCB6E /* SnowHistory.swift */; };
 		778C15AA319BE61E081B1EB7 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91DF633F5B9C586A93281C8B /* ProfileView.swift */; };
+		3FF9E87E72074802BB0F2EDE /* WelcomeLandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 232B207EAE294D649FD53A68 /* WelcomeLandingView.swift */; };
 		77A555A3FD9007FCE6F0EF13 /* ImageCacheConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D031460B4C2EBB6950A471A /* ImageCacheConfig.swift */; };
 		7997660E073FEABE38915456 /* Forecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F42690B312118CCC3712822 /* Forecast.swift */; };
 		7BB42D8985A482136582062F /* UnifiedAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8642083A77F5020B08F3F777 /* UnifiedAuthView.swift */; };
@@ -290,6 +291,7 @@
 		EAFDA5E50174A59AC1DB7048 /* SignInWithAppleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FA362EABC0FF07EAE55B9 /* SignInWithAppleButton.swift */; };
 		EB838DAE32EE17C88FCE15F1 /* PushNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65B85D6E19BD297B9CBFFDE /* PushNotificationService.swift */; };
 		EC01EC02EC03EC04EC05EC06 /* EventCreateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F2E3F4E5F6E7F8E9F0E1F2 /* EventCreateView.swift */; };
+		08B5AC9F7E0DDDD0D29E8506 /* PowderDaySuggestionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F409A4EE47BD50337C9CC53 /* PowderDaySuggestionCard.swift */; };
 		ECD77A0B9D5E10086C8546F0 /* ForecastDayRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */; };
 		ED01ED02ED03ED04ED05ED06 /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D2D3D4D5D6D7D8D9D0D1D2 /* EventDetailView.swift */; };
 		ED067DCC20BE42D6E92AC81D /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9824E6338E1E30A861BC857F /* ForgotPasswordView.swift */; };
@@ -297,7 +299,10 @@
 		EF0F49076C32CD74AB5815F8 /* PowderDayOutlookCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A099B314D7A659E723A9F83C /* PowderDayOutlookCard.swift */; };
 		EI01EI02EI03EI04EI05EI06 /* EventInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2F3E4F5E6F7E8F9E0F1E2 /* EventInviteView.swift */; };
 		EV01EV02EV03EV04EV05EV06 /* EventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C2C3C4C5C6C7C8C9C0C1C2 /* EventsView.swift */; };
+		EVMAP001EVMAP002EVMAP04B /* EventsMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EVMAP001EVMAP002EVMAP003 /* EventsMapView.swift */; };
 		EVTCACHE0001BLDFILE00001 /* EventCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EVTCACHE0001FILREF00001 /* EventCacheService.swift */; };
+		USRPROFILECACHE0001BLD1 /* UserProfileCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = USRPROFILECACHE0001REF1 /* UserProfileCacheService.swift */; };
+		RSVPCACHE000001BLDFILE1 /* RSVPCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = RSVPCACHE000001FILREF1 /* RSVPCacheService.swift */; };
 		F05341407C4FFC94662C01C6 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 31BEB1F846D7528B30CE3D8A /* Nuke */; };
 		F0B17B4DA02517A8A40D1D22 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887CD4C6E9EFA848C710D78D /* User.swift */; };
 		F1F2F3F4F5F6F7F8F9F0F1F2 /* EventService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B2B3B4B5B6B7B8B9B0B1B2 /* EventService.swift */; };
@@ -559,6 +564,7 @@
 		9D3F3869B5D71D48805E15B8 /* ForecastDayRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastDayRow.swift; sourceTree = "<group>"; };
 		9D823E2DF6DFD563045B822C /* WebcamsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebcamsSection.swift; sourceTree = "<group>"; };
 		9E8F75C7ACA67E68B1B910FC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		232B207EAE294D649FD53A68 /* WelcomeLandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeLandingView.swift; sourceTree = "<group>"; };
 		A099B314D7A659E723A9F83C /* PowderDayOutlookCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderDayOutlookCard.swift; sourceTree = "<group>"; };
 		A0A869ACDDD5341BB208CB7B /* NavigateButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigateButton.swift; sourceTree = "<group>"; };
 		A1A2A3A4A5A6A7A8A9A0A1A2 /* Event.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
@@ -617,6 +623,7 @@
 		C0FABB08A899118C33166CAC /* SeasonGoalsCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SeasonGoalsCard.swift; sourceTree = "<group>"; };
 		C18BCFFF27743BFACB908F15 /* NowTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowTabView.swift; sourceTree = "<group>"; };
 		C1C2C3C4C5C6C7C8C9C0C1C2 /* EventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsView.swift; sourceTree = "<group>"; };
+		EVMAP001EVMAP002EVMAP003 /* EventsMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsMapView.swift; sourceTree = "<group>"; };
 		C33520EA9C7031B61A59F2D4 /* CheckInCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInCardView.swift; sourceTree = "<group>"; };
 		C3F039BD1CE2816954471FC9 /* CollapsibleHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CollapsibleHeaderView.swift; sourceTree = "<group>"; };
 		C528BC7B8C59EABA2DBA9F58 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
@@ -650,6 +657,7 @@
 		DF8A1B2C3E4F5A6D7B8C9E0F /* DateFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatters.swift; sourceTree = "<group>"; };
 		DFC2520A016FF13192D4D5EB /* PhotoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoService.swift; sourceTree = "<group>"; };
 		E1F2E3F4E5F6E7F8E9F0E1F2 /* EventCreateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCreateView.swift; sourceTree = "<group>"; };
+		1F409A4EE47BD50337C9CC53 /* PowderDaySuggestionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderDaySuggestionCard.swift; sourceTree = "<group>"; };
 		E28784AC5A5192C32BCB6684 /* LiftStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftStatusCard.swift; sourceTree = "<group>"; };
 		E3A1F31EB28E3168633DE8D9 /* EmptyStateView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		E41F12DEC4621D5BFF6BE700 /* SmartAlertsBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartAlertsBanner.swift; sourceTree = "<group>"; };
@@ -666,6 +674,8 @@
 		EB5ED58A01CC626842782EC4 /* LocationMapSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationMapSection.swift; sourceTree = "<group>"; };
 		EBB9335BE87BB21B367E3947 /* MountainStatusIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainStatusIndicator.swift; sourceTree = "<group>"; };
 		EVTCACHE0001FILREF00001 /* EventCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCacheService.swift; sourceTree = "<group>"; };
+		USRPROFILECACHE0001REF1 /* UserProfileCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileCacheService.swift; sourceTree = "<group>"; };
+		RSVPCACHE000001FILREF1 /* RSVPCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSVPCacheService.swift; sourceTree = "<group>"; };
 		EVTMEMPRF001FILREF00001 /* EventMemoryPerformanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventMemoryPerformanceTests.swift; sourceTree = "<group>"; };
 		F11D7E7F812C603A02763F0B /* EventCardStyle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventCardStyle.swift; sourceTree = "<group>"; };
 		F18F08D114EB92FCE6D7285E /* GenericEmptyStateView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GenericEmptyStateView.swift; sourceTree = "<group>"; };
@@ -1029,6 +1039,8 @@
 				7CFEBD9AC149F47ED3E0A3C9 /* CommentService.swift */,
 				E73D5AA5B3D2A61B4E794D42 /* FavoritesService.swift */,
 				EVTCACHE0001FILREF00001 /* EventCacheService.swift */,
+				USRPROFILECACHE0001REF1 /* UserProfileCacheService.swift */,
+				RSVPCACHE000001FILREF1 /* RSVPCacheService.swift */,
 				ACHV00MGR00FILE0000001REF /* AchievementService.swift */,
 				28656095089954A5933744CC /* LiftLinePredictor.swift */,
 				09DCEADC22BB7E6F31592048 /* LiftTileOverlay.swift */,
@@ -1300,8 +1312,10 @@
 				0AE5B6A72F2A4E13001D53AD /* LocationSearchResultRow.swift */,
 				0AE5B6A82F2A4E13001D53AD /* MiniLocationMapView.swift */,
 				C1C2C3C4C5C6C7C8C9C0C1C2 /* EventsView.swift */,
+				EVMAP001EVMAP002EVMAP003 /* EventsMapView.swift */,
 				D1D2D3D4D5D6D7D8D9D0D1D2 /* EventDetailView.swift */,
 				E1F2E3F4E5F6E7F8E9F0E1F2 /* EventCreateView.swift */,
+				1F409A4EE47BD50337C9CC53 /* PowderDaySuggestionCard.swift */,
 				F1E2F3E4F5E6F7E8F9E0F1E2 /* EventInviteView.swift */,
 				046E1D36A34E51359DDFA2DA /* PowderDayEventSheet.swift */,
 				8C611C31FCC0DD6B2EDB830A /* LastMinuteEventCard.swift */,
@@ -1368,6 +1382,7 @@
 				BBF69C67679CEF2F265DC270 /* PatrolView.swift */,
 				41C86B43A0DD3865E47BCD1D /* WeatherGovLinksView.swift */,
 				AAD53D080257007E2F41F249 /* WebcamsView.swift */,
+				232B207EAE294D649FD53A68 /* WelcomeLandingView.swift */,
 				759980B3F3929CA2574A22CE /* Alerts */,
 				68B35783BE4FC180A451A16A /* Auth */,
 				AB287A8A884E4E3BD60F605C /* Components */,
@@ -1554,10 +1569,12 @@
 				E1E2E3E4E5E6E7E8E9E0E1E2 /* Event.swift in Sources */,
 				F1F2F3F4F5F6F7F8F9F0F1F2 /* EventService.swift in Sources */,
 				EV01EV02EV03EV04EV05EV06 /* EventsView.swift in Sources */,
+				EVMAP001EVMAP002EVMAP04B /* EventsMapView.swift in Sources */,
 				ED01ED02ED03ED04ED05ED06 /* EventDetailView.swift in Sources */,
 				0AE5B6842F2780DC001D53AD /* OnboardingView.swift in Sources */,
 				0AE5B6852F2780DC001D53AD /* MountainsView.swift in Sources */,
 				EC01EC02EC03EC04EC05EC06 /* EventCreateView.swift in Sources */,
+				08B5AC9F7E0DDDD0D29E8506 /* PowderDaySuggestionCard.swift in Sources */,
 				EI01EI02EI03EI04EI05EI06 /* EventInviteView.swift in Sources */,
 				WM01WM02WM03WM04WM05WM06 /* WeatherMapView.swift in Sources */,
 				WT01WT02WT03WT04WT05WT06 /* WeatherTileOverlay.swift in Sources */,
@@ -1616,6 +1633,8 @@
 				0DBA097EADFDC434C033F5F6 /* FavoritesManagementView.swift in Sources */,
 				CADF7548E2BB570D96110D58 /* FavoritesService.swift in Sources */,
 				EVTCACHE0001BLDFILE00001 /* EventCacheService.swift in Sources */,
+				USRPROFILECACHE0001BLD1 /* UserProfileCacheService.swift in Sources */,
+				RSVPCACHE000001BLDFILE1 /* RSVPCacheService.swift in Sources */,
 				ACHV00MGR00BUILD0000001S1 /* AchievementService.swift in Sources */,
 				0AE5B7A92F2AEA20001D53AD /* FavoritesManagementSheet.swift in Sources */,
 				ACHV00COMP0BUILD0000001S1 /* AchievementComponents.swift in Sources */,
@@ -1745,6 +1764,7 @@
 				DA3CE4DC2A9688E81FE1CF01 /* WebcamsSection.swift in Sources */,
 				BD6F1903C9528679C2CBAE1F /* WebcamsTab.swift in Sources */,
 				B40821D03E1127C38548D58A /* WebcamsView.swift in Sources */,
+				3FF9E87E72074802BB0F2EDE /* WelcomeLandingView.swift in Sources */,
 				32EF6978DB804D81382C89B4 /* KeychainHelper.swift in Sources */,
 				C3250229A673FE97BB64EC94 /* BiometricAuthService.swift in Sources */,
 				5DE28671946E0D90484C1A73 /* ChangePasswordView.swift in Sources */,
