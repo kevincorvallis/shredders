@@ -9,7 +9,8 @@ struct PowderTrackerApp: App {
     @State private var deepLinkMountainId: String? = nil
     @State private var deepLinkEventId: String? = nil
     @State private var deepLinkInviteToken: String? = nil
-    @State private var showOnboarding = false
+    /// Initialize showOnboarding directly from launch argument for reliable UI testing
+    @State private var showOnboarding = ProcessInfo.processInfo.arguments.contains("SHOW_ONBOARDING")
 
     /// Check if running in UI testing mode
     private var isUITesting: Bool {

@@ -21,6 +21,11 @@ struct PookieBSnowWelcomeView: View {
     // Accessibility
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    // Skip animations during UI tests
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("UI_TESTING")
+    }
+
     // Animation states
     @State private var showBrock = false
     @State private var showTitle = false
@@ -67,7 +72,7 @@ struct PookieBSnowWelcomeView: View {
             }
         }
         .onAppear {
-            if reduceMotion {
+            if reduceMotion || isUITesting {
                 showAllInstantly()
             } else {
                 startAnimationSequence()
