@@ -9,7 +9,7 @@ PROJECT_DIR="/Users/kevin/Downloads/Projects/shredders/ios/PowderTracker"
 SCHEME="PowderTracker"
 BUNDLE_ID="com.shredders.powdertracker"
 SCREENSHOT_DIR="/tmp/powdertracker_e2e"
-SIMULATOR_NAME="iPhone 17 Pro"
+SIMULATOR_NAME="iPhone 16 Pro"
 
 # Colors for output
 RED='\033[0;31m'
