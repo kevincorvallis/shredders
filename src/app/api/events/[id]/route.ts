@@ -52,16 +52,21 @@ export async function GET(
 
     const mountain = getMountain(event.mountain_id);
 
-    // Get user profile ID if authenticated (needed for parallel queries)
+    // OPTIMIZATION: Use cached profileId from auth when available
     let userProfileId: string | null = null;
     if (authUser) {
-      const adminClient = createAdminClient();
-      const { data: userProfile } = await adminClient
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.userId)
-        .single();
-      userProfileId = userProfile?.id || null;
+      userProfileId = authUser.profileId || null;
+
+      // Fallback to database lookup only if profileId not in cache
+      if (!userProfileId) {
+        const adminClient = createAdminClient();
+        const { data: userProfile } = await adminClient
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', authUser.userId)
+          .single();
+        userProfileId = userProfile?.id || null;
+      }
     }
 
     // Build conditions URL
@@ -78,11 +83,18 @@ export async function GET(
       commentCountResult,
       photoCountResult,
     ] = await Promise.allSettled([
-      // 1. Fetch attendees
+      // 1. Fetch attendees - OPTIMIZATION: Select only needed columns
       supabase
         .from('event_attendees')
         .select(`
-          *,
+          id,
+          user_id,
+          status,
+          is_driver,
+          needs_ride,
+          pickup_location,
+          responded_at,
+          waitlist_position,
           user:user_id (
             id,
             username,
@@ -234,7 +246,13 @@ export async function GET(
       event: eventWithDetails,
     };
 
-    return NextResponse.json(response);
+    // Add cache headers - event details can be cached for 5 minutes
+    // with stale-while-revalidate for better UX during updates
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+      },
+    });
   } catch (error) {
     console.error('Error in GET /api/events/[id]:', error);
     return NextResponse.json(

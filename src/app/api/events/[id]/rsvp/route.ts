@@ -81,21 +81,29 @@ export async function POST(
       );
     }
 
-    // Look up the internal users.id from auth_user_id
-    // The event_attendees.user_id foreign key references users.id, not users.auth_user_id
-    const { data: userProfile, error: userError } = await adminClient
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', authUser.userId)
-      .single();
+    // OPTIMIZATION: Use cached profileId from auth when available
+    let userProfileId = authUser.profileId;
 
-    if (userError || !userProfile) {
-      console.error('Error finding user profile:', userError);
-      return NextResponse.json(
-        { error: 'User profile not found. Please try signing out and back in.' },
-        { status: 404 }
-      );
+    // Fallback to database lookup only if profileId not in cache
+    if (!userProfileId) {
+      const { data: userProfile, error: userError } = await adminClient
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.userId)
+        .single();
+
+      if (userError || !userProfile) {
+        console.error('Error finding user profile:', userError);
+        return NextResponse.json(
+          { error: 'User profile not found. Please try signing out and back in.' },
+          { status: 404 }
+        );
+      }
+      userProfileId = userProfile.id;
     }
+
+    // Create a compatible object for the rest of the code
+    const userProfile = { id: userProfileId };
 
     const body: RSVPRequest = await request.json();
     const { status, isDriver, needsRide, pickupLocation } = body;
@@ -109,22 +117,24 @@ export async function POST(
       );
     }
 
+    // OPTIMIZATION: Fetch existing RSVP once and reuse throughout the function
+    const { data: existingRSVP } = await supabase
+      .from('event_attendees')
+      .select('id, status')
+      .eq('event_id', eventId)
+      .eq('user_id', userProfile.id)
+      .single();
+
+    const oldStatus = existingRSVP?.status || null;
+
     // Check capacity and determine if user should be waitlisted
     let effectiveStatus: RSVPStatus = status;
     let waitlistPosition: number | null = null;
     const isAtCapacity = event.max_attendees !== null && event.going_count >= event.max_attendees;
 
     if (status === 'going' && isAtCapacity) {
-      // Event is at capacity - check if user is already going (allow update) or needs to be waitlisted
-      const { data: existingRSVPCheck } = await supabase
-        .from('event_attendees')
-        .select('id, status')
-        .eq('event_id', eventId)
-        .eq('user_id', userProfile.id)
-        .single();
-
       // If user is not already going, put them on waitlist
-      if (!existingRSVPCheck || existingRSVPCheck.status !== 'going') {
+      if (!existingRSVP || existingRSVP.status !== 'going') {
         effectiveStatus = 'waitlist';
         // Get next waitlist position
         const { data: maxPosition } = await adminClient
@@ -139,16 +149,6 @@ export async function POST(
         waitlistPosition = (maxPosition?.waitlist_position || 0) + 1;
       }
     }
-
-    // Check if user already has an RSVP
-    const { data: existingRSVP } = await supabase
-      .from('event_attendees')
-      .select('id, status')
-      .eq('event_id', eventId)
-      .eq('user_id', userProfile.id)
-      .single();
-
-    const oldStatus = existingRSVP?.status || null;
     const isNewRSVP = !existingRSVP;
 
     let attendeeData;
@@ -347,20 +347,27 @@ export async function DELETE(
       );
     }
 
-    // Look up the internal users.id from auth_user_id
-    const { data: userProfile, error: userError } = await adminClient
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', authUser.userId)
-      .single();
+    // OPTIMIZATION: Use cached profileId from auth when available
+    let userProfileId = authUser.profileId;
 
-    if (userError || !userProfile) {
-      console.error('Error finding user profile:', userError);
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+    if (!userProfileId) {
+      const { data: profile, error: userError } = await adminClient
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.userId)
+        .single();
+
+      if (userError || !profile) {
+        console.error('Error finding user profile:', userError);
+        return NextResponse.json(
+          { error: 'User profile not found' },
+          { status: 404 }
+        );
+      }
+      userProfileId = profile.id;
     }
+
+    const userProfile = { id: userProfileId };
 
     // Event creator cannot remove their RSVP
     if (event.user_id === userProfile.id) {

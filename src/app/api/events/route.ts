@@ -67,17 +67,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Look up the internal users.id from auth_user_id if authenticated
+    // OPTIMIZATION: Use cached profileId from auth when available
     let userProfileId: string | null = null;
     if (authUser) {
-      const adminClient = createAdminClient();
-      const { data: userProfile } = await adminClient
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.userId)
-        .single();
+      // profileId is now cached in getDualAuthUser, avoiding repeated lookups
+      userProfileId = authUser.profileId || null;
 
-      userProfileId = userProfile?.id || null;
+      // Fallback to database lookup only if profileId not in cache (shouldn't happen for valid users)
+      if (!userProfileId) {
+        const adminClient = createAdminClient();
+        const { data: userProfile } = await adminClient
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', authUser.userId)
+          .single();
+        userProfileId = userProfile?.id || null;
+      }
 
       // Only require profile for filters that need it
       if (!userProfileId && (createdByMe || attendingOnly)) {
@@ -93,33 +98,8 @@ export async function GET(request: NextRequest) {
     let count: number | null = null;
 
     if (attendingOnly && userProfileId && !createdByMe) {
-      // Directly fetch events where user is an attendee (skip base query)
-      const { data: attendeeEvents, error: attendeeError } = await supabase
-        .from('event_attendees')
-        .select(`
-          status,
-          event:event_id (
-            *,
-            creator:user_id (
-              id,
-              username,
-              display_name,
-              avatar_url
-            )
-          )
-        `)
-        .eq('user_id', userProfileId)
-        .in('status', ['going', 'maybe']);
-
-      if (attendeeError) {
-        console.error('Error fetching attending events:', attendeeError);
-        return NextResponse.json(
-          { error: 'Failed to fetch attending events' },
-          { status: 500 }
-        );
-      }
-
-      // Filter by status, upcoming, and Phase 3 filters, then apply pagination
+      // OPTIMIZATION: Query events directly with inner join on attendees
+      // This allows database-side filtering instead of fetching all events
       const today = new Date().toISOString().split('T')[0];
 
       // Calculate weekend dates if needed
@@ -137,52 +117,115 @@ export async function GET(request: NextRequest) {
         weekendEnd = sunday.toISOString().split('T')[0];
       }
 
+      // Build query with database-side filters
+      let attendeeQuery = supabase
+        .from('event_attendees')
+        .select(`
+          status,
+          event:event_id!inner (
+            id,
+            user_id,
+            mountain_id,
+            title,
+            notes,
+            event_date,
+            departure_time,
+            departure_location,
+            skill_level,
+            carpool_available,
+            carpool_seats,
+            max_attendees,
+            status,
+            created_at,
+            updated_at,
+            attendee_count,
+            going_count,
+            maybe_count,
+            waitlist_count,
+            creator:user_id (
+              id,
+              username,
+              display_name,
+              avatar_url
+            )
+          )
+        `, { count: 'exact' })
+        .eq('user_id', userProfileId)
+        .in('status', ['going', 'maybe']);
+
+      // Push filters to the database query using the !inner join
+      // Note: Supabase allows filtering on joined tables with dot notation
+      attendeeQuery = attendeeQuery.eq('event.status', status);
+
+      if (mountainId) {
+        attendeeQuery = attendeeQuery.eq('event.mountain_id', mountainId);
+      }
+
+      if (skillLevel) {
+        attendeeQuery = attendeeQuery.eq('event.skill_level', skillLevel);
+      }
+
+      if (carpoolAvailable === 'true') {
+        attendeeQuery = attendeeQuery.eq('event.carpool_available', true);
+      }
+
+      if (hasAvailableSeats) {
+        attendeeQuery = attendeeQuery
+          .eq('event.carpool_available', true)
+          .gt('event.carpool_seats', 0);
+      }
+
+      // Date filters
+      if (thisWeekend) {
+        attendeeQuery = attendeeQuery
+          .gte('event.event_date', weekendStart)
+          .lte('event.event_date', weekendEnd);
+      } else {
+        if (dateFrom) {
+          attendeeQuery = attendeeQuery.gte('event.event_date', dateFrom);
+        } else if (upcoming) {
+          attendeeQuery = attendeeQuery.gte('event.event_date', today);
+        }
+        if (dateTo) {
+          attendeeQuery = attendeeQuery.lte('event.event_date', dateTo);
+        }
+      }
+
+      // Text search (can be done at DB level with ilike)
+      if (search) {
+        attendeeQuery = attendeeQuery.or(
+          `event.title.ilike.%${search}%,event.notes.ilike.%${search}%`
+        );
+      }
+
+      // Apply sorting
+      if (sortBy === 'popularity') {
+        attendeeQuery = attendeeQuery.order('event(going_count)', { ascending: false });
+      } else {
+        attendeeQuery = attendeeQuery.order('event(event_date)', { ascending: true });
+      }
+
+      // Apply pagination
+      attendeeQuery = attendeeQuery.range(offset, offset + limit - 1);
+
+      const { data: attendeeEvents, error: attendeeError, count: attendeeCount } = await attendeeQuery;
+
+      if (attendeeError) {
+        console.error('Error fetching attending events:', attendeeError);
+        return NextResponse.json(
+          { error: 'Failed to fetch attending events' },
+          { status: 500 }
+        );
+      }
+
       filteredEvents = (attendeeEvents || [])
-        .filter((a: any) => {
-          if (!a.event) return false;
-          if (a.event.status !== status) return false;
-          if (mountainId && a.event.mountain_id !== mountainId) return false;
-
-          // Date filtering
-          if (thisWeekend) {
-            if (a.event.event_date < weekendStart || a.event.event_date > weekendEnd) return false;
-          } else {
-            if (dateFrom && a.event.event_date < dateFrom) return false;
-            if (dateTo && a.event.event_date > dateTo) return false;
-            if (upcoming && !dateFrom && a.event.event_date < today) return false;
-          }
-
-          // Skill level filter
-          if (skillLevel && a.event.skill_level !== skillLevel) return false;
-
-          // Carpool filters
-          if (carpoolAvailable === 'true' && !a.event.carpool_available) return false;
-          if (hasAvailableSeats && (!a.event.carpool_available || !a.event.carpool_seats || a.event.carpool_seats <= 0)) return false;
-
-          // Text search
-          if (search) {
-            const searchLower = search.toLowerCase();
-            const titleMatch = a.event.title?.toLowerCase().includes(searchLower);
-            const notesMatch = a.event.notes?.toLowerCase().includes(searchLower);
-            if (!titleMatch && !notesMatch) return false;
-          }
-
-          return true;
-        })
+        .filter((a: any) => a.event) // Safety filter for null events
         .map((a: any) => ({
           ...a.event,
           userRSVPStatus: a.status,
-        }))
-        .sort((a: any, b: any) => {
-          if (sortBy === 'popularity') {
-            return (b.going_count || 0) - (a.going_count || 0);
-          }
-          return a.event_date.localeCompare(b.event_date);
-        });
+        }));
 
-      // Apply pagination manually for attendingOnly
-      count = filteredEvents.length;
-      filteredEvents = filteredEvents.slice(offset, offset + limit);
+      count = attendeeCount;
     } else {
       // Build base query for non-attendingOnly requests
       let query = supabase
@@ -318,7 +361,13 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    return NextResponse.json(response);
+    // Add cache headers for better performance
+    // Events list can be cached for 60 seconds with stale-while-revalidate
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, max-age=60, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error('Error in GET /api/events:', error);
     return NextResponse.json(

@@ -8,39 +8,34 @@ import {
 } from '@/lib/push/event-notifications';
 
 /**
- * Helper: Check if user has RSVP'd to an event (going or maybe)
+ * OPTIMIZATION: Combined helper to check both creator status and RSVP in a single query
+ * Returns { isCreator: boolean, hasRSVP: boolean }
  */
-async function checkUserRSVP(
+async function checkUserEventAccess(
   supabase: any,
   eventId: string,
   userProfileId: string
-): Promise<boolean> {
-  const { data: attendee } = await supabase
-    .from('event_attendees')
-    .select('status')
-    .eq('event_id', eventId)
-    .eq('user_id', userProfileId)
-    .in('status', ['going', 'maybe'])
-    .single();
+): Promise<{ isCreator: boolean; hasRSVP: boolean }> {
+  // Run both checks in parallel for better performance
+  const [eventResult, rsvpResult] = await Promise.all([
+    supabase
+      .from('events')
+      .select('user_id')
+      .eq('id', eventId)
+      .single(),
+    supabase
+      .from('event_attendees')
+      .select('status')
+      .eq('event_id', eventId)
+      .eq('user_id', userProfileId)
+      .in('status', ['going', 'maybe'])
+      .maybeSingle(),
+  ]);
 
-  return !!attendee;
-}
-
-/**
- * Helper: Check if user is the event creator
- */
-async function checkIsCreator(
-  supabase: any,
-  eventId: string,
-  userProfileId: string
-): Promise<boolean> {
-  const { data: event } = await supabase
-    .from('events')
-    .select('user_id')
-    .eq('id', eventId)
-    .single();
-
-  return event?.user_id === userProfileId;
+  return {
+    isCreator: eventResult.data?.user_id === userProfileId,
+    hasRSVP: !!rsvpResult.data,
+  };
 }
 
 /**
@@ -101,14 +96,19 @@ export async function GET(
       });
     }
 
-    // Look up user's internal profile ID
-    const { data: userProfile } = await adminClient
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', authUser.userId)
-      .single();
+    // OPTIMIZATION: Use cached profileId from auth when available
+    let userProfileId = authUser.profileId;
 
-    if (!userProfile) {
+    if (!userProfileId) {
+      const { data: profile } = await adminClient
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.userId)
+        .single();
+      userProfileId = profile?.id;
+    }
+
+    if (!userProfileId) {
       return NextResponse.json({
         comments: [],
         commentCount: commentCount || 0,
@@ -117,10 +117,10 @@ export async function GET(
       });
     }
 
-    // Check if user is creator or has RSVP'd
-    // Use adminClient for RSVP check to bypass RLS (RSVP records are inserted via admin client)
-    const isCreator = await checkIsCreator(adminClient, eventId, userProfile.id);
-    const hasRSVP = await checkUserRSVP(adminClient, eventId, userProfile.id);
+    const userProfile = { id: userProfileId };
+
+    // OPTIMIZATION: Check creator + RSVP in parallel (combined query)
+    const { isCreator, hasRSVP } = await checkUserEventAccess(adminClient, eventId, userProfile.id);
 
     if (!isCreator && !hasRSVP) {
       return NextResponse.json({
@@ -245,12 +245,27 @@ export async function POST(
       );
     }
 
-    // Look up user's internal profile ID and display name
-    const { data: userProfile } = await adminClient
-      .from('users')
-      .select('id, display_name, username')
-      .eq('auth_user_id', authUser.userId)
-      .single();
+    // OPTIMIZATION: Use cached profileId, but still need display_name for notifications
+    let userProfile: { id: string; display_name?: string; username?: string } | null = null;
+
+    if (authUser.profileId) {
+      // We have the ID cached, but need display_name for notifications
+      // Fetch only if we need those fields (which we do for posting comments)
+      const { data: profile } = await adminClient
+        .from('users')
+        .select('id, display_name, username')
+        .eq('id', authUser.profileId)
+        .single();
+      userProfile = profile;
+    } else {
+      // Fallback: full lookup
+      const { data: profile } = await adminClient
+        .from('users')
+        .select('id, display_name, username')
+        .eq('auth_user_id', authUser.userId)
+        .single();
+      userProfile = profile;
+    }
 
     if (!userProfile) {
       return NextResponse.json(
@@ -259,10 +274,8 @@ export async function POST(
       );
     }
 
-    // Check if user is creator or has RSVP'd
-    // Use adminClient for RSVP check to bypass RLS (RSVP records are inserted via admin client)
-    const isCreator = await checkIsCreator(adminClient, eventId, userProfile.id);
-    const hasRSVP = await checkUserRSVP(adminClient, eventId, userProfile.id);
+    // OPTIMIZATION: Check creator + RSVP in parallel (combined query)
+    const { isCreator, hasRSVP } = await checkUserEventAccess(adminClient, eventId, userProfile.id);
 
     if (!isCreator && !hasRSVP) {
       return NextResponse.json(
