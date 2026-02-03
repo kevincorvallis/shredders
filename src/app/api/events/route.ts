@@ -521,9 +521,15 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Error creating event:', insertError);
+      console.error('Error creating event:', JSON.stringify(insertError, null, 2));
+      console.error('Insert payload:', JSON.stringify({
+        user_id: userProfile.id,
+        mountain_id: mountainId,
+        title: title.trim(),
+        event_date: eventDate,
+      }));
       return NextResponse.json(
-        { error: 'Failed to create event' },
+        { error: `Failed to create event: ${insertError.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
