@@ -51,4 +51,55 @@ final class EventCreateEditSnapshotTests: XCTestCase {
 
         assertViewSnapshot(view)
     }
+
+    // MARK: - Multi-Device Tests
+
+    func testEventCreateView_multiDevice() {
+        let view = EventCreateView(mountainId: "baker", mountainName: "Mt. Baker")
+            .snapshotContainer()
+
+        SnapshotTestHelper.assertMultiDeviceSnapshot(
+            of: view,
+            devices: SnapshotTestHelper.allDevices
+        )
+    }
+
+    func testEventCreateView_iPad() {
+        let view = EventCreateView(mountainId: "baker", mountainName: "Mt. Baker")
+            .snapshotContainer()
+
+        assertViewSnapshot(view, device: .iPadPro11)
+    }
+
+    func testEventEditView_iPad() {
+        let event = EventWithDetails.mock()
+        let view = EventEditView(event: event)
+            .snapshotContainer()
+
+        assertViewSnapshot(view, device: .iPadPro11)
+    }
+
+    // MARK: - Dynamic Type Tests
+
+    func testEventCreateView_dynamicType() {
+        let view = EventCreateView(mountainId: "baker", mountainName: "Mt. Baker")
+            .snapshotContainer()
+
+        SnapshotTestHelper.assertDynamicTypeSnapshot(of: view)
+    }
+
+    func testEventCreateView_accessibilityXXL() {
+        let view = EventCreateView(mountainId: "baker", mountainName: "Mt. Baker")
+            .snapshotContainer()
+
+        assertAccessibilitySnapshot(view)
+    }
+
+    func testEventEditView_accessibilityXXL() {
+        let event = EventWithDetails.mock()
+        let view = EventEditView(event: event)
+            .snapshotContainer()
+
+        assertAccessibilitySnapshot(view)
+    }
 }

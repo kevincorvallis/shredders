@@ -81,4 +81,54 @@ final class EventDetailSnapshotTests: XCTestCase {
 
         assertDarkModeSnapshot(view)
     }
+
+    // MARK: - Multi-Device Tests
+
+    func testEventDetailView_multiDevice() {
+        let event = EventWithDetails.mock()
+        let view = EventDetailView(eventId: event.id)
+            .snapshotContainer()
+
+        SnapshotTestHelper.assertMultiDeviceSnapshot(
+            of: view,
+            devices: SnapshotTestHelper.allDevices
+        )
+    }
+
+    func testEventDetailView_multiDevice_manyAttendees() {
+        let event = EventWithDetails.mock(attendeeCount: 25, goingCount: 20, maybeCount: 5)
+        let view = EventDetailView(eventId: event.id)
+            .snapshotContainer()
+
+        SnapshotTestHelper.assertMultiDeviceSnapshot(
+            of: view,
+            devices: SnapshotTestHelper.allDevices
+        )
+    }
+
+    func testEventDetailView_iPad() {
+        let event = EventWithDetails.mock()
+        let view = EventDetailView(eventId: event.id)
+            .snapshotContainer()
+
+        assertViewSnapshot(view, device: .iPadPro11)
+    }
+
+    // MARK: - Dynamic Type Tests
+
+    func testEventDetailView_dynamicType() {
+        let event = EventWithDetails.mock()
+        let view = EventDetailView(eventId: event.id)
+            .snapshotContainer()
+
+        SnapshotTestHelper.assertDynamicTypeSnapshot(of: view)
+    }
+
+    func testEventDetailView_accessibilityXXL() {
+        let event = EventWithDetails.mock()
+        let view = EventDetailView(eventId: event.id)
+            .snapshotContainer()
+
+        assertAccessibilitySnapshot(view)
+    }
 }

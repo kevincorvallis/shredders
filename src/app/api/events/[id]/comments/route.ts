@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
+import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 
 /**
  * Helper: Check if user has RSVP'd to an event (going or maybe)
@@ -113,8 +114,9 @@ export async function GET(
     }
 
     // Check if user is creator or has RSVP'd
-    const isCreator = await checkIsCreator(supabase, eventId, userProfile.id);
-    const hasRSVP = await checkUserRSVP(supabase, eventId, userProfile.id);
+    // Use adminClient for RSVP check to bypass RLS (RSVP records are inserted via admin client)
+    const isCreator = await checkIsCreator(adminClient, eventId, userProfile.id);
+    const hasRSVP = await checkUserRSVP(adminClient, eventId, userProfile.id);
 
     if (!isCreator && !hasRSVP) {
       return NextResponse.json({
@@ -208,6 +210,23 @@ export async function POST(
       );
     }
 
+    // Rate limiting: 30 comments per hour per user
+    const rateLimitKey = createRateLimitKey(authUser.userId, 'postComment');
+    const rateLimit = rateLimitEnhanced(rateLimitKey, 'postComment');
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded. Please try again later.',
+          retryAfter: rateLimit.retryAfter,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(rateLimit.retryAfter || 3600) },
+        }
+      );
+    }
+
     // Check if event exists
     const { data: event, error: eventError } = await supabase
       .from('events')
@@ -237,8 +256,9 @@ export async function POST(
     }
 
     // Check if user is creator or has RSVP'd
-    const isCreator = await checkIsCreator(supabase, eventId, userProfile.id);
-    const hasRSVP = await checkUserRSVP(supabase, eventId, userProfile.id);
+    // Use adminClient for RSVP check to bypass RLS (RSVP records are inserted via admin client)
+    const isCreator = await checkIsCreator(adminClient, eventId, userProfile.id);
+    const hasRSVP = await checkUserRSVP(adminClient, eventId, userProfile.id);
 
     if (!isCreator && !hasRSVP) {
       return NextResponse.json(

@@ -97,4 +97,65 @@ final class EventCardSnapshotTests: XCTestCase {
 
         assertDarkModeSnapshot(view)
     }
+
+    // MARK: - Multi-Device Tests
+
+    func testEventCard_multiDevice() {
+        let event = Event.mock()
+        let view = EventCard(event: event)
+            .snapshotContainer()
+
+        SnapshotTestHelper.assertMultiDeviceSnapshot(
+            of: view,
+            devices: SnapshotTestHelper.allDevices
+        )
+    }
+
+    func testEventCard_multiDevice_manyAttendees() {
+        let event = Event.mock(attendeeCount: 20, goingCount: 15, maybeCount: 5)
+        let view = EventCard(event: event)
+            .snapshotContainer()
+
+        SnapshotTestHelper.assertMultiDeviceSnapshot(
+            of: view,
+            devices: SnapshotTestHelper.allDevices
+        )
+    }
+
+    func testEventCard_multiDevice_longTitle() {
+        let event = Event.mock(title: "Epic Powder Day at Stevens Pass with All the Homies - Don't Miss Out!")
+        let view = EventCard(event: event)
+            .snapshotContainer()
+
+        SnapshotTestHelper.assertMultiDeviceSnapshot(
+            of: view,
+            devices: SnapshotTestHelper.allDevices
+        )
+    }
+
+    // MARK: - Dynamic Type Tests
+
+    func testEventCard_dynamicType() {
+        let event = Event.mock()
+        let view = EventCard(event: event)
+            .snapshotContainer()
+
+        SnapshotTestHelper.assertDynamicTypeSnapshot(of: view)
+    }
+
+    func testEventCard_accessibilityXXL() {
+        let event = Event.mock()
+        let view = EventCard(event: event)
+            .componentSnapshot()
+
+        assertAccessibilitySnapshot(view)
+    }
+
+    func testEventCard_accessibilityXXL_longTitle() {
+        let event = Event.mock(title: "Epic Powder Day at Stevens Pass with All the Homies")
+        let view = EventCard(event: event)
+            .componentSnapshot()
+
+        assertAccessibilitySnapshot(view)
+    }
 }

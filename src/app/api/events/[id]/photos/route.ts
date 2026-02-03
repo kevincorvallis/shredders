@@ -129,8 +129,9 @@ export async function GET(
     }
 
     // Check if user is creator or has RSVP'd
-    const isCreator = await checkIsCreator(supabase, eventId, userProfile.id);
-    const hasRSVP = await checkUserRSVP(supabase, eventId, userProfile.id);
+    // Use adminClient for RSVP check to bypass RLS (RSVP records are inserted via admin client)
+    const isCreator = await checkIsCreator(adminClient, eventId, userProfile.id);
+    const hasRSVP = await checkUserRSVP(adminClient, eventId, userProfile.id);
 
     if (!isCreator && !hasRSVP) {
       return NextResponse.json({
@@ -281,8 +282,9 @@ export async function POST(
     }
 
     // Check if user is creator or has RSVP'd
-    const isCreator = await checkIsCreator(supabase, eventId, userProfile.id);
-    const hasRSVP = await checkUserRSVP(supabase, eventId, userProfile.id);
+    // Use adminClient for RSVP check to bypass RLS (RSVP records are inserted via admin client)
+    const isCreator = await checkIsCreator(adminClient, eventId, userProfile.id);
+    const hasRSVP = await checkUserRSVP(adminClient, eventId, userProfile.id);
 
     if (!isCreator && !hasRSVP) {
       return NextResponse.json(
