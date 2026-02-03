@@ -211,6 +211,10 @@ final class EventPhotosViewModel {
 
     private func resizeImage(_ image: UIImage, maxDimension: CGFloat) -> UIImage? {
         let size = image.size
+
+        // Guard against invalid dimensions (prevent division by zero)
+        guard size.width > 0 && size.height > 0 else { return nil }
+
         let aspectRatio = size.width / size.height
 
         var newSize: CGSize

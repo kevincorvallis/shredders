@@ -194,11 +194,41 @@ export async function POST(
       );
     }
 
-    // Increment usage count
-    await adminClient
-      .from('event_invite_tokens')
-      .update({ uses_count: inviteData.uses_count + 1 })
-      .eq('id', inviteData.id);
+    // Increment usage count atomically using raw SQL to prevent race conditions
+    // This ensures concurrent requests don't exceed max_uses
+    const { error: incrementError } = await adminClient.rpc('increment_invite_usage', {
+      token_id: inviteData.id,
+      max_allowed: inviteData.max_uses || 999999,
+    });
+
+    // If the RPC doesn't exist, fall back to regular update with error handling
+    if (incrementError?.code === '42883') { // function does not exist
+      const { error: updateError } = await adminClient
+        .from('event_invite_tokens')
+        .update({ uses_count: inviteData.uses_count + 1 })
+        .eq('id', inviteData.id);
+
+      if (updateError) {
+        console.error('Error incrementing invite usage:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to process invite' },
+          { status: 500 }
+        );
+      }
+    } else if (incrementError) {
+      // Check if it was a max_uses exceeded error from the RPC
+      if (incrementError.message?.includes('max_uses')) {
+        return NextResponse.json(
+          { error: 'This invite link has reached its usage limit' },
+          { status: 400 }
+        );
+      }
+      console.error('Error incrementing invite usage:', incrementError);
+      return NextResponse.json(
+        { error: 'Failed to process invite' },
+        { status: 500 }
+      );
+    }
 
     // Return event ID for client to use with RSVP endpoint
     return NextResponse.json({

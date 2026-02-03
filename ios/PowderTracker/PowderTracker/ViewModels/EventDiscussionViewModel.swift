@@ -119,6 +119,15 @@ final class EventDiscussionViewModel {
                     }
                     parent.replies = replies
                     comments[parentIndex] = parent
+                } else {
+                    // Bug fix: Parent was deleted between optimistic add and server response
+                    // Add the reply as a top-level comment instead of losing it
+                    if let tempIndex = comments.firstIndex(where: { $0.id == tempId }) {
+                        // Remove from where it was incorrectly placed
+                        comments.remove(at: tempIndex)
+                    }
+                    // Add as top-level comment
+                    comments.append(postedComment)
                 }
             } else {
                 if let tempIndex = comments.firstIndex(where: { $0.id == tempId }) {
@@ -223,12 +232,13 @@ final class EventDiscussionViewModel {
     // MARK: - Private Helpers
 
     private func createOptimisticComment(id: String, content: String, parentId: String?) -> EventComment {
-        // Get current user info (simplified - in production, get from AuthService)
+        // Get current user info from AuthService
+        let userProfile = AuthService.shared.userProfile
         let currentUser = EventCommentUser(
-            id: "temp",
-            username: "You",
-            displayName: nil,
-            avatarUrl: nil
+            id: userProfile?.id ?? "temp",
+            username: userProfile?.username ?? "You",
+            displayName: userProfile?.displayName,
+            avatarUrl: userProfile?.avatarUrl
         )
 
         let now = ISO8601DateFormatter().string(from: Date())

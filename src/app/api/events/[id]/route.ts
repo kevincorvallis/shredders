@@ -46,81 +46,113 @@ export async function GET(
       );
     }
 
-    // Fetch attendees
-    const { data: attendees, error: attendeesError } = await supabase
-      .from('event_attendees')
-      .select(`
-        *,
-        user:user_id (
-          id,
-          username,
-          display_name,
-          avatar_url
-        )
-      `)
-      .eq('event_id', id)
-      .in('status', ['going', 'maybe'])
-      .order('responded_at', { ascending: true });
+    const mountain = getMountain(event.mountain_id);
 
-    if (attendeesError) {
-      console.error('Error fetching attendees:', attendeesError);
-    }
-
-    // Get user's RSVP status if authenticated
-    let userRSVPStatus = null;
+    // Get user profile ID if authenticated (needed for parallel queries)
     let userProfileId: string | null = null;
-
     if (authUser) {
-      // Look up the internal users.id from auth_user_id
       const adminClient = createAdminClient();
       const { data: userProfile } = await adminClient
         .from('users')
         .select('id')
         .eq('auth_user_id', authUser.userId)
         .single();
-
       userProfileId = userProfile?.id || null;
-
-      if (userProfileId) {
-        const { data: userAttendee } = await supabase
-          .from('event_attendees')
-          .select('status')
-          .eq('event_id', id)
-          .eq('user_id', userProfileId)
-          .single();
-
-        userRSVPStatus = userAttendee?.status || null;
-      }
     }
 
-    // Get invite token if user is the creator
-    let inviteToken = null;
-    if (authUser && userProfileId && event.user_id === userProfileId) {
-      const { data: tokenData } = await supabase
-        .from('event_invite_tokens')
-        .select('token')
+    // Build conditions URL
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+    // OPTIMIZATION: Run all independent queries in parallel using Promise.allSettled
+    const [
+      attendeesResult,
+      userRSVPResult,
+      inviteTokenResult,
+      conditionsResult,
+      commentCountResult,
+      photoCountResult,
+    ] = await Promise.allSettled([
+      // 1. Fetch attendees
+      supabase
+        .from('event_attendees')
+        .select(`
+          *,
+          user:user_id (
+            id,
+            username,
+            display_name,
+            avatar_url
+          )
+        `)
         .eq('event_id', id)
-        .single();
+        .in('status', ['going', 'maybe'])
+        .order('responded_at', { ascending: true }),
 
-      inviteToken = tokenData?.token || null;
+      // 2. Get user's RSVP status (if authenticated)
+      userProfileId
+        ? supabase
+            .from('event_attendees')
+            .select('status')
+            .eq('event_id', id)
+            .eq('user_id', userProfileId)
+            .single()
+        : Promise.resolve({ data: null }),
+
+      // 3. Get invite token (if user is the creator)
+      userProfileId && event.user_id === userProfileId
+        ? supabase
+            .from('event_invite_tokens')
+            .select('token')
+            .eq('event_id', id)
+            .single()
+        : Promise.resolve({ data: null }),
+
+      // 4. Fetch mountain conditions
+      mountain
+        ? fetch(`${baseUrl}/api/mountains/${event.mountain_id}/all`, {
+            headers: { 'Accept': 'application/json' },
+            next: { revalidate: 600 },
+          })
+        : Promise.resolve(null),
+
+      // 5. Comment count
+      supabase
+        .from('event_comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', id)
+        .eq('is_deleted', false),
+
+      // 6. Photo count
+      supabase
+        .from('event_photos')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', id),
+    ]);
+
+    // Extract results from Promise.allSettled
+    const attendees = attendeesResult.status === 'fulfilled'
+      ? attendeesResult.value.data
+      : null;
+
+    if (attendeesResult.status === 'rejected' || (attendeesResult.status === 'fulfilled' && attendeesResult.value.error)) {
+      console.error('Error fetching attendees:', attendeesResult.status === 'rejected' ? attendeesResult.reason : attendeesResult.value.error);
     }
 
-    // Fetch mountain conditions
+    const userRSVPStatus = userRSVPResult.status === 'fulfilled'
+      ? userRSVPResult.value?.data?.status || null
+      : null;
+
+    const inviteToken = inviteTokenResult.status === 'fulfilled'
+      ? inviteTokenResult.value?.data?.token || null
+      : null;
+
+    // Parse conditions response
     let conditions: EventConditions | undefined;
-    const mountain = getMountain(event.mountain_id);
-
-    if (mountain) {
+    if (conditionsResult.status === 'fulfilled' && conditionsResult.value) {
       try {
-        // Fetch conditions from the internal API
-        const baseUrl = process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-
-        const conditionsRes = await fetch(`${baseUrl}/api/mountains/${event.mountain_id}/all`, {
-          headers: { 'Accept': 'application/json' },
-          next: { revalidate: 600 }, // Cache for 10 minutes
-        });
-
+        const conditionsRes = conditionsResult.value as Response;
         if (conditionsRes.ok) {
           const data = await conditionsRes.json();
           conditions = {
@@ -137,10 +169,17 @@ export async function GET(
           };
         }
       } catch (conditionsError) {
-        console.error('Error fetching conditions:', conditionsError);
-        // Continue without conditions data
+        console.error('Error parsing conditions:', conditionsError);
       }
     }
+
+    const commentCount = commentCountResult.status === 'fulfilled'
+      ? commentCountResult.value.count
+      : 0;
+
+    const photoCount = photoCountResult.status === 'fulfilled'
+      ? photoCountResult.value.count
+      : 0;
 
     // Transform attendees
     const transformedAttendees: EventAttendee[] = (attendees || []).map((a: any) => ({
@@ -153,19 +192,6 @@ export async function GET(
       respondedAt: a.responded_at,
       user: a.user,
     }));
-
-    // Fetch comment count
-    const { count: commentCount } = await supabase
-      .from('event_comments')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_id', id)
-      .is('deleted_at', null);
-
-    // Fetch photo count
-    const { count: photoCount } = await supabase
-      .from('event_photos')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_id', id);
 
     // Transform to API response
     const eventWithDetails: EventWithDetails = {
