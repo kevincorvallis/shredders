@@ -1,5 +1,4 @@
 import http2 from 'http2';
-import fs from 'fs';
 import jwt from 'jsonwebtoken';
 
 /**
@@ -12,10 +11,42 @@ import jwt from 'jsonwebtoken';
  * 2. Add environment variables:
  *    - APNS_KEY_ID: Key ID from Apple
  *    - APNS_TEAM_ID: Team ID from Apple
- *    - APNS_KEY_PATH: Path to .p8 key file
+ *    - APNS_KEY: The .p8 key content (base64 encoded or raw PEM format)
  *    - APNS_PRODUCTION: true/false (use production APNs)
  *    - APNS_BUNDLE_ID: App bundle identifier
+ *
+ * To encode your .p8 key for APNS_KEY:
+ *   base64 -i AuthKey_XXXXXXXXXX.p8 | tr -d '\n'
  */
+
+// Cache the decoded key to avoid repeated base64 decoding
+let cachedPrivateKey: string | null = null;
+
+/**
+ * Get the APNs private key from environment variable
+ */
+function getPrivateKey(): string {
+  if (cachedPrivateKey) {
+    return cachedPrivateKey;
+  }
+
+  const keyContent = process.env.APNS_KEY;
+
+  if (!keyContent) {
+    throw new Error('APNs key not configured. Set APNS_KEY environment variable with the .p8 key content.');
+  }
+
+  // Check if the key is base64 encoded (doesn't start with -----BEGIN)
+  if (!keyContent.startsWith('-----BEGIN')) {
+    // Decode from base64
+    cachedPrivateKey = Buffer.from(keyContent, 'base64').toString('utf8');
+  } else {
+    // Already in PEM format
+    cachedPrivateKey = keyContent;
+  }
+
+  return cachedPrivateKey;
+}
 
 /**
  * Generate JWT token for APNs authentication
@@ -23,14 +54,12 @@ import jwt from 'jsonwebtoken';
 function generateAuthToken(): string {
   const keyId = process.env.APNS_KEY_ID;
   const teamId = process.env.APNS_TEAM_ID;
-  const keyPath = process.env.APNS_KEY_PATH;
 
-  if (!keyId || !teamId || !keyPath) {
-    throw new Error('APNs credentials not configured. Set APNS_KEY_ID, APNS_TEAM_ID, and APNS_KEY_PATH environment variables.');
+  if (!keyId || !teamId) {
+    throw new Error('APNs credentials not configured. Set APNS_KEY_ID and APNS_TEAM_ID environment variables.');
   }
 
-  // Read the .p8 key file
-  const privateKey = fs.readFileSync(keyPath, 'utf8');
+  const privateKey = getPrivateKey();
 
   // Generate JWT token
   const token = jwt.sign({}, privateKey, {
