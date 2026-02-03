@@ -10,10 +10,33 @@ class EventService {
     private let decoder: JSONDecoder
     private let supabase = SupabaseClientManager.shared.client
     private let cache = EventCacheService.shared
+    private let userCache = UserProfileCacheService.shared
+    private let rsvpCache = RSVPCacheService.shared
+
+    // OPTIMIZATION: Memory cache for auth token to avoid Keychain queries on every request
+    private static var cachedToken: String?
+    private static var tokenExpiry: Date?
+    private static let tokenCacheDuration: TimeInterval = 300 // 5 minutes
 
     private init() {
         self.baseURL = AppConfig.apiBaseURL
         self.decoder = JSONDecoder()
+    }
+
+    /// Clear the cached auth token (call on sign out or token refresh)
+    static func clearCachedToken() {
+        cachedToken = nil
+        tokenExpiry = nil
+    }
+
+    /// Clear all caches (call on sign out)
+    static func clearAllCaches() {
+        clearCachedToken()
+        Task { @MainActor in
+            EventCacheService.shared.clearCache()
+            UserProfileCacheService.shared.clearAllCaches()
+            RSVPCacheService.shared.clearCache()
+        }
     }
 
     // MARK: - List Events
@@ -78,6 +101,16 @@ class EventService {
                 cache.cacheEvents(result.events)
             }
 
+            // OPTIMIZATION: Cache user profiles from event creators
+            for event in result.events {
+                userCache.cacheCreatorFromEvent(event)
+            }
+
+            // OPTIMIZATION: Cache RSVP statuses from events (if attending filter)
+            if attendingOnly {
+                rsvpCache.cacheRSVPsFromEvents(result.events)
+            }
+
             return result
         } catch {
             // Try to return cached events if network fails
@@ -135,6 +168,17 @@ class EventService {
 
             // Cache event details for offline access
             cache.cacheEventDetails(event)
+
+            // OPTIMIZATION: Cache user profiles from the event
+            userCache.cacheCreatorFromEvent(event)
+            if !event.attendees.isEmpty {
+                userCache.cacheAttendeesFromEvent(event.attendees)
+            }
+
+            // OPTIMIZATION: Cache RSVP status if present
+            if let rsvpStatus = event.userRSVPStatus {
+                rsvpCache.cacheRSVP(eventId: event.id, status: rsvpStatus.rawValue)
+            }
 
             return event
         } catch {
@@ -377,9 +421,9 @@ class EventService {
         request.httpBody = try JSONEncoder().encode(requestBody)
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, urlResponse) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse else {
+        guard let httpResponse = urlResponse as? HTTPURLResponse else {
             throw EventServiceError.networkError
         }
 
@@ -399,7 +443,12 @@ class EventService {
             throw EventServiceError.serverError(httpResponse.statusCode)
         }
 
-        return try decoder.decode(RSVPResponse.self, from: data)
+        let rsvpResponse = try decoder.decode(RSVPResponse.self, from: data)
+
+        // OPTIMIZATION: Update RSVP cache and invalidate event cache
+        rsvpCache.handleRSVPResponse(rsvpResponse)
+
+        return rsvpResponse
     }
 
     /// Remove RSVP from an event
@@ -425,6 +474,9 @@ class EventService {
         guard httpResponse.statusCode == 200 else {
             throw EventServiceError.serverError(httpResponse.statusCode)
         }
+
+        // OPTIMIZATION: Update RSVP cache and invalidate event cache
+        rsvpCache.handleRSVPRemoved(eventId: eventId)
     }
 
     // MARK: - Invite
@@ -856,8 +908,19 @@ class EventService {
     // MARK: - Auth Helper
 
     private func addAuthHeader(to request: inout URLRequest) async throws {
+        // OPTIMIZATION: Check memory cache first to avoid Keychain queries
+        if let token = Self.cachedToken,
+           let expiry = Self.tokenExpiry,
+           expiry > Date() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            return
+        }
+
         // First try Keychain JWT tokens (from email/password login)
         if let accessToken = KeychainHelper.getAccessToken(), !KeychainHelper.isAccessTokenExpired() {
+            // Cache the token in memory
+            Self.cachedToken = accessToken
+            Self.tokenExpiry = Date().addingTimeInterval(Self.tokenCacheDuration)
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
             return
         }
@@ -868,6 +931,9 @@ class EventService {
                 // Delegate to AuthService for token refresh (single source of truth)
                 try await AuthService.shared.refreshTokens()
                 if let accessToken = KeychainHelper.getAccessToken() {
+                    // Cache the refreshed token
+                    Self.cachedToken = accessToken
+                    Self.tokenExpiry = Date().addingTimeInterval(Self.tokenCacheDuration)
                     request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
                     return
                 }
@@ -879,6 +945,9 @@ class EventService {
         // Fallback to Supabase session token (for Sign In with Apple users)
         do {
             let session = try await supabase.auth.session
+            // Cache the Supabase token as well
+            Self.cachedToken = session.accessToken
+            Self.tokenExpiry = Date().addingTimeInterval(Self.tokenCacheDuration)
             request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
             return
         } catch {

@@ -15,5 +15,10 @@ export async function GET(
     );
   }
 
-  return NextResponse.json(mountain);
+  // Mountains are relatively static - cache for 1 hour
+  return NextResponse.json(mountain, {
+    headers: {
+      'Cache-Control': 'public, max-age=3600, stale-while-revalidate=7200',
+    },
+  });
 }

@@ -8,6 +8,7 @@
 import Foundation
 
 /// Service for caching events locally for offline viewing
+/// OPTIMIZATION: Extended cache TTL to 24 hours with stale-while-revalidate pattern
 @MainActor
 class EventCacheService {
     static let shared = EventCacheService()
@@ -15,7 +16,13 @@ class EventCacheService {
     private let cacheDirectory: URL
     private let eventsFileName = "cached_events.json"
     private let eventDetailsPrefix = "event_detail_"
-    private let cacheExpirySeconds: TimeInterval = 3600 // 1 hour
+
+    // OPTIMIZATION: Extended cache expiry from 1 hour to 24 hours for better offline access
+    private let cacheExpirySeconds: TimeInterval = 86400 // 24 hours
+
+    // Stale-while-revalidate: Return stale data immediately but trigger background refresh
+    // after this threshold
+    private let staleThresholdSeconds: TimeInterval = 3600 // 1 hour - data is "fresh" for 1 hour
 
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
@@ -59,7 +66,8 @@ class EventCacheService {
     }
 
     /// Get cached events list
-    func getCachedEvents() -> [Event]? {
+    /// - Parameter allowStale: If true, returns stale (but not expired) data
+    func getCachedEvents(allowStale: Bool = true) -> [Event]? {
         let fileURL = cacheDirectory.appendingPathComponent(eventsFileName)
 
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
@@ -69,17 +77,19 @@ class EventCacheService {
         do {
             let data = try Data(contentsOf: fileURL)
             let cacheEntry = try decoder.decode(CachedEventsList.self, from: data)
+            let age = Date().timeIntervalSince(cacheEntry.cachedAt)
 
-            // Check if cache is expired
-            if Date().timeIntervalSince(cacheEntry.cachedAt) > cacheExpirySeconds {
+            // Check if cache is expired (beyond 24 hours)
+            if age > cacheExpirySeconds {
                 #if DEBUG
-                print("⚠️ Events cache expired")
+                print("⚠️ Events cache expired (age: \(Int(age/3600))h)")
                 #endif
                 return nil
             }
 
             #if DEBUG
-            print("✅ Loaded \(cacheEntry.events.count) events from cache")
+            let freshOrStale = age > staleThresholdSeconds ? "stale" : "fresh"
+            print("✅ Loaded \(cacheEntry.events.count) events from cache (\(freshOrStale), age: \(Int(age/60))min)")
             #endif
             return cacheEntry.events
         } catch {
@@ -87,6 +97,26 @@ class EventCacheService {
             print("⚠️ Failed to load cached events: \(error)")
             #endif
             return nil
+        }
+    }
+
+    /// Check if cached events need background refresh (stale but not expired)
+    func shouldRefreshEvents() -> Bool {
+        let fileURL = cacheDirectory.appendingPathComponent(eventsFileName)
+
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return true // No cache, definitely refresh
+        }
+
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let cacheEntry = try decoder.decode(CachedEventsList.self, from: data)
+            let age = Date().timeIntervalSince(cacheEntry.cachedAt)
+
+            // Refresh if data is stale (older than 1 hour)
+            return age > staleThresholdSeconds
+        } catch {
+            return true
         }
     }
 
@@ -119,7 +149,8 @@ class EventCacheService {
     }
 
     /// Get cached event details
-    func getCachedEventDetails(id: String) -> EventWithDetails? {
+    /// - Parameter allowStale: If true, returns stale (but not expired) data
+    func getCachedEventDetails(id: String, allowStale: Bool = true) -> EventWithDetails? {
         let fileURL = cacheDirectory.appendingPathComponent("\(eventDetailsPrefix)\(id).json")
 
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
@@ -129,17 +160,19 @@ class EventCacheService {
         do {
             let data = try Data(contentsOf: fileURL)
             let cacheEntry = try decoder.decode(CachedEventDetails.self, from: data)
+            let age = Date().timeIntervalSince(cacheEntry.cachedAt)
 
-            // Check if cache is expired
-            if Date().timeIntervalSince(cacheEntry.cachedAt) > cacheExpirySeconds {
+            // Check if cache is expired (beyond 24 hours)
+            if age > cacheExpirySeconds {
                 #if DEBUG
-                print("⚠️ Event details cache expired for \(id)")
+                print("⚠️ Event details cache expired for \(id) (age: \(Int(age/3600))h)")
                 #endif
                 return nil
             }
 
             #if DEBUG
-            print("✅ Loaded event details from cache for \(id)")
+            let freshOrStale = age > staleThresholdSeconds ? "stale" : "fresh"
+            print("✅ Loaded event details from cache for \(id) (\(freshOrStale))")
             #endif
             return cacheEntry.event
         } catch {
@@ -148,6 +181,44 @@ class EventCacheService {
             #endif
             return nil
         }
+    }
+
+    /// Check if cached event details need background refresh
+    func shouldRefreshEventDetails(id: String) -> Bool {
+        let fileURL = cacheDirectory.appendingPathComponent("\(eventDetailsPrefix)\(id).json")
+
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return true
+        }
+
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let cacheEntry = try decoder.decode(CachedEventDetails.self, from: data)
+            let age = Date().timeIntervalSince(cacheEntry.cachedAt)
+
+            return age > staleThresholdSeconds
+        } catch {
+            return true
+        }
+    }
+
+    /// Invalidate cache for a specific event (call after mutations)
+    func invalidateEvent(id: String) {
+        let fileURL = cacheDirectory.appendingPathComponent("\(eventDetailsPrefix)\(id).json")
+        try? FileManager.default.removeItem(at: fileURL)
+
+        // Also invalidate the events list since counts may have changed
+        let listURL = cacheDirectory.appendingPathComponent(eventsFileName)
+        try? FileManager.default.removeItem(at: listURL)
+
+        #if DEBUG
+        print("🗑️ Invalidated cache for event \(id)")
+        #endif
+    }
+
+    /// Invalidate all event caches (call after creating/deleting events)
+    func invalidateAll() {
+        clearCache()
     }
 
     // MARK: - Cache Management

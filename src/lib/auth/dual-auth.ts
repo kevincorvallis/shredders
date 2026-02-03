@@ -12,10 +12,38 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export interface AuthenticatedUser {
-  userId: string;
+  userId: string;        // auth_user_id (from Supabase Auth or JWT)
+  profileId?: string;    // users.id (internal database ID) - OPTIMIZATION: included to avoid repeated lookups
   email: string;
   username?: string;
   authMethod: 'jwt' | 'supabase';
+}
+
+// OPTIMIZATION: In-memory cache for auth_user_id -> users.id mapping
+// This avoids repeated database lookups for the same user
+const userProfileCache = new Map<string, { profileId: string; username?: string; cachedAt: number }>();
+const PROFILE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCachedProfile(authUserId: string): { profileId: string; username?: string } | null {
+  const cached = userProfileCache.get(authUserId);
+  if (cached && Date.now() - cached.cachedAt < PROFILE_CACHE_TTL) {
+    return { profileId: cached.profileId, username: cached.username };
+  }
+  if (cached) {
+    userProfileCache.delete(authUserId); // Expired
+  }
+  return null;
+}
+
+function setCachedProfile(authUserId: string, profileId: string, username?: string): void {
+  userProfileCache.set(authUserId, { profileId, username, cachedAt: Date.now() });
+}
+
+/**
+ * Clear cached profile for a user (call on profile updates)
+ */
+export function clearUserProfileCache(authUserId: string): void {
+  userProfileCache.delete(authUserId);
 }
 
 /**
@@ -44,10 +72,35 @@ export async function getDualAuthUser(
   const jwtUser = getAuthUser(req);
 
   if (jwtUser) {
+    // OPTIMIZATION: Check cache first for profile lookup
+    const cached = getCachedProfile(jwtUser.userId);
+    if (cached) {
+      return {
+        userId: jwtUser.userId,
+        profileId: cached.profileId,
+        email: jwtUser.email,
+        username: cached.username || jwtUser.username,
+        authMethod: 'jwt',
+      };
+    }
+
+    // Cache miss - fetch from database
+    const adminClient = createAdminClient();
+    const { data: profile } = await adminClient
+      .from('users')
+      .select('id, username')
+      .eq('auth_user_id', jwtUser.userId)
+      .single();
+
+    if (profile) {
+      setCachedProfile(jwtUser.userId, profile.id, profile.username);
+    }
+
     return {
       userId: jwtUser.userId,
+      profileId: profile?.id,
       email: jwtUser.email,
-      username: jwtUser.username,
+      username: profile?.username || jwtUser.username,
       authMethod: 'jwt',
     };
   }
@@ -62,15 +115,32 @@ export async function getDualAuthUser(
     const { data: { user: supabaseUser }, error } = await adminClient.auth.getUser(bearerToken);
 
     if (supabaseUser && !error) {
-      // Fetch username from users table
+      // OPTIMIZATION: Check cache first
+      const cached = getCachedProfile(supabaseUser.id);
+      if (cached) {
+        return {
+          userId: supabaseUser.id,
+          profileId: cached.profileId,
+          email: supabaseUser.email || '',
+          username: cached.username,
+          authMethod: 'supabase',
+        };
+      }
+
+      // Cache miss - fetch from database
       const { data: profile } = await adminClient
         .from('users')
-        .select('username')
+        .select('id, username')
         .eq('auth_user_id', supabaseUser.id)
         .single();
 
+      if (profile) {
+        setCachedProfile(supabaseUser.id, profile.id, profile.username);
+      }
+
       return {
         userId: supabaseUser.id,
+        profileId: profile?.id,
         email: supabaseUser.email || '',
         username: profile?.username,
         authMethod: 'supabase',
@@ -85,15 +155,32 @@ export async function getDualAuthUser(
   } = await supabase.auth.getUser();
 
   if (supabaseUser) {
-    // Fetch username from users table
+    // OPTIMIZATION: Check cache first
+    const cached = getCachedProfile(supabaseUser.id);
+    if (cached) {
+      return {
+        userId: supabaseUser.id,
+        profileId: cached.profileId,
+        email: supabaseUser.email || '',
+        username: cached.username,
+        authMethod: 'supabase',
+      };
+    }
+
+    // Cache miss - fetch from database
     const { data: profile } = await supabase
       .from('users')
-      .select('username')
+      .select('id, username')
       .eq('auth_user_id', supabaseUser.id)
       .single();
 
+    if (profile) {
+      setCachedProfile(supabaseUser.id, profile.id, profile.username);
+    }
+
     return {
       userId: supabaseUser.id,
+      profileId: profile?.id,
       email: supabaseUser.email || '',
       username: profile?.username,
       authMethod: 'supabase',
