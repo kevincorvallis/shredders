@@ -103,12 +103,9 @@ struct WelcomeLandingView: View {
     private func snowflakeLayer(in size: CGSize) -> some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
             Canvas { context, canvasSize in
-                for snowflake in snowflakes {
-                    let symbol = context.resolve(
-                        Image(systemName: "snowflake")
-                            .foregroundStyle(.white.opacity(snowflake.opacity))
-                    )
+                let snowflakeImage = context.resolve(Image(systemName: "snowflake"))
 
+                for snowflake in snowflakes {
                     // Calculate current position based on time
                     let elapsed = timeline.date.timeIntervalSinceReferenceDate
                     let yOffset = (elapsed * snowflake.speed).truncatingRemainder(dividingBy: Double(canvasSize.height + 50))
@@ -117,8 +114,11 @@ struct WelcomeLandingView: View {
                     let x = snowflake.x + xDrift
                     let y = (snowflake.y + yOffset).truncatingRemainder(dividingBy: canvasSize.height + 50) - 50
 
-                    context.draw(
-                        symbol,
+                    var innerContext = context
+                    innerContext.opacity = snowflake.opacity
+
+                    innerContext.draw(
+                        snowflakeImage,
                         at: CGPoint(x: x, y: y)
                     )
                 }
@@ -156,21 +156,21 @@ struct WelcomeLandingView: View {
                         RadialGradient(
                             colors: [Color.pookieCyan.opacity(0.4), Color.clear],
                             center: .center,
-                            startRadius: 40,
-                            endRadius: 80
+                            startRadius: 50,
+                            endRadius: 100
                         )
                     )
-                    .frame(width: 160, height: 160)
+                    .frame(width: 200, height: 200)
 
                 // Icon background
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                RoundedRectangle(cornerRadius: 32, style: .continuous)
                     .fill(LinearGradient.pookieBSnow)
-                    .frame(width: 110, height: 110)
-                    .shadow(color: .pookiePurple.opacity(0.5), radius: 20, y: 10)
+                    .frame(width: 140, height: 140)
+                    .shadow(color: .pookiePurple.opacity(0.5), radius: 24, y: 12)
 
                 // Snowflake icon
                 Image(systemName: "snowflake")
-                    .font(.system(size: 55, weight: .medium))
+                    .font(.system(size: 70, weight: .medium))
                     .foregroundStyle(.white)
                     .symbolEffect(.pulse.byLayer, options: .repeating.speed(0.5))
             }
