@@ -8,10 +8,13 @@ struct EventsView: View {
     @State private var error: String?
     @AppStorage("eventsFilter") private var filter: EventFilter = .all
     @AppStorage("eventsViewMode") private var viewMode: EventViewMode = .list
+    @AppStorage("showEventSuggestions") private var showSuggestions = true
     @State private var showingCreateSheet = false
     @State private var navigationPath = NavigationPath()
     @State private var toast: ToastMessage?
     @State private var searchText = ""
+    @State private var selectedSuggestion: EventSuggestionType?
+    @StateObject private var suggestionsViewModel = SmartEventSuggestionsViewModel()
 
     enum EventFilter: String, CaseIterable, RawRepresentable {
         case all = "All"
@@ -267,9 +270,18 @@ struct EventsView: View {
                 await loadEvents()
             }
             .sheet(isPresented: $showingCreateSheet) {
-                EventCreateView(onEventCreated: { _ in
-                    Task { await loadEvents() }
-                })
+                EventCreateView(
+                    suggestion: selectedSuggestion,
+                    onEventCreated: { _ in
+                        Task { await loadEvents() }
+                        selectedSuggestion = nil
+                    }
+                )
+            }
+            .onChange(of: showingCreateSheet) { _, isShowing in
+                if !isShowing {
+                    selectedSuggestion = nil
+                }
             }
             .navigationDestination(for: String.self) { eventId in
                 EventDetailView(eventId: eventId)
@@ -283,6 +295,11 @@ struct EventsView: View {
                 mountains = MountainService.shared.allMountains
             }
             await loadEvents()
+            
+            // Load smart suggestions
+            if showSuggestions {
+                await suggestionsViewModel.loadSuggestions()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("EventCancelled"))) { _ in
             // Refresh events when an event is cancelled
@@ -339,6 +356,25 @@ struct EventsView: View {
     private var eventsList: some View {
         AdaptiveContentView(maxWidth: .maxContentWidthRegular) {
             List {
+                // Smart Suggestions Card
+                if showSuggestions && !suggestionsViewModel.suggestions.isEmpty && filter == .all {
+                    Section {
+                        SmartEventSuggestionsCard(
+                            suggestions: suggestionsViewModel.suggestions,
+                            onSuggestionTap: { suggestion in
+                                selectedSuggestion = suggestion
+                                showingCreateSheet = true
+                            },
+                            onDismiss: {
+                                showSuggestions = false
+                            }
+                        )
+                    }
+                    .listRowInsets(EdgeInsets(top: .spacingS, leading: .spacingL, bottom: .spacingS, trailing: .spacingL))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                }
+                
                 // Filter picker
                 Picker("Filter", selection: $filter) {
                     ForEach(EventFilter.allCases, id: \.self) { f in

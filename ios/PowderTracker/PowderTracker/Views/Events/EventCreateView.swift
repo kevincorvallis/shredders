@@ -3,6 +3,8 @@ import SwiftUI
 struct EventCreateView: View {
     @Environment(\.dismiss) private var dismiss
 
+    // Optional suggestion from smart suggestions
+    var suggestion: EventSuggestionType?
     var onEventCreated: ((Event) -> Void)?
 
     @State private var selectedMountainId = ""
@@ -30,6 +32,9 @@ struct EventCreateView: View {
     @State private var mountainComparisons: [(id: String, name: String, forecast: ForecastDay)] = []
     @State private var bestMountain: (id: String, name: String, forecast: ForecastDay)?
     @State private var isLoadingMountainSuggestion = false
+    
+    // Track if we've applied the suggestion
+    @State private var suggestionApplied = false
 
     // All mountains from the app config (IDs must match backend)
     private let mountains: [(id: String, name: String)] = [
@@ -242,7 +247,55 @@ struct EventCreateView: View {
             .sheet(isPresented: $showingLocationPicker) {
                 LocationPickerView(selectedLocation: $departureLocation)
             }
+            .onAppear {
+                applySuggestionIfNeeded()
+            }
         }
+    }
+    
+    // MARK: - Apply Suggestion
+    
+    private func applySuggestionIfNeeded() {
+        guard let suggestion = suggestion, !suggestionApplied else { return }
+        suggestionApplied = true
+        
+        switch suggestion {
+        case .powderDay(let mountain, let forecast):
+            selectedMountainId = mountain.id
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            if let date = dateFormatter.date(from: forecast.date) {
+                eventDate = date
+            }
+            title = "Powder Day at \(mountain.name)"
+            notes = "Expected snowfall: \(forecast.snowfall)\"\nConditions: \(forecast.conditions)"
+            
+        case .weekendTrip(let mountain, let date, let snowfall):
+            selectedMountainId = mountain.id
+            eventDate = date
+            title = "Weekend at \(mountain.name)"
+            if snowfall > 0 {
+                notes = "Expected fresh snow: \(snowfall)\""
+            }
+            
+        case .bestConditions(let mountain, let score):
+            selectedMountainId = mountain.id
+            eventDate = Date()
+            title = "\(mountain.name) - Great Conditions"
+            notes = "Current powder score: \(String(format: "%.1f", score))/10"
+            
+        case .groupTrip(let mountains, let date):
+            if let firstMountain = mountains.first {
+                selectedMountainId = firstMountain.id
+            }
+            eventDate = date
+            title = "Group Ski Trip"
+            let mountainNames = mountains.map { $0.name }.joined(separator: ", ")
+            notes = "Considering: \(mountainNames)"
+        }
+        
+        // Load forecast for the selected mountain
+        Task { await loadForecast() }
     }
 
     // MARK: - Forecast Preview Card
