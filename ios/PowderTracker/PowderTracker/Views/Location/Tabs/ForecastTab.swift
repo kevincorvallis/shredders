@@ -22,7 +22,7 @@ struct ForecastTab: View {
 
             // Hourly Forecast
             if let hourly = hourlyData {
-                HourlyForecastCard(hourly: hourly)
+                APIHourlyForecastCard(hourly: hourly)
             }
 
             if isLoading {
@@ -218,7 +218,7 @@ struct DayForecastRow: View {
 
 // MARK: - Hourly Forecast Card
 
-struct HourlyForecastCard: View {
+struct APIHourlyForecastCard: View {
     let hourly: HourlyForecastResponse
 
     var body: some View {

@@ -41,6 +41,16 @@ struct WeatherConditionsSection: View {
                         color: temperatureColor(temp)
                     )
                 }
+                
+                // Feels like temperature from WeatherKit
+                if let feelsLike = viewModel.apparentTemperature {
+                    WeatherMetricCard(
+                        icon: "thermometer.snowflake",
+                        label: "Feels Like",
+                        value: "\(Int(feelsLike))°F",
+                        color: temperatureColor(feelsLike)
+                    )
+                }
 
                 if let wind = viewModel.windSpeed {
                     WeatherMetricCard(
@@ -50,10 +60,59 @@ struct WeatherConditionsSection: View {
                         color: windColor(wind)
                     )
                 }
+                
+                // Wind gust from WeatherKit
+                if let gust = viewModel.windGust {
+                    WeatherMetricCard(
+                        icon: "wind.snow",
+                        label: "Wind Gust",
+                        value: "\(Int(gust)) mph",
+                        color: windColor(gust)
+                    )
+                }
+                
+                // Humidity from WeatherKit
+                if let humidity = viewModel.humidity {
+                    WeatherMetricCard(
+                        icon: "humidity.fill",
+                        label: "Humidity",
+                        value: "\(Int(humidity * 100))%",
+                        color: .blue
+                    )
+                }
+                
+                // UV Index from WeatherKit
+                if let uvIndex = viewModel.uvIndex {
+                    WeatherMetricCard(
+                        icon: "sun.max.fill",
+                        label: "UV Index",
+                        value: "\(uvIndex)",
+                        color: uvIndexColor(uvIndex)
+                    )
+                }
+                
+                // Visibility from WeatherKit
+                if let visibility = viewModel.visibility {
+                    WeatherMetricCard(
+                        icon: "eye.fill",
+                        label: "Visibility",
+                        value: String(format: "%.1f mi", visibility),
+                        color: .cyan
+                    )
+                }
 
                 if let description = viewModel.weatherDescription {
                     WeatherDescriptionCard(description: description)
                 }
+            }
+            
+            // WeatherKit Attribution
+            if viewModel.hasWeatherKitData {
+                HStack {
+                    Spacer()
+                    WeatherAttributionInline()
+                }
+                .padding(.top, 4)
             }
 
             // Expanded Content
@@ -148,6 +207,14 @@ struct WeatherConditionsSection: View {
         if speed < 20 { return .yellow }
         if speed < 30 { return .orange }
         return .red
+    }
+    
+    private func uvIndexColor(_ index: Int) -> Color {
+        if index <= 2 { return .green }
+        if index <= 5 { return .yellow }
+        if index <= 7 { return .orange }
+        if index <= 10 { return .red }
+        return .purple
     }
 }
 

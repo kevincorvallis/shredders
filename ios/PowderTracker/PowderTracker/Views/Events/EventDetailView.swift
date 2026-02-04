@@ -99,7 +99,7 @@ struct EventDetailView: View {
             await loadEvent()
         }
         .sheet(isPresented: $showingShareSheet) {
-            if let event = event {
+            if event != nil {
                 ShareSheet(items: [eventShareURL, shareMessage])
             }
         }
@@ -129,7 +129,7 @@ struct EventDetailView: View {
         }
         .toast($toast)
         .sheet(isPresented: $showingRSVPSheet) {
-            if let event = event {
+            if event != nil {
                 RSVPCarpoolSheet(
                     eventId: eventId,
                     currentStatus: currentUserRSVPStatus
@@ -193,6 +193,9 @@ struct EventDetailView: View {
             VStack(spacing: 20) {
                 // Event Info Card
                 eventInfoCard(event: event)
+
+                // Add to Calendar Button (visible to all users)
+                addToCalendarButton(event: event)
 
                 // Forecast Card (for event day)
                 if let forecast = event.conditions?.forecast {
@@ -732,6 +735,35 @@ extension EventDetailView {
         .padding()
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func addToCalendarButton(event: EventWithDetails) -> some View {
+        Button {
+            Task { await addToCalendar() }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: isAddingToCalendar ? "calendar.badge.clock" : "calendar.badge.plus")
+                    .font(.system(size: 18, weight: .semibold))
+                    .symbolEffect(.pulse, isActive: isAddingToCalendar)
+
+                Text(isAddingToCalendar ? "Adding..." : "Add to Calendar")
+                    .fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(
+                LinearGradient(
+                    colors: [Color.blue, Color.blue.opacity(0.8)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .foregroundStyle(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .shadow(color: .blue.opacity(0.3), radius: 8, y: 4)
+        }
+        .disabled(isAddingToCalendar)
+        .accessibilityIdentifier("add_to_calendar_button")
     }
 
     private func rsvpButtons(event: EventWithDetails) -> some View {

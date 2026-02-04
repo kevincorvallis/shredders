@@ -754,6 +754,7 @@ final class EventModelTests: XCTestCase {
             isDriver: isDriver,
             needsRide: needsRide,
             pickupLocation: nil,
+            waitlistPosition: nil,
             respondedAt: "2025-01-01T00:00:00Z",
             user: EventUser(id: "user-1", username: "testuser", displayName: "Test User", avatarUrl: nil)
         )

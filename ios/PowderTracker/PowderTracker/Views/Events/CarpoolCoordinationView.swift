@@ -439,6 +439,7 @@ struct RSVPCarpoolSheet: View {
                 isDriver: true,
                 needsRide: false,
                 pickupLocation: "Seattle - Capitol Hill",
+                waitlistPosition: nil,
                 respondedAt: nil,
                 user: EventUser(id: "u1", username: "sarah_k", displayName: "Sarah K.", avatarUrl: nil)
             ),
@@ -449,6 +450,7 @@ struct RSVPCarpoolSheet: View {
                 isDriver: false,
                 needsRide: true,
                 pickupLocation: "Bellevue",
+                waitlistPosition: nil,
                 respondedAt: nil,
                 user: EventUser(id: "u2", username: "mike_t", displayName: "Mike T.", avatarUrl: nil)
             )

@@ -39,6 +39,8 @@ struct HomeView: View {
                     } label: {
                         Image(systemName: "gear")
                     }
+                    .accessibilityIdentifier("home_settings_button")
+                    .accessibilityLabel("Settings")
                 }
             }
             .refreshable {
@@ -178,7 +180,7 @@ struct MountainSelectorHeader: View {
     var body: some View {
         Button(action: onTap) {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: .spacingXS) {
                     Text("Current Mountain")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -225,7 +227,7 @@ struct MountainPickerSheet: View {
                                 size: 40
                             )
 
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: .spacingXS) {
                                 Text(mountain.name)
                                     .font(.subheadline)
                                     .fontWeight(.medium)
@@ -242,7 +244,7 @@ struct MountainPickerSheet: View {
                                     .foregroundColor(.blue)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, .spacingXS)
                     }
                     .buttonStyle(.plain)
                 }
@@ -365,13 +367,13 @@ struct SkeletonMountainCard: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack(spacing: 10) {
+            HStack(spacing: .spacingS) {
                 Circle()
                     .fill(Color.gray.opacity(0.3))
                     .frame(width: 44, height: 44)
                     .shimmering(isAnimating: isAnimating)
 
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: .spacingXS) {
                     RoundedRectangle(cornerRadius: 4)
                         .fill(Color.gray.opacity(0.3))
                         .frame(width: 120, height: 16)
@@ -385,15 +387,15 @@ struct SkeletonMountainCard: View {
 
                 Spacer()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, .spacingM)
+            .padding(.vertical, .spacingS)
             .background(Color(.tertiarySystemBackground))
 
             // Content area
-            VStack(spacing: 8) {
+            VStack(spacing: .spacingS) {
                 HStack(spacing: 0) {
                     ForEach(0..<3, id: \.self) { _ in
-                        VStack(spacing: 4) {
+                        VStack(spacing: .spacingXS) {
                             RoundedRectangle(cornerRadius: 2)
                                 .fill(Color.gray.opacity(0.2))
                                 .frame(height: 20)
@@ -405,8 +407,8 @@ struct SkeletonMountainCard: View {
                         .frame(maxWidth: .infinity)
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
+                .padding(.horizontal, .spacingM)
+                .padding(.vertical, .spacingM)
             }
         }
         .background(Color(.secondarySystemBackground))

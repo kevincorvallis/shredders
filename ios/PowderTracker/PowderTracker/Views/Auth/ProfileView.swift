@@ -167,7 +167,7 @@ struct ProfileView: View {
                             .foregroundStyle(.white)
                     }
 
-                VStack(spacing: 4) {
+                VStack(spacing: .spacingXS) {
                     Text(profile.displayName ?? profile.username)
                         .font(.title3)
                         .fontWeight(.bold)
@@ -226,7 +226,7 @@ struct ProfileView: View {
     }
 
     private func statItem(value: String, label: String) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: .spacingXS) {
             Text(value)
                 .font(.title3)
                 .fontWeight(.bold)
@@ -252,6 +252,7 @@ struct ProfileView: View {
                 ) {
                     showingManageFavorites = true
                 }
+                .accessibilityIdentifier("profile_favorites_row")
 
                 Divider().padding(.leading, 44)
 
@@ -264,6 +265,7 @@ struct ProfileView: View {
                 ) {
                     showingRegionPicker = true
                 }
+                .accessibilityIdentifier("profile_region_row")
 
                 Divider().padding(.leading, 44)
 
@@ -276,6 +278,7 @@ struct ProfileView: View {
                 ) {
                     showingPassPicker = true
                 }
+                .accessibilityIdentifier("profile_pass_row")
             }
             .background(Color(.secondarySystemBackground))
             .cornerRadius(.cornerRadiusCard)
@@ -493,7 +496,7 @@ struct ProfileView: View {
                     .foregroundColor(iconColor)
                     .frame(width: 28, height: 28)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: .spacingXS) {
                     Text(title)
                         .font(.body)
                         .foregroundColor(.primary)

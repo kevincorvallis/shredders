@@ -12,6 +12,12 @@ struct PowderTrackerApp: App {
     /// Initialize showOnboarding directly from launch argument for reliable UI testing
     @State private var showOnboarding = ProcessInfo.processInfo.arguments.contains("SHOW_ONBOARDING")
 
+    /// Track previous auth state to detect logout
+    @State private var wasAuthenticated = false
+
+    /// Show welcome landing page after logout
+    @State private var showWelcomeLanding = false
+
     /// Check if running in UI testing mode
     private var isUITesting: Bool {
         ProcessInfo.processInfo.arguments.contains("UI_TESTING")
@@ -54,6 +60,14 @@ struct PowderTrackerApp: App {
                 await loadInitialData()
             }
             .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
+                // Detect logout: user was authenticated, now they're not
+                if wasAuthenticated && !isAuthenticated {
+                    // Small delay to let the sign-out complete cleanly
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showWelcomeLanding = true
+                    }
+                }
+
                 // Check if user needs onboarding after authentication
                 if isAuthenticated && authService.needsOnboarding {
                     // Small delay to let the UI settle
@@ -61,6 +75,13 @@ struct PowderTrackerApp: App {
                         showOnboarding = true
                     }
                 }
+
+                // Update tracking state
+                wasAuthenticated = isAuthenticated
+            }
+            .onAppear {
+                // Initialize wasAuthenticated on first appear
+                wasAuthenticated = authService.isAuthenticated
             }
             .onChange(of: authService.userProfile) { _, profile in
                 // Also check when profile loads
@@ -70,6 +91,30 @@ struct PowderTrackerApp: App {
             }
             .fullScreenCover(isPresented: $showOnboarding) {
                 OnboardingContainerView(authService: authService)
+            }
+            .fullScreenCover(isPresented: $showWelcomeLanding) {
+                WelcomeLandingView(
+                    onContinueBrowsing: {
+                        // Dismiss welcome and navigate to Today tab
+                        showWelcomeLanding = false
+                        // Post notification to switch to Today tab
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name("NavigateToTab"),
+                            object: nil,
+                            userInfo: ["tabIndex": 0]
+                        )
+                    },
+                    onSignIn: {
+                        // Sign in is handled within WelcomeLandingView via sheet
+                        // When auth succeeds, this cover will auto-dismiss due to wasAuthenticated change
+                    }
+                )
+            }
+            .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
+                // Auto-dismiss welcome landing when user signs back in
+                if isAuthenticated && showWelcomeLanding {
+                    showWelcomeLanding = false
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DeepLinkToMountain"))) { notification in
                 if let mountainId = notification.userInfo?["mountainId"] as? String {

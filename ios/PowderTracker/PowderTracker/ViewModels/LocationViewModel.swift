@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 
 @MainActor
 class LocationViewModel: ObservableObject {
@@ -10,6 +11,11 @@ class LocationViewModel: ObservableObject {
     @Published var safetyData: SafetyData?
     @Published var snowHistory: [SnowHistoryPoint] = []
     @Published var snowHistoryLoading = false
+    
+    // WeatherKit integration
+    @Published var weatherKitData: WeatherKitService.WeatherData?
+    @Published var weatherKitLoading = false
+    private let weatherKitService = WeatherKitService.shared
 
     let mountain: Mountain
 
@@ -36,11 +42,12 @@ class LocationViewModel: ObservableObject {
             locationData = data
             isLoading = false
 
-            // Fetch lift data, snow comparison, safety data, and snow history (don't block on errors)
+            // Fetch lift data, snow comparison, safety data, snow history, and WeatherKit data (don't block on errors)
             await fetchLiftData()
             await fetchSnowComparison()
             await fetchSafetyData()
             await fetchSnowHistory()
+            await fetchWeatherKitData()
         } catch {
             // Ignore cancellation errors
             if (error as NSError).code == NSURLErrorCancelled {
@@ -107,6 +114,24 @@ class LocationViewModel: ObservableObject {
             #endif
         }
     }
+    
+    func fetchWeatherKitData() async {
+        // Create location from mountain coordinates
+        let location = CLLocation(latitude: mountain.location.lat, longitude: mountain.location.lng)
+        
+        weatherKitLoading = true
+        defer { weatherKitLoading = false }
+        
+        do {
+            let weather = try await weatherKitService.fetchWeather(for: location)
+            weatherKitData = weather
+        } catch {
+            // WeatherKit is optional - fall back to API data
+            #if DEBUG
+            print("Failed to fetch WeatherKit data: \(error)")
+            #endif
+        }
+    }
 
     // MARK: - Computed Properties
 
@@ -129,17 +154,67 @@ class LocationViewModel: ObservableObject {
     }
 
     var temperature: Double? {
+        // Prefer WeatherKit data, fall back to API
+        if let weatherKit = weatherKitData?.currentWeather.temperature {
+            return weatherKitService.celsiusToFahrenheit(weatherKit)
+        }
         guard let temp = locationData?.conditions.temperature else { return nil }
         return Double(temp)
     }
 
     var windSpeed: Double? {
+        // Prefer WeatherKit data, fall back to API
+        if let weatherKit = weatherKitData?.currentWeather.windSpeed {
+            return weatherKitService.metersPerSecondToMph(weatherKit)
+        }
         guard let speed = locationData?.conditions.wind?.speed else { return nil }
         return Double(speed)
     }
 
     var weatherDescription: String? {
-        locationData?.conditions.conditions
+        // Prefer WeatherKit data, fall back to API
+        weatherKitData?.currentWeather.condition ?? locationData?.conditions.conditions
+    }
+    
+    // Additional WeatherKit properties
+    var humidity: Double? {
+        weatherKitData?.currentWeather.humidity
+    }
+    
+    var uvIndex: Int? {
+        weatherKitData?.currentWeather.uvIndex
+    }
+    
+    var visibility: Double? {
+        guard let meters = weatherKitData?.currentWeather.visibility else { return nil }
+        return meters * 0.000621371 // Convert meters to miles
+    }
+    
+    var dewPoint: Double? {
+        guard let celsius = weatherKitData?.currentWeather.dewPoint else { return nil }
+        return weatherKitService.celsiusToFahrenheit(celsius)
+    }
+    
+    var apparentTemperature: Double? {
+        guard let celsius = weatherKitData?.currentWeather.apparentTemperature else { return nil }
+        return weatherKitService.celsiusToFahrenheit(celsius)
+    }
+    
+    var windGust: Double? {
+        guard let mps = weatherKitData?.currentWeather.windGust else { return nil }
+        return weatherKitService.metersPerSecondToMph(mps)
+    }
+    
+    var windDirection: Int? {
+        weatherKitData?.currentWeather.windDirection
+    }
+    
+    var weatherSymbolName: String? {
+        weatherKitData?.currentWeather.symbolName
+    }
+    
+    var hasWeatherKitData: Bool {
+        weatherKitData != nil
     }
 
     var powderScore: Int? {

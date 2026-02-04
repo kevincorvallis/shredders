@@ -76,7 +76,7 @@ struct EventsView: View {
                                             .stroke(hexColor("0EA5E9").opacity(0.5), lineWidth: 1)
                                     )
 
-                                VStack(alignment: .leading, spacing: 4) {
+                                VStack(alignment: .leading, spacing: .spacingXS) {
                                     Text("Plan ski trips with friends")
                                         .font(.headline)
                                         .foregroundStyle(.white)
@@ -346,8 +346,9 @@ struct EventsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .listRowInsets(EdgeInsets(top: .spacingS, leading: .spacingL, bottom: .spacingS, trailing: .spacingL))
                 .listRowBackground(Color.clear)
+                .accessibilityIdentifier("events_filter_picker")
                 .onChange(of: filter) { _, _ in
                     Task { await loadEvents() }
                 }

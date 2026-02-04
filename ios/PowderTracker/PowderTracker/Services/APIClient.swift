@@ -224,8 +224,20 @@ actor APIClient {
             }
 
             do {
+                #if DEBUG
+                // Debug: Print raw JSON for mountains endpoint to verify passType is present
+                if request.url?.path.contains("/mountains") == true && !request.url!.path.contains("/mountains/") {
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        let preview = String(jsonString.prefix(500))
+                        print("🌐 [APIClient] Mountains raw response (first 500 chars): \(preview)")
+                    }
+                }
+                #endif
                 return try decoder.decode(T.self, from: data)
             } catch {
+                #if DEBUG
+                print("🌐 [APIClient] Decoding error: \(error)")
+                #endif
                 throw APIError.decodingError(error)
             }
         } catch let error as APIError {

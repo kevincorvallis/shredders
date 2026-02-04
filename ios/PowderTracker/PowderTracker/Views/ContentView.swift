@@ -64,6 +64,22 @@ struct ContentView: View {
                 deepLinkInviteToken = nil
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("NavigateToTab"))) { notification in
+            if let tabIndex = notification.userInfo?["tabIndex"] as? Int {
+                withAnimation(.smooth) {
+                    selectedTab = tabIndex
+                    // Sync section selection for iPad
+                    switch tabIndex {
+                    case 0: selectedSection = .today
+                    case 1: selectedSection = .mountains
+                    case 2: selectedSection = .events
+                    case 3: selectedSection = .map
+                    case 4: selectedSection = .profile
+                    default: break
+                    }
+                }
+            }
+        }
         .sheet(item: $selectedMountain) { mountain in
             NavigationStack {
                 MountainDetailView(mountain: mountain)

@@ -11,5 +11,7 @@
 		<string>applinks:shredders-bay.vercel.app</string>
 		<string>applinks:*.shredders-bay.vercel.app</string>
 	</array>
+	<key>com.apple.developer.weatherkit</key>
+	<true/>
 </dict>
 </plist>

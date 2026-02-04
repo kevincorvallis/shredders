@@ -39,6 +39,15 @@ class MountainSelectionViewModel: ObservableObject {
 
             #if DEBUG
             print("🏔️ [MountainSelectionVM] Loaded \(mountains.count) mountains")
+            // Debug: Print pass types to verify decoding
+            let epicCount = mountains.filter { $0.passType == .epic }.count
+            let ikonCount = mountains.filter { $0.passType == .ikon }.count
+            let independentCount = mountains.filter { $0.passType == .independent }.count
+            let nilCount = mountains.filter { $0.passType == nil }.count
+            print("🏔️ [MountainSelectionVM] Pass types - Epic: \(epicCount), Ikon: \(ikonCount), Independent: \(independentCount), Nil: \(nilCount)")
+            if let firstMountain = mountains.first {
+                print("🏔️ [MountainSelectionVM] First mountain: \(firstMountain.shortName), passType: \(firstMountain.passType?.rawValue ?? "nil")")
+            }
             #endif
 
             // Request location to calculate distances

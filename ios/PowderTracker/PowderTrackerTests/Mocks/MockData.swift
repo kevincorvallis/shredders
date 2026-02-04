@@ -671,6 +671,7 @@ extension EventAttendee {
             isDriver: isDriver,
             needsRide: needsRide,
             pickupLocation: pickupLocation,
+            waitlistPosition: nil,
             respondedAt: ISO8601DateFormatter().string(from: Date()),
             user: EventUser(
                 id: userId,

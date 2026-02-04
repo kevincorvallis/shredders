@@ -14,7 +14,7 @@ struct MountainsTabView: View {
                 // Segmented mode picker
                 modePicker
                     .padding(.horizontal)
-                    .padding(.top, 8)
+                    .padding(.top, .spacingS)
 
                 // Content based on selected mode
                 TabView(selection: $selectedMode) {
@@ -78,6 +78,7 @@ struct MountainsTabView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("mountains_mode_\(mode.rawValue)")
                 .accessibilityLabel("\(mode.title) view")
                 .accessibilityHint("Shows mountains sorted by \(mode.title.lowercased())")
             }
@@ -280,6 +281,7 @@ struct ConditionsView: View {
                         }
                         HapticFeedback.selection.trigger()
                     }
+                    .accessibilityIdentifier("mountains_filter_fresh_powder")
 
                     // Open Only filter
                     FilterToggleChip(
@@ -293,6 +295,7 @@ struct ConditionsView: View {
                         }
                         HapticFeedback.selection.trigger()
                     }
+                    .accessibilityIdentifier("mountains_filter_open_only")
 
                     // Favorites filter
                     FilterToggleChip(
@@ -306,6 +309,7 @@ struct ConditionsView: View {
                         }
                         HapticFeedback.selection.trigger()
                     }
+                    .accessibilityIdentifier("mountains_filter_favorites")
 
                     // Nearby filter
                     FilterToggleChip(
@@ -319,6 +323,7 @@ struct ConditionsView: View {
                         }
                         HapticFeedback.selection.trigger()
                     }
+                    .accessibilityIdentifier("mountains_filter_nearby")
                 }
             }
 
@@ -1024,21 +1029,48 @@ struct MyPassView: View {
                         .font(.headline)
                         .padding(.horizontal)
 
-                    ForEach(filteredMountains) { mountain in
-                        NavigationLink {
-                            MountainDetailView(mountain: mountain)
-                        } label: {
-                            PassMountainRow(
-                                mountain: mountain,
-                                conditions: viewModel.getConditions(for: mountain),
-                                score: viewModel.getScore(for: mountain),
-                                isFavorite: favoritesManager.isFavorite(mountain.id),
-                                onFavoriteToggle: { toggleFavorite(mountain.id) }
-                            )
+                    // Loading state
+                    if viewModel.isLoading && viewModel.mountains.isEmpty {
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                            Text("Loading mountains...")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
                         }
-                        .buttonStyle(.plain)
-                        .navigationHaptic()
-                        .padding(.horizontal)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
+                    } else if filteredMountains.isEmpty {
+                        // Empty state for filter
+                        VStack(spacing: 12) {
+                            Image(systemName: "mountain.2")
+                                .font(.system(size: 48))
+                                .foregroundColor(.secondary)
+                            Text("No \(selectedPass.rawValue) mountains found")
+                                .font(.headline)
+                            Text("Try selecting a different pass type")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
+                    } else {
+                        ForEach(filteredMountains) { mountain in
+                            NavigationLink {
+                                MountainDetailView(mountain: mountain)
+                            } label: {
+                                PassMountainRow(
+                                    mountain: mountain,
+                                    conditions: viewModel.getConditions(for: mountain),
+                                    score: viewModel.getScore(for: mountain),
+                                    isFavorite: favoritesManager.isFavorite(mountain.id),
+                                    onFavoriteToggle: { toggleFavorite(mountain.id) }
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .navigationHaptic()
+                            .padding(.horizontal)
+                        }
                     }
                 }
 

@@ -672,8 +672,11 @@ struct PookieBSnowIntroView: View {
         generateHeart()
 
         // Generate new hearts periodically (store reference for cleanup)
+        // Note: Structs can't use weak self, use explicit capture instead
+        let showIntroBinding = $showIntro
         heartTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { timer in
-            guard showIntro else {
+            // Check if intro is still showing before generating hearts
+            if !showIntroBinding.wrappedValue {
                 timer.invalidate()
                 return
             }

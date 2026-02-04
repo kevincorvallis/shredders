@@ -8,10 +8,10 @@
 
 import XCTest
 
-@MainActor
 final class AppStoreScreenshots: XCTestCase {
-    nonisolated(unsafe) var app: XCUIApplication!
+    var app: XCUIApplication!
 
+    @MainActor
     override func setUpWithError() throws {
         try super.setUpWithError()
         continueAfterFailure = true
@@ -21,11 +21,14 @@ final class AppStoreScreenshots: XCTestCase {
         app.launch()
     }
 
+    @MainActor
     override func tearDownWithError() throws {
         app = nil
         try super.tearDownWithError()
     }
 
+	
+    @MainActor
     func testCaptureRemainingScreenshots() {
         // Wait for app to fully load
         sleep(5)
@@ -66,6 +69,7 @@ final class AppStoreScreenshots: XCTestCase {
         }
     }
 
+    @MainActor
     func testCaptureAppStoreScreenshots() {
         // Wait for app to fully load
         sleep(3)
@@ -145,11 +149,13 @@ final class AppStoreScreenshots: XCTestCase {
 
     // MARK: - Snapshot Helper
 
+    @MainActor
     private func setupSnapshot(_ app: XCUIApplication) {
         // Snapshot setup for fastlane compatibility
         Snapshot.setupSnapshot(app, waitForAnimations: true)
     }
 
+    @MainActor
     private func snapshot(_ name: String) {
         // Take screenshot and save as attachment
         let screenshot = XCUIScreen.main.screenshot()

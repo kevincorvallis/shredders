@@ -47,6 +47,8 @@ struct TodayView: View {
                     } label: {
                         Image(systemName: "star.circle")
                     }
+                    .accessibilityIdentifier("today_manage_favorites_button")
+                    .accessibilityLabel("Manage favorites")
                 }
             }
             .refreshable {
@@ -92,7 +94,7 @@ struct TodayView: View {
 
     private var regionHeader: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: .spacingXS) {
                 Text(currentRegionName)
                     .font(.headline)
                     .fontWeight(.semibold)
@@ -111,10 +113,13 @@ struct TodayView: View {
                     .font(.subheadline)
                     .foregroundColor(.blue)
             }
+            .accessibilityIdentifier("today_change_region_button")
+            .accessibilityLabel("Change region")
         }
         .padding(.spacingM)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(.cornerRadiusCard)
+        .accessibilityElement(children: .combine)
     }
 
     private var currentRegionName: String {
@@ -178,6 +183,7 @@ struct TodayView: View {
                 showingManageFavorites = true
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("today_add_mountains_button")
         }
         .frame(maxWidth: .infinity)
         .padding(.spacingXL)

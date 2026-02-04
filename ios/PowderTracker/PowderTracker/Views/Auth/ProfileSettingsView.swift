@@ -180,17 +180,21 @@ struct ProfileSettingsView: View {
     private var avatarSection: some View {
         let size: CGFloat = 100
         let initial = String(authService.userProfile?.displayName?.first ?? authService.userProfile?.username.first ?? "?").uppercased()
+        // Capture values to avoid main actor isolation warnings in closures
+        let currentSelectedImage = selectedImage
+        let currentAvatarUrl = authService.userProfile?.avatarUrl
+        let currentIsUploading = isUploadingAvatar
 
         PhotosPicker(selection: $selectedItem, matching: .images) {
             ZStack {
                 // Show selected image, or current avatar, or placeholder
-                if let image = selectedImage {
+                if let image = currentSelectedImage {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
                         .frame(width: size, height: size)
                         .clipShape(Circle())
-                } else if let avatarUrl = authService.userProfile?.avatarUrl,
+                } else if let avatarUrl = currentAvatarUrl,
                           let url = URL(string: avatarUrl) {
                     AsyncImage(url: url) { phase in
                         switch phase {
@@ -218,7 +222,7 @@ struct ProfileSettingsView: View {
                     .frame(width: 32, height: 32)
                     .overlay(
                         Group {
-                            if isUploadingAvatar {
+                            if currentIsUploading {
                                 ProgressView()
                                     .tint(.white)
                                     .scaleEffect(0.7)
@@ -238,7 +242,7 @@ struct ProfileSettingsView: View {
                     .frame(width: size, height: size)
             }
         }
-        .disabled(isUploadingAvatar)
+        .disabled(currentIsUploading)
     }
 
     // MARK: - Image Loading
