@@ -43,19 +43,26 @@ class EventService {
 
     /// Fetch events with optional filters
     /// Falls back to cached events when offline
+    /// - Parameter bustCache: If true, adds a timestamp to bypass HTTP cache (use after creating/modifying events)
     func fetchEvents(
         mountainId: String? = nil,
         upcoming: Bool = true,
         createdByMe: Bool = false,
         attendingOnly: Bool = false,
         limit: Int = 20,
-        offset: Int = 0
+        offset: Int = 0,
+        bustCache: Bool = false
     ) async throws -> EventsListResponse {
         var components = URLComponents(string: "\(baseURL)/events")!
         var queryItems: [URLQueryItem] = [
             URLQueryItem(name: "limit", value: String(limit)),
             URLQueryItem(name: "offset", value: String(offset)),
         ]
+
+        // Add cache-busting timestamp to bypass HTTP cache when needed
+        if bustCache {
+            queryItems.append(URLQueryItem(name: "_t", value: String(Int(Date().timeIntervalSince1970))))
+        }
 
         if let mountainId = mountainId {
             queryItems.append(URLQueryItem(name: "mountainId", value: mountainId))
@@ -290,7 +297,12 @@ class EventService {
             throw EventServiceError.serverError(httpResponse.statusCode)
         }
 
-        return try decoder.decode(CreateEventResponse.self, from: data)
+        let result = try decoder.decode(CreateEventResponse.self, from: data)
+
+        // Invalidate cache after creating event so next fetch gets fresh data
+        cache.invalidateAll()
+
+        return result
     }
 
     // MARK: - Update Event

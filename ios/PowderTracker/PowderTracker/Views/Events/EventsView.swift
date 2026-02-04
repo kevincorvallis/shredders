@@ -8,13 +8,10 @@ struct EventsView: View {
     @State private var error: String?
     @AppStorage("eventsFilter") private var filter: EventFilter = .all
     @AppStorage("eventsViewMode") private var viewMode: EventViewMode = .list
-    @AppStorage("showEventSuggestions") private var showSuggestions = true
     @State private var showingCreateSheet = false
     @State private var navigationPath = NavigationPath()
     @State private var toast: ToastMessage?
     @State private var searchText = ""
-    @State private var selectedSuggestion: EventSuggestionType?
-    @StateObject private var suggestionsViewModel = SmartEventSuggestionsViewModel()
 
     enum EventFilter: String, CaseIterable, RawRepresentable {
         case all = "All"
@@ -271,17 +268,10 @@ struct EventsView: View {
             }
             .sheet(isPresented: $showingCreateSheet) {
                 EventCreateView(
-                    suggestion: selectedSuggestion,
                     onEventCreated: { _ in
-                        Task { await loadEvents() }
-                        selectedSuggestion = nil
+                        Task { await loadEvents(bustCache: true) }
                     }
                 )
-            }
-            .onChange(of: showingCreateSheet) { _, isShowing in
-                if !isShowing {
-                    selectedSuggestion = nil
-                }
             }
             .navigationDestination(for: String.self) { eventId in
                 EventDetailView(eventId: eventId)
@@ -295,26 +285,18 @@ struct EventsView: View {
                 mountains = MountainService.shared.allMountains
             }
             await loadEvents()
-            
-            // Load smart suggestions
-            if showSuggestions {
-                await suggestionsViewModel.loadSuggestions()
-            }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("EventCancelled"))) { _ in
             // Refresh events when an event is cancelled
-            Task { await loadEvents() }
+            Task { await loadEvents(bustCache: true) }
         }
     }
 
     // MARK: - Subviews
 
     private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-            Text("Loading events...")
-                .foregroundStyle(.secondary)
-        }
+        // Use skeleton loading for better perceived performance
+        EventsTabSkeleton()
     }
 
     private func errorView(message: String) -> some View {
@@ -352,28 +334,84 @@ struct EventsView: View {
         }
         .padding()
     }
+    
+    /// Banner suggesting users find the best powder day to create an event
+    private var powderDayFinderBanner: some View {
+        Button {
+            HapticFeedback.medium.trigger()
+            showingCreateSheet = true
+        } label: {
+            HStack(spacing: .spacingM) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.cyan, .blue],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 44, height: 44)
+                        .shadow(color: .cyan.opacity(0.3), radius: 6, y: 2)
+                    
+                    Image(systemName: "wand.and.stars")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                
+                // Content
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Find Best Powder Day")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Text("AI picks the best day & mountain for your trip")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                // Arrow
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary.opacity(0.5))
+            }
+            .padding(.spacingM)
+            .background(
+                RoundedRectangle(cornerRadius: .cornerRadiusCard)
+                    .fill(Color(.secondarySystemBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: .cornerRadiusCard)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.cyan.opacity(0.3), .blue.opacity(0.2)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+            )
+            .cardShadow()
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("powder_day_finder_banner")
+    }
 
     private var eventsList: some View {
         AdaptiveContentView(maxWidth: .maxContentWidthRegular) {
             List {
-                // Smart Suggestions Card
-                if showSuggestions && !suggestionsViewModel.suggestions.isEmpty && filter == .all {
-                    Section {
-                        SmartEventSuggestionsCard(
-                            suggestions: suggestionsViewModel.suggestions,
-                            onSuggestionTap: { suggestion in
-                                selectedSuggestion = suggestion
-                                showingCreateSheet = true
-                            },
-                            onDismiss: {
-                                showSuggestions = false
-                            }
-                        )
-                    }
-                    .listRowInsets(EdgeInsets(top: .spacingS, leading: .spacingL, bottom: .spacingS, trailing: .spacingL))
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
+                // Powder Day Finder suggestion banner
+                Section {
+                    powderDayFinderBanner
                 }
+                .listRowInsets(EdgeInsets(top: .spacingS, leading: .spacingL, bottom: .spacingS, trailing: .spacingL))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
                 
                 // Filter picker
                 Picker("Filter", selection: $filter) {
@@ -476,7 +514,7 @@ struct EventsView: View {
 
     // MARK: - Data Loading
 
-    private func loadEvents() async {
+    private func loadEvents(bustCache: Bool = false) async {
         isLoading = events.isEmpty
         error = nil
 
@@ -484,7 +522,8 @@ struct EventsView: View {
             let response = try await EventService.shared.fetchEvents(
                 upcoming: true,
                 createdByMe: filter == .mine,
-                attendingOnly: filter == .attending
+                attendingOnly: filter == .attending,
+                bustCache: bustCache
             )
             events = response.events
         } catch let err as EventServiceError {
@@ -1194,7 +1233,7 @@ struct SampleEventRow: View {
     }
 }
 
-#Preview {
+#Preview("Events") {
     EventsView()
         .environment(AuthService.shared)
 }
