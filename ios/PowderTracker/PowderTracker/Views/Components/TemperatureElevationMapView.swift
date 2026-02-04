@@ -439,6 +439,7 @@ struct TemperatureElevationMapView_Previews: PreviewProvider {
                     snotel: nil,
                     noaa: nil,
                     webcams: [],
+                    webcamPageUrl: nil,
                     roadWebcams: nil,
                     color: "#8b5cf6",
                     website: "https://www.crystalmountainresort.com",

@@ -420,6 +420,7 @@ extension MountainBatchedResponse {
                 MountainDetail.Webcam(id: "1", name: "Base Lodge", url: "https://example.com/cam1.jpg", refreshUrl: nil),
                 MountainDetail.Webcam(id: "2", name: "Summit", url: "https://example.com/cam2.jpg", refreshUrl: nil)
             ],
+            webcamPageUrl: "https://www.mtbaker.us/snow-report/webcams",
             roadWebcams: nil,
             color: "#3b82f6",
             website: "https://www.mtbaker.us",

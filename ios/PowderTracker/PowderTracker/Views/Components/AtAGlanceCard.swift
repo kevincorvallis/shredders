@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Compact hero card showing the most important information at a glance
 struct AtAGlanceCard: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     var onNavigateToLifts: (() -> Void)?
     @State private var expandedSection: ExpandableSection? = nil
 
@@ -458,6 +458,7 @@ struct AtAGlanceCard: View {
                     snotel: MountainDetail.SnotelInfo(stationId: "909", stationName: "Wells Creek"),
                     noaa: MountainDetail.NOAAInfo(gridOffice: "SEW", gridX: 120, gridY: 110),
                     webcams: [],
+                    webcamPageUrl: nil,
                     roadWebcams: nil,
                     color: "#4A90E2",
                     website: "https://www.mtbaker.us",

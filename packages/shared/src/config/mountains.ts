@@ -35,6 +35,7 @@ export interface MountainConfig {
     url: string;
     refreshUrl?: string;
   }[];
+  webcamPageUrl?: string;
   roadWebcams?: {
     id: string;
     name: string;
@@ -73,6 +74,7 @@ export const mountains: Record<string, MountainConfig> = {
         refreshUrl: 'https://video-monitoring.com/parks/mtbaker/',
       },
     ],
+    webcamPageUrl: 'https://www.mtbaker.us/snow-report/webcams',
     color: '#3b82f6',
     website: 'https://www.mtbaker.us',
     logo: '/logos/baker.png',
@@ -96,6 +98,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Stevens Pass webcams have moved to a dynamic system
       // Visit https://www.stevenspass.com/the-mountain/mountain-conditions/mountain-cams.aspx for live webcams
     ],
+    webcamPageUrl: 'https://www.stevenspass.com/the-mountain/mountain-conditions/mountain-cams.aspx',
     roadWebcams: [
       {
         id: 'us2-skykomish',
@@ -161,6 +164,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Crystal uses dynamic Roundshot 360 webcams which don't have static image URLs
       // Users can view webcams at: https://www.crystalmountainresort.com/the-mountain/webcams
     ],
+    webcamPageUrl: 'https://www.crystalmountainresort.com/the-mountain/webcams',
     color: '#8b5cf6',
     website: 'https://www.crystalmountainresort.com',
     logo: '/logos/crystal.png',
@@ -184,6 +188,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Snoqualmie webcams have moved to a dynamic system
       // Visit https://www.summitatsnoqualmie.com/webcams for live cameras
     ],
+    webcamPageUrl: 'https://www.summitatsnoqualmie.com/webcams',
     roadWebcams: [
       {
         id: 'i90-northbend',
@@ -329,6 +334,7 @@ export const mountains: Record<string, MountainConfig> = {
       // White Pass webcams have moved to a dynamic system
       // Visit https://skiwhitepass.com/mountain-cams for live cameras
     ],
+    webcamPageUrl: 'https://skiwhitepass.com/mountain-cams',
     roadWebcams: [
       {
         id: 'us12-whitepasssummit',
@@ -362,6 +368,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Mt. Hood Meadows webcams have moved to a dynamic system
       // Visit https://www.skihood.com/mountain-report/mountain-cams for live cameras
     ],
+    webcamPageUrl: 'https://www.skihood.com/mountain-report/mountain-cams',
     color: '#06b6d4',
     website: 'https://www.skihood.com',
     logo: '/logos/meadows.png',
@@ -385,6 +392,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Timberline webcams have moved to a dynamic system
       // Visit https://timberlinelodge.com/webcams for live cameras
     ],
+    webcamPageUrl: 'https://www.timberlinelodge.com/webcams',
     color: '#14b8a6',
     website: 'https://www.timberlinelodge.com',
     logo: '/logos/timberline.png',
@@ -408,6 +416,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Mt. Bachelor uses 13 dynamic live feed webcams
       // Visit https://www.mtbachelor.com/the-mountain/webcams for live cameras
     ],
+    webcamPageUrl: 'https://www.mtbachelor.com/the-mountain/webcams',
     color: '#f97316',
     website: 'https://www.mtbachelor.com',
     logo: '/logos/bachelor.png',
@@ -432,6 +441,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Mission Ridge webcams have moved to a dynamic system
       // Visit https://www.missionridge.com/mountain-report for live cameras
     ],
+    webcamPageUrl: 'https://www.missionridge.com/mountain-report',
     color: '#dc2626',
     website: 'https://www.missionridge.com',
     logo: '/logos/missionridge.png',
@@ -455,6 +465,7 @@ export const mountains: Record<string, MountainConfig> = {
       // 49 Degrees North webcams have moved to a dynamic system
       // Visit https://www.ski49n.com/index.php/mountain-info/webcams for live cameras
     ],
+    webcamPageUrl: 'https://www.ski49n.com/index.php/mountain-info/webcams',
     color: '#7c3aed',
     website: 'https://www.ski49n.com',
     logo: '/logos/fortynine.png',
@@ -479,6 +490,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Schweitzer webcams have moved to a dynamic system
       // Visit https://www.schweitzer.com/mountain-info/webcam for live cameras
     ],
+    webcamPageUrl: 'https://www.schweitzer.com/mountain-info/webcam',
     color: '#0ea5e9',
     website: 'https://www.schweitzer.com',
     logo: '/logos/schweitzer.png',
@@ -502,6 +514,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Lookout Pass webcams have moved to a dynamic system
       // Visit https://www.skilookout.com for current conditions
     ],
+    webcamPageUrl: 'https://www.skilookout.com/the-mountain/web-cams',
     color: '#059669',
     website: 'https://www.skilookout.com',
     logo: '/logos/lookout.png',
@@ -526,6 +539,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Mt. Ashland webcams have moved to a dynamic system
       // Visit https://www.mtashland.com for current conditions
     ],
+    webcamPageUrl: 'https://www.mtashland.com/conditions',
     color: '#ea580c',
     website: 'https://www.mtashland.com',
     logo: '/logos/ashland.png',
@@ -549,6 +563,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Willamette Pass webcams have moved to a dynamic system
       // Visit https://www.willamettepass.ski/weather-conditions-webcams for live cameras
     ],
+    webcamPageUrl: 'https://www.willamettepass.ski/weather-conditions-webcams',
     color: '#84cc16',
     website: 'https://www.willamettepass.com',
     logo: '/logos/willamette.png',
@@ -572,6 +587,7 @@ export const mountains: Record<string, MountainConfig> = {
       // Hoodoo webcams have moved to a dynamic system
       // Visit https://www.skihoodoo.com for current conditions
     ],
+    webcamPageUrl: 'https://www.skihoodoo.com/conditions',
     color: '#f472b6',
     website: 'https://www.skihoodoo.com',
     logo: '/logos/hoodoo.png',
@@ -626,6 +642,7 @@ export const mountains: Record<string, MountainConfig> = {
         refreshUrl: 'https://ots-webcams.s3.amazonaws.com/493/25397/2025-12-20_1804/xl.jpg',
       },
     ],
+    webcamPageUrl: 'https://www.whistlerblackcomb.com/the-mountain/mountain-conditions/webcams.aspx',
     color: '#0066b3',
     website: 'https://www.whistlerblackcomb.com',
     logo: '/logos/whistler.png',
@@ -646,6 +663,7 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'BOI', gridX: 110, gridY: 96 },
     webcams: [],
+    webcamPageUrl: 'https://www.sunvalley.com/mountain-info/webcams',
     color: '#d946ef',
     website: 'https://www.sunvalley.com',
     logo: '/logos/sunvalley.png',
@@ -663,6 +681,7 @@ export const mountains: Record<string, MountainConfig> = {
     // No SNOTEL data (Canada)
     // No NOAA grid (using Open-Meteo for Canadian weather)
     webcams: [],
+    webcamPageUrl: 'https://www.revelstokemountainresort.com/conditions/webcams',
     color: '#fb923c',
     website: 'https://www.revelstokemountainresort.com',
     logo: '/logos/revelstoke.png',
@@ -680,6 +699,7 @@ export const mountains: Record<string, MountainConfig> = {
     // No SNOTEL data (Canada)
     // No NOAA grid (using Open-Meteo for Canadian weather)
     webcams: [],
+    webcamPageUrl: 'https://www.cypressmountain.com/mountain-info/webcams',
     color: '#4ade80',
     website: 'https://www.cypressmountain.com',
     logo: '/logos/cypress.png',
@@ -697,6 +717,7 @@ export const mountains: Record<string, MountainConfig> = {
     // No SNOTEL data (Canada)
     // No NOAA grid (using Open-Meteo for Canadian weather)
     webcams: [],
+    webcamPageUrl: 'https://www.sunpeaksresort.com/ski-ride/snow-report/webcams',
     color: '#facc15',
     website: 'https://www.sunpeaksresort.com',
     logo: '/logos/sunpeaks.png',
@@ -714,6 +735,7 @@ export const mountains: Record<string, MountainConfig> = {
     // No SNOTEL data (Canada)
     // No NOAA grid (using Open-Meteo for Canadian weather)
     webcams: [],
+    webcamPageUrl: 'https://www.bigwhite.com/mountain/webcams',
     color: '#c084fc',
     website: 'https://www.bigwhite.com',
     logo: '/logos/bigwhite.png',
@@ -734,6 +756,7 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'BOI', gridX: 145, gridY: 149 },
     webcams: [],
+    webcamPageUrl: 'https://www.brundage.com/the-mountain/webcams',
     color: '#fb7185',
     website: 'https://www.brundage.com',
     logo: '/logos/brundage.png',
@@ -754,6 +777,7 @@ export const mountains: Record<string, MountainConfig> = {
     },
     noaa: { gridOffice: 'PDT', gridX: 39, gridY: 122 },
     webcams: [],
+    webcamPageUrl: 'https://anthonylakes.com/snow-report',
     color: '#38bdf8',
     website: 'https://anthonylakes.com',
     logo: '/logos/anthonylakes.png',
@@ -771,6 +795,7 @@ export const mountains: Record<string, MountainConfig> = {
     // No SNOTEL data (Canada)
     // No NOAA grid (using Open-Meteo for Canadian weather)
     webcams: [],
+    webcamPageUrl: 'https://www.redresort.com/conditions/webcams',
     color: '#fbbf24',
     website: 'https://www.redresort.com',
     logo: '/logos/red.png',
@@ -788,6 +813,7 @@ export const mountains: Record<string, MountainConfig> = {
     // No SNOTEL data (Canada)
     // No NOAA grid (using Open-Meteo for Canadian weather)
     webcams: [],
+    webcamPageUrl: 'https://www.panoramaresort.com/conditions/webcams',
     color: '#22d3ee',
     website: 'https://www.panoramaresort.com',
     logo: '/logos/panorama.png',
@@ -805,6 +831,7 @@ export const mountains: Record<string, MountainConfig> = {
     // No SNOTEL data (Canada)
     // No NOAA grid (using Open-Meteo for Canadian weather)
     webcams: [],
+    webcamPageUrl: 'https://www.skisilverstar.com/conditions/webcams',
     color: '#a78bfa',
     website: 'https://www.skisilverstar.com',
     logo: '/logos/silverstar.png',
@@ -822,6 +849,7 @@ export const mountains: Record<string, MountainConfig> = {
     // No SNOTEL data (Canada)
     // No NOAA grid (using Open-Meteo for Canadian weather)
     webcams: [],
+    webcamPageUrl: 'https://www.apexresort.com/mountain-info/webcams',
     color: '#34d399',
     website: 'https://www.apexresort.com',
     logo: '/logos/apex.png',

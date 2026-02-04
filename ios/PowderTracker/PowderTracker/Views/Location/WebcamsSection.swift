@@ -3,35 +3,92 @@ import Nuke
 import NukeUI
 
 struct WebcamsSection: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
 
     var body: some View {
         VStack(spacing: 16) {
             // Resort Webcams
-            if let mountain = viewModel.locationData?.mountain,
-               !mountain.webcams.isEmpty {
-                VStack(alignment: .leading, spacing: 16) {
-                    // Section Header
-                    HStack {
-                        Image(systemName: "camera.fill")
-                            .foregroundColor(.blue)
-                        Text("Resort Webcams")
-                            .font(.headline)
-                    }
+            if let mountain = viewModel.locationData?.mountain {
+                if !mountain.webcams.isEmpty {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Section Header
+                        HStack {
+                            Image(systemName: "camera.fill")
+                                .foregroundColor(.blue)
+                            Text("Resort Webcams")
+                                .font(.headline)
 
-                    // Webcams Scroll View
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(mountain.webcams) { webcam in
-                                LocationResortWebcamCard(webcam: webcam)
+                            Spacer()
+
+                            // View All link if webcam page URL exists
+                            if let webcamPageUrl = mountain.webcamPageUrl,
+                               let url = URL(string: webcamPageUrl) {
+                                Link(destination: url) {
+                                    HStack(spacing: 4) {
+                                        Text("View All")
+                                            .font(.subheadline)
+                                        Image(systemName: "arrow.up.right")
+                                            .font(.caption)
+                                    }
+                                    .foregroundColor(.blue)
+                                }
+                            }
+                        }
+
+                        // Webcams Scroll View
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(mountain.webcams) { webcam in
+                                    LocationResortWebcamCard(webcam: webcam)
+                                }
                             }
                         }
                     }
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .cornerRadius(.cornerRadiusCard)
+                    .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
+                } else if let webcamPageUrl = mountain.webcamPageUrl,
+                          let url = URL(string: webcamPageUrl) {
+                    // No static webcams but has webcam page URL - show link card
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Section Header
+                        HStack {
+                            Image(systemName: "camera.fill")
+                                .foregroundColor(.blue)
+                            Text("Resort Webcams")
+                                .font(.headline)
+                        }
+
+                        // Link to webcam page
+                        Link(destination: url) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("View Live Webcams")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.primary)
+                                    Text("Opens in browser")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Spacer()
+
+                                Image(systemName: "arrow.up.right.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(.cornerRadiusButton)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .cornerRadius(.cornerRadiusCard)
+                    .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
                 }
-                .padding()
-                .background(Color(.systemBackground))
-                .cornerRadius(.cornerRadiusCard)
-                .shadow(color: Color(.label).opacity(0.05), radius: 8, x: 0, y: 2)
             }
 
             // Road Webcams

@@ -2,19 +2,20 @@ import Foundation
 import CoreLocation
 
 @MainActor
-class LocationViewModel: ObservableObject {
-    @Published var isLoading = false
-    @Published var error: String?
-    @Published var locationData: MountainBatchedResponse?
-    @Published var liftData: LiftGeoJSON?
-    @Published var snowComparison: SnowComparisonResponse?
-    @Published var safetyData: SafetyData?
-    @Published var snowHistory: [SnowHistoryPoint] = []
-    @Published var snowHistoryLoading = false
+@Observable
+class LocationViewModel {
+    var isLoading = false
+    var error: String?
+    var locationData: MountainBatchedResponse?
+    var liftData: LiftGeoJSON?
+    var snowComparison: SnowComparisonResponse?
+    var safetyData: SafetyData?
+    var snowHistory: [SnowHistoryPoint] = []
+    var snowHistoryLoading = false
     
     // WeatherKit integration
-    @Published var weatherKitData: WeatherKitService.WeatherData?
-    @Published var weatherKitLoading = false
+    var weatherKitData: WeatherKitService.WeatherData?
+    var weatherKitLoading = false
     private let weatherKitService = WeatherKitService.shared
 
     let mountain: Mountain
@@ -236,7 +237,8 @@ class LocationViewModel: ObservableObject {
         guard let mountain = locationData?.mountain else { return false }
         let hasResortWebcams = !mountain.webcams.isEmpty
         let hasRoadWebcams = mountain.roadWebcams?.isEmpty == false
-        return hasResortWebcams || hasRoadWebcams
+        let hasWebcamPageUrl = mountain.webcamPageUrl != nil
+        return hasResortWebcams || hasRoadWebcams || hasWebcamPageUrl
     }
 
     // MARK: - Historical Data for Chart

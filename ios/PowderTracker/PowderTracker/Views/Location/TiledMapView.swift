@@ -137,6 +137,7 @@ struct TiledMapView_Previews: PreviewProvider {
                     gridY: 90
                 ),
                 webcams: [],
+                webcamPageUrl: nil,
                 roadWebcams: nil,
                 color: "#8b5cf6",
                 website: "https://www.crystalmountainresort.com",
