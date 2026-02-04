@@ -59,7 +59,9 @@ actor APIClient {
         config.timeoutIntervalForRequest = 60  // Increased timeout
         config.timeoutIntervalForResource = 120
         config.waitsForConnectivity = true
-        config.requestCachePolicy = .returnCacheDataElseLoad
+        // Use protocol cache policy to respect server cache headers (10-min TTL)
+        // instead of returnCacheDataElseLoad which can return stale data indefinitely
+        config.requestCachePolicy = .useProtocolCachePolicy
         return URLSession(configuration: config)
     }()
 
