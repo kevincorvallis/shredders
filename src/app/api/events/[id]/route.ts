@@ -286,10 +286,10 @@ export async function PATCH(
     }
 
     // Check if event exists and user is the creator
-    // Fetch additional fields needed for change detection
+    // Fetch additional fields needed for change detection and validation
     const { data: existingEvent, error: fetchError } = await supabase
       .from('events')
-      .select('user_id, title, mountain_id, event_date, departure_time, departure_location')
+      .select('user_id, title, mountain_id, event_date, departure_time, departure_location, going_count, max_attendees')
       .eq('id', id)
       .single();
 
@@ -401,6 +401,24 @@ export async function PATCH(
       updates.carpool_seats = body.carpoolSeats;
     }
 
+    if (body.maxAttendees !== undefined) {
+      // Validate range
+      if (body.maxAttendees !== null && (body.maxAttendees < 1 || body.maxAttendees > 1000)) {
+        return NextResponse.json(
+          { error: 'Max attendees must be between 1 and 1000' },
+          { status: 400 }
+        );
+      }
+      // Prevent setting below current going count (would strand existing attendees)
+      if (body.maxAttendees !== null && existingEvent.going_count > body.maxAttendees) {
+        return NextResponse.json(
+          { error: `Cannot set capacity below current attendees (${existingEvent.going_count} going)` },
+          { status: 400 }
+        );
+      }
+      updates.max_attendees = body.maxAttendees;
+    }
+
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
         { error: 'No valid fields to update' },
@@ -481,6 +499,7 @@ export async function PATCH(
         skillLevel: updatedEvent.skill_level,
         carpoolAvailable: updatedEvent.carpool_available,
         carpoolSeats: updatedEvent.carpool_seats,
+        maxAttendees: updatedEvent.max_attendees,
         status: updatedEvent.status,
         createdAt: updatedEvent.created_at,
         updatedAt: updatedEvent.updated_at,
