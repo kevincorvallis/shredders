@@ -18,11 +18,13 @@ struct EventDetailView: View {
     @State private var toast: ToastMessage?
     @State private var showingRSVPSheet = false
     @State private var isAddingToCalendar = false
+    @State private var selectedSocialTab: EventSocialTab = .discussion
 
     var body: some View {
         Group {
             if isLoading {
-                ProgressView()
+                // Use skeleton loading for better perceived performance
+                EventDetailSkeleton()
             } else if let error = error {
                 errorView(message: error)
             } else if let event = event {
@@ -194,9 +196,6 @@ struct EventDetailView: View {
                 // Event Info Card
                 eventInfoCard(event: event)
 
-                // Add to Calendar Button (visible to all users)
-                addToCalendarButton(event: event)
-
                 // Forecast Card (for event day)
                 if let forecast = event.conditions?.forecast {
                     forecastCard(forecast: forecast, eventDate: event.eventDate)
@@ -236,38 +235,95 @@ struct EventDetailView: View {
         }
     }
 
-    // MARK: - Discussion Section
+    // MARK: - Social Sections (Discussion, Activity, Photos)
 
     private func socialSections(event: EventWithDetails) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header
-            HStack {
-                Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .foregroundStyle(.blue)
-                Text("Discussion")
-                    .font(.headline)
-                if let count = event.commentCount, count > 0 {
-                    Text("(\(count))")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+            // Tab Picker
+            Picker("Social", selection: $selectedSocialTab) {
+                ForEach(EventSocialTab.allCases, id: \.self) { tab in
+                    HStack(spacing: 4) {
+                        Image(systemName: tab.icon)
+                        Text(tab.title)
+                    }
+                    .tag(tab)
                 }
-                Spacer()
             }
+            .pickerStyle(.segmented)
 
-            Divider()
-
-            // Recent activity summary (who joined)
+            // Recent activity summary (always visible)
             recentActivitySummary(event: event)
 
             Divider()
 
-            // Discussion content
+            // Tab content
             let canView = event.userRSVPStatus != nil || event.isCreator == true
-            discussionContent(event: event, canView: canView)
+
+            switch selectedSocialTab {
+            case .discussion:
+                discussionContent(event: event, canView: canView)
+            case .activity:
+                activityContent(event: event, canView: canView)
+            case .photos:
+                photosContent(event: event, canView: canView)
+            }
         }
         .padding()
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func activityContent(event: EventWithDetails, canView: Bool) -> some View {
+        Group {
+            if canView {
+                EventActivityView(eventId: eventId)
+                    .frame(minHeight: 200)
+            } else {
+                gatedContentView(icon: "chart.line.uptrend.xyaxis", message: "RSVP to see activity")
+            }
+        }
+    }
+
+    private func photosContent(event: EventWithDetails, canView: Bool) -> some View {
+        Group {
+            if canView {
+                EventPhotosView(eventId: eventId)
+                    .frame(minHeight: 250)
+            } else {
+                VStack(spacing: 16) {
+                    Image(systemName: "photo.stack.fill")
+                        .font(.title)
+                        .foregroundStyle(.secondary)
+                    Text("RSVP to view and upload photos")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    if let count = event.photoCount, count > 0 {
+                        Text("\(count) photos shared")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 150)
+                .background(Color(.tertiarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+    }
+
+    private func gatedContentView(icon: String, message: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.title)
+                .foregroundStyle(.secondary)
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 150)
+        .background(Color(.tertiarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private func recentActivitySummary(event: EventWithDetails) -> some View {
@@ -737,35 +793,6 @@ extension EventDetailView {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    private func addToCalendarButton(event: EventWithDetails) -> some View {
-        Button {
-            Task { await addToCalendar() }
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: isAddingToCalendar ? "calendar.badge.clock" : "calendar.badge.plus")
-                    .font(.system(size: 18, weight: .semibold))
-                    .symbolEffect(.pulse, isActive: isAddingToCalendar)
-
-                Text(isAddingToCalendar ? "Adding..." : "Add to Calendar")
-                    .fontWeight(.semibold)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(
-                LinearGradient(
-                    colors: [Color.blue, Color.blue.opacity(0.8)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .shadow(color: .blue.opacity(0.3), radius: 8, y: 4)
-        }
-        .disabled(isAddingToCalendar)
-        .accessibilityIdentifier("add_to_calendar_button")
-    }
-
     private func rsvpButtons(event: EventWithDetails) -> some View {
         VStack(spacing: 12) {
             HStack(spacing: 16) {
@@ -790,6 +817,7 @@ extension EventDetailView {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .disabled(isRSVPing)
+                .accessibilityIdentifier("event_detail_going_button")
 
                 Button {
                     if event.carpoolAvailable {
@@ -812,6 +840,7 @@ extension EventDetailView {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .disabled(isRSVPing)
+                .accessibilityIdentifier("event_detail_maybe_button")
             }
         }
     }
