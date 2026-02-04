@@ -216,7 +216,8 @@ class EventService {
         departureLocation: String? = nil,
         skillLevel: SkillLevel? = nil,
         carpoolAvailable: Bool = false,
-        carpoolSeats: Int? = nil
+        carpoolSeats: Int? = nil,
+        maxAttendees: Int? = nil
     ) async throws -> CreateEventResponse {
         // Phase 5: Client-side validation (prevents unnecessary network calls)
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -270,7 +271,8 @@ class EventService {
             departureLocation: departureLocation,
             skillLevel: skillLevel?.rawValue,
             carpoolAvailable: carpoolAvailable,
-            carpoolSeats: carpoolSeats
+            carpoolSeats: carpoolSeats,
+            maxAttendees: maxAttendees
         )
 
         var request = URLRequest(url: url)

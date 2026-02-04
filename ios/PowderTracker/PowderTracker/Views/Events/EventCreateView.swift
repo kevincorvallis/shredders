@@ -3,8 +3,6 @@ import SwiftUI
 struct EventCreateView: View {
     @Environment(\.dismiss) private var dismiss
 
-    // Optional suggestion from smart suggestions
-    var suggestion: EventSuggestionType?
     var onEventCreated: ((Event) -> Void)?
 
     @State private var selectedMountainId = ""
@@ -17,6 +15,8 @@ struct EventCreateView: View {
     @State private var skillLevel: SkillLevel?
     @State private var carpoolAvailable = false
     @State private var carpoolSeats = 3
+    @State private var hasMaxAttendees = false
+    @State private var maxAttendees = 20
 
     @State private var isSubmitting = false
     @State private var error: String?
@@ -27,14 +27,6 @@ struct EventCreateView: View {
     @State private var allForecasts: [ForecastDay] = []
     @State private var isLoadingForecast = false
     @State private var bestPowderDay: ForecastDay?
-
-    // Mountain suggestions (multiple for leaderboard)
-    @State private var mountainComparisons: [(id: String, name: String, forecast: ForecastDay)] = []
-    @State private var bestMountain: (id: String, name: String, forecast: ForecastDay)?
-    @State private var isLoadingMountainSuggestion = false
-    
-    // Track if we've applied the suggestion
-    @State private var suggestionApplied = false
 
     // All mountains from the app config (IDs must match backend)
     private let mountains: [(id: String, name: String)] = [
@@ -95,6 +87,11 @@ struct EventCreateView: View {
                     .onChange(of: eventDate) { _, _ in
                         Task { await loadForecast() }
                     }
+                    
+                    // Auto-fill best powder day button
+                    if !selectedMountainId.isEmpty {
+                        autoFillBestDayButton
+                    }
                 }
 
                 // Forecast Preview (when mountain + date selected)
@@ -112,34 +109,6 @@ struct EventCreateView: View {
                         }
                     }
 
-                    // Enhanced Powder Day Suggestions
-                    if !allForecasts.isEmpty {
-                        Section {
-                            PowderDaySuggestionCard(
-                                forecasts: allForecasts,
-                                selectedDate: eventDate,
-                                selectedMountainId: selectedMountainId,
-                                mountainName: mountains.first { $0.id == selectedMountainId }?.name ?? "",
-                                onSelectDate: { day in
-                                    selectBestPowderDay(day)
-                                },
-                                onSelectMountain: { mountain in
-                                    selectBestMountain(mountain)
-                                },
-                                mountainComparisons: mountainComparisons,
-                                isLoadingComparisons: isLoadingMountainSuggestion
-                            )
-                        } header: {
-                            HStack {
-                                Text("Powder Day Finder")
-                                Spacer()
-                                if isLoadingMountainSuggestion {
-                                    ProgressView()
-                                        .scaleEffect(0.7)
-                                }
-                            }
-                        }
-                    }
                 }
 
                 // Departure info
@@ -183,12 +152,34 @@ struct EventCreateView: View {
                     .accessibilityIdentifier("create_event_meeting_point_button")
                 }
 
-                // Skill level
+                // Skill level and capacity
                 Section("Group Info") {
                     Picker("Skill Level", selection: $skillLevel) {
                         Text("All levels welcome").tag(nil as SkillLevel?)
                         ForEach(SkillLevel.allCases, id: \.self) { level in
                             Text(level.displayName).tag(level as SkillLevel?)
+                        }
+                    }
+
+                    Toggle("Limit group size", isOn: $hasMaxAttendees)
+                        .accessibilityIdentifier("create_event_max_attendees_toggle")
+
+                    if hasMaxAttendees {
+                        Stepper("Max attendees: \(maxAttendees)", value: $maxAttendees, in: 2...100)
+                            .accessibilityIdentifier("create_event_max_attendees_stepper")
+
+                        if maxAttendees <= 6 {
+                            Text("Small intimate group")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else if maxAttendees <= 15 {
+                            Text("Medium-sized crew")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("Large group event")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -247,55 +238,7 @@ struct EventCreateView: View {
             .sheet(isPresented: $showingLocationPicker) {
                 LocationPickerView(selectedLocation: $departureLocation)
             }
-            .onAppear {
-                applySuggestionIfNeeded()
-            }
         }
-    }
-    
-    // MARK: - Apply Suggestion
-    
-    private func applySuggestionIfNeeded() {
-        guard let suggestion = suggestion, !suggestionApplied else { return }
-        suggestionApplied = true
-        
-        switch suggestion {
-        case .powderDay(let mountain, let forecast):
-            selectedMountainId = mountain.id
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            if let date = dateFormatter.date(from: forecast.date) {
-                eventDate = date
-            }
-            title = "Powder Day at \(mountain.name)"
-            notes = "Expected snowfall: \(forecast.snowfall)\"\nConditions: \(forecast.conditions)"
-            
-        case .weekendTrip(let mountain, let date, let snowfall):
-            selectedMountainId = mountain.id
-            eventDate = date
-            title = "Weekend at \(mountain.name)"
-            if snowfall > 0 {
-                notes = "Expected fresh snow: \(snowfall)\""
-            }
-            
-        case .bestConditions(let mountain, let score):
-            selectedMountainId = mountain.id
-            eventDate = Date()
-            title = "\(mountain.name) - Great Conditions"
-            notes = "Current powder score: \(String(format: "%.1f", score))/10"
-            
-        case .groupTrip(let mountains, let date):
-            if let firstMountain = mountains.first {
-                selectedMountainId = firstMountain.id
-            }
-            eventDate = date
-            title = "Group Ski Trip"
-            let mountainNames = mountains.map { $0.name }.joined(separator: ", ")
-            notes = "Considering: \(mountainNames)"
-        }
-        
-        // Load forecast for the selected mountain
-        Task { await loadForecast() }
     }
 
     // MARK: - Forecast Preview Card
@@ -408,6 +351,69 @@ struct EventCreateView: View {
         }
     }
 
+    // MARK: - Auto-fill Best Day Button
+    
+    @ViewBuilder
+    private var autoFillBestDayButton: some View {
+        if isLoadingForecast {
+            HStack(spacing: .spacingS) {
+                ProgressView()
+                    .scaleEffect(0.8)
+                Text("Finding best powder day...")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        } else if let best = bestPowderDay {
+            Button {
+                HapticFeedback.medium.trigger()
+                selectBestPowderDay(best)
+            } label: {
+                HStack(spacing: .spacingS) {
+                    Image(systemName: "wand.and.stars")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.cyan)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Best Powder Day: \(best.dayOfWeek)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.primary)
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: "snowflake")
+                                .font(.system(size: 10))
+                            Text("\(best.snowfall)\" expected")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.cyan)
+                    }
+                    
+                    Spacer()
+                    
+                    Text("Apply")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, .spacingS)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.cyan, .blue],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                        )
+                }
+                .padding(.vertical, 4)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("auto_fill_best_day_button")
+        }
+    }
+
     private func weatherIcon(for conditions: String) -> String {
         let lowercased = conditions.lowercased()
         if lowercased.contains("snow") || lowercased.contains("blizzard") { return "❄️" }
@@ -495,98 +501,6 @@ struct EventCreateView: View {
         }
 
         isLoadingForecast = false
-
-        // Also check for better mountains (in background)
-        await loadBestMountainSuggestion()
-    }
-
-    /// Check other mountains for better conditions on the selected date
-    /// Populates mountainComparisons for the leaderboard
-    private func loadBestMountainSuggestion() async {
-        isLoadingMountainSuggestion = true
-        mountainComparisons = []
-        bestMountain = nil
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let eventDateStr = formatter.string(from: eventDate)
-        let todayStr = formatter.string(from: Date())
-
-        // Only suggest if the date is today or in the future
-        guard eventDateStr >= todayStr else {
-            isLoadingMountainSuggestion = false
-            return
-        }
-
-        // Check a subset of popular mountains (to avoid too many API calls)
-        let mountainsToCheck = mountains.filter { $0.id != selectedMountainId }.prefix(6)
-
-        var allComparisons: [(id: String, name: String, forecast: ForecastDay, score: Int)] = []
-
-        // Score the currently selected mountain's forecast
-        var currentScore = 0
-        if let currentForecast = forecastPreview {
-            currentScore = scoreForecast(currentForecast)
-        }
-
-        // Fetch forecasts for other mountains concurrently
-        // Note: Using a local scoring function to avoid actor isolation issues
-        let scoreFn: @Sendable (ForecastDay) -> Int = { day in
-            var score = 0
-            score += day.snowfall * 10
-            if day.snowfall >= 6 { score += 20 }
-            if day.snowfall >= 12 { score += 30 }
-            if day.high < 32 { score += 10 }
-            if day.high < 28 { score += 5 }
-            if day.precipProbability >= 70 && day.precipType == "snow" { score += 15 }
-            if day.wind.gust > 40 { score -= 10 }
-            if day.wind.gust > 50 { score -= 15 }
-            return score
-        }
-
-        await withTaskGroup(of: (String, String, ForecastDay, Int)?.self) { group in
-            for mountain in mountainsToCheck {
-                // Capture values explicitly for Sendable closure
-                let mountainId = mountain.id
-                let mountainName = mountain.name
-                let dateStr = eventDateStr
-
-                group.addTask { [scoreFn] in
-                    do {
-                        let response = try await APIClient.shared.fetchForecast(for: mountainId)
-
-                        // Find forecast for the selected date
-                        if let dayForecast = response.forecast.first(where: { $0.date == dateStr }) {
-                            let score = scoreFn(dayForecast)
-                            return (mountainId, mountainName, dayForecast, score)
-                        }
-                    } catch {
-                        // Skip this mountain on error
-                    }
-                    return nil
-                }
-            }
-
-            for await result in group {
-                if let result = result {
-                    allComparisons.append((id: result.0, name: result.1, forecast: result.2, score: result.3))
-                }
-            }
-        }
-
-        // Sort by score descending and take top 3 that are better than current
-        let betterMountains = allComparisons
-            .filter { $0.score > currentScore }
-            .sorted { $0.score > $1.score }
-            .prefix(3)
-            .map { (id: $0.id, name: $0.name, forecast: $0.forecast) }
-
-        mountainComparisons = Array(betterMountains)
-
-        // Set best mountain (first one if any)
-        bestMountain = mountainComparisons.first
-
-        isLoadingMountainSuggestion = false
     }
 
     /// Score a forecast day for comparison (higher = better skiing conditions)
@@ -627,20 +541,7 @@ struct EventCreateView: View {
 
             // Clear best powder day since we just selected it
             bestPowderDay = nil
-
-            // Re-check for mountain suggestion with new date
-            Task { await loadBestMountainSuggestion() }
         }
-    }
-
-    private func selectBestMountain(_ mountain: (id: String, name: String, forecast: ForecastDay)) {
-        selectedMountainId = mountain.id
-        forecastPreview = mountain.forecast
-        bestMountain = nil
-        HapticFeedback.selection.trigger()
-
-        // Reload forecast for new mountain
-        Task { await loadForecast() }
     }
 
     /// Generate a description for the powder day suggestion
@@ -690,7 +591,8 @@ struct EventCreateView: View {
                 departureLocation: departureLocation.isEmpty ? nil : departureLocation.trimmingCharacters(in: .whitespacesAndNewlines),
                 skillLevel: skillLevel,
                 carpoolAvailable: carpoolAvailable,
-                carpoolSeats: carpoolAvailable ? carpoolSeats : nil
+                carpoolSeats: carpoolAvailable ? carpoolSeats : nil,
+                maxAttendees: hasMaxAttendees ? maxAttendees : nil
             )
 
             HapticFeedback.success.trigger()
@@ -708,6 +610,61 @@ struct EventCreateView: View {
     }
 }
 
-#Preview {
+#Preview("Create Event") {
     EventCreateView()
+}
+
+#Preview("Auto-fill Button") {
+    List {
+        Section("Event Details") {
+            Text("Event Title")
+            Text("Date: Feb 4, 2026")
+            
+            // Simulated auto-fill button
+            Button {
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "wand.and.stars")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.cyan)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Best Powder Day: Friday")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.primary)
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: "snowflake")
+                                .font(.system(size: 10))
+                            Text("12\" expected")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.cyan)
+                    }
+                    
+                    Spacer()
+                    
+                    Text("Apply")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.cyan, .blue],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                        )
+                }
+                .padding(.vertical, 4)
+            }
+            .buttonStyle(.plain)
+        }
+    }
 }

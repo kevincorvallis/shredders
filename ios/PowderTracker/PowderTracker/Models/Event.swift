@@ -436,6 +436,7 @@ struct CreateEventRequest: Encodable {
     let skillLevel: String?
     let carpoolAvailable: Bool?
     let carpoolSeats: Int?
+    let maxAttendees: Int?
 }
 
 struct RSVPRequest: Encodable {
