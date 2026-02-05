@@ -222,8 +222,9 @@ export async function POST(
 
       if (insertError) {
         console.error('Error creating RSVP:', insertError);
+        console.error('Insert details - eventId:', eventId, 'userId:', userProfile.id, 'status:', effectiveStatus);
         return NextResponse.json(
-          { error: 'Failed to create RSVP' },
+          { error: `Failed to create RSVP: ${insertError.message || 'Database error'}` },
           { status: 500 }
         );
       }

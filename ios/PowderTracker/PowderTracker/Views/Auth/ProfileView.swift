@@ -1,8 +1,17 @@
+//
+//  ProfileView.swift
+//  PowderTracker
+//
+//  Modern profile view with glassmorphism design.
+//
+
 import SwiftUI
 
 struct ProfileView: View {
     @Environment(AuthService.self) private var authService
     @StateObject private var favoritesManager = FavoritesService.shared
+    @Environment(\.colorScheme) private var colorScheme
+    
     @State private var showingSettings = false
     @State private var showingLogin = false
     @State private var showingManageFavorites = false
@@ -23,33 +32,44 @@ struct ProfileView: View {
     @AppStorage("homeRegion") private var homeRegion = "washington"
     @AppStorage("seasonPass") private var seasonPass = "none"
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
+    @AppStorage("temperatureUnit") private var temperatureUnit = "F"
+    @AppStorage("distanceUnit") private var distanceUnit = "mi"
+    
+    // Animation states
+    @State private var headerScale: CGFloat = 0.9
+    @State private var headerOpacity: Double = 0
+    @State private var sectionsOffset: CGFloat = 30
+    @State private var sectionsOpacity: Double = 0
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: .spacingL) {
-                    // User header section (conditional on auth state)
-                    userHeaderSection
+            ZStack {
+                // Dynamic gradient background
+                backgroundGradient
+                    .ignoresSafeArea()
 
-                    // Your Mountains section
-                    yourMountainsSection
+                ScrollView {
+                    VStack(spacing: .spacingL) {
+                        // User header section
+                        userHeaderSection
+                            .scaleEffect(headerScale)
+                            .opacity(headerOpacity)
 
-                    // Alerts & Notifications section
-                    alertsSection
-
-                    // Tools section
-                    toolsSection
-
-                    // External Resources section
-                    externalResourcesSection
-
-                    // App Settings section
-                    appSettingsSection
+                        // Content sections
+                        VStack(spacing: .spacingL) {
+                            yourMountainsSection
+                            alertsSection
+                            toolsSection
+                            externalResourcesSection
+                            appSettingsSection
+                        }
+                        .offset(y: sectionsOffset)
+                        .opacity(sectionsOpacity)
+                    }
+                    .padding(.horizontal, .spacingL)
+                    .padding(.vertical, .spacingM)
                 }
-                .padding(.horizontal, .spacingL)
-                .padding(.vertical, .spacingM)
             }
-            .background(Color(.systemGroupedBackground))
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -58,7 +78,9 @@ struct ProfileView: View {
                         Button {
                             showingSettings = true
                         } label: {
-                            Image(systemName: "gearshape")
+                            Image(systemName: "gearshape.fill")
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(.primary)
                         }
                     }
                 }
@@ -86,7 +108,6 @@ struct ProfileView: View {
             } message: {
                 Text("Are you sure you want to sign out?")
             }
-            // New sheets
             .sheet(isPresented: $showingRegionPicker) {
                 RegionPickerView()
             }
@@ -126,7 +147,29 @@ struct ProfileView: View {
             .sheet(isPresented: $showingWeatherAlerts) {
                 WeatherAlertsSettingsView()
             }
+            .onAppear {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    headerScale = 1.0
+                    headerOpacity = 1.0
+                }
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1)) {
+                    sectionsOffset = 0
+                    sectionsOpacity = 1.0
+                }
+            }
         }
+    }
+
+    // MARK: - Background
+
+    private var backgroundGradient: some View {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [Color(white: 0.08), Color(white: 0.12), Color(white: 0.08)]
+                : [Color(white: 0.96), Color(white: 0.94), Color(white: 0.98)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
     // MARK: - Computed Properties
@@ -134,9 +177,6 @@ struct ProfileView: View {
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     }
-
-    @AppStorage("temperatureUnit") private var temperatureUnit = "F"
-    @AppStorage("distanceUnit") private var distanceUnit = "mi"
 
     private var unitsSubtitle: String {
         let temp = temperatureUnit == "F" ? "°F" : "°C"
@@ -149,27 +189,30 @@ struct ProfileView: View {
     @ViewBuilder
     private var userHeaderSection: some View {
         if authService.isAuthenticated, let profile = authService.userProfile {
-            // Authenticated user header
-            VStack(spacing: .spacingM) {
-                // Avatar
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+            // Authenticated user header with glass design
+            VStack(spacing: .spacingL) {
+                // Avatar with glow
+                ZStack {
+                    // Glow effect
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.pookieCyan.opacity(0.4), .clear],
+                                center: .center,
+                                startRadius: 30,
+                                endRadius: 70
+                            )
                         )
-                    )
-                    .frame(width: 80, height: 80)
-                    .overlay {
-                        Text(String(profile.displayName?.first ?? profile.username.first ?? "?").uppercased())
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-
+                        .frame(width: 140, height: 140)
+                        .blur(radius: 20)
+                    
+                    // Avatar
+                    ProfileAvatarView(profile: profile, size: 100)
+                }
+                
                 VStack(spacing: .spacingXS) {
                     Text(profile.displayName ?? profile.username)
-                        .font(.title3)
+                        .font(.title2)
                         .fontWeight(.bold)
 
                     Text("@\(profile.username)")
@@ -177,74 +220,114 @@ struct ProfileView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                // Quick stats
-                HStack(spacing: .spacingXL) {
-                    statItem(value: "0", label: "Photos")
-                    statItem(value: "0", label: "Check-ins")
-                    statItem(value: "\(favoritesManager.favoriteIds.count)", label: "Mountains")
+                // Quick stats in glass pills
+                HStack(spacing: .spacingM) {
+                    ProfileStatPill(value: "0", label: "Photos", icon: "photo.fill")
+                    ProfileStatPill(value: "0", label: "Check-ins", icon: "mappin.circle.fill")
+                    ProfileStatPill(value: "\(favoritesManager.favoriteIds.count)", label: "Mountains", icon: "mountain.2.fill")
                 }
-                .padding(.spacingM)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(.cornerRadiusCard)
             }
-            .padding(.spacingL)
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(.cornerRadiusHero)
+            .padding(.spacingXL)
+            .frame(maxWidth: .infinity)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusHero))
+            .overlay(
+                RoundedRectangle(cornerRadius: .cornerRadiusHero)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.3), .white.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
         } else {
-            // Not logged in state
-            VStack(spacing: .spacingM) {
-                Image(systemName: "person.circle")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.secondary)
+            // Not logged in state with glass design
+            VStack(spacing: .spacingL) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.pookiePurple.opacity(0.3), .clear],
+                                center: .center,
+                                startRadius: 20,
+                                endRadius: 60
+                            )
+                        )
+                        .frame(width: 120, height: 120)
+                        .blur(radius: 15)
+                    
+                    Image(systemName: "person.circle.fill")
+                        .font(.system(size: 70))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.pookieCyan, .pookiePurple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
 
-                Text("Sign in for full features")
-                    .font(.headline)
+                VStack(spacing: .spacingS) {
+                    Text("Sign in for full features")
+                        .font(.title3)
+                        .fontWeight(.semibold)
 
-                Text("Track your photos, check-ins, and activity")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    Text("Track your photos, check-ins, and activity")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
 
                 Button {
                     showingLogin = true
                 } label: {
-                    Text("Sign In")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundStyle(.white)
-                        .cornerRadius(.cornerRadiusButton)
+                    HStack {
+                        Image(systemName: "person.fill")
+                        Text("Sign In")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.spacingM)
+                    .background(
+                        LinearGradient(
+                            colors: [.pookieCyan, .pookiePurple],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusButton))
                 }
                 .accessibilityIdentifier("profile_sign_in_button")
-                .padding(.top, .spacingS)
             }
-            .padding(.spacingL)
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(.cornerRadiusHero)
-        }
-    }
-
-    private func statItem(value: String, label: String) -> some View {
-        VStack(spacing: .spacingXS) {
-            Text(value)
-                .font(.title3)
-                .fontWeight(.bold)
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            .padding(.spacingXL)
+            .frame(maxWidth: .infinity)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusHero))
+            .overlay(
+                RoundedRectangle(cornerRadius: .cornerRadiusHero)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.3), .white.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
         }
     }
 
     // MARK: - Your Mountains Section
 
     private var yourMountainsSection: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            SectionHeaderView(title: "Your Mountains")
-
+        ProfileGlassSection(title: "Your Mountains", icon: "mountain.2.fill") {
             VStack(spacing: 0) {
-                // Favorites row
-                profileRow(
+                ProfileGlassRow(
                     icon: "star.fill",
                     iconColor: .yellow,
                     title: "Favorites",
@@ -254,10 +337,9 @@ struct ProfileView: View {
                 }
                 .accessibilityIdentifier("profile_favorites_row")
 
-                Divider().padding(.leading, 44)
+                Divider().padding(.leading, 52)
 
-                // Home region row
-                profileRow(
+                ProfileGlassRow(
                     icon: "location.fill",
                     iconColor: .blue,
                     title: "Home Region",
@@ -267,10 +349,9 @@ struct ProfileView: View {
                 }
                 .accessibilityIdentifier("profile_region_row")
 
-                Divider().padding(.leading, 44)
+                Divider().padding(.leading, 52)
 
-                // Pass type row
-                profileRow(
+                ProfileGlassRow(
                     icon: "ticket.fill",
                     iconColor: .purple,
                     title: "Season Pass",
@@ -280,24 +361,21 @@ struct ProfileView: View {
                 }
                 .accessibilityIdentifier("profile_pass_row")
             }
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(.cornerRadiusCard)
         }
     }
 
     // MARK: - Alerts Section
 
     private var alertsSection: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            SectionHeaderView(title: "Alerts & Notifications")
-
+        ProfileGlassSection(title: "Alerts & Notifications", icon: "bell.badge.fill") {
             VStack(spacing: 0) {
-                // Push notifications toggle
                 HStack {
                     Image(systemName: "bell.badge.fill")
                         .font(.system(size: 18))
-                        .foregroundColor(.red)
-                        .frame(width: 28, height: 28)
+                        .foregroundStyle(.red)
+                        .frame(width: 32, height: 32)
+                        .background(.red.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
 
                     Text("Push Notifications")
                         .font(.body)
@@ -306,25 +384,24 @@ struct ProfileView: View {
 
                     Toggle("", isOn: .constant(true))
                         .labelsHidden()
+                        .tint(.pookieCyan)
                 }
                 .padding(.spacingM)
 
-                Divider().padding(.leading, 44)
+                Divider().padding(.leading, 52)
 
-                // Powder alerts
-                profileRow(
+                ProfileGlassRow(
                     icon: "snowflake",
-                    iconColor: .blue,
+                    iconColor: .cyan,
                     title: "Powder Alerts",
                     subtitle: "Get notified for 6\"+ days"
                 ) {
                     showingAlertPreferences = true
                 }
 
-                Divider().padding(.leading, 44)
+                Divider().padding(.leading, 52)
 
-                // Weather alerts
-                profileRow(
+                ProfileGlassRow(
                     icon: "exclamationmark.triangle.fill",
                     iconColor: .orange,
                     title: "Weather Alerts",
@@ -333,20 +410,15 @@ struct ProfileView: View {
                     showingWeatherAlerts = true
                 }
             }
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(.cornerRadiusCard)
         }
     }
 
     // MARK: - Tools Section
 
     private var toolsSection: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            SectionHeaderView(title: "Tools")
-
+        ProfileGlassSection(title: "Tools", icon: "wrench.and.screwdriver.fill") {
             VStack(spacing: 0) {
-                // Chat
-                profileRow(
+                ProfileGlassRow(
                     icon: "bubble.left.and.bubble.right.fill",
                     iconColor: .green,
                     title: "Powder Chat",
@@ -355,10 +427,9 @@ struct ProfileView: View {
                     showingChat = true
                 }
 
-                Divider().padding(.leading, 44)
+                Divider().padding(.leading, 52)
 
-                // Snow history
-                profileRow(
+                ProfileGlassRow(
                     icon: "chart.line.uptrend.xyaxis",
                     iconColor: .cyan,
                     title: "Snow History",
@@ -367,10 +438,9 @@ struct ProfileView: View {
                     showingSnowHistory = true
                 }
 
-                Divider().padding(.leading, 44)
+                Divider().padding(.leading, 52)
 
-                // Patrol reports
-                profileRow(
+                ProfileGlassRow(
                     icon: "cross.fill",
                     iconColor: .red,
                     title: "Ski Patrol Reports",
@@ -379,20 +449,15 @@ struct ProfileView: View {
                     showingPatrolReports = true
                 }
             }
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(.cornerRadiusCard)
         }
     }
 
     // MARK: - External Resources Section
 
     private var externalResourcesSection: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            SectionHeaderView(title: "Resources")
-
+        ProfileGlassSection(title: "Resources", icon: "link") {
             VStack(spacing: 0) {
-                // NWAC
-                profileRow(
+                ProfileGlassRow(
                     icon: "mountain.2.fill",
                     iconColor: .blue,
                     title: "NWAC Avalanche Center",
@@ -403,10 +468,9 @@ struct ProfileView: View {
                     }
                 }
 
-                Divider().padding(.leading, 44)
+                Divider().padding(.leading, 52)
 
-                // WSDOT
-                profileRow(
+                ProfileGlassRow(
                     icon: "car.fill",
                     iconColor: .green,
                     title: "WSDOT Pass Reports",
@@ -417,20 +481,15 @@ struct ProfileView: View {
                     }
                 }
             }
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(.cornerRadiusCard)
         }
     }
 
     // MARK: - App Settings Section
 
     private var appSettingsSection: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            SectionHeaderView(title: "Settings")
-
+        ProfileGlassSection(title: "Settings", icon: "gearshape.fill") {
             VStack(spacing: 0) {
-                // Units
-                profileRow(
+                ProfileGlassRow(
                     icon: "ruler",
                     iconColor: .gray,
                     title: "Units",
@@ -439,10 +498,9 @@ struct ProfileView: View {
                     showingUnitsSettings = true
                 }
 
-                Divider().padding(.leading, 44)
+                Divider().padding(.leading, 52)
 
-                // About
-                profileRow(
+                ProfileGlassRow(
                     icon: "info.circle.fill",
                     iconColor: .blue,
                     title: "About PowderTracker",
@@ -452,21 +510,22 @@ struct ProfileView: View {
                 }
 
                 if authService.isAuthenticated {
-                    Divider().padding(.leading, 44)
+                    Divider().padding(.leading, 52)
 
-                    // Sign out
                     Button {
                         showingSignOutConfirmation = true
                     } label: {
                         HStack {
                             Image(systemName: "rectangle.portrait.and.arrow.right")
                                 .font(.system(size: 18))
-                                .foregroundColor(.red)
-                                .frame(width: 28, height: 28)
+                                .foregroundStyle(.red)
+                                .frame(width: 32, height: 32)
+                                .background(.red.opacity(0.15))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
 
                             Text("Sign Out")
                                 .font(.body)
-                                .foregroundColor(.red)
+                                .foregroundStyle(.red)
 
                             Spacer()
                         }
@@ -475,45 +534,178 @@ struct ProfileView: View {
                     .accessibilityIdentifier("profile_sign_out_button")
                 }
             }
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(.cornerRadiusCard)
         }
     }
+}
 
-    // MARK: - Helper Views
+// MARK: - Profile Avatar View
 
-    private func profileRow(
-        icon: String,
-        iconColor: Color,
-        title: String,
-        subtitle: String,
-        action: @escaping () -> Void
-    ) -> some View {
+private struct ProfileAvatarView: View {
+    let profile: UserProfile
+    let size: CGFloat
+    
+    var body: some View {
+        let initial = String(profile.displayName?.first ?? profile.username.first ?? "?").uppercased()
+        
+        ZStack {
+            if let avatarUrl = profile.avatarUrl, let url = URL(string: avatarUrl) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    case .failure:
+                        ProfileAvatarPlaceholder(initial: initial, size: size)
+                    case .empty:
+                        ProgressView()
+                            .frame(width: size, height: size)
+                    @unknown default:
+                        ProfileAvatarPlaceholder(initial: initial, size: size)
+                    }
+                }
+            } else {
+                ProfileAvatarPlaceholder(initial: initial, size: size)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .overlay(
+            Circle()
+                .stroke(
+                    LinearGradient(
+                        colors: [.white.opacity(0.6), .white.opacity(0.2)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 3
+                )
+        )
+    }
+}
+
+private struct ProfileAvatarPlaceholder: View {
+    let initial: String
+    let size: CGFloat
+    
+    var body: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [.pookieCyan, .pookiePurple],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: size, height: size)
+            .overlay {
+                Text(initial)
+                    .font(.system(size: size * 0.4, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+    }
+}
+
+// MARK: - Profile Stat Pill
+
+private struct ProfileStatPill: View {
+    let value: String
+    let label: String
+    let icon: String
+    
+    var body: some View {
+        VStack(spacing: .spacingXS) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(value)
+                    .font(.headline)
+                    .fontWeight(.bold)
+            }
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, .spacingM)
+        .padding(.vertical, .spacingS)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusSmall))
+    }
+}
+
+// MARK: - Profile Glass Section
+
+private struct ProfileGlassSection<Content: View>: View {
+    let title: String
+    let icon: String
+    @ViewBuilder let content: Content
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: .spacingS) {
+            // Section header
+            HStack(spacing: .spacingS) {
+                Image(systemName: icon)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, .spacingS)
+            
+            // Glass card content
+            content
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusCard))
+                .overlay(
+                    RoundedRectangle(cornerRadius: .cornerRadiusCard)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
+        }
+    }
+}
+
+// MARK: - Profile Glass Row
+
+private struct ProfileGlassRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let subtitle: String
+    let action: () -> Void
+    
+    var body: some View {
         Button(action: action) {
             HStack {
                 Image(systemName: icon)
                     .font(.system(size: 18))
-                    .foregroundColor(iconColor)
-                    .frame(width: 28, height: 28)
+                    .foregroundStyle(iconColor)
+                    .frame(width: 32, height: 32)
+                    .background(iconColor.opacity(0.15))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                VStack(alignment: .leading, spacing: .spacingXS) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.body)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
 
                     Text(subtitle)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary.opacity(0.5))
+                    .foregroundStyle(.tertiary)
             }
             .padding(.spacingM)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 }
 
