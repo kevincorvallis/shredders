@@ -1,7 +1,7 @@
 // NOAA National Weather Service API Client
 // Docs: https://www.weather.gov/documentation/services-web-api
 
-const USER_AGENT = 'Shredders/1.0 (contact@shredders.app)';
+const USER_AGENT = 'Shredders/1.0 (contact@pookieb.com)';
 
 // Grid config type for parameterized forecasts
 export interface NOAAGridConfig {

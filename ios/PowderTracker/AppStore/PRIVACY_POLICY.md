@@ -69,7 +69,7 @@ We share data only with:
 You can:
 - **Access** your data through the app's Profile section
 - **Update** your profile information at any time
-- **Delete** your account by contacting support@shredders.app
+- **Delete** your account by contacting contact@pookieb.com
 - **Opt out** of analytics in app settings
 
 ## Children's Privacy
@@ -83,7 +83,7 @@ We may update this Privacy Policy from time to time. We will notify you of chang
 ## Contact Us
 
 If you have questions about this Privacy Policy:
-- Email: support@shredders.app
+- Email: contact@pookieb.com
 - Website: https://shredders-bay.vercel.app/support
 
 ---

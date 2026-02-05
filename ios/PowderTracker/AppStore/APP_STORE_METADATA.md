@@ -214,7 +214,7 @@ https://shredders-bay.vercel.app/privacy
 
 ```
 Test Account (if needed):
-Email: reviewer@shredders.app
+Email: contact@pookieb.com
 Password: [Create test account before submission]
 
 The app requires location permission to show nearby mountains, but functions fully without it by letting users browse all resorts manually.

@@ -176,7 +176,7 @@ Chase powder. Shred hard. Repeat.
 - Email: [Your email]
 
 **Demo Account (if login required):**
-- Username: reviewer@shredders.app
+- Username: contact@pookieb.com
 - Password: [Create a test account]
 
 **Notes for Review:**

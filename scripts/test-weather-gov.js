@@ -21,7 +21,7 @@ const mountains = {
   hoodoo: { name: 'Hoodoo Ski Area', lat: 44.408, lng: -121.870, noaa: { gridOffice: 'PDT', gridX: 107, gridY: 65 } },
 };
 
-const USER_AGENT = 'Shredders/1.0 (test@shredders.app)';
+const USER_AGENT = 'Shredders/1.0 (contact@pookieb.com)';
 
 async function fetchWithRetry(url, retries = 2) {
   for (let i = 0; i < retries; i++) {

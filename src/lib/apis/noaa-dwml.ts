@@ -38,7 +38,7 @@ async function fetchDWML(lat: number, lng: number): Promise<string> {
 
   const response = await fetch(url.toString(), {
     headers: {
-      'User-Agent': 'Shredders/1.0 (contact@shredders.app)',
+      'User-Agent': 'Shredders/1.0 (contact@pookieb.com)',
     },
   });
 

@@ -538,7 +538,7 @@ struct AboutView: View {
                         title: "Contact Support",
                         subtitle: "Bug reports & suggestions"
                     ) {
-                        if let url = URL(string: "mailto:contact@aclsolutions.io") {
+                        if let url = URL(string: "mailto:contact@pookieb.com") {
                             UIApplication.shared.open(url)
                         }
                     }

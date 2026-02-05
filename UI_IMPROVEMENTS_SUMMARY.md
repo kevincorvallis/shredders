@@ -332,4 +332,4 @@ Uses Tailwind utility classes:
 ## Questions?
 
 See full documentation: `UI_ENHANCEMENTS.md`
-Contact: team@shredders.app
+Contact: contact@pookieb.com
