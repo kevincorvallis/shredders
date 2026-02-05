@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * Standard error codes for the application
@@ -338,8 +339,13 @@ export function handleError(
         stack: error.stack,
         context,
       });
+      Sentry.captureException(error, {
+        level: 'error',
+        extra: context,
+      });
     } else {
       // Log operational errors (expected errors like validation)
+      // These are NOT reported to Sentry — they are expected.
       console.warn('[OPERATIONAL ERROR]', {
         code: error.code,
         message: error.message,
@@ -354,6 +360,10 @@ export function handleError(
   console.error('[UNEXPECTED ERROR]', {
     error,
     context,
+  });
+  Sentry.captureException(error, {
+    level: 'fatal',
+    extra: context,
   });
 
   return createErrorResponse(

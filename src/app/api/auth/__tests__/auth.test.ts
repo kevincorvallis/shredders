@@ -52,7 +52,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 // Mock rate limiting
 vi.mock('@/lib/api-utils', () => ({
-  rateLimitEnhanced: vi.fn(() => ({ success: true, remaining: 4 })),
+  rateLimitEnhanced: vi.fn(() => Promise.resolve({ success: true, remaining: 4 })),
   createRateLimitKey: vi.fn((a: string, b: string) => `${a}:${b}`),
 }));
 
@@ -259,23 +259,23 @@ describe('Authentication API', () => {
   });
 
   describe('Rate Limiting', () => {
-    it('should allow requests within rate limit', () => {
-      vi.mocked(rateLimitEnhanced).mockReturnValue({ success: true, remaining: 4 });
+    it('should allow requests within rate limit', async () => {
+      vi.mocked(rateLimitEnhanced).mockResolvedValue({ success: true, remaining: 4 });
 
-      const result = rateLimitEnhanced('test-key', 'login');
+      const result = await rateLimitEnhanced('test-key', 'login');
 
       expect(result.success).toBe(true);
       expect(result.remaining).toBe(4);
     });
 
-    it('should block requests exceeding rate limit', () => {
-      vi.mocked(rateLimitEnhanced).mockReturnValue({
+    it('should block requests exceeding rate limit', async () => {
+      vi.mocked(rateLimitEnhanced).mockResolvedValue({
         success: false,
         remaining: 0,
         retryAfter: 300,
       });
 
-      const result = rateLimitEnhanced('test-key', 'login');
+      const result = await rateLimitEnhanced('test-key', 'login');
 
       expect(result.success).toBe(false);
       expect(result.retryAfter).toBe(300);

@@ -58,6 +58,7 @@ const envSchema = z.object({
 
   // Monitoring & Error Tracking
   SENTRY_DSN: z.string().url().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   SENTRY_ORG: z.string().optional(),
   SENTRY_PROJECT: z.string().optional(),
 
@@ -263,11 +264,12 @@ export const redisConfig = {
 export const monitoringConfig = {
   get sentry() {
     const cfg = getConfig();
+    const dsn = cfg.SENTRY_DSN || cfg.NEXT_PUBLIC_SENTRY_DSN;
     return {
-      dsn: cfg.SENTRY_DSN,
+      dsn,
       org: cfg.SENTRY_ORG,
       project: cfg.SENTRY_PROJECT,
-      enabled: !!cfg.SENTRY_DSN,
+      enabled: !!dsn,
     };
   },
 };

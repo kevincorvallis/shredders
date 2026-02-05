@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       'unknown';
 
     const rateLimitKey = createRateLimitKey('resend-verification', email);
-    const rateLimit = rateLimitEnhanced(rateLimitKey, 'signup'); // Use signup limits (3/hour)
+    const rateLimit = await rateLimitEnhanced(rateLimitKey, 'signup'); // Use signup limits (3/hour)
 
     if (!rateLimit.success) {
       return NextResponse.json(

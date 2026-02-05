@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       'unknown';
 
     const rateLimitKey = createRateLimitKey('refresh', ipAddress);
-    const rateLimit = rateLimitEnhanced(rateLimitKey, 'refresh');
+    const rateLimit = await rateLimitEnhanced(rateLimitKey, 'refresh');
 
     if (!rateLimit.success) {
       // Log rate limit exceeded

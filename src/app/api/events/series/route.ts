@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
 
     // Rate limiting
     const rateLimitKey = createRateLimitKey(authUser.userId, 'createEvent');
-    const rateLimit = rateLimitEnhanced(rateLimitKey, 'createEvent');
+    const rateLimit = await rateLimitEnhanced(rateLimitKey, 'createEvent');
 
     if (!rateLimit.success) {
       return NextResponse.json(

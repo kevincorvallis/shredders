@@ -226,7 +226,7 @@ export async function POST(
 
     // Rate limiting: 30 comments per hour per user
     const rateLimitKey = createRateLimitKey(authUser.userId, 'postComment');
-    const rateLimit = rateLimitEnhanced(rateLimitKey, 'postComment');
+    const rateLimit = await rateLimitEnhanced(rateLimitKey, 'postComment');
 
     if (!rateLimit.success) {
       return NextResponse.json(

@@ -14,6 +14,14 @@ import type {
 } from '@/types/event';
 
 /**
+ * Sanitize search input to prevent PostgREST filter injection.
+ * Strips characters that could manipulate .or() filter syntax.
+ */
+function sanitizeSearchInput(input: string): string {
+  return input.replace(/[,.()\[\]]/g, '').trim();
+}
+
+/**
  * GET /api/events
  *
  * Fetch events with optional filters
@@ -194,9 +202,12 @@ export async function GET(request: NextRequest) {
 
       // Text search (can be done at DB level with ilike)
       if (search) {
-        attendeeQuery = attendeeQuery.or(
-          `event.title.ilike.%${search}%,event.notes.ilike.%${search}%`
-        );
+        const sanitized = sanitizeSearchInput(search);
+        if (sanitized) {
+          attendeeQuery = attendeeQuery.or(
+            `event.title.ilike.%${sanitized}%,event.notes.ilike.%${sanitized}%`
+          );
+        }
       }
 
       // Apply sorting
@@ -293,8 +304,10 @@ export async function GET(request: NextRequest) {
 
       // Text search on title and notes
       if (search) {
-        // Use ilike for case-insensitive partial match
-        query = query.or(`title.ilike.%${search}%,notes.ilike.%${search}%`);
+        const sanitized = sanitizeSearchInput(search);
+        if (sanitized) {
+          query = query.or(`title.ilike.%${sanitized}%,notes.ilike.%${sanitized}%`);
+        }
       }
 
       if (createdByMe && userProfileId) {
@@ -412,7 +425,7 @@ export async function POST(request: NextRequest) {
 
     // Rate limiting: 10 events per hour per user
     const rateLimitKey = createRateLimitKey(authUser.userId, 'createEvent');
-    const rateLimit = rateLimitEnhanced(rateLimitKey, 'createEvent');
+    const rateLimit = await rateLimitEnhanced(rateLimitKey, 'createEvent');
 
     if (!rateLimit.success) {
       return NextResponse.json(
@@ -581,7 +594,7 @@ export async function POST(request: NextRequest) {
         event_date: eventDate,
       }));
       return NextResponse.json(
-        { error: `Failed to create event: ${insertError.message || 'Unknown error'}` },
+        { error: 'Failed to create event' },
         { status: 500 }
       );
     }

@@ -25,7 +25,7 @@ vi.mock('@shredders/shared', () => ({
 
 // Mock rate limiting to always allow
 vi.mock('@/lib/api-utils', () => ({
-  rateLimitEnhanced: vi.fn().mockReturnValue({ success: true }),
+  rateLimitEnhanced: vi.fn().mockResolvedValue({ success: true }),
   createRateLimitKey: vi.fn().mockReturnValue('test-key'),
 }));
 

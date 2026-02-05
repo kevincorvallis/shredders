@@ -36,7 +36,7 @@ export async function POST(
 
     // Rate limiting: 20 RSVPs per hour per user
     const rateLimitKey = createRateLimitKey(authUser.userId, 'rsvpEvent');
-    const rateLimit = rateLimitEnhanced(rateLimitKey, 'rsvpEvent');
+    const rateLimit = await rateLimitEnhanced(rateLimitKey, 'rsvpEvent');
 
     if (!rateLimit.success) {
       return NextResponse.json(
@@ -238,7 +238,7 @@ export async function POST(
         console.error('Error creating RSVP:', insertError);
         console.error('Insert details - eventId:', eventId, 'userId:', userProfile.id, 'status:', effectiveStatus);
         return NextResponse.json(
-          { error: `Failed to create RSVP: ${insertError.message || 'Database error'}` },
+          { error: 'Failed to create RSVP' },
           { status: 500 }
         );
       }

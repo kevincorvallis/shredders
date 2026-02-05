@@ -35,7 +35,7 @@ export async function POST(
 
     // Rate limiting: 10 events per hour (same as create)
     const rateLimitKey = createRateLimitKey(authUser.userId, 'createEvent');
-    const rateLimit = rateLimitEnhanced(rateLimitKey, 'createEvent');
+    const rateLimit = await rateLimitEnhanced(rateLimitKey, 'createEvent');
 
     if (!rateLimit.success) {
       return NextResponse.json(

@@ -75,15 +75,18 @@ export async function isBlacklisted(jti: string): Promise<boolean> {
 
     if (error) {
       console.error('Error checking blacklist:', error);
-      // Fail open - don't block valid tokens due to DB errors
-      return false;
+      // Fail closed - treat DB errors as "token is revoked" so revoked tokens
+      // stay blocked even during outages. A brief disruption for legitimate
+      // users (who can simply re-authenticate) is safer than allowing a
+      // compromised token through.
+      return true;
     }
 
     return !!data;
   } catch (error) {
     console.error('Blacklist check error:', error);
-    // Fail open - don't block valid tokens
-    return false;
+    // Fail closed - same rationale as above
+    return true;
   }
 }
 

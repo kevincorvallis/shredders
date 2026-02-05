@@ -27,8 +27,7 @@ export function apiSuccess<T>(data: T, status: number = 200) {
 }
 
 /**
- * Simple in-memory rate limiter
- * For production, consider using Redis or a dedicated rate limiting service
+ * In-memory rate limiter (fallback when REDIS_URL is not set)
  */
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
@@ -59,34 +58,54 @@ export const RATE_LIMITS = {
   postComment: { limit: 30, windowMs: 60 * 60 * 1000 }, // 30 comments per hour
 };
 
-/**
- * Enhanced rate limiter with composite key support
- *
- * @param identifier - Unique identifier (can be composite like "ip:email")
- * @param config - Rate limit configuration or preset name
- * @returns Rate limit result with success/failure and metadata
- *
- * @example
- * // Using preset
- * const result = rateLimitEnhanced('user@example.com', 'login');
- *
- * // Using composite key
- * const result = rateLimitEnhanced(`${ip}:${email}`, { limit: 5, windowMs: 300000 });
- *
- * // Check result
- * if (!result.success) {
- *   return NextResponse.json(
- *     { error: 'Too many attempts', retryAfter: result.retryAfter },
- *     { status: 429, headers: { 'Retry-After': result.retryAfter!.toString() } }
- *   );
- * }
- */
-export function rateLimitEnhanced(
-  identifier: string,
-  config: keyof typeof RATE_LIMITS | RateLimitConfig = 'default'
-): RateLimitResult {
-  const { limit, windowMs } = typeof config === 'string' ? RATE_LIMITS[config] : config;
+// Lazy-initialized Upstash Ratelimit instance
+let _upstashRatelimiters: Map<string, import('@upstash/ratelimit').Ratelimit> | null = null;
 
+function getUpstashRatelimiter(
+  windowMs: number,
+  limit: number,
+): import('@upstash/ratelimit').Ratelimit | null {
+  const url = process.env.REDIS_URL;
+  const token = process.env.REDIS_TOKEN;
+  if (!url || !token) return null;
+
+  if (!_upstashRatelimiters) {
+    _upstashRatelimiters = new Map();
+  }
+
+  const key = `${windowMs}:${limit}`;
+  if (_upstashRatelimiters.has(key)) {
+    return _upstashRatelimiters.get(key)!;
+  }
+
+  try {
+    // Dynamic import is not needed since we installed the packages
+    const { Ratelimit } = require('@upstash/ratelimit');
+    const { Redis } = require('@upstash/redis');
+
+    const redis = new Redis({ url, token });
+    const ratelimiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(limit, `${windowMs} ms`),
+      prefix: 'shredders:rl',
+    });
+
+    _upstashRatelimiters.set(key, ratelimiter);
+    return ratelimiter;
+  } catch (e) {
+    console.warn('Failed to initialize Upstash ratelimiter, falling back to in-memory:', e);
+    return null;
+  }
+}
+
+/**
+ * In-memory rate limit check (used as fallback when Redis is not available)
+ */
+function rateLimitInMemory(
+  identifier: string,
+  limit: number,
+  windowMs: number,
+): RateLimitResult {
   const now = Date.now();
   const record = rateLimitMap.get(identifier);
 
@@ -122,14 +141,50 @@ export function rateLimitEnhanced(
 }
 
 /**
- * Legacy rate limiter (kept for backward compatibility)
+ * Enhanced rate limiter with Upstash Redis backend and in-memory fallback
+ *
+ * Uses Upstash Redis sliding window when REDIS_URL and REDIS_TOKEN are set.
+ * Falls back to in-memory Map for local development.
+ *
+ * @param identifier - Unique identifier (can be composite like "ip:email")
+ * @param config - Rate limit configuration or preset name
+ * @returns Rate limit result with success/failure and metadata
  */
-export function rateLimit(
+export async function rateLimitEnhanced(
+  identifier: string,
+  config: keyof typeof RATE_LIMITS | RateLimitConfig = 'default'
+): Promise<RateLimitResult> {
+  const { limit, windowMs } = typeof config === 'string' ? RATE_LIMITS[config] : config;
+
+  const upstash = getUpstashRatelimiter(windowMs, limit);
+  if (upstash) {
+    try {
+      const result = await upstash.limit(identifier);
+      return {
+        success: result.success,
+        remaining: result.remaining,
+        resetTime: result.reset,
+        retryAfter: result.success ? undefined : Math.ceil((result.reset - Date.now()) / 1000),
+      };
+    } catch (e) {
+      console.warn('Upstash rate limit error, falling back to in-memory:', e);
+    }
+  }
+
+  // Fallback to in-memory
+  return rateLimitInMemory(identifier, limit, windowMs);
+}
+
+/**
+ * Legacy rate limiter (kept for backward compatibility)
+ * @deprecated Use rateLimitEnhanced instead
+ */
+export async function rateLimit(
   identifier: string,
   limit: number = 60,
   windowMs: number = 60000
-): { success: boolean; remaining: number } {
-  const result = rateLimitEnhanced(identifier, { limit, windowMs });
+): Promise<{ success: boolean; remaining: number }> {
+  const result = await rateLimitEnhanced(identifier, { limit, windowMs });
   return { success: result.success, remaining: result.remaining };
 }
 
@@ -139,20 +194,6 @@ export function rateLimit(
  */
 export function createRateLimitKey(...parts: (string | undefined)[]): string {
   return parts.filter(Boolean).join(':');
-}
-
-/**
- * Clean up old rate limit entries (call periodically)
- */
-if (typeof window === 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, record] of rateLimitMap.entries()) {
-      if (now > record.resetTime) {
-        rateLimitMap.delete(key);
-      }
-    }
-  }, 60000); // Clean up every minute
 }
 
 /**
