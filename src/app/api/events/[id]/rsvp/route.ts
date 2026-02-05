@@ -118,7 +118,8 @@ export async function POST(
     }
 
     // OPTIMIZATION: Fetch existing RSVP once and reuse throughout the function
-    const { data: existingRSVP } = await supabase
+    // NOTE: Use adminClient to bypass RLS - regular client may not see user's own RSVP
+    const { data: existingRSVP } = await adminClient
       .from('event_attendees')
       .select('id, status')
       .eq('event_id', eventId)
