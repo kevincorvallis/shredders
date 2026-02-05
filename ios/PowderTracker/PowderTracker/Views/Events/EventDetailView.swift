@@ -135,7 +135,16 @@ struct EventDetailView: View {
                 RSVPCarpoolSheet(
                     eventId: eventId,
                     currentStatus: currentUserRSVPStatus
-                ) {
+                ) { newStatus in
+                    // Update status immediately from RSVP response
+                    currentUserRSVPStatus = newStatus
+                    // Notify EventsView so it can refresh attendee counts
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("RSVPUpdated"),
+                        object: nil,
+                        userInfo: ["eventId": eventId]
+                    )
+                    // Also reload event to get updated counts and attendee list
                     Task { await loadEvent() }
                 }
             }
@@ -875,16 +884,16 @@ extension EventDetailView {
 
     private func rsvpButtons(event: EventWithDetails) -> some View {
         VStack(spacing: 12) {
-            // If user has RSVP'd, show their status with option to change
-            if currentUserRSVPStatus == .going || currentUserRSVPStatus == .maybe {
+            // If user has RSVP'd (going, maybe, or declined), show their status with option to change
+            if let status = currentUserRSVPStatus {
                 // Show current status
                 HStack(spacing: 12) {
-                    Image(systemName: currentUserRSVPStatus == .going ? "checkmark.circle.fill" : "questionmark.circle.fill")
+                    Image(systemName: rsvpStatusIcon(for: status))
                         .font(.title2)
-                        .foregroundStyle(currentUserRSVPStatus == .going ? .green : .orange)
+                        .foregroundStyle(rsvpStatusColor(for: status))
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(currentUserRSVPStatus == .going ? "You're going!" : "You're a maybe")
+                        Text(rsvpStatusText(for: status))
                             .font(.headline)
                         Text("Tap to change your response")
                             .font(.caption)
@@ -906,7 +915,7 @@ extension EventDetailView {
                     }
                 }
                 .padding()
-                .background(currentUserRSVPStatus == .going ? .green.opacity(0.1) : .orange.opacity(0.1))
+                .background(rsvpStatusColor(for: status).opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .accessibilityIdentifier("event_detail_rsvp_status")
             } else {
@@ -955,6 +964,53 @@ extension EventDetailView {
                     .accessibilityIdentifier("event_detail_maybe_button")
                 }
             }
+        }
+    }
+
+    // MARK: - RSVP Status Helpers
+
+    private func rsvpStatusIcon(for status: RSVPStatus) -> String {
+        switch status {
+        case .going:
+            return "checkmark.circle.fill"
+        case .maybe:
+            return "questionmark.circle.fill"
+        case .declined:
+            return "xmark.circle.fill"
+        case .waitlist:
+            return "hourglass.circle.fill"
+        case .invited:
+            return "envelope.circle.fill"
+        }
+    }
+
+    private func rsvpStatusColor(for status: RSVPStatus) -> Color {
+        switch status {
+        case .going:
+            return .green
+        case .maybe:
+            return .orange
+        case .declined:
+            return .red
+        case .waitlist:
+            return .purple
+        case .invited:
+            return .blue
+        }
+    }
+
+    private func rsvpStatusText(for status: RSVPStatus) -> String {
+        switch status {
+        case .going:
+            return "You're going!"
+        case .maybe:
+            return "You're a maybe"
+        case .declined:
+            return "You can't make it"
+        case .waitlist:
+            return "You're on the waitlist"
+        case .invited:
+            return "You're invited"
         }
     }
 
@@ -1041,6 +1097,12 @@ extension EventDetailView {
             let response = try await EventService.shared.rsvp(eventId: eventId, status: status)
             currentUserRSVPStatus = response.attendee.status
             HapticFeedback.success.trigger()
+            // Notify EventsView so it can refresh attendee counts
+            NotificationCenter.default.post(
+                name: NSNotification.Name("RSVPUpdated"),
+                object: nil,
+                userInfo: ["eventId": eventId]
+            )
             toast = ToastMessage(
                 type: .success,
                 title: status == .going ? "You're in!" : "Got it!",
@@ -1070,6 +1132,12 @@ extension EventDetailView {
         do {
             try await EventService.shared.cancelEvent(id: eventId)
             HapticFeedback.success.trigger()
+            // Post notification so EventsView refreshes
+            NotificationCenter.default.post(
+                name: NSNotification.Name("EventCancelled"),
+                object: nil,
+                userInfo: ["eventId": eventId]
+            )
             dismiss()
         } catch let err as EventServiceError {
             HapticFeedback.error.trigger()

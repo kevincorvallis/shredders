@@ -108,6 +108,12 @@ struct EventsView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("EventCancelled"))) { _ in
             Task { await loadEvents(bustCache: true) }
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("RSVPUpdated"))) { _ in
+            Task { await loadEvents(bustCache: true) }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("EventUpdated"))) { _ in
+            Task { await loadEvents(bustCache: true) }
+        }
     }
 
     // MARK: - Content View
@@ -282,34 +288,27 @@ struct EventsView: View {
     // MARK: - State Views
 
     private func errorView(message: String) -> some View {
-        VStack(spacing: .spacingL) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-            Text(message)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button("Retry") {
+        BrockEmptyState(
+            title: "Ruh Roh!",
+            message: "Brock couldn't fetch the events. \(message)",
+            expression: .chilly,
+            actionTitle: "Try Again",
+            action: {
                 Task { await loadEvents() }
             }
-            .buttonStyle(.borderedProminent)
-        }
-        .padding()
+        )
     }
 
     private var emptyStateView: some View {
-        ModernEmptyStateView(
-            style: .noEvents,
+        BrockEmptyState(
             title: "No Upcoming Events",
-            message: "Create an event to plan ski trips with friends and coordinate carpools!"
-        ) {
-            ModernEmptyStateButton(
-                title: "Create Event",
-                icon: "plus.circle.fill"
-            ) {
+            message: "Brock is ready to shred! Create an event to rally your crew for a powder day.",
+            expression: .excited,
+            actionTitle: "Create Event",
+            action: {
                 showingCreateSheet = true
             }
-        }
+        )
     }
 
     // MARK: - Computed Properties

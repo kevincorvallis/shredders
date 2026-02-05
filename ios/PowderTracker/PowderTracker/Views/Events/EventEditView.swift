@@ -229,6 +229,12 @@ struct EventEditView: View {
             )
 
             HapticFeedback.success.trigger()
+            // Notify EventsView so it can refresh the list
+            NotificationCenter.default.post(
+                name: NSNotification.Name("EventUpdated"),
+                object: nil,
+                userInfo: ["eventId": event.id]
+            )
             onEventUpdated?()
             dismiss()
         } catch let err as EventServiceError {

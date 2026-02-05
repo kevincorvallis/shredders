@@ -604,6 +604,30 @@ export async function POST(request: NextRequest) {
       // Don't fail the whole request, event was created successfully
     }
 
+    // Auto-RSVP creator as 'going' so they appear in attendee list
+    const { error: rsvpError } = await adminClient
+      .from('event_attendees')
+      .insert({
+        event_id: event.id,
+        user_id: userProfile.id,
+        status: 'going',
+        is_driver: carpoolAvailable,
+        needs_ride: false,
+        responded_at: new Date().toISOString(),
+      });
+
+    if (rsvpError) {
+      console.error('Error auto-RSVPing creator:', rsvpError);
+      // Don't fail the whole request, event was created successfully
+    }
+
+    // Fetch updated counts after auto-RSVP
+    const { data: updatedEvent } = await adminClient
+      .from('events')
+      .select('attendee_count, going_count, maybe_count')
+      .eq('id', event.id)
+      .single();
+
     // Transform to API response
     const transformedEvent: Event = {
       id: event.id,
@@ -622,11 +646,12 @@ export async function POST(request: NextRequest) {
       status: event.status,
       createdAt: event.created_at,
       updatedAt: event.updated_at,
-      attendeeCount: event.attendee_count,
-      goingCount: event.going_count,
-      maybeCount: event.maybe_count,
+      attendeeCount: updatedEvent?.attendee_count ?? event.attendee_count,
+      goingCount: updatedEvent?.going_count ?? event.going_count,
+      maybeCount: updatedEvent?.maybe_count ?? event.maybe_count,
       waitlistCount: event.waitlist_count ?? 0,
       creator: event.creator,
+      userRSVPStatus: 'going',  // Creator is auto-RSVP'd as going
       isCreator: true,
     };
 
