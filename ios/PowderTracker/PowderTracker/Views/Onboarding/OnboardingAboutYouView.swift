@@ -34,6 +34,31 @@ struct OnboardingAboutYouView: View {
                 }
                 .padding(.top, .spacingXL)
 
+                // Riding Style - First question!
+                VStack(alignment: .leading, spacing: .spacingM) {
+                    Text("I ride on...")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(.horizontal, .spacingL)
+
+                    HStack(spacing: .spacingM) {
+                        ForEach(RidingStyle.allCases) { style in
+                            RidingStyleButton(
+                                style: style,
+                                isSelected: profile.ridingStyle == style,
+                                action: {
+                                    withAnimation(.spring(response: 0.3)) {
+                                        profile.ridingStyle = style
+                                    }
+                                    HapticFeedback.selection.trigger()
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, .spacingL)
+                }
+
                 // Bio
                 VStack(alignment: .leading, spacing: .spacingS) {
                     HStack {

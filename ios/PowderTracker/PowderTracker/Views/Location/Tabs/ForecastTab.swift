@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ForecastTab: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     let mountain: Mountain
     @State private var forecastData: MountainForecastResponse?
     @State private var hourlyData: HourlyForecastResponse?

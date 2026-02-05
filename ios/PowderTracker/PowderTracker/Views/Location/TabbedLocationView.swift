@@ -3,7 +3,7 @@ import SwiftUI
 struct TabbedLocationView: View {
     let mountain: Mountain
     let initialTab: Tab?
-    @StateObject private var viewModel: LocationViewModel
+    @State private var viewModel: LocationViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab: Tab
 
@@ -40,7 +40,7 @@ struct TabbedLocationView: View {
     init(mountain: Mountain, initialTab: Tab? = nil) {
         self.mountain = mountain
         self.initialTab = initialTab
-        _viewModel = StateObject(wrappedValue: LocationViewModel(mountain: mountain))
+        _viewModel = State(wrappedValue: LocationViewModel(mountain: mountain))
         _selectedTab = State(initialValue: initialTab ?? .overview)
     }
 
@@ -114,9 +114,9 @@ struct TabbedLocationView: View {
     @ViewBuilder
     private var tabContent: some View {
         if viewModel.isLoading {
-            ProgressView("Loading \(selectedTab.rawValue.lowercased())...")
-                .frame(maxWidth: .infinity, minHeight: 300)
-                .frame(alignment: .center)
+            // Use skeleton loading for better perceived performance
+            OverviewTabSkeleton()
+                .padding(.top, 8)
         } else if let error = viewModel.error {
             ErrorView(message: error) {
                 Task {

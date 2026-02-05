@@ -8,6 +8,57 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Riding Style
+
+enum RidingStyle: String, Codable, CaseIterable, Identifiable {
+    case skier
+    case snowboarder
+    case both
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .skier: return "Skier"
+        case .snowboarder: return "Snowboarder"
+        case .both: return "Both"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .skier: return "Two planks, one dream"
+        case .snowboarder: return "Sideways is the way"
+        case .both: return "Why choose?"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .skier: return "figure.skiing.downhill"
+        case .snowboarder: return "figure.snowboarding"
+        case .both: return "figure.skiing.crosscountry"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .skier: return Color(hex: "3B82F6") ?? .blue        // Classic ski blue
+        case .snowboarder: return Color(hex: "F97316") ?? .orange // Snowboard orange
+        case .both: return Color(hex: "8B5CF6") ?? .purple       // Purple for versatility
+        }
+    }
+
+    /// Compact emoji representation for badges
+    var emoji: String {
+        switch self {
+        case .skier: return "⛷️"
+        case .snowboarder: return "🏂"
+        case .both: return "🎿"
+        }
+    }
+}
+
 // MARK: - Experience Level
 
 enum ExperienceLevel: String, Codable, CaseIterable, Identifiable {
@@ -156,6 +207,7 @@ struct OnboardingProfile: Codable {
     var displayName: String?
     var bio: String?
     var avatarUrl: String?
+    var ridingStyle: RidingStyle?
     var experienceLevel: ExperienceLevel?
     var preferredTerrain: [TerrainType]
     var seasonPassType: SeasonPassType?
@@ -165,6 +217,7 @@ struct OnboardingProfile: Codable {
         displayName: String? = nil,
         bio: String? = nil,
         avatarUrl: String? = nil,
+        ridingStyle: RidingStyle? = nil,
         experienceLevel: ExperienceLevel? = nil,
         preferredTerrain: [TerrainType] = [],
         seasonPassType: SeasonPassType? = nil,
@@ -173,6 +226,7 @@ struct OnboardingProfile: Codable {
         self.displayName = displayName
         self.bio = bio
         self.avatarUrl = avatarUrl
+        self.ridingStyle = ridingStyle
         self.experienceLevel = experienceLevel
         self.preferredTerrain = preferredTerrain
         self.seasonPassType = seasonPassType
@@ -183,6 +237,7 @@ struct OnboardingProfile: Codable {
         case displayName = "display_name"
         case bio
         case avatarUrl = "avatar_url"
+        case ridingStyle = "riding_style"
         case experienceLevel = "experience_level"
         case preferredTerrain = "preferred_terrain"
         case seasonPassType = "season_pass_type"
@@ -195,6 +250,7 @@ struct OnboardingProfile: Codable {
         try container.encodeIfPresent(displayName, forKey: .displayName)
         try container.encodeIfPresent(bio, forKey: .bio)
         try container.encodeIfPresent(avatarUrl, forKey: .avatarUrl)
+        try container.encodeIfPresent(ridingStyle?.rawValue, forKey: .ridingStyle)
         try container.encodeIfPresent(experienceLevel?.rawValue, forKey: .experienceLevel)
         try container.encode(preferredTerrain.map { $0.rawValue }, forKey: .preferredTerrain)
         try container.encodeIfPresent(seasonPassType?.rawValue, forKey: .seasonPassType)
@@ -206,6 +262,12 @@ struct OnboardingProfile: Codable {
         displayName = try container.decodeIfPresent(String.self, forKey: .displayName)
         bio = try container.decodeIfPresent(String.self, forKey: .bio)
         avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
+
+        if let styleString = try container.decodeIfPresent(String.self, forKey: .ridingStyle) {
+            ridingStyle = RidingStyle(rawValue: styleString)
+        } else {
+            ridingStyle = nil
+        }
 
         if let levelString = try container.decodeIfPresent(String.self, forKey: .experienceLevel) {
             experienceLevel = ExperienceLevel(rawValue: levelString)

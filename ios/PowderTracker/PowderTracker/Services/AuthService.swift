@@ -241,6 +241,9 @@ class AuthService {
         isLoading = true
         error = nil
 
+        // Clear any cached tokens from previous user session
+        EventService.clearCachedToken()
+
         defer { isLoading = false }
 
         do {
@@ -269,6 +272,9 @@ class AuthService {
     func signInWithApple(idToken: String, nonce: String) async throws {
         isLoading = true
         error = nil
+
+        // Clear any cached tokens from previous user session
+        EventService.clearCachedToken()
 
         defer { isLoading = false }
 
@@ -387,6 +393,10 @@ class AuthService {
             // Clear JWT tokens from Keychain
             KeychainHelper.clearTokens()
 
+            // Clear all cached data including EventService token cache
+            // CRITICAL: This must be called to prevent token reuse between users
+            EventService.clearAllCaches()
+
             // Clear cached user (Phase 2)
             currentUser = nil
             userProfile = nil
@@ -408,6 +418,10 @@ class AuthService {
     func signInViaBackend(email: String, password: String) async throws {
         isLoading = true
         error = nil
+
+        // Clear any cached tokens from previous user session BEFORE signing in
+        // This prevents token reuse between different user accounts
+        EventService.clearCachedToken()
 
         defer { isLoading = false }
 

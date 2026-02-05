@@ -12,8 +12,8 @@ struct ContentView: View {
     @State private var selectedTab: Int = 0
     @State private var selectedSection: NavigationSection? = .today
     @State private var columnVisibility = NavigationSplitViewVisibility.all
-    @StateObject private var mountainsViewModel = MountainSelectionViewModel()
-    @StateObject private var homeViewModel = HomeViewModel()
+    @State private var mountainsViewModel = MountainSelectionViewModel()
+    @State private var homeViewModel = HomeViewModel()
 
     var body: some View {
         Group {

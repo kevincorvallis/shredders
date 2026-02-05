@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Enhanced Homepage with time-based tabs and smart alerts
 struct HomeView: View {
-    @StateObject private var viewModel = HomeViewModel()
+    @State private var viewModel = HomeViewModel()
     @StateObject private var favoritesManager = FavoritesService.shared
     @StateObject private var scrollSync = TimelineScrollSync()
     @State private var selectedTab: HomeTab = .forecast

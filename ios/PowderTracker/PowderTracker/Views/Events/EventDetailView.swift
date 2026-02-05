@@ -35,7 +35,7 @@ struct EventDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             // Creator menu (edit/cancel)
-            if let event = event, event.isCreator == true {
+            if let event = event, event.isCreator ?? false {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button {
@@ -211,9 +211,15 @@ struct EventDetailView: View {
 
                 // Carpool Coordination (if carpool is available)
                 if event.carpoolAvailable {
+                    // Find current user's carpool status from attendees
+                    let currentUserAttendee = event.attendees.first { $0.userId == AuthService.shared.userProfile?.id }
+
                     CarpoolCoordinationView(
                         attendees: event.attendees,
                         carpoolSeats: event.carpoolSeats,
+                        isCurrentUserHost: event.isCreator ?? false,
+                        currentUserIsDriver: currentUserAttendee?.isDriver ?? false,
+                        currentUserNeedsRide: currentUserAttendee?.needsRide ?? false,
                         onOfferRide: {
                             showingRSVPSheet = true
                         },
@@ -226,8 +232,8 @@ struct EventDetailView: View {
                 // Social Sections (Discussion & Activity)
                 socialSections(event: event)
 
-                // RSVP Buttons
-                if event.isCreator != true {
+                // RSVP Buttons (not shown to host/creator)
+                if !(event.isCreator ?? false) {
                     rsvpButtons(event: event)
                 }
             }
@@ -238,26 +244,19 @@ struct EventDetailView: View {
     // MARK: - Social Sections (Discussion, Activity, Photos)
 
     private func socialSections(event: EventWithDetails) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Tab Picker
-            Picker("Social", selection: $selectedSocialTab) {
-                ForEach(EventSocialTab.allCases, id: \.self) { tab in
-                    HStack(spacing: 4) {
-                        Image(systemName: tab.icon)
-                        Text(tab.title)
-                    }
-                    .tag(tab)
-                }
-            }
-            .pickerStyle(.segmented)
+        VStack(alignment: .leading, spacing: .spacingM) {
+            // Custom Tab Bar
+            socialTabBar(event: event)
 
             // Recent activity summary (always visible)
             recentActivitySummary(event: event)
 
             Divider()
 
-            // Tab content
-            let canView = event.userRSVPStatus != nil || event.isCreator == true
+            // Tab content - Host (creator) always has access, RSVP'd users have access
+            let isHost = event.isCreator ?? false
+            let hasRSVP = event.userRSVPStatus != nil
+            let canView = hasRSVP || isHost
 
             switch selectedSocialTab {
             case .discussion:
@@ -271,6 +270,66 @@ struct EventDetailView: View {
         .padding()
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func socialTabBar(event: EventWithDetails) -> some View {
+        HStack(spacing: 0) {
+            ForEach(EventSocialTab.allCases, id: \.self) { tab in
+                Button {
+                    withAnimation(.snappy) {
+                        selectedSocialTab = tab
+                    }
+                    HapticFeedback.selection.trigger()
+                } label: {
+                    VStack(spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: tab.icon)
+                                .font(.subheadline)
+                            Text(tab.title)
+                                .font(.subheadline)
+                                .fontWeight(selectedSocialTab == tab ? .semibold : .regular)
+
+                            // Badge count
+                            if let count = tabCount(for: tab, event: event), count > 0 {
+                                Text("\(count)")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(selectedSocialTab == tab ? Color.blue : Color.secondary)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                        .foregroundStyle(selectedSocialTab == tab ? .primary : .secondary)
+
+                        // Selection indicator
+                        Rectangle()
+                            .fill(selectedSocialTab == tab ? Color.blue : Color.clear)
+                            .frame(height: 2)
+                            .cornerRadius(1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, .spacingS)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(tab.title) tab")
+                .accessibilityHint(selectedSocialTab == tab ? "Selected" : "Double tap to select")
+            }
+        }
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusButton))
+    }
+
+    private func tabCount(for tab: EventSocialTab, event: EventWithDetails) -> Int? {
+        switch tab {
+        case .discussion:
+            return event.commentCount
+        case .photos:
+            return event.photoCount
+        case .activity:
+            return nil // Activity doesn't have a simple count
+        }
     }
 
     private func activityContent(event: EventWithDetails, canView: Bool) -> some View {
@@ -755,26 +814,14 @@ extension EventDetailView {
 
                         Spacer()
 
-                        HStack(spacing: 8) {
-                            if attendee.isDriver {
-                                Label("Driver", systemImage: "car.fill")
-                                    .font(.caption2)
-                                    .foregroundStyle(.green)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(.green.opacity(0.1))
-                                    .clipShape(Capsule())
+                        HStack(spacing: 6) {
+                            // Riding style badge (skier/snowboarder)
+                            if let ridingStyle = attendee.user.ridingStyleEnum {
+                                RidingStyleBadge(style: ridingStyle)
                             }
 
-                            if attendee.needsRide {
-                                Text("Needs ride")
-                                    .font(.caption2)
-                                    .foregroundStyle(.purple)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(.purple.opacity(0.1))
-                                    .clipShape(Capsule())
-                            }
+                            // Transportation status - explicit for all attendees
+                            transportationBadge(for: attendee)
 
                             Text(attendee.status.displayName)
                                 .font(.caption2)
@@ -791,6 +838,38 @@ extension EventDetailView {
         .padding()
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    @ViewBuilder
+    private func transportationBadge(for attendee: EventAttendee) -> some View {
+        if attendee.isDriver {
+            // Offering carpool
+            Label("Offering ride", systemImage: "car.fill")
+                .font(.caption2)
+                .foregroundStyle(.green)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(.green.opacity(0.1))
+                .clipShape(Capsule())
+        } else if attendee.needsRide {
+            // Needs a ride
+            Label("Needs ride", systemImage: "figure.wave")
+                .font(.caption2)
+                .foregroundStyle(.purple)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(.purple.opacity(0.1))
+                .clipShape(Capsule())
+        } else {
+            // Driving themselves (not offering carpool)
+            Label("Own car", systemImage: "car.side")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(Color(.tertiarySystemFill))
+                .clipShape(Capsule())
+        }
     }
 
     private func rsvpButtons(event: EventWithDetails) -> some View {

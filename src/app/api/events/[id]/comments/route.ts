@@ -122,6 +122,16 @@ export async function GET(
     // OPTIMIZATION: Check creator + RSVP in parallel (combined query)
     const { isCreator, hasRSVP } = await checkUserEventAccess(adminClient, eventId, userProfile.id);
 
+    // Debug logging
+    console.log('[Comments] Access check:', {
+      eventId,
+      userProfileId: userProfile.id,
+      eventCreatorId: event.user_id,
+      isCreator,
+      hasRSVP,
+      idsMatch: event.user_id === userProfile.id,
+    });
+
     if (!isCreator && !hasRSVP) {
       return NextResponse.json({
         comments: [],

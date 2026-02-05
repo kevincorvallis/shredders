@@ -46,13 +46,13 @@ struct UnifiedAuthView: View {
                 // Decorative blurred circles
                 GeometryReader { geometry in
                     Circle()
-                        .fill(.pookieCyan.opacity(0.3))
+                        .fill(Color.pookieCyan.opacity(0.3))
                         .frame(width: 200, height: 200)
                         .blur(radius: 60)
                         .offset(x: -50, y: geometry.size.height * 0.1)
                     
                     Circle()
-                        .fill(.pookiePurple.opacity(0.3))
+                        .fill(Color.pookiePurple.opacity(0.3))
                         .frame(width: 250, height: 250)
                         .blur(radius: 70)
                         .offset(x: geometry.size.width - 100, y: geometry.size.height * 0.6)
@@ -391,7 +391,7 @@ struct UnifiedAuthView: View {
                     Text("Forgot Password?")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundStyle(.pookieCyan)
+                        .foregroundStyle(Color.pookieCyan)
                 }
                 .accessibilityIdentifier("auth_forgot_password_button")
                 .sheet(isPresented: $showForgotPassword) {
@@ -416,7 +416,7 @@ struct UnifiedAuthView: View {
                     .foregroundStyle(.secondary)
                 Text(isSignupMode ? "Sign In" : "Sign Up")
                     .fontWeight(.semibold)
-                    .foregroundStyle(.pookieCyan)
+                    .foregroundStyle(Color.pookieCyan)
             }
             .font(.subheadline)
         }

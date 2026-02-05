@@ -10,6 +10,9 @@ import SwiftUI
 struct CarpoolCoordinationView: View {
     let attendees: [EventAttendee]
     let carpoolSeats: Int?
+    var isCurrentUserHost: Bool = false
+    var currentUserIsDriver: Bool = false
+    var currentUserNeedsRide: Bool = false
     let onOfferRide: () -> Void
     let onNeedRide: () -> Void
 
@@ -23,6 +26,22 @@ struct CarpoolCoordinationView: View {
                 Text("Carpool Coordination")
                     .font(.headline)
                 Spacer()
+
+                // Show host's carpool status
+                if isCurrentUserHost {
+                    Text("You organized this")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(.tertiarySystemFill))
+                        .clipShape(Capsule())
+                }
+            }
+
+            // Your carpool status (for host or current user)
+            if isCurrentUserHost || currentUserIsDriver || currentUserNeedsRide {
+                yourCarpoolStatus
             }
 
             Divider()
@@ -39,6 +58,58 @@ struct CarpoolCoordinationView: View {
         .padding(12)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
+    }
+
+    // MARK: - Your Carpool Status
+
+    private var yourCarpoolStatus: some View {
+        HStack(spacing: 12) {
+            Image(systemName: currentUserIsDriver ? "car.fill" : (currentUserNeedsRide ? "figure.wave" : "person.fill"))
+                .font(.title3)
+                .foregroundStyle(currentUserIsDriver ? .green : (currentUserNeedsRide ? .purple : .blue))
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Your Status")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if currentUserIsDriver {
+                    Text("Offering rides")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.green)
+                } else if currentUserNeedsRide {
+                    Text("Looking for a ride")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.purple)
+                } else if isCurrentUserHost {
+                    Text("Not set - tap to update")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
+
+            if isCurrentUserHost && !currentUserIsDriver && !currentUserNeedsRide {
+                Button("Update") {
+                    onOfferRide()
+                }
+                .font(.caption)
+                .fontWeight(.medium)
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(.tertiarySystemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(currentUserIsDriver ? Color.green.opacity(0.3) : (currentUserNeedsRide ? Color.purple.opacity(0.3) : Color.clear), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Drivers Section
@@ -430,35 +501,52 @@ struct RSVPCarpoolSheet: View {
 }
 
 #Preview("Carpool Coordination") {
-    CarpoolCoordinationView(
-        attendees: [
-            EventAttendee(
-                id: "1",
-                userId: "u1",
-                status: .going,
-                isDriver: true,
-                needsRide: false,
-                pickupLocation: "Seattle - Capitol Hill",
-                waitlistPosition: nil,
-                respondedAt: nil,
-                user: EventUser(id: "u1", username: "sarah_k", displayName: "Sarah K.", avatarUrl: nil)
-            ),
-            EventAttendee(
-                id: "2",
-                userId: "u2",
-                status: .going,
-                isDriver: false,
-                needsRide: true,
-                pickupLocation: "Bellevue",
-                waitlistPosition: nil,
-                respondedAt: nil,
-                user: EventUser(id: "u2", username: "mike_t", displayName: "Mike T.", avatarUrl: nil)
-            )
-        ],
-        carpoolSeats: 4,
-        onOfferRide: {},
-        onNeedRide: {}
-    )
+    VStack(spacing: 20) {
+        // As host who is a driver
+        CarpoolCoordinationView(
+            attendees: [
+                EventAttendee(
+                    id: "1",
+                    userId: "u1",
+                    status: .going,
+                    isDriver: true,
+                    needsRide: false,
+                    pickupLocation: "Seattle - Capitol Hill",
+                    waitlistPosition: nil,
+                    respondedAt: nil,
+                    user: EventUser(id: "u1", username: "sarah_k", displayName: "Sarah K.", avatarUrl: nil, ridingStyle: "skier")
+                ),
+                EventAttendee(
+                    id: "2",
+                    userId: "u2",
+                    status: .going,
+                    isDriver: false,
+                    needsRide: true,
+                    pickupLocation: "Bellevue",
+                    waitlistPosition: nil,
+                    respondedAt: nil,
+                    user: EventUser(id: "u2", username: "mike_t", displayName: "Mike T.", avatarUrl: nil, ridingStyle: "snowboarder")
+                )
+            ],
+            carpoolSeats: 4,
+            isCurrentUserHost: true,
+            currentUserIsDriver: true,
+            currentUserNeedsRide: false,
+            onOfferRide: {},
+            onNeedRide: {}
+        )
+
+        // As host who hasn't set status
+        CarpoolCoordinationView(
+            attendees: [],
+            carpoolSeats: 4,
+            isCurrentUserHost: true,
+            currentUserIsDriver: false,
+            currentUserNeedsRide: false,
+            onOfferRide: {},
+            onNeedRide: {}
+        )
+    }
     .padding()
 }
 

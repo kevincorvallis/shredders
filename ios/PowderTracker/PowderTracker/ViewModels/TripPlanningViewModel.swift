@@ -1,12 +1,13 @@
 import Foundation
 
 @MainActor
-class TripPlanningViewModel: ObservableObject {
-    @Published var roads: RoadsResponse?
-    @Published var tripAdvice: TripAdviceResponse?
-    @Published var powderDayPlan: PowderDayPlanResponse?
-    @Published var isLoading = false
-    @Published var error: Error?
+@Observable
+class TripPlanningViewModel {
+    var roads: RoadsResponse?
+    var tripAdvice: TripAdviceResponse?
+    var powderDayPlan: PowderDayPlanResponse?
+    var isLoading = false
+    var error: Error?
 
     private let apiClient = APIClient.shared
 

@@ -54,61 +54,70 @@ struct SkiRefreshIndicator: View {
     let progress: Double // 0.0 to 1.0 for pull progress
     
     @State private var rotation: Double = 0
-    @State private var snowflakeOpacity: [Double] = [0.3, 0.5, 0.7, 0.5, 0.3]
+    
+    private let snowflakeOpacities: [Double] = [0.3, 0.5, 0.7, 0.5, 0.3]
     
     var body: some View {
         ZStack {
-            // Background circle
-            Circle()
-                .fill(.ultraThinMaterial)
-                .frame(width: 50, height: 50)
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                )
+            backgroundCircle
             
             if isRefreshing {
-                // Spinning snowflake when refreshing
-                Image(systemName: "snowflake")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.pookieCyan, .white],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .rotationEffect(.degrees(rotation))
-                    .onAppear {
-                        withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
-                            rotation = 360
-                        }
-                    }
+                refreshingView
             } else {
-                // Progress indicator when pulling
-                ZStack {
-                    // Snowflake particles
-                    ForEach(0..<5, id: \.self) { index in
-                        Image(systemName: "snowflake")
-                            .font(.system(size: 8))
-                            .foregroundStyle(.pookieCyan)
-                            .opacity(snowflakeOpacity[index] * progress)
-                            .offset(
-                                x: CGFloat(cos(Double(index) * .pi / 2.5)) * 18,
-                                y: CGFloat(sin(Double(index) * .pi / 2.5)) * 18
-                            )
-                    }
-                    
-                    // Center mountain icon
-                    Image(systemName: "mountain.2.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.secondary)
-                        .opacity(0.5 + progress * 0.5)
-                        .scaleEffect(0.8 + progress * 0.2)
-                }
+                progressView
             }
         }
-        .shadow(color: .pookieCyan.opacity(isRefreshing ? 0.3 : 0), radius: 10)
+        .shadow(color: Color.pookieCyan.opacity(isRefreshing ? 0.3 : 0), radius: 10)
+    }
+    
+    private var backgroundCircle: some View {
+        Circle()
+            .fill(.ultraThinMaterial)
+            .frame(width: 50, height: 50)
+            .overlay(
+                Circle()
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+    }
+    
+    private var refreshingView: some View {
+        Image(systemName: "snowflake")
+            .font(.system(size: 24, weight: .medium))
+            .foregroundStyle(Color.pookieCyan)
+            .rotationEffect(.degrees(rotation))
+            .onAppear {
+                withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
+                    rotation = 360
+                }
+            }
+    }
+    
+    private var progressView: some View {
+        ZStack {
+            // Snowflake particles
+            ForEach(0..<5, id: \.self) { index in
+                snowflakeParticle(at: index)
+            }
+            
+            // Center mountain icon
+            Image(systemName: "mountain.2.fill")
+                .font(.system(size: 20))
+                .foregroundStyle(.secondary)
+                .opacity(0.5 + progress * 0.5)
+                .scaleEffect(0.8 + CGFloat(progress) * 0.2)
+        }
+    }
+    
+    private func snowflakeParticle(at index: Int) -> some View {
+        let angle = Double(index) * .pi / 2.5
+        let xOffset = CGFloat(cos(angle)) * 18
+        let yOffset = CGFloat(sin(angle)) * 18
+        
+        return Image(systemName: "snowflake")
+            .font(.system(size: 8))
+            .foregroundStyle(Color.pookieCyan)
+            .opacity(snowflakeOpacities[index] * progress)
+            .offset(x: xOffset, y: yOffset)
     }
 }
 

@@ -6,7 +6,7 @@ import SwiftUI
 struct ComparisonGrid: View {
     let favorites: [(mountain: Mountain, data: MountainBatchedResponse)]
     let bestMountainId: String?
-    @ObservedObject var viewModel: HomeViewModel
+    var viewModel: HomeViewModel
     var onWebcamTap: ((Mountain) -> Void)? = nil
 
     // 2-column grid layout with design system spacing

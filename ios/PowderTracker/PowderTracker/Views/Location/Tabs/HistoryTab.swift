@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HistoryTab: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     let mountain: Mountain
 
     var body: some View {

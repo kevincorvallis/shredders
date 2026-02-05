@@ -2,26 +2,27 @@ import Foundation
 import SwiftUI
 
 @MainActor
-class HomeViewModel: ObservableObject {
-    @Published var mountainData: [String: MountainBatchedResponse] = [:]
-    @Published var mountains: [Mountain] = [] {
+@Observable
+class HomeViewModel {
+    var mountainData: [String: MountainBatchedResponse] = [:]
+    var mountains: [Mountain] = [] {
         didSet {
             // Rebuild lookup dictionary when mountains change
             mountainsById = Dictionary(uniqueKeysWithValues: mountains.map { ($0.id, $0) })
         }
     }
-    @Published var isLoading = false
-    @Published var error: String?
-    @Published var lastRefreshDate: Date?
+    var isLoading = false
+    var error: String?
+    var lastRefreshDate: Date?
 
     // Enhanced data for homepage redesign
-    @Published var arrivalTimes: [String: ArrivalTimeRecommendation] = [:]
-    @Published var parkingPredictions: [String: ParkingPredictionResponse] = [:]
+    var arrivalTimes: [String: ArrivalTimeRecommendation] = [:]
+    var parkingPredictions: [String: ParkingPredictionResponse] = [:]
 
     // Track failed enhanced data loads for potential retry
-    @Published var failedArrivalTimeLoads: Set<String> = []
-    @Published var failedParkingLoads: Set<String> = []
-    @Published var isLoadingEnhancedData = false
+    var failedArrivalTimeLoads: Set<String> = []
+    var failedParkingLoads: Set<String> = []
+    var isLoadingEnhancedData = false
 
     // O(1) mountain lookup by ID
     private var mountainsById: [String: Mountain] = [:]

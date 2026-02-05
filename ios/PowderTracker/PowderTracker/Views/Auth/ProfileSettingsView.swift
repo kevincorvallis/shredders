@@ -184,6 +184,14 @@ struct ProfileSettingsView: View {
             // Quick stats
             if let profile = authService.userProfile {
                 HStack(spacing: .spacingXL) {
+                    if let ridingStyle = profile.ridingStyleEnum {
+                        StatBadge(
+                            icon: ridingStyle.icon,
+                            value: ridingStyle.displayName,
+                            color: ridingStyle.color
+                        )
+                    }
+
                     if let level = profile.experienceLevelEnum {
                         StatBadge(
                             icon: "figure.skiing.downhill",
@@ -192,7 +200,7 @@ struct ProfileSettingsView: View {
                         )
                     }
 
-                    if let homeMountain = profile.homeMountainId {
+                    if profile.homeMountainId != nil {
                         StatBadge(
                             icon: "mountain.2.fill",
                             value: "Home Set",
@@ -228,16 +236,16 @@ struct ProfileSettingsView: View {
                                     .resizable()
                                     .scaledToFill()
                             case .failure:
-                                avatarPlaceholder(initial: initial, size: size)
+                                AvatarPlaceholderView(initial: initial, size: size)
                             case .empty:
                                 ProgressView()
                                     .frame(width: size, height: size)
                             @unknown default:
-                                avatarPlaceholder(initial: initial, size: size)
+                                AvatarPlaceholderView(initial: initial, size: size)
                             }
                         }
                     } else {
-                        avatarPlaceholder(initial: initial, size: size)
+                        AvatarPlaceholderView(initial: initial, size: size)
                     }
                 }
                 .frame(width: size, height: size)
@@ -281,24 +289,6 @@ struct ProfileSettingsView: View {
         }
         .disabled(isUploadingAvatar)
         .buttonStyle(.plain)
-    }
-
-    @ViewBuilder
-    private func avatarPlaceholder(initial: String, size: CGFloat) -> some View {
-        Circle()
-            .fill(
-                LinearGradient(
-                    colors: [.pookieCyan, .pookiePurple],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .frame(width: size, height: size)
-            .overlay {
-                Text(initial)
-                    .font(.system(size: size * 0.4, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-            }
     }
 
     // MARK: - Profile Info Card
@@ -360,10 +350,10 @@ struct ProfileSettingsView: View {
                     SkiingPreferencesView()
                 } label: {
                     ModernSettingsRow(
-                        icon: "figure.skiing.downhill",
+                        icon: authService.userProfile?.ridingStyleEnum?.icon ?? "figure.skiing.downhill",
                         iconColor: .pookieCyan,
-                        title: "Skiing Preferences",
-                        subtitle: authService.userProfile?.experienceLevelEnum?.displayName ?? "Not set",
+                        title: "Riding Preferences",
+                        subtitle: ridingPreferencesSubtitle,
                         showChevron: true
                     )
                 }
@@ -410,6 +400,18 @@ struct ProfileSettingsView: View {
     }
 
     // MARK: - Helpers
+
+    private var ridingPreferencesSubtitle: String {
+        let profile = authService.userProfile
+        var parts: [String] = []
+        if let style = profile?.ridingStyleEnum {
+            parts.append(style.displayName)
+        }
+        if let level = profile?.experienceLevelEnum {
+            parts.append(level.displayName)
+        }
+        return parts.isEmpty ? "Not set" : parts.joined(separator: " • ")
+    }
 
     private var hasChanges: Bool {
         let profile = authService.userProfile
@@ -681,6 +683,30 @@ private struct StatusBanner: View {
             RoundedRectangle(cornerRadius: .cornerRadiusCard)
                 .stroke(type.color.opacity(0.3), lineWidth: 1)
         )
+    }
+}
+
+// MARK: - Avatar Placeholder View
+
+private struct AvatarPlaceholderView: View {
+    let initial: String
+    let size: CGFloat
+    
+    var body: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [.pookieCyan, .pookiePurple],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: size, height: size)
+            .overlay {
+                Text(initial)
+                    .font(.system(size: size * 0.4, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            }
     }
 }
 

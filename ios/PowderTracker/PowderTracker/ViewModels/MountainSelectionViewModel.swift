@@ -3,13 +3,14 @@ import CoreLocation
 import Combine
 
 @MainActor
-class MountainSelectionViewModel: ObservableObject {
-    @Published var mountains: [Mountain] = []
-    @Published var mountainScores: [String: Double] = [:]
-    @Published var mountainConditions: [String: MountainConditions] = [:]
-    @Published var selectedMountain: Mountain?
-    @Published var isLoading = false
-    @Published var error: Error?
+@Observable
+class MountainSelectionViewModel {
+    var mountains: [Mountain] = []
+    var mountainScores: [String: Double] = [:]
+    var mountainConditions: [String: MountainConditions] = [:]
+    var selectedMountain: Mountain?
+    var isLoading = false
+    var error: Error?
 
     private let apiClient = APIClient.shared
     private let locationManager = LocationManager.shared

@@ -3,7 +3,7 @@ import SwiftUI
 /// Main Mountains tab with purpose-driven sub-views
 /// Each view mode is optimized for a specific user intent
 struct MountainsTabView: View {
-    @StateObject private var viewModel = MountainSelectionViewModel()
+    @State private var viewModel = MountainSelectionViewModel()
     private var favoritesManager: FavoritesService { FavoritesService.shared }
     @State private var selectedMode: MountainViewMode = .conditions
     @Namespace private var namespace
@@ -35,7 +35,7 @@ struct MountainsTabView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Mountains")
             .navigationBarTitleDisplayMode(.large)
-            .refreshable {
+            .enhancedRefreshable {
                 await viewModel.loadMountains()
             }
             .task {
@@ -131,7 +131,7 @@ enum MountainViewMode: String, CaseIterable {
 /// Focus: Real-time conditions, what's open, current powder
 
 struct ConditionsView: View {
-    @ObservedObject var viewModel: MountainSelectionViewModel
+    var viewModel: MountainSelectionViewModel
     var favoritesManager: FavoritesService
     @State private var sortBy: ConditionSort = .bestConditions
 
@@ -167,17 +167,10 @@ struct ConditionsView: View {
                 filterChips
                     .padding(.horizontal)
 
-                // Loading state
+                // Loading state - use skeleton for better perceived performance
                 if viewModel.isLoading && viewModel.mountains.isEmpty {
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .scaleEffect(1.2)
-                        Text("Loading mountains...")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 60)
+                    MountainListSkeleton(itemCount: 6)
+                        .padding(.top, 8)
                 } else if sortedMountains.isEmpty {
                     // Empty state
                     VStack(spacing: 12) {
@@ -452,7 +445,7 @@ struct ConditionsView: View {
 /// Focus: Forecast, comparison, trip planning
 
 struct PlannerView: View {
-    @ObservedObject var viewModel: MountainSelectionViewModel
+    var viewModel: MountainSelectionViewModel
     var favoritesManager: FavoritesService
     @State private var selectedDay: PlanDay = .saturday
     @State private var compareList: [String] = []
@@ -661,7 +654,7 @@ struct PlannerView: View {
 /// Focus: Discovery, regions, terrain types
 
 struct ExploreView: View {
-    @ObservedObject var viewModel: MountainSelectionViewModel
+    var viewModel: MountainSelectionViewModel
     var favoritesManager: FavoritesService
     @State private var searchText = ""
     @State private var selectedRegion: ExploreRegion?
@@ -981,7 +974,7 @@ struct ExploreView: View {
 /// Focus: Pass filtering, value/savings
 
 struct MyPassView: View {
-    @ObservedObject var viewModel: MountainSelectionViewModel
+    var viewModel: MountainSelectionViewModel
     var favoritesManager: FavoritesService
     @State private var selectedPass: PassSelection = .all
 
@@ -1738,7 +1731,7 @@ struct PassStat: View {
 struct RegionSheet: View {
     let region: ExploreRegion
     let mountains: [Mountain]
-    @ObservedObject var viewModel: MountainSelectionViewModel
+    var viewModel: MountainSelectionViewModel
     var favoritesManager: FavoritesService
     @Environment(\.dismiss) private var dismiss
 
@@ -1790,7 +1783,7 @@ struct RegionSheet: View {
 struct CategorySheet: View {
     let category: ExploreCategory
     let mountains: [Mountain]
-    @ObservedObject var viewModel: MountainSelectionViewModel
+    var viewModel: MountainSelectionViewModel
     var favoritesManager: FavoritesService
     @Environment(\.dismiss) private var dismiss
 

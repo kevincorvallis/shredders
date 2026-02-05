@@ -4,7 +4,7 @@ import SwiftUI
 /// Replaces LocationView and TabbedLocationView with a modern, scrollable interface
 struct MountainDetailView: View {
     let mountain: Mountain
-    @StateObject private var viewModel: LocationViewModel
+    @State private var viewModel: LocationViewModel
     @Environment(\.dismiss) private var dismiss
 
     // State
@@ -20,7 +20,7 @@ struct MountainDetailView: View {
 
     init(mountain: Mountain) {
         self.mountain = mountain
-        _viewModel = StateObject(wrappedValue: LocationViewModel(mountain: mountain))
+        _viewModel = State(wrappedValue: LocationViewModel(mountain: mountain))
     }
 
     enum DetailTab: String, CaseIterable, Identifiable {

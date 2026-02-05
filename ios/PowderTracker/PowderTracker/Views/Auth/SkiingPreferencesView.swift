@@ -11,6 +11,7 @@ struct SkiingPreferencesView: View {
     @Environment(AuthService.self) private var authService
     @Environment(\.dismiss) private var dismiss
 
+    @State private var ridingStyle: RidingStyle?
     @State private var experienceLevel: ExperienceLevel?
     @State private var preferredTerrain: [TerrainType] = []
     @State private var seasonPassType: SeasonPassType?
@@ -30,6 +31,39 @@ struct SkiingPreferencesView: View {
 
     var body: some View {
         Form {
+            // Riding Style
+            Section {
+                ForEach(RidingStyle.allCases) { style in
+                    Button {
+                        ridingStyle = style
+                        HapticFeedback.selection.trigger()
+                    } label: {
+                        HStack {
+                            Image(systemName: style.icon)
+                                .foregroundStyle(style.color)
+                                .frame(width: 32)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(style.displayName)
+                                    .foregroundStyle(.primary)
+                                Text(style.description)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            if ridingStyle == style {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(.blue)
+                            }
+                        }
+                    }
+                }
+            } header: {
+                Text("I Ride On...")
+            }
+
             // Experience Level
             Section {
                 ForEach(ExperienceLevel.allCases) { level in
@@ -197,6 +231,7 @@ struct SkiingPreferencesView: View {
     private func loadCurrentPreferences() {
         guard let profile = authService.userProfile else { return }
 
+        ridingStyle = profile.ridingStyleEnum
         experienceLevel = profile.experienceLevelEnum
         preferredTerrain = profile.preferredTerrainEnums
         seasonPassType = profile.seasonPassTypeEnum
@@ -219,6 +254,7 @@ struct SkiingPreferencesView: View {
             displayName: authService.userProfile?.displayName,
             bio: authService.userProfile?.bio,
             avatarUrl: authService.userProfile?.avatarUrl,
+            ridingStyle: ridingStyle,
             experienceLevel: experienceLevel,
             preferredTerrain: preferredTerrain,
             seasonPassType: seasonPassType,

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct OverviewTab: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     let mountain: Mountain
     @Binding var selectedTab: TabbedLocationView.Tab
 
@@ -40,24 +40,24 @@ struct OverviewTab: View {
 // MARK: - Powder Score Card
 
 struct PowderScoreCard: View {
-    let score: Int
+    let score: Double
 
     private var scoreColor: Color {
         switch score {
-        case 9...10: return .green
-        case 7...8: return .blue
-        case 5...6: return .orange
-        case 3...4: return .yellow
+        case 9.0...: return .green
+        case 7.0..<9.0: return .blue
+        case 5.0..<7.0: return .orange
+        case 3.0..<5.0: return .yellow
         default: return .red
         }
     }
 
     private var scoreLabel: String {
         switch score {
-        case 9...10: return "Epic"
-        case 7...8: return "Great"
-        case 5...6: return "Good"
-        case 3...4: return "Fair"
+        case 9.0...: return "Epic"
+        case 7.0..<9.0: return "Great"
+        case 5.0..<7.0: return "Good"
+        case 3.0..<5.0: return "Fair"
         default: return "Poor"
         }
     }
@@ -75,7 +75,7 @@ struct PowderScoreCard: View {
                     .frame(width: 110, height: 110)
 
                 VStack(spacing: 4) {
-                    Text("\(score)")
+                    Text(String(format: "%.1f", score))
                         .font(.system(size: 48, weight: .bold))
                         .foregroundColor(scoreColor)
 
@@ -107,7 +107,7 @@ struct PowderScoreCard: View {
 // MARK: - Quick Stats Grid
 
 struct QuickStatsGrid: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
 
     var body: some View {
         LazyVGrid(columns: [
@@ -177,7 +177,7 @@ struct OverviewStatCard: View {
 // MARK: - Current Conditions Card
 
 struct CurrentConditionsCard: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

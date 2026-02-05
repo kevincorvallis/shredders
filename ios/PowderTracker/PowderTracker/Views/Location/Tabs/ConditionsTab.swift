@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Consolidated tab combining Forecast and History
 struct ConditionsTab: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     let mountain: Mountain
     @State private var selectedSection: Section = .forecast
 

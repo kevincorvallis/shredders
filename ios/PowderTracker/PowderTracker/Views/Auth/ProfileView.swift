@@ -218,6 +218,12 @@ struct ProfileView: View {
                     Text("@\(profile.username)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+
+                    // Riding style badge
+                    if let ridingStyle = profile.ridingStyleEnum {
+                        RidingStyleBadge(style: ridingStyle, showLabel: true)
+                            .padding(.top, .spacingXS)
+                    }
                 }
 
                 // Quick stats in glass pills

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NowTabView: View {
-    @ObservedObject var viewModel: HomeViewModel
+    var viewModel: HomeViewModel
     @StateObject private var favoritesManager = FavoritesService.shared
 
     var body: some View {

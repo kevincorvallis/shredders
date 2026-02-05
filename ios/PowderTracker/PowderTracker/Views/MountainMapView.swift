@@ -2,7 +2,7 @@ import SwiftUI
 import MapKit
 
 struct MountainMapView: View {
-    @StateObject private var viewModel = MountainSelectionViewModel()
+    @State private var viewModel = MountainSelectionViewModel()
     @StateObject private var locationManager = LocationManager.shared
     @StateObject private var favoritesManager = FavoritesService.shared
     @StateObject private var overlayState = MapOverlayState()

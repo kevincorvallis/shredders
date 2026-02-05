@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 struct CheckIn: Codable, Identifiable {
     let id: String
@@ -84,6 +85,45 @@ enum SnowQuality: String, CaseIterable {
         case .icy: return "Icy"
         case .slushy: return "Slushy"
         case .variable: return "Variable"
+        }
+    }
+
+    /// Authentic ski resort icon for each snow condition
+    var icon: String {
+        switch self {
+        case .powder: return "snowflake"
+        case .packedPowder: return "square.stack.3d.up.fill"
+        case .groomed: return "line.3.horizontal"
+        case .hardPack: return "square.fill"
+        case .icy: return "drop.triangle.fill"
+        case .slushy: return "drop.fill"
+        case .variable: return "cloud.fill"
+        }
+    }
+
+    /// Color representing the snow condition
+    var color: Color {
+        switch self {
+        case .powder: return .cyan
+        case .packedPowder: return .blue
+        case .groomed: return .mint
+        case .hardPack: return .indigo
+        case .icy: return Color(red: 0.58, green: 0.64, blue: 0.72) // Slate gray
+        case .slushy: return .purple
+        case .variable: return .orange
+        }
+    }
+
+    /// Description of the snow condition
+    var conditionDescription: String {
+        switch self {
+        case .powder: return "Fresh, fluffy snow"
+        case .packedPowder: return "Firm, well-packed surface"
+        case .groomed: return "Machine-groomed corduroy"
+        case .hardPack: return "Compressed, firm snow"
+        case .icy: return "Hard, icy conditions"
+        case .slushy: return "Wet, spring snow"
+        case .variable: return "Mixed conditions"
         }
     }
 }

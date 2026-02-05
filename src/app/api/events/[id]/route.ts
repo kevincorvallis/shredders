@@ -37,7 +37,8 @@ export async function GET(
           id,
           username,
           display_name,
-          avatar_url
+          avatar_url,
+          riding_style
         )
       `)
       .eq('id', id)
@@ -99,7 +100,8 @@ export async function GET(
             id,
             username,
             display_name,
-            avatar_url
+            avatar_url,
+            riding_style
           )
         `)
         .eq('event_id', id)
@@ -437,7 +439,8 @@ export async function PATCH(
           id,
           username,
           display_name,
-          avatar_url
+          avatar_url,
+          riding_style
         )
       `)
       .single();

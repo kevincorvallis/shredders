@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TravelTab: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     let mountain: Mountain
     @State private var arrivalTime: ArrivalTimeRecommendation?
     @State private var isLoadingArrivalTime = false

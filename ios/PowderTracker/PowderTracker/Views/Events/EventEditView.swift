@@ -77,6 +77,7 @@ struct EventEditView: View {
                 Section("Event Details") {
                     TextField("Event Title", text: $title)
                         .textContentType(.none)
+                        .accessibilityIdentifier("edit_event_title_field")
 
                     DatePicker(
                         "Date",
@@ -84,6 +85,7 @@ struct EventEditView: View {
                         in: Date()...,
                         displayedComponents: .date
                     )
+                    .accessibilityIdentifier("edit_event_date_picker")
                 }
 
                 // Departure info
@@ -163,6 +165,7 @@ struct EventEditView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("edit_event_cancel_button")
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -171,6 +174,7 @@ struct EventEditView: View {
                     }
                     .fontWeight(.semibold)
                     .disabled(isSubmitting || !isFormValid)
+                    .accessibilityIdentifier("edit_event_save_button")
                 }
             }
             .disabled(isSubmitting)
@@ -264,7 +268,7 @@ struct EventEditView: View {
         waitlistCount: 0,
         commentCount: 0,
         photoCount: 0,
-        creator: EventUser(id: "user-1", username: "test", displayName: "Test User", avatarUrl: nil),
+        creator: EventUser(id: "user-1", username: "test", displayName: "Test User", avatarUrl: nil, ridingStyle: nil),
         userRSVPStatus: nil,
         isCreator: true,
         attendees: [],

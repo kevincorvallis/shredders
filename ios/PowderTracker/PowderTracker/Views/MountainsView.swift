@@ -82,7 +82,7 @@ struct FilterChipView: View {
 /// Discovery-focused Mountains tab with smart sections, regions, and visual hierarchy
 /// Inspired by Apple's Weather app and App Store design patterns
 struct MountainsView: View {
-    @StateObject private var viewModel = MountainSelectionViewModel()
+    @State private var viewModel = MountainSelectionViewModel()
     @StateObject private var favoritesManager = FavoritesService.shared
 
     @State private var searchText = ""

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MountainPickerView: View {
-    @StateObject private var viewModel = MountainSelectionViewModel()
+    @State private var viewModel = MountainSelectionViewModel()
     @Binding var selectedMountainId: String
     @Environment(\.dismiss) private var dismiss
 

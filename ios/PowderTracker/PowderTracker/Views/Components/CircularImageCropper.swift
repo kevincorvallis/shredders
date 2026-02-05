@@ -751,7 +751,7 @@ private struct AdjustmentSlider: View {
                 Slider(value: $value, in: range)
                     .tint(.white)
                     .onChange(of: value) { _, _ in
-                        HapticFeedback.soft.trigger()
+                        HapticFeedback.light.trigger()
                     }
             }
 
@@ -770,9 +770,8 @@ private struct AdjustmentSlider: View {
     }
 
     private var normalizedValue: Double {
-        let midpoint = (range.lowerBound + range.upperBound) / 2
-        let normalizedMid = range.upperBound - range.lowerBound
-        return (value - range.lowerBound) / normalizedMid
+        let rangeSpan = range.upperBound - range.lowerBound
+        return (value - range.lowerBound) / rangeSpan
     }
 
     private var defaultValue: Double {

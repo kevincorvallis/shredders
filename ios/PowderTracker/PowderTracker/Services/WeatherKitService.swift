@@ -222,8 +222,12 @@ class WeatherKitService: ObservableObject {
     
     private func mapDailyWeather(_ weather: WeatherKit.DayWeather) -> DailyWeather {
         var snowfall: Double? = nil
+        var rainfall: Double = 0
         if #available(iOS 18.0, *) {
             snowfall = weather.snowfallAmount.value
+            rainfall = weather.precipitationAmountByType.rainfall.value
+        } else {
+            rainfall = weather.rainfallAmount.value
         }
         
         return DailyWeather(
@@ -231,7 +235,7 @@ class WeatherKitService: ObservableObject {
             highTemperature: weather.highTemperature.value,
             lowTemperature: weather.lowTemperature.value,
             precipitationChance: weather.precipitationChance,
-            precipitationAmount: weather.rainfallAmount.value,
+            precipitationAmount: rainfall,
             snowfallAmount: snowfall,
             windSpeed: weather.wind.speed.value,
             windGust: weather.wind.gust?.value,

@@ -13,7 +13,7 @@ struct LiftLinePredictorCard: View {
         let liftsTotal = liftStatus?.liftsTotal ?? 10
 
         return LiftLinePredictor.predictMountainBusyness(
-            powderScore: viewModel.powderScore ?? 5,
+            powderScore: Int(viewModel.powderScore ?? 5.0),
             temperature: viewModel.temperature ?? 32,
             windSpeed: viewModel.windSpeed ?? 10,
             percentOpen: percentOpen,
@@ -165,7 +165,7 @@ struct LiftLinePredictorCard: View {
                 .font(.caption)
 
             Text(LiftLinePredictor.crowdReason(
-                powderScore: viewModel.powderScore ?? 5,
+                powderScore: Int(viewModel.powderScore ?? 5.0),
                 currentTime: now,
                 isWeekend: isWeekend
             ))

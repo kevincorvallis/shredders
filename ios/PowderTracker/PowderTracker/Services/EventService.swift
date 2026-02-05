@@ -406,6 +406,9 @@ class EventService {
         guard httpResponse.statusCode == 200 else {
             throw EventServiceError.serverError(httpResponse.statusCode)
         }
+
+        // Invalidate cache after deleting event so it no longer appears in lists
+        cache.invalidateAll()
     }
 
     // MARK: - RSVP
@@ -475,7 +478,7 @@ class EventService {
         request.httpMethod = "DELETE"
         try await addAuthHeader(to: &request)
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -483,6 +486,19 @@ class EventService {
 
         if httpResponse.statusCode == 401 {
             throw EventServiceError.notAuthenticated
+        }
+
+        if httpResponse.statusCode == 400 {
+            // Check for specific error (e.g., creator cannot remove RSVP)
+            if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
+               let errorMessage = errorData["error"] {
+                throw EventServiceError.validationError(errorMessage)
+            }
+            throw EventServiceError.validationError("Cannot remove RSVP")
+        }
+
+        if httpResponse.statusCode == 404 {
+            throw EventServiceError.notFound
         }
 
         guard httpResponse.statusCode == 200 else {

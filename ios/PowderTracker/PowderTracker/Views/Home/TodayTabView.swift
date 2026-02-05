@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TodayTabView: View {
-    @ObservedObject var viewModel: HomeViewModel
+    var viewModel: HomeViewModel
     @StateObject private var favoritesManager = FavoritesService.shared
     @State private var isVisible = false
     @State private var showAllFavorites = false

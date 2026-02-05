@@ -9,22 +9,24 @@
 import XCTest
 
 final class AppStoreScreenshots: XCTestCase {
-    var app: XCUIApplication!
+    @MainActor var app: XCUIApplication!
 
-    @MainActor
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() {
+        super.setUp()
         continueAfterFailure = true
-        app = XCUIApplication()
-        app.launchArguments = ["UI_TESTING", "SCREENSHOTS"]
-        setupSnapshot(app)
-        app.launch()
+        MainActor.assumeIsolated {
+            app = XCUIApplication()
+            app.launchArguments = ["UI_TESTING", "SCREENSHOTS"]
+            setupSnapshot(app)
+            app.launch()
+        }
     }
 
-    @MainActor
-    override func tearDownWithError() throws {
-        app = nil
-        try super.tearDownWithError()
+    override func tearDown() {
+        MainActor.assumeIsolated {
+            app = nil
+        }
+        super.tearDown()
     }
 
 	
@@ -36,7 +38,7 @@ final class AppStoreScreenshots: XCTestCase {
         // Debug: print all tab bar buttons
         let tabBar = app.tabBars.firstMatch
         _ = tabBar.waitForExistence(timeout: 10)
-
+ 
         print("Tab bar exists: \(tabBar.exists)")
         print("All tab buttons:")
         for button in tabBar.buttons.allElementsBoundByIndex {

@@ -3,7 +3,7 @@ import SwiftUI
 /// Detailed favorites comparison tab inspired by OpenSnow's Favorites tab
 /// Shows complete list of favorite mountains with detailed information
 struct FavoritesTabView: View {
-    @ObservedObject var viewModel: HomeViewModel
+    var viewModel: HomeViewModel
     @StateObject private var favoritesService = FavoritesService.shared
 
     var body: some View {

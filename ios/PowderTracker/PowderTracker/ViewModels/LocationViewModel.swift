@@ -218,8 +218,8 @@ class LocationViewModel {
         weatherKitData != nil
     }
 
-    var powderScore: Int? {
-        Int(locationData?.powderScore.score ?? 0)
+    var powderScore: Double? {
+        locationData?.powderScore.score
     }
 
     var lastUpdated: Date? {

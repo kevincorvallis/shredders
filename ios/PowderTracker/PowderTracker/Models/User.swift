@@ -16,6 +16,7 @@ struct UserProfile: Codable, Identifiable, Equatable {
 
     // Onboarding fields
     let hasCompletedOnboarding: Bool?
+    let ridingStyle: String?
     let experienceLevel: String?
     let preferredTerrain: [String]?
     let seasonPassType: String?
@@ -36,6 +37,7 @@ struct UserProfile: Codable, Identifiable, Equatable {
         case lastLoginAt = "last_login_at"
         case isActive = "is_active"
         case hasCompletedOnboarding = "has_completed_onboarding"
+        case ridingStyle = "riding_style"
         case experienceLevel = "experience_level"
         case preferredTerrain = "preferred_terrain"
         case seasonPassType = "season_pass_type"
@@ -57,6 +59,12 @@ struct UserProfile: Codable, Identifiable, Equatable {
 // MARK: - Onboarding enum helpers (main app only, not available in widget)
 #if !WIDGET_EXTENSION
 extension UserProfile {
+    /// Returns the riding style as enum
+    var ridingStyleEnum: RidingStyle? {
+        guard let style = ridingStyle else { return nil }
+        return RidingStyle(rawValue: style)
+    }
+
     /// Returns the experience level as enum
     var experienceLevelEnum: ExperienceLevel? {
         guard let level = experienceLevel else { return nil }

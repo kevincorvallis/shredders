@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WeatherConditionsSection: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     var onNavigateToForecast: (() -> Void)?
     @State private var isExpanded = false
 
@@ -219,19 +219,19 @@ struct WeatherConditionsSection: View {
 }
 
 struct PowderScoreBanner: View {
-    let score: Int
+    let score: Double
 
     var scoreColor: Color {
-        if score >= 8 { return .green }
-        if score >= 6 { return .yellow }
-        if score >= 4 { return .orange }
+        if score >= 8.0 { return .green }
+        if score >= 6.0 { return .yellow }
+        if score >= 4.0 { return .orange }
         return .red
     }
 
     var scoreText: String {
-        if score >= 8 { return "Epic" }
-        if score >= 6 { return "Good" }
-        if score >= 4 { return "Fair" }
+        if score >= 8.0 { return "Epic" }
+        if score >= 6.0 { return "Good" }
+        if score >= 4.0 { return "Fair" }
         return "Poor"
     }
 
@@ -242,7 +242,7 @@ struct PowderScoreBanner: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(score)")
+                    Text(String(format: "%.1f", score))
                         .font(.system(size: 48, weight: .bold))
                         .foregroundColor(scoreColor)
                     Text("/ 10")
@@ -269,9 +269,9 @@ struct PowderScoreBanner: View {
     }
 
     private var scoreIcon: String {
-        if score >= 8 { return "star.fill" }
-        if score >= 6 { return "hand.thumbsup.fill" }
-        if score >= 4 { return "minus.circle.fill" }
+        if score >= 8.0 { return "star.fill" }
+        if score >= 6.0 { return "hand.thumbsup.fill" }
+        if score >= 4.0 { return "minus.circle.fill" }
         return "hand.thumbsdown.fill"
     }
 }

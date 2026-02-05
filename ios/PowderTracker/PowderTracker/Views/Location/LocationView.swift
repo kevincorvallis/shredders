@@ -2,14 +2,14 @@ import SwiftUI
 
 struct LocationView: View {
     let mountain: Mountain
-    @StateObject private var viewModel: LocationViewModel
+    @State private var viewModel: LocationViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingDetailedSections = false
     @State private var navigateToTab: TabbedLocationView.Tab? = nil
 
     init(mountain: Mountain) {
         self.mountain = mountain
-        _viewModel = StateObject(wrappedValue: LocationViewModel(mountain: mountain))
+        _viewModel = State(wrappedValue: LocationViewModel(mountain: mountain))
     }
 
     var body: some View {

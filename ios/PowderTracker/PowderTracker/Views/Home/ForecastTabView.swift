@@ -3,7 +3,7 @@ import SwiftUI
 /// Redesigned Forecast-first tab with hero chart and horizontal powder outlook
 /// Follows the Phase 4 layout improvements
 struct ForecastTabView: View {
-    @ObservedObject var viewModel: HomeViewModel
+    var viewModel: HomeViewModel
     @StateObject private var favoritesService = FavoritesService.shared
 
     var body: some View {

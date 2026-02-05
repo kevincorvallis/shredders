@@ -171,7 +171,7 @@ enum EmptyStateStyle {
                     .offset(x: 20, y: -20)
                     .background(
                         Circle()
-                            .fill(.pookieCyan)
+                            .fill(Color.pookieCyan)
                             .frame(width: 24, height: 24)
                     )
             }

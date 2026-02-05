@@ -146,7 +146,8 @@ export async function GET(request: NextRequest) {
               id,
               username,
               display_name,
-              avatar_url
+              avatar_url,
+              riding_style
             )
           )
         `, { count: 'exact' })
@@ -236,7 +237,8 @@ export async function GET(request: NextRequest) {
             id,
             username,
             display_name,
-            avatar_url
+            avatar_url,
+            riding_style
           )
         `, { count: 'exact' })
         .eq('status', status)
@@ -564,7 +566,8 @@ export async function POST(request: NextRequest) {
           id,
           username,
           display_name,
-          avatar_url
+          avatar_url,
+          riding_style
         )
       `)
       .single();

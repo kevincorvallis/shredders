@@ -4,7 +4,7 @@ import SwiftUI
 struct FavoritesManagementSheet: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var favoritesManager = FavoritesService.shared
-    @StateObject private var viewModel = MountainSelectionViewModel()
+    @State private var viewModel = MountainSelectionViewModel()
     @State private var searchText = ""
 
     var body: some View {

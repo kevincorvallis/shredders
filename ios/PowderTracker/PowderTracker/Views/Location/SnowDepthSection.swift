@@ -2,7 +2,7 @@ import SwiftUI
 import Charts
 
 struct SnowDepthSection: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     var onNavigateToHistory: (() -> Void)?
     @State private var isExpanded = false
 

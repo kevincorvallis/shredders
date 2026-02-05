@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct RoadConditionsSection: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     var onNavigateToTravel: (() -> Void)?
     @State private var isExpanded = false
 

@@ -13,7 +13,7 @@ struct MountainDetailRow: View {
     let data: MountainBatchedResponse
     let powderScore: MountainPowderScore?
     let trend: TrendIndicator
-    @ObservedObject var viewModel: HomeViewModel
+    var viewModel: HomeViewModel
 
     @State private var isExpanded = false
 

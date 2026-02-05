@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Consolidated tab combining Lifts, Webcams, and Safety
 struct MountainTab: View {
-    @ObservedObject var viewModel: LocationViewModel
+    var viewModel: LocationViewModel
     let mountain: Mountain
     @State private var selectedSection: Section = .lifts
 

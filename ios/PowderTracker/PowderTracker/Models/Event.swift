@@ -269,16 +269,24 @@ struct EventUser: Codable {
     let username: String
     let displayName: String?
     let avatarUrl: String?
+    let ridingStyle: String?
 
     enum CodingKeys: String, CodingKey {
         case id
         case username
         case displayName = "display_name"
         case avatarUrl = "avatar_url"
+        case ridingStyle = "riding_style"
     }
 
     var displayNameOrUsername: String {
         displayName ?? username
+    }
+
+    /// Returns the riding style as enum for display
+    var ridingStyleEnum: RidingStyle? {
+        guard let style = ridingStyle else { return nil }
+        return RidingStyle(rawValue: style)
     }
 }
 

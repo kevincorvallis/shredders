@@ -78,7 +78,7 @@ struct AtAGlanceCard: View {
                     .fill(powderScoreColor.opacity(.opacityMedium))
                     .frame(width: 50, height: 50)
 
-                Text("\(viewModel.powderScore ?? 0)")
+                Text(String(format: "%.1f", viewModel.powderScore ?? 0))
                     .heroNumber()
                     .foregroundColor(powderScoreColor)
             }
@@ -412,18 +412,18 @@ struct AtAGlanceCard: View {
     }
 
     private var powderScoreColor: Color {
-        let score = viewModel.powderScore ?? 0
-        if score >= 8 { return .green }
-        if score >= 6 { return .yellow }
-        if score >= 4 { return .orange }
+        let score = viewModel.powderScore ?? 0.0
+        if score >= 8.0 { return .green }
+        if score >= 6.0 { return .yellow }
+        if score >= 4.0 { return .orange }
         return .red
     }
 
     private var powderScoreLabel: String {
-        let score = viewModel.powderScore ?? 0
-        if score >= 8 { return "Epic Day" }
-        if score >= 6 { return "Great Conditions" }
-        if score >= 4 { return "Good Day" }
+        let score = viewModel.powderScore ?? 0.0
+        if score >= 8.0 { return "Epic Day" }
+        if score >= 6.0 { return "Great Conditions" }
+        if score >= 4.0 { return "Good Day" }
         return "Fair Conditions"
     }
 

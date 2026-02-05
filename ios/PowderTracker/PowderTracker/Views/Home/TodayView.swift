@@ -3,7 +3,7 @@ import SwiftUI
 /// New Today view - the main landing screen for the app
 /// Shows today's conditions, recommendations, and quick access to favorites
 struct TodayView: View {
-    @ObservedObject var viewModel: HomeViewModel
+    var viewModel: HomeViewModel
     @StateObject private var favoritesManager = FavoritesService.shared
     @State private var showingManageFavorites = false
     @State private var showingRegionPicker = false

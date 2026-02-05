@@ -156,21 +156,21 @@ struct WelcomeLandingView: View {
                         RadialGradient(
                             colors: [Color.pookieCyan.opacity(0.4), Color.clear],
                             center: .center,
-                            startRadius: 50,
-                            endRadius: 100
+                            startRadius: 70,
+                            endRadius: 140
                         )
                     )
-                    .frame(width: 200, height: 200)
+                    .frame(width: 280, height: 280)
 
                 // Icon background
-                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                RoundedRectangle(cornerRadius: 44, style: .continuous)
                     .fill(LinearGradient.pookieBSnow)
-                    .frame(width: 140, height: 140)
-                    .shadow(color: .pookiePurple.opacity(0.5), radius: 24, y: 12)
+                    .frame(width: 180, height: 180)
+                    .shadow(color: .pookiePurple.opacity(0.5), radius: 30, y: 16)
 
                 // Snowflake icon
                 Image(systemName: "snowflake")
-                    .font(.system(size: 70, weight: .medium))
+                    .font(.system(size: 90, weight: .medium))
                     .foregroundStyle(.white)
                     .symbolEffect(.pulse.byLayer, options: .repeating.speed(0.5))
             }

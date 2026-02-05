@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ThisWeekTabView: View {
-    @ObservedObject var viewModel: HomeViewModel
+    var viewModel: HomeViewModel
     @StateObject private var favoritesManager = FavoritesService.shared
 
     var body: some View {
