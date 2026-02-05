@@ -254,8 +254,9 @@ struct EventDetailView: View {
             Divider()
 
             // Tab content - Host (creator) always has access, RSVP'd users have access
+            // Use currentUserRSVPStatus which is updated after RSVP, not event.userRSVPStatus
             let isHost = event.isCreator ?? false
-            let hasRSVP = event.userRSVPStatus != nil
+            let hasRSVP = currentUserRSVPStatus == .going || currentUserRSVPStatus == .maybe
             let canView = hasRSVP || isHost
 
             switch selectedSocialTab {
@@ -874,52 +875,85 @@ extension EventDetailView {
 
     private func rsvpButtons(event: EventWithDetails) -> some View {
         VStack(spacing: 12) {
-            HStack(spacing: 16) {
-                Button {
-                    if event.carpoolAvailable {
-                        showingRSVPSheet = true
-                    } else {
-                        Task { await rsvp(status: .going) }
-                    }
-                } label: {
-                    HStack {
-                        if currentUserRSVPStatus == .going {
-                            Image(systemName: "checkmark.circle.fill")
-                        }
-                        Text("I'm In!")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(currentUserRSVPStatus == .going ? .green : .green.opacity(0.2))
-                    .foregroundStyle(currentUserRSVPStatus == .going ? .white : .green)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .disabled(isRSVPing)
-                .accessibilityIdentifier("event_detail_going_button")
+            // If user has RSVP'd, show their status with option to change
+            if currentUserRSVPStatus == .going || currentUserRSVPStatus == .maybe {
+                // Show current status
+                HStack(spacing: 12) {
+                    Image(systemName: currentUserRSVPStatus == .going ? "checkmark.circle.fill" : "questionmark.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(currentUserRSVPStatus == .going ? .green : .orange)
 
-                Button {
-                    if event.carpoolAvailable {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(currentUserRSVPStatus == .going ? "You're going!" : "You're a maybe")
+                            .font(.headline)
+                        Text("Tap to change your response")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Button {
                         showingRSVPSheet = true
-                    } else {
-                        Task { await rsvp(status: .maybe) }
+                    } label: {
+                        Text("Change")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color(.tertiarySystemFill))
+                            .clipShape(Capsule())
                     }
-                } label: {
-                    HStack {
-                        if currentUserRSVPStatus == .maybe {
-                            Image(systemName: "questionmark.circle.fill")
-                        }
-                        Text("Maybe")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(currentUserRSVPStatus == .maybe ? .orange : .orange.opacity(0.2))
-                    .foregroundStyle(currentUserRSVPStatus == .maybe ? .white : .orange)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
-                .disabled(isRSVPing)
-                .accessibilityIdentifier("event_detail_maybe_button")
+                .padding()
+                .background(currentUserRSVPStatus == .going ? .green.opacity(0.1) : .orange.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .accessibilityIdentifier("event_detail_rsvp_status")
+            } else {
+                // Show RSVP buttons for users who haven't responded
+                HStack(spacing: 16) {
+                    Button {
+                        if event.carpoolAvailable {
+                            showingRSVPSheet = true
+                        } else {
+                            Task { await rsvp(status: .going) }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "hand.thumbsup.fill")
+                            Text("I'm In!")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(.green)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(isRSVPing)
+                    .accessibilityIdentifier("event_detail_going_button")
+
+                    Button {
+                        if event.carpoolAvailable {
+                            showingRSVPSheet = true
+                        } else {
+                            Task { await rsvp(status: .maybe) }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "hand.raised.fill")
+                            Text("Maybe")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(.orange.opacity(0.2))
+                        .foregroundStyle(.orange)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(isRSVPing)
+                    .accessibilityIdentifier("event_detail_maybe_button")
+                }
             }
         }
     }
