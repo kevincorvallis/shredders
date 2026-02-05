@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ThisWeekTabView: View {
     var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @ObservedObject private var favoritesManager = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: 20) {
@@ -33,7 +33,7 @@ struct ThisWeekTabView: View {
                 .padding(.horizontal, 4)
 
             ForEach(favoritesManager.favoriteIds, id: \.self) { mountainId in
-                if let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
+                if let mountain = viewModel.mountainsById[mountainId],
                    let data = viewModel.mountainData[mountainId] {
                     PowderDayOutlookCard(
                         mountain: mountain,

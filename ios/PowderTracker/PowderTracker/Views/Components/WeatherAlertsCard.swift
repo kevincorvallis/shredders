@@ -11,6 +11,8 @@ struct WeatherAlertsCard: View {
                     .foregroundStyle(.orange)
                 Text("Weather Alerts")
                     .font(.headline)
+                Spacer()
+                WeatherAttributionInline()
             }
             
             ForEach(alerts) { alert in

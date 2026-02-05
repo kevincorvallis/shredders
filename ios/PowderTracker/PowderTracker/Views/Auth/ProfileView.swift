@@ -9,24 +9,20 @@ import SwiftUI
 
 struct ProfileView: View {
     @Environment(AuthService.self) private var authService
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @ObservedObject private var favoritesManager = FavoritesService.shared
     @Environment(\.colorScheme) private var colorScheme
     
-    @State private var showingSettings = false
-    @State private var showingLogin = false
-    @State private var showingManageFavorites = false
-    @State private var showingAlertPreferences = false
+    @State private var activeSheet: ProfileSheet?
     @State private var showingSignOutConfirmation = false
+    @State private var isSigningOut = false
 
-    // New sheet states
-    @State private var showingRegionPicker = false
-    @State private var showingPassPicker = false
-    @State private var showingUnitsSettings = false
-    @State private var showingAbout = false
-    @State private var showingChat = false
-    @State private var showingSnowHistory = false
-    @State private var showingPatrolReports = false
-    @State private var showingWeatherAlerts = false
+    private enum ProfileSheet: Identifiable {
+        case settings, login, manageFavorites, alertPreferences
+        case regionPicker, passPicker, unitsSettings, about
+        case chat, snowHistory, patrolReports, weatherAlerts
+
+        var id: String { String(describing: self) }
+    }
 
     // User preferences from AppStorage
     @AppStorage("homeRegion") private var homeRegion = "washington"
@@ -76,7 +72,7 @@ struct ProfileView: View {
                 if authService.isAuthenticated {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
-                            showingSettings = true
+                            activeSheet = .settings
                         } label: {
                             Image(systemName: "gearshape.fill")
                                 .symbolRenderingMode(.hierarchical)
@@ -85,14 +81,49 @@ struct ProfileView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingSettings) {
-                ProfileSettingsView()
-            }
-            .sheet(isPresented: $showingLogin) {
-                UnifiedAuthView()
-            }
-            .sheet(isPresented: $showingManageFavorites) {
-                FavoritesManagementSheet()
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .settings:
+                    ProfileSettingsView()
+                case .login:
+                    UnifiedAuthView()
+                        .environment(authService)
+                case .manageFavorites:
+                    FavoritesManagementSheet()
+                case .regionPicker:
+                    RegionPickerView()
+                case .passPicker:
+                    SeasonPassPickerView()
+                case .unitsSettings:
+                    UnitsSettingsView()
+                case .about:
+                    AboutView()
+                case .chat:
+                    NavigationStack {
+                        ChatView()
+                    }
+                case .snowHistory:
+                    NavigationStack {
+                        HistoryChartContainer()
+                            .navigationTitle("Snow History")
+                            .navigationBarTitleDisplayMode(.inline)
+                            .toolbar {
+                                ToolbarItem(placement: .confirmationAction) {
+                                    Button("Done") {
+                                        activeSheet = nil
+                                    }
+                                }
+                            }
+                    }
+                case .patrolReports:
+                    NavigationStack {
+                        PatrolView(mountainId: selectedMountainId)
+                    }
+                case .weatherAlerts:
+                    WeatherAlertsSettingsView()
+                case .alertPreferences:
+                    PushNotificationSetupView()
+                }
             }
             .confirmationDialog(
                 "Sign Out",
@@ -100,59 +131,39 @@ struct ProfileView: View {
                 titleVisibility: .visible
             ) {
                 Button("Sign Out", role: .destructive) {
+                    isSigningOut = true
+                    HapticFeedback.medium.trigger()
                     Task {
-                        try? await authService.signOut()
+                        do {
+                            try await authService.signOut()
+                        } catch {
+                            HapticFeedback.error.trigger()
+                        }
+                        isSigningOut = false
                     }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("Are you sure you want to sign out?")
             }
-            .sheet(isPresented: $showingRegionPicker) {
-                RegionPickerView()
-            }
-            .sheet(isPresented: $showingPassPicker) {
-                SeasonPassPickerView()
-            }
-            .sheet(isPresented: $showingUnitsSettings) {
-                UnitsSettingsView()
-            }
-            .sheet(isPresented: $showingAbout) {
-                AboutView()
-            }
-            .sheet(isPresented: $showingChat) {
-                NavigationStack {
-                    ChatView()
-                }
-            }
-            .sheet(isPresented: $showingSnowHistory) {
-                NavigationStack {
-                    HistoryChartContainer()
-                        .navigationTitle("Snow History")
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button("Done") {
-                                    showingSnowHistory = false
-                                }
-                            }
+            .allowsHitTesting(!isSigningOut)
+            .overlay {
+                if isSigningOut {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .overlay {
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(1.2)
                         }
+                        .transition(.opacity)
                 }
             }
-            .sheet(isPresented: $showingPatrolReports) {
-                NavigationStack {
-                    PatrolView(mountainId: selectedMountainId)
-                }
-            }
-            .sheet(isPresented: $showingWeatherAlerts) {
-                WeatherAlertsSettingsView()
-            }
+            .animation(.smooth(duration: 0.2), value: isSigningOut)
             .onAppear {
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                     headerScale = 1.0
                     headerOpacity = 1.0
-                }
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1)) {
                     sectionsOffset = 0
                     sectionsOpacity = 1.0
                 }
@@ -288,7 +299,7 @@ struct ProfileView: View {
                 }
 
                 Button {
-                    showingLogin = true
+                    activeSheet = .login
                 } label: {
                     HStack {
                         Image(systemName: "person.fill")
@@ -339,7 +350,7 @@ struct ProfileView: View {
                     title: "Favorites",
                     subtitle: "\(favoritesManager.favoriteIds.count) mountains"
                 ) {
-                    showingManageFavorites = true
+                    activeSheet = .manageFavorites
                 }
                 .accessibilityIdentifier("profile_favorites_row")
 
@@ -351,7 +362,7 @@ struct ProfileView: View {
                     title: "Home Region",
                     subtitle: HomeRegion(rawValue: homeRegion)?.displayName ?? "Not Set"
                 ) {
-                    showingRegionPicker = true
+                    activeSheet = .regionPicker
                 }
                 .accessibilityIdentifier("profile_region_row")
 
@@ -363,7 +374,7 @@ struct ProfileView: View {
                     title: "Season Pass",
                     subtitle: SeasonPassType(rawValue: seasonPass)?.displayName ?? "No Pass"
                 ) {
-                    showingPassPicker = true
+                    activeSheet = .passPicker
                 }
                 .accessibilityIdentifier("profile_pass_row")
             }
@@ -402,7 +413,7 @@ struct ProfileView: View {
                     title: "Powder Alerts",
                     subtitle: "Get notified for 6\"+ days"
                 ) {
-                    showingAlertPreferences = true
+                    activeSheet = .alertPreferences
                 }
 
                 Divider().padding(.leading, 52)
@@ -413,7 +424,7 @@ struct ProfileView: View {
                     title: "Weather Alerts",
                     subtitle: "Storms, road closures"
                 ) {
-                    showingWeatherAlerts = true
+                    activeSheet = .weatherAlerts
                 }
             }
         }
@@ -430,7 +441,7 @@ struct ProfileView: View {
                     title: "Powder Chat",
                     subtitle: "Get AI-powered recommendations"
                 ) {
-                    showingChat = true
+                    activeSheet = .chat
                 }
 
                 Divider().padding(.leading, 52)
@@ -441,7 +452,7 @@ struct ProfileView: View {
                     title: "Snow History",
                     subtitle: "View historical snowfall data"
                 ) {
-                    showingSnowHistory = true
+                    activeSheet = .snowHistory
                 }
 
                 Divider().padding(.leading, 52)
@@ -452,7 +463,7 @@ struct ProfileView: View {
                     title: "Ski Patrol Reports",
                     subtitle: "View incident and safety reports"
                 ) {
-                    showingPatrolReports = true
+                    activeSheet = .patrolReports
                 }
             }
         }
@@ -501,7 +512,7 @@ struct ProfileView: View {
                     title: "Units",
                     subtitle: unitsSubtitle
                 ) {
-                    showingUnitsSettings = true
+                    activeSheet = .unitsSettings
                 }
 
                 Divider().padding(.leading, 52)
@@ -512,17 +523,18 @@ struct ProfileView: View {
                     title: "About PowderTracker",
                     subtitle: "Version \(appVersion)"
                 ) {
-                    showingAbout = true
+                    activeSheet = .about
                 }
 
                 if authService.isAuthenticated {
                     Divider().padding(.leading, 52)
 
                     Button {
+                        HapticFeedback.light.trigger()
                         showingSignOutConfirmation = true
                     } label: {
                         HStack {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Image(systemName: "arrow.right.square")
                                 .font(.system(size: 18))
                                 .foregroundStyle(.red)
                                 .frame(width: 32, height: 32)

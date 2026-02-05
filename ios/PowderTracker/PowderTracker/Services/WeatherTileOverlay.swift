@@ -21,19 +21,19 @@ class WeatherTileOverlay: MKTileOverlay {
         AppConfig.openWeatherMapAPIKey
     }
 
-    /// Initialize weather overlay
-    /// - Parameters:
-    ///   - overlayType: The type of weather overlay
-    ///   - timestamp: Unix timestamp for time-based overlays (radar, etc.)
-    /// - Returns: nil if the overlay type doesn't have a valid URL template
-    init?(overlayType: MapOverlayType, timestamp: Int? = nil) {
-        self.overlayType = overlayType
-        self.timestamp = timestamp
-
-        // Get URL template based on overlay type - return nil if unavailable
-        guard let urlTemplate = Self.urlTemplate(for: overlayType, timestamp: timestamp) else {
+    /// Create a weather overlay if the overlay type has a valid URL template.
+    /// Uses a static factory method instead of a failable init to avoid
+    /// EXC_BAD_ACCESS when returning nil before super.init() on ObjC subclass.
+    static func create(overlayType: MapOverlayType, timestamp: Int? = nil) -> WeatherTileOverlay? {
+        guard let urlTemplate = urlTemplate(for: overlayType, timestamp: timestamp) else {
             return nil
         }
+        return WeatherTileOverlay(overlayType: overlayType, timestamp: timestamp, urlTemplate: urlTemplate)
+    }
+
+    private init(overlayType: MapOverlayType, timestamp: Int?, urlTemplate: String) {
+        self.overlayType = overlayType
+        self.timestamp = timestamp
         super.init(urlTemplate: urlTemplate)
 
         // Configure overlay properties
@@ -353,7 +353,7 @@ class WeatherOverlayManager: ObservableObject {
         }
 
         // Create and add new overlay - returns nil if unavailable
-        guard let overlay = WeatherTileOverlay(overlayType: overlayType, timestamp: timestamp) else {
+        guard let overlay = WeatherTileOverlay.create(overlayType: overlayType, timestamp: timestamp) else {
             #if DEBUG
             print("addOverlayToMap - Overlay \(overlayType.displayName) is not available (init returned nil)")
             #endif

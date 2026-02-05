@@ -44,7 +44,8 @@ struct OnboardingContainerView: View {
 
                 // Content
                 TabView(selection: $currentStep) {
-                    PookieBSnowWelcomeView(onContinue: { goToNext() })
+                    // Story-driven introduction with Brock
+                    BrockStoryOnboardingView(onComplete: { goToNext() })
                         .tag(OnboardingStep.welcome)
 
                     OnboardingProfileSetupView(
@@ -71,20 +72,24 @@ struct OnboardingContainerView: View {
                     .tag(OnboardingStep.preferences)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: currentStep)
+                .animation(.spring(response: 0.3, dampingFraction: 0.85), value: currentStep)
             }
 
             // Loading overlay with Brock
             if isCompleting {
-                Color.black.opacity(0.4)
+                Rectangle()
+                    .fill(.ultraThinMaterial)
                     .ignoresSafeArea()
+                    .transition(.opacity)
 
                 BrockLoadingView("Setting up your profile...")
                     .padding(.spacingXL)
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(.cornerRadiusCard)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: .cornerRadiusCard, style: .continuous))
+                    .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
             }
         }
+        .animation(.smooth(duration: 0.25), value: isCompleting)
         .interactiveDismissDisabled()
         .alert("Oops!", isPresented: $showError) {
             Button("Try Again") {

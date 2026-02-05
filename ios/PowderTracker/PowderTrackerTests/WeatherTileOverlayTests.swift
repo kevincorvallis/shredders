@@ -8,7 +8,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_Radar_ShouldCreate() {
         // Given/When
-        let overlay = WeatherTileOverlay(overlayType: .radar, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .radar, timestamp: nil)
 
         // Then
         XCTAssertNotNil(overlay)
@@ -20,7 +20,7 @@ final class WeatherTileOverlayTests: XCTestCase {
         let timestamp = Int(Date().timeIntervalSince1970)
 
         // When
-        let overlay = WeatherTileOverlay(overlayType: .radar, timestamp: timestamp)
+        let overlay = WeatherTileOverlay.create(overlayType: .radar, timestamp: timestamp)
 
         // Then
         XCTAssertNotNil(overlay)
@@ -28,7 +28,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_Clouds_ShouldCreate() {
         // Given/When
-        let overlay = WeatherTileOverlay(overlayType: .clouds, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .clouds, timestamp: nil)
 
         // Then
         XCTAssertNotNil(overlay)
@@ -36,7 +36,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_Smoke_ShouldCreate() {
         // Given/When
-        let overlay = WeatherTileOverlay(overlayType: .smoke, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .smoke, timestamp: nil)
 
         // Then
         XCTAssertNotNil(overlay)
@@ -44,7 +44,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_Snowfall_ShouldCreate() {
         // Given/When
-        let overlay = WeatherTileOverlay(overlayType: .snowfall, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .snowfall, timestamp: nil)
 
         // Then
         XCTAssertNotNil(overlay)
@@ -52,7 +52,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_SnowDepth_ShouldCreate() {
         // Given/When
-        let overlay = WeatherTileOverlay(overlayType: .snowDepth, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .snowDepth, timestamp: nil)
 
         // Then
         XCTAssertNotNil(overlay)
@@ -60,7 +60,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_Avalanche_ShouldReturnNil() {
         // Given/When (Avalanche not implemented yet)
-        let overlay = WeatherTileOverlay(overlayType: .avalanche, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .avalanche, timestamp: nil)
 
         // Then
         XCTAssertNil(overlay)
@@ -68,7 +68,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_LandOwnership_ShouldReturnNil() {
         // Given/When (Coming soon)
-        let overlay = WeatherTileOverlay(overlayType: .landOwnership, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .landOwnership, timestamp: nil)
 
         // Then
         XCTAssertNil(overlay)
@@ -76,7 +76,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_OfflineMaps_ShouldReturnNil() {
         // Given/When (Coming soon)
-        let overlay = WeatherTileOverlay(overlayType: .offlineMaps, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .offlineMaps, timestamp: nil)
 
         // Then
         XCTAssertNil(overlay)
@@ -151,7 +151,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
         for type in overlayTypes {
             // When
-            let overlay = WeatherTileOverlay(overlayType: type, timestamp: nil)
+            let overlay = WeatherTileOverlay.create(overlayType: type, timestamp: nil)
 
             // Then
             XCTAssertEqual(overlay?.overlayType, type, "Overlay type should match for \(type)")
@@ -162,7 +162,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_InheritsFromMKTileOverlay() {
         // Given/When
-        let overlay = WeatherTileOverlay(overlayType: .radar, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .radar, timestamp: nil)
 
         // Then
         XCTAssertTrue(overlay is MKTileOverlay)
@@ -170,7 +170,7 @@ final class WeatherTileOverlayTests: XCTestCase {
 
     func testWeatherTileOverlay_TileSize_ShouldBe256() {
         // Given/When
-        let overlay = WeatherTileOverlay(overlayType: .radar, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .radar, timestamp: nil)
 
         // Then
         XCTAssertEqual(overlay?.tileSize.width, 256)
@@ -184,7 +184,7 @@ final class WeatherTileOverlayRendererTests: XCTestCase {
 
     func testWeatherTileOverlayRenderer_ShouldInheritFromMKTileOverlayRenderer() {
         // Given
-        guard let overlay = WeatherTileOverlay(overlayType: .radar, timestamp: nil) else {
+        guard let overlay = WeatherTileOverlay.create(overlayType: .radar, timestamp: nil) else {
             XCTFail("Failed to create overlay")
             return
         }
@@ -198,7 +198,7 @@ final class WeatherTileOverlayRendererTests: XCTestCase {
 
     func testWeatherTileOverlayRenderer_Alpha_ShouldBeLessThanOne() {
         // Given
-        guard let overlay = WeatherTileOverlay(overlayType: .radar, timestamp: nil) else {
+        guard let overlay = WeatherTileOverlay.create(overlayType: .radar, timestamp: nil) else {
             XCTFail("Failed to create overlay")
             return
         }

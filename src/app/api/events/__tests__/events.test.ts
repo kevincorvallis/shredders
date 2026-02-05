@@ -23,6 +23,46 @@ vi.mock('@shredders/shared', () => ({
   }),
 }));
 
+// Mock rate limiting to always allow
+vi.mock('@/lib/api-utils', () => ({
+  rateLimitEnhanced: vi.fn().mockReturnValue({ success: true }),
+  createRateLimitKey: vi.fn().mockReturnValue('test-key'),
+}));
+
+// Mock push notifications
+vi.mock('@/lib/push/event-notifications', () => ({
+  sendNewRSVPNotification: vi.fn().mockResolvedValue(undefined),
+  sendRSVPChangeNotification: vi.fn().mockResolvedValue(undefined),
+}));
+
+const FUTURE_DATE = '2027-02-15';
+
+/**
+ * Creates a chainable mock that mimics Supabase query builder.
+ * All query methods return `this`, and the object is thenable
+ * so `await query` resolves to the provided result.
+ */
+function createChainableMock(resolveValue: { data: any; error: any; count?: number | null }) {
+  const chain: any = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    lte: vi.fn().mockReturnThis(),
+    gt: vi.fn().mockReturnThis(),
+    lt: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    range: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue(resolveValue),
+    // Make the object thenable so `await query` works
+    then: (resolve: any, reject: any) => Promise.resolve(resolveValue).then(resolve, reject),
+  };
+  return chain;
+}
+
 describe('GET /api/events', () => {
   let mockSupabase: any;
   let mockRequest: Request;
@@ -30,45 +70,38 @@ describe('GET /api/events', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    const eventData = [
+      {
+        id: 'event123',
+        user_id: 'user123',
+        mountain_id: 'stevens-pass',
+        title: 'Powder Day!',
+        notes: 'Lets go!',
+        event_date: FUTURE_DATE,
+        departure_time: '06:00:00',
+        departure_location: 'Northgate',
+        skill_level: 'intermediate',
+        carpool_available: true,
+        carpool_seats: 3,
+        status: 'active',
+        attendee_count: 5,
+        going_count: 3,
+        maybe_count: 2,
+        created_at: '2025-01-15T12:00:00Z',
+        updated_at: '2025-01-15T12:00:00Z',
+        creator: {
+          id: 'user123',
+          username: 'testuser',
+          display_name: 'Test User',
+          avatar_url: null,
+        },
+      },
+    ];
+
     mockSupabase = {
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnThis(),
-          gte: vi.fn().mockReturnThis(),
-          order: vi.fn().mockReturnThis(),
-          range: vi.fn().mockResolvedValue({
-            data: [
-              {
-                id: 'event123',
-                user_id: 'user123',
-                mountain_id: 'stevens-pass',
-                title: 'Powder Day!',
-                notes: 'Lets go!',
-                event_date: '2025-02-15',
-                departure_time: '06:00:00',
-                departure_location: 'Northgate',
-                skill_level: 'intermediate',
-                carpool_available: true,
-                carpool_seats: 3,
-                status: 'active',
-                attendee_count: 5,
-                going_count: 3,
-                maybe_count: 2,
-                created_at: '2025-01-15T12:00:00Z',
-                updated_at: '2025-01-15T12:00:00Z',
-                creator: {
-                  id: 'user123',
-                  username: 'testuser',
-                  display_name: 'Test User',
-                  avatar_url: null,
-                },
-              },
-            ],
-            error: null,
-            count: 1,
-          }),
-        }),
-      }),
+      from: vi.fn().mockReturnValue(
+        createChainableMock({ data: eventData, error: null, count: 1 })
+      ),
     };
 
     (createClient as any).mockResolvedValue(mockSupabase);
@@ -120,6 +153,7 @@ describe('GET /api/events', () => {
     (getDualAuthUser as any).mockResolvedValue({
       userId: 'user123',
       email: 'test@example.com',
+      profileId: 'profile-user123',
     });
 
     mockRequest = new Request(
@@ -147,40 +181,78 @@ describe('POST /api/events', () => {
       from: vi.fn(),
     };
 
+    // Admin client needs to handle multiple tables
     mockAdminClient = {
-      from: vi.fn().mockReturnValue({
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: 'newevent123',
-                user_id: 'user123',
-                mountain_id: 'stevens-pass',
-                title: 'Powder Day!',
-                notes: null,
-                event_date: '2025-02-15',
-                departure_time: '06:00:00',
-                departure_location: null,
-                skill_level: null,
-                carpool_available: false,
-                carpool_seats: null,
-                status: 'active',
-                attendee_count: 1,
-                going_count: 1,
-                maybe_count: 0,
-                created_at: '2025-01-15T12:00:00Z',
-                updated_at: '2025-01-15T12:00:00Z',
-                creator: {
-                  id: 'user123',
-                  username: 'testuser',
-                  display_name: 'Test User',
-                  avatar_url: null,
-                },
-              },
-              error: null,
+      from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'users') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: 'profile-user123' },
+                  error: null,
+                }),
+              }),
             }),
-          }),
-        }),
+          };
+        }
+        if (table === 'events') {
+          return {
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: 'newevent123',
+                    user_id: 'profile-user123',
+                    mountain_id: 'stevens-pass',
+                    title: 'Powder Day!',
+                    notes: null,
+                    event_date: FUTURE_DATE,
+                    departure_time: '06:00:00',
+                    departure_location: null,
+                    skill_level: null,
+                    carpool_available: false,
+                    carpool_seats: null,
+                    max_attendees: null,
+                    status: 'active',
+                    attendee_count: 1,
+                    going_count: 1,
+                    maybe_count: 0,
+                    waitlist_count: 0,
+                    created_at: '2025-01-15T12:00:00Z',
+                    updated_at: '2025-01-15T12:00:00Z',
+                    creator: {
+                      id: 'profile-user123',
+                      username: 'testuser',
+                      display_name: 'Test User',
+                      avatar_url: null,
+                    },
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { attendee_count: 1, going_count: 1, maybe_count: 0 },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'event_invite_tokens') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+        if (table === 'event_attendees') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+        return {};
       }),
     };
 
@@ -196,7 +268,7 @@ describe('POST /api/events', () => {
     const requestBody = {
       mountainId: 'stevens-pass',
       title: 'Powder Day!',
-      eventDate: '2025-02-15',
+      eventDate: FUTURE_DATE,
       departureTime: '06:00',
     };
 
@@ -222,7 +294,7 @@ describe('POST /api/events', () => {
     const requestBody = {
       mountainId: 'stevens-pass',
       title: 'Powder Day!',
-      eventDate: '2025-02-15',
+      eventDate: FUTURE_DATE,
     };
 
     mockRequest = new Request('http://localhost:3000/api/events', {
@@ -241,7 +313,7 @@ describe('POST /api/events', () => {
   it('should require mountainId', async () => {
     const requestBody = {
       title: 'Powder Day!',
-      eventDate: '2025-02-15',
+      eventDate: FUTURE_DATE,
     };
 
     mockRequest = new Request('http://localhost:3000/api/events', {
@@ -261,7 +333,7 @@ describe('POST /api/events', () => {
     const requestBody = {
       mountainId: 'stevens-pass',
       title: 'ab', // Too short
-      eventDate: '2025-02-15',
+      eventDate: FUTURE_DATE,
     };
 
     mockRequest = new Request('http://localhost:3000/api/events', {
@@ -301,7 +373,7 @@ describe('POST /api/events', () => {
     const requestBody = {
       mountainId: 'stevens-pass',
       title: 'Powder Day!',
-      eventDate: '2025-02-15',
+      eventDate: FUTURE_DATE,
       carpoolAvailable: true,
       carpoolSeats: 10, // Too many
     };
@@ -323,7 +395,7 @@ describe('POST /api/events', () => {
     const requestBody = {
       mountainId: 'stevens-pass',
       title: 'Powder Day!',
-      eventDate: '2025-02-15',
+      eventDate: FUTURE_DATE,
       departureTime: 'invalid', // Invalid format
     };
 

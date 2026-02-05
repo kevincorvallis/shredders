@@ -35,6 +35,17 @@ class SimpleCache {
     return entry.data as T;
   }
 
+  /** Get entry even if expired (for stale-while-revalidate) */
+  getStale<T>(key: string): { data: T; isStale: boolean } | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+
+    return {
+      data: entry.data as T,
+      isStale: Date.now() > entry.expiresAt,
+    };
+  }
+
   set<T>(key: string, data: T, ttlSeconds: number = 600): void {
     const entry: CacheEntry<T> = {
       data,
@@ -83,21 +94,34 @@ class SimpleCache {
 export const cache = new SimpleCache();
 
 /**
- * Helper function to wrap API calls with caching
+ * Helper function to wrap API calls with caching.
+ * Supports stale-while-revalidate: returns stale data immediately
+ * while refreshing in the background.
  */
 export async function withCache<T>(
   key: string,
   fetcher: () => Promise<T>,
   ttlSeconds: number = 600
 ): Promise<T> {
-  // Check cache first
+  // Check fresh cache first
   const cached = cache.get<T>(key);
   if (cached !== null) {
     console.log(`[Cache HIT] ${key}`);
     return cached;
   }
 
-  // Fetch fresh data
+  // Check for stale data we can serve while revalidating
+  const stale = cache.getStale<T>(key);
+  if (stale) {
+    console.log(`[Cache STALE] ${key} - serving stale, revalidating in background`);
+    // Revalidate in background (fire-and-forget)
+    fetcher()
+      .then((data) => cache.set(key, data, ttlSeconds))
+      .catch((err) => console.error(`[Cache REVALIDATE ERROR] ${key}:`, err));
+    return stale.data;
+  }
+
+  // Full cache miss - must fetch synchronously
   console.log(`[Cache MISS] ${key}`);
   const data = await fetcher();
 

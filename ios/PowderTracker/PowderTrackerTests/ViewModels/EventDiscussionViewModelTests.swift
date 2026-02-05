@@ -149,8 +149,8 @@ final class EventDiscussionViewModelTests: XCTestCase {
             content: "Test comment content",
             parentId: nil,
             createdAt: ISO8601DateFormatter().string(from: Date()),
-            deletedAt: nil,
-            user: CommentUser(
+            updatedAt: ISO8601DateFormatter().string(from: Date()),
+            user: EventCommentUser(
                 id: "user-1",
                 username: username,
                 displayName: "Test User",

@@ -766,6 +766,28 @@ extension EventDetailView {
                     .foregroundStyle(.secondary)
             }
 
+            // Capacity indicator (only shown when event has a max)
+            if let maxAttendees = event.maxAttendees {
+                HStack(spacing: 6) {
+                    Text("\(event.goingCount)/\(maxAttendees)")
+                        .font(.subheadline.weight(.medium))
+                        .monospacedDigit()
+                    Text("spots filled")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    if event.goingCount >= maxAttendees {
+                        Text("FULL")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(.orange)
+                            .clipShape(Capsule())
+                    }
+                    Spacer()
+                }
+            }
+
             if event.attendees.isEmpty {
                 Text("No attendees yet")
                     .foregroundStyle(.secondary)
@@ -920,6 +942,7 @@ extension EventDetailView {
                 .accessibilityIdentifier("event_detail_rsvp_status")
             } else {
                 // Show RSVP buttons for users who haven't responded
+                let isAtCapacity = event.maxAttendees != nil && event.goingCount >= (event.maxAttendees ?? 0)
                 HStack(spacing: 16) {
                     Button {
                         if event.carpoolAvailable {
@@ -929,13 +952,13 @@ extension EventDetailView {
                         }
                     } label: {
                         HStack {
-                            Image(systemName: "hand.thumbsup.fill")
-                            Text("I'm In!")
+                            Image(systemName: isAtCapacity ? "list.bullet" : "hand.thumbsup.fill")
+                            Text(isAtCapacity ? "Join Waitlist" : "I'm In!")
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(.green)
+                        .background(isAtCapacity ? .purple : .green)
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
@@ -1103,11 +1126,20 @@ extension EventDetailView {
                 object: nil,
                 userInfo: ["eventId": eventId]
             )
-            toast = ToastMessage(
-                type: .success,
-                title: status == .going ? "You're in!" : "Got it!",
-                message: status == .going ? "See you on the mountain!" : "We'll keep you posted"
-            )
+            // Show appropriate toast based on actual resulting status
+            if response.attendee.status == .waitlist {
+                toast = ToastMessage(
+                    type: .info,
+                    title: "You're on the waitlist",
+                    message: "We'll notify you if a spot opens up"
+                )
+            } else {
+                toast = ToastMessage(
+                    type: .success,
+                    title: status == .going ? "You're in!" : "Got it!",
+                    message: status == .going ? "See you on the mountain!" : "We'll keep you posted"
+                )
+            }
         } catch let err as EventServiceError {
             HapticFeedback.error.trigger()
             toast = ToastMessage(

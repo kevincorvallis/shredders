@@ -2,168 +2,161 @@ import XCTest
 @testable import PowderTracker
 
 /// Tests for AuthService authentication functionality
+/// Tests actual AuthService methods and KeychainHelper behavior
 final class AuthServiceTests: XCTestCase {
 
-    // MARK: - Password Validation Tests
-
-    func testPasswordValidation_MinimumLength() {
-        // Password must be at least 12 characters
-        let shortPassword = "Short1!Aa"
-        let validPassword = "ValidP@ss123!"
-
-        XCTAssertTrue(shortPassword.count < 12, "Short password should be under 12 characters")
-        XCTAssertTrue(validPassword.count >= 12, "Valid password should be at least 12 characters")
+    override func setUp() {
+        super.setUp()
+        // Clean slate for each test
+        KeychainHelper.clearTokens()
     }
 
-    func testPasswordValidation_UppercaseRequired() {
-        let noUppercase = "nouppercase1!"
-        let hasUppercase = "HasUppercase1!"
-
-        XCTAssertFalse(noUppercase.contains(where: { $0.isUppercase }))
-        XCTAssertTrue(hasUppercase.contains(where: { $0.isUppercase }))
+    override func tearDown() {
+        // Always clean up keychain state
+        KeychainHelper.clearTokens()
+        super.tearDown()
     }
 
-    func testPasswordValidation_LowercaseRequired() {
-        let noLowercase = "NOLOWERCASE1!"
-        let hasLowercase = "HasLowercase1!"
+    // MARK: - KeychainHelper Token Storage Tests
 
-        XCTAssertFalse(noLowercase.contains(where: { $0.isLowercase }))
-        XCTAssertTrue(hasLowercase.contains(where: { $0.isLowercase }))
-    }
-
-    func testPasswordValidation_NumberRequired() {
-        let noNumber = "NoNumbersHere!"
-        let hasNumber = "HasNumber1Here!"
-
-        XCTAssertFalse(noNumber.contains(where: { $0.isNumber }))
-        XCTAssertTrue(hasNumber.contains(where: { $0.isNumber }))
-    }
-
-    func testPasswordValidation_SpecialCharRequired() {
-        let specialChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?"
-        let noSpecial = "NoSpecialChars1"
-        let hasSpecial = "HasSpecial@1!"
-
-        XCTAssertFalse(noSpecial.contains(where: { specialChars.contains($0) }))
-        XCTAssertTrue(hasSpecial.contains(where: { specialChars.contains($0) }))
-    }
-
-    func testPasswordValidation_AllRequirementsMet() {
-        let specialChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?"
-        let validPassword = "MyStrongP@ss123"
-
-        // Check all requirements
-        let hasMinLength = validPassword.count >= 12
-        let hasUppercase = validPassword.contains(where: { $0.isUppercase })
-        let hasLowercase = validPassword.contains(where: { $0.isLowercase })
-        let hasNumber = validPassword.contains(where: { $0.isNumber })
-        let hasSpecial = validPassword.contains(where: { specialChars.contains($0) })
-
-        XCTAssertTrue(hasMinLength, "Should meet minimum length")
-        XCTAssertTrue(hasUppercase, "Should have uppercase")
-        XCTAssertTrue(hasLowercase, "Should have lowercase")
-        XCTAssertTrue(hasNumber, "Should have number")
-        XCTAssertTrue(hasSpecial, "Should have special character")
-    }
-
-    // MARK: - Email Validation Tests
-
-    func testEmailValidation_ValidEmails() {
-        let validEmails = [
-            "test@example.com",
-            "user.name@domain.org",
-            "user+tag@example.co.uk"
-        ]
-
-        for email in validEmails {
-            XCTAssertTrue(email.contains("@"), "\(email) should contain @")
-            XCTAssertTrue(email.split(separator: "@").count == 2, "\(email) should have one @")
-        }
-    }
-
-    func testEmailValidation_InvalidEmails() {
-        let invalidEmails = [
-            "not-an-email",
-            "@nodomain.com",
-            "user@",
-            ""
-        ]
-
-        for email in invalidEmails {
-            let isValid = email.contains("@") && !email.hasPrefix("@") && !email.hasSuffix("@") && !email.isEmpty
-            XCTAssertFalse(isValid, "\(email) should be invalid")
-        }
-    }
-
-    // MARK: - Keychain Tests
-
-    func testKeychainHelper_SaveAndRetrieveToken() throws {
-        // Test token storage
+    func testKeychainHelper_SaveAndRetrieveAccessToken() throws {
         let testToken = "test-access-token-\(UUID().uuidString)"
 
-        // Save token
         try KeychainHelper.saveAccessToken(testToken)
 
-        // Retrieve token
-        let retrievedToken = KeychainHelper.getAccessToken()
-
-        XCTAssertEqual(retrievedToken, testToken, "Retrieved token should match saved token")
-
-        // Cleanup
-        KeychainHelper.clearTokens()
+        let retrieved = KeychainHelper.getAccessToken()
+        XCTAssertEqual(retrieved, testToken, "Retrieved access token should match saved token")
     }
 
-    func testKeychainHelper_ClearTokens() throws {
-        // Save some tokens
-        try KeychainHelper.saveAccessToken("test-access")
-        try KeychainHelper.saveRefreshToken("test-refresh")
+    func testKeychainHelper_SaveAndRetrieveRefreshToken() throws {
+        let testToken = "test-refresh-token-\(UUID().uuidString)"
 
-        // Clear all tokens
+        try KeychainHelper.saveRefreshToken(testToken)
+
+        let retrieved = KeychainHelper.getRefreshToken()
+        XCTAssertEqual(retrieved, testToken, "Retrieved refresh token should match saved token")
+    }
+
+    func testKeychainHelper_ClearTokens_RemovesAll() throws {
+        try KeychainHelper.saveAccessToken("access-token")
+        try KeychainHelper.saveRefreshToken("refresh-token")
+
+        // Verify they were saved
+        XCTAssertNotNil(KeychainHelper.getAccessToken())
+        XCTAssertNotNil(KeychainHelper.getRefreshToken())
+
         KeychainHelper.clearTokens()
 
-        // Verify tokens are cleared
         XCTAssertNil(KeychainHelper.getAccessToken(), "Access token should be nil after clear")
         XCTAssertNil(KeychainHelper.getRefreshToken(), "Refresh token should be nil after clear")
     }
 
-    func testKeychainHelper_TokenExpiry() throws {
-        // Save token with short expiry
-        let shortExpiry = Date().addingTimeInterval(30) // 30 seconds
-        try KeychainHelper.saveTokenExpiry(shortExpiry)
+    func testKeychainHelper_OverwriteExistingToken() throws {
+        try KeychainHelper.saveAccessToken("first-token")
+        try KeychainHelper.saveAccessToken("second-token")
 
-        // Should be expired (with 60 second buffer)
-        XCTAssertTrue(KeychainHelper.isAccessTokenExpired(), "Token should be considered expired with buffer")
-
-        // Save token with long expiry
-        let longExpiry = Date().addingTimeInterval(300) // 5 minutes
-        try KeychainHelper.saveTokenExpiry(longExpiry)
-
-        // Should not be expired
-        XCTAssertFalse(KeychainHelper.isAccessTokenExpired(), "Token should not be expired")
-
-        // Cleanup
-        KeychainHelper.clearTokens()
+        let retrieved = KeychainHelper.getAccessToken()
+        XCTAssertEqual(retrieved, "second-token", "Should return the most recently saved token")
     }
 
-    func testKeychainHelper_HasValidTokens() throws {
-        // Initially should have no valid tokens
+    func testKeychainHelper_GetTokenWhenNoneExists() {
+        // No tokens saved
+        XCTAssertNil(KeychainHelper.getAccessToken(), "Should return nil when no access token exists")
+        XCTAssertNil(KeychainHelper.getRefreshToken(), "Should return nil when no refresh token exists")
+    }
+
+    // MARK: - Token Expiry Tests
+
+    func testKeychainHelper_TokenExpiry_ExpiredWithBuffer() throws {
+        // Token expires in 30 seconds - within the 60-second safety buffer
+        let shortExpiry = Date().addingTimeInterval(30)
+        try KeychainHelper.saveTokenExpiry(shortExpiry)
+
+        XCTAssertTrue(KeychainHelper.isAccessTokenExpired(),
+                      "Token expiring within buffer should be considered expired")
+    }
+
+    func testKeychainHelper_TokenExpiry_NotExpired() throws {
+        // Token expires in 5 minutes - well outside the buffer
+        let longExpiry = Date().addingTimeInterval(300)
+        try KeychainHelper.saveTokenExpiry(longExpiry)
+
+        XCTAssertFalse(KeychainHelper.isAccessTokenExpired(),
+                       "Token with 5 minutes remaining should not be expired")
+    }
+
+    func testKeychainHelper_TokenExpiry_AlreadyPast() throws {
+        // Token already expired
+        let pastExpiry = Date().addingTimeInterval(-60)
+        try KeychainHelper.saveTokenExpiry(pastExpiry)
+
+        XCTAssertTrue(KeychainHelper.isAccessTokenExpired(),
+                      "Token with past expiry should be expired")
+    }
+
+    // MARK: - HasValidTokens Tests
+
+    func testKeychainHelper_HasValidTokens_NoTokens() {
+        XCTAssertFalse(KeychainHelper.hasValidTokens(),
+                       "Should return false when no tokens are stored")
+    }
+
+    func testKeychainHelper_HasValidTokens_WithTokens() throws {
+        try KeychainHelper.saveAccessToken("access")
+        try KeychainHelper.saveRefreshToken("refresh")
+
+        XCTAssertTrue(KeychainHelper.hasValidTokens(),
+                      "Should return true when tokens are stored")
+    }
+
+    func testKeychainHelper_HasValidTokens_OnlyAccessToken() throws {
+        try KeychainHelper.saveAccessToken("access")
+
+        // hasValidTokens checks for access token existence
+        // Behavior depends on implementation - verify it's consistent
+        let hasValid = KeychainHelper.hasValidTokens()
+        // Access token alone should be enough for validity check
+        XCTAssertTrue(hasValid, "Should be valid with just access token")
+    }
+
+    // MARK: - SaveTokens Bundle Tests
+
+    func testKeychainHelper_SaveTokensBundle() throws {
+        try KeychainHelper.saveTokens(
+            accessToken: "bundle-access",
+            refreshToken: "bundle-refresh",
+            expiresIn: 900 // 15 minutes
+        )
+
+        XCTAssertEqual(KeychainHelper.getAccessToken(), "bundle-access")
+        XCTAssertEqual(KeychainHelper.getRefreshToken(), "bundle-refresh")
+        XCTAssertFalse(KeychainHelper.isAccessTokenExpired(),
+                       "Newly saved token with 15 min expiry should not be expired")
+    }
+
+    func testKeychainHelper_SaveTokensBundle_ClearAndResave() throws {
+        // Save first set
+        try KeychainHelper.saveTokens(
+            accessToken: "first-access",
+            refreshToken: "first-refresh",
+            expiresIn: 900
+        )
+
+        // Clear and save new set
         KeychainHelper.clearTokens()
-        XCTAssertFalse(KeychainHelper.hasValidTokens(), "Should have no valid tokens initially")
+        try KeychainHelper.saveTokens(
+            accessToken: "second-access",
+            refreshToken: "second-refresh",
+            expiresIn: 900
+        )
 
-        // Save tokens
-        try KeychainHelper.saveAccessToken("test-access")
-        try KeychainHelper.saveRefreshToken("test-refresh")
-
-        // Should have valid tokens
-        XCTAssertTrue(KeychainHelper.hasValidTokens(), "Should have valid tokens after saving")
-
-        // Cleanup
-        KeychainHelper.clearTokens()
+        XCTAssertEqual(KeychainHelper.getAccessToken(), "second-access")
+        XCTAssertEqual(KeychainHelper.getRefreshToken(), "second-refresh")
     }
 
     // MARK: - AppConfig Tests
 
-    func testAppConfig_APIBaseURL() {
+    func testAppConfig_APIBaseURL_IsValid() {
         let apiURL = AppConfig.apiBaseURL
 
         XCTAssertFalse(apiURL.isEmpty, "API URL should not be empty")
@@ -171,7 +164,7 @@ final class AuthServiceTests: XCTestCase {
         XCTAssertTrue(apiURL.hasSuffix("/api"), "API URL should end with /api")
     }
 
-    func testAppConfig_SupabaseURL() {
+    func testAppConfig_SupabaseURL_IsValid() {
         let supabaseURL = AppConfig.supabaseURL
 
         XCTAssertFalse(supabaseURL.isEmpty, "Supabase URL should not be empty")
@@ -179,17 +172,115 @@ final class AuthServiceTests: XCTestCase {
     }
 
     func testAppConfig_SafeURLCreation() {
-        let endpoint = "/auth/login"
-        let url = AppConfig.apiURL(for: endpoint)
+        let endpoints = ["/auth/login", "/auth/signup", "/auth/refresh", "/events", "/mountains"]
 
-        XCTAssertNotNil(url, "Should create valid URL for endpoint")
-        XCTAssertTrue(url?.absoluteString.contains("/auth/login") == true, "URL should contain endpoint")
+        for endpoint in endpoints {
+            let url = AppConfig.apiURL(for: endpoint)
+            XCTAssertNotNil(url, "Should create valid URL for endpoint: \(endpoint)")
+            XCTAssertTrue(url?.absoluteString.contains(endpoint) == true,
+                         "URL should contain endpoint path: \(endpoint)")
+        }
     }
 
-    // MARK: - Signup Response Tests
+    func testAppConfig_URLCreation_EmptyEndpoint() {
+        let url = AppConfig.apiURL(for: "")
+        XCTAssertNotNil(url, "Should handle empty endpoint gracefully")
+    }
+
+    // MARK: - AuthError Tests
+
+    func testAuthError_AllCasesHaveDescriptions() {
+        let errors: [AuthError] = [
+            .invalidCredentials,
+            .emailNotVerified,
+            .tokenStorageFailed,
+            .noRefreshToken,
+            .sessionExpired,
+            .serverError("Test server error"),
+            .networkError(URLError(.badServerResponse))
+        ]
+
+        for error in errors {
+            XCTAssertNotNil(error.errorDescription, "Error should have description: \(error)")
+            XCTAssertFalse(error.errorDescription?.isEmpty ?? true,
+                          "Error description should not be empty: \(error)")
+        }
+    }
+
+    func testAuthError_InvalidCredentials_Message() {
+        let error = AuthError.invalidCredentials
+        XCTAssertEqual(error.errorDescription, "Invalid email or password")
+    }
+
+    func testAuthError_EmailNotVerified_Message() {
+        let error = AuthError.emailNotVerified
+        XCTAssertEqual(error.errorDescription, "Please verify your email address")
+    }
+
+    func testAuthError_ServerError_PreservesMessage() {
+        let customMessage = "Custom server error message"
+        let error = AuthError.serverError(customMessage)
+        XCTAssertEqual(error.errorDescription, customMessage)
+    }
+
+    func testAuthError_NetworkError_IncludesUnderlying() {
+        let urlError = URLError(.notConnectedToInternet)
+        let error = AuthError.networkError(urlError)
+
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.contains("Network") ?? false,
+                     "Network error description should mention 'Network'")
+    }
+
+    func testAuthError_SessionExpired_Message() {
+        let error = AuthError.sessionExpired
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.contains("expired") ?? false,
+                     "Session expired error should mention 'expired'")
+    }
+
+    func testAuthError_NoRefreshToken_Message() {
+        let error = AuthError.noRefreshToken
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.contains("refresh token") ?? false,
+                     "No refresh token error should mention 'refresh token'")
+    }
+
+    // MARK: - BiometricAuthService Tests
+
+    @MainActor func testBiometricAuthService_BiometricType_IsValid() {
+        let biometricService = BiometricAuthService.shared
+        let biometricType = biometricService.biometricType
+
+        switch biometricType {
+        case .faceID, .touchID, .none:
+            // All valid
+            break
+        }
+    }
+
+    @MainActor func testBiometricAuthService_BiometricTypeName_IsNonEmpty() {
+        let biometricService = BiometricAuthService.shared
+        let name = biometricService.biometricTypeName
+
+        XCTAssertFalse(name.isEmpty, "Biometric type name should not be empty")
+
+        let validNames = ["Face ID", "Touch ID", "Biometric"]
+        XCTAssertTrue(validNames.contains(name),
+                     "Biometric type name '\(name)' should be one of \(validNames)")
+    }
+
+    @MainActor func testBiometricAuthService_DisableBiometric() {
+        let biometricService = BiometricAuthService.shared
+
+        biometricService.disableBiometric()
+        XCTAssertFalse(biometricService.isBiometricEnabled,
+                      "Biometric should be disabled after calling disableBiometric()")
+    }
+
+    // MARK: - Signup Response Decoding Tests
 
     func testSignupResponse_DecodesWithTokens() throws {
-        // When email verification is NOT required, response includes tokens
         let json = """
         {
             "user": {"id": "123", "email": "test@example.com"},
@@ -222,8 +313,7 @@ final class AuthServiceTests: XCTestCase {
         XCTAssertEqual(response.message, "Account created successfully")
     }
 
-    func testSignupResponse_DecodesWithEmailVerificationRequired() throws {
-        // When email verification IS required, response has needsEmailVerification but no tokens
+    func testSignupResponse_DecodesWithEmailVerification() throws {
         let json = """
         {
             "user": {"id": "456", "email": "new@example.com"},
@@ -248,16 +338,14 @@ final class AuthServiceTests: XCTestCase {
         let response = try JSONDecoder().decode(SignupResponse.self, from: json)
 
         XCTAssertEqual(response.user.id, "456")
-        XCTAssertEqual(response.user.email, "new@example.com")
-        XCTAssertNil(response.accessToken, "Should not have access token when verification required")
-        XCTAssertNil(response.refreshToken, "Should not have refresh token when verification required")
-        XCTAssertTrue(response.needsEmailVerification ?? false, "Should indicate email verification needed")
-        XCTAssertEqual(response.message, "Please check your email to verify your account")
+        XCTAssertNil(response.accessToken, "Should not have tokens when verification required")
+        XCTAssertNil(response.refreshToken, "Should not have tokens when verification required")
+        XCTAssertTrue(response.needsEmailVerification ?? false)
     }
 
-    func testSignupResponse_HandlesEmailVerificationFlag() throws {
-        // Test that the needsEmailVerification flag properly indicates when to throw emailNotVerified error
-        let responseWithVerification = """
+    func testSignupResponse_HandlesVerificationFlowLogic() throws {
+        // Test the branching logic AuthService uses for signup responses
+        let verificationJson = """
         {
             "user": {"id": "789", "email": "verify@example.com"},
             "needsEmailVerification": true,
@@ -278,82 +366,43 @@ final class AuthServiceTests: XCTestCase {
             }
         }
 
-        let response = try JSONDecoder().decode(SignupResponse.self, from: responseWithVerification)
+        let response = try JSONDecoder().decode(SignupResponse.self, from: verificationJson)
 
-        // Simulate the auth service logic
+        // Simulate the actual AuthService logic branch
         if response.needsEmailVerification == true {
-            // This is expected - should throw emailNotVerified
-            XCTAssertTrue(true, "Should trigger email verification flow")
-        } else if let accessToken = response.accessToken, let refreshToken = response.refreshToken {
-            XCTFail("Should not have tokens when verification required")
-            _ = (accessToken, refreshToken) // Suppress unused warning
+            // This branch should throw AuthError.emailNotVerified in AuthService
+            XCTAssertTrue(true, "Verification flow correctly detected")
+            XCTAssertNil(response.accessToken, "Should have no tokens when verification needed")
+        } else if response.accessToken != nil, response.refreshToken != nil {
+            XCTFail("Should not reach token branch when verification is required")
         } else {
-            XCTFail("Should either have verification flag or tokens")
+            XCTFail("Should detect verification flag")
         }
     }
 
-    // MARK: - BiometricAuthService Tests
+    // MARK: - AuthService isAuthenticated Property Tests
 
-    func testBiometricAuthService_BiometricType() {
-        let biometricService = BiometricAuthService.shared
+    @MainActor
+    func testAuthService_IsAuthenticated_WithValidTokens() throws {
+        // Save valid tokens to make isAuthenticated return true via KeychainHelper.hasValidTokens()
+        try KeychainHelper.saveAccessToken("test-token")
+        try KeychainHelper.saveRefreshToken("test-refresh")
 
-        // Just verify the service can be accessed and returns a type
-        let biometricType = biometricService.biometricType
+        let authService = AuthService.shared
+        XCTAssertTrue(authService.isAuthenticated,
+                     "Should be authenticated when valid tokens exist in keychain")
+    }
 
-        // Type should be one of the valid options
-        switch biometricType {
-        case .faceID, .touchID, .none:
-            // All valid options
-            break
+    @MainActor
+    func testAuthService_IsAuthenticated_NoTokens() {
+        KeychainHelper.clearTokens()
+
+        let authService = AuthService.shared
+        // Note: isAuthenticated checks currentUser OR hasValidTokens
+        // With no tokens and no currentUser, should be false
+        if authService.currentUser == nil {
+            XCTAssertFalse(authService.isAuthenticated,
+                         "Should not be authenticated with no tokens and no current user")
         }
-    }
-
-    func testBiometricAuthService_BiometricTypeName() {
-        let biometricService = BiometricAuthService.shared
-        let name = biometricService.biometricTypeName
-
-        XCTAssertFalse(name.isEmpty, "Biometric type name should not be empty")
-
-        let validNames = ["Face ID", "Touch ID", "Biometric"]
-        XCTAssertTrue(validNames.contains(name), "Biometric type name should be valid")
-    }
-
-    func testBiometricAuthService_EnableDisable() {
-        let biometricService = BiometricAuthService.shared
-
-        // Disable biometric
-        biometricService.disableBiometric()
-        XCTAssertFalse(biometricService.isBiometricEnabled, "Biometric should be disabled")
-
-        // Note: Cannot test enable without actual biometric hardware
-    }
-}
-
-// MARK: - AuthError Tests
-
-final class AuthErrorTests: XCTestCase {
-
-    func testAuthError_ErrorDescriptions() {
-        let errors: [AuthError] = [
-            .invalidCredentials,
-            .emailNotVerified,
-            .tokenStorageFailed,
-            .noRefreshToken,
-            .sessionExpired,
-            .serverError("Test error")
-        ]
-
-        for error in errors {
-            XCTAssertNotNil(error.errorDescription, "Error should have description: \(error)")
-            XCTAssertFalse(error.errorDescription?.isEmpty ?? true, "Error description should not be empty")
-        }
-    }
-
-    func testAuthError_NetworkError() {
-        let urlError = URLError(.badServerResponse)
-        let authError = AuthError.networkError(urlError)
-
-        XCTAssertNotNil(authError.errorDescription)
-        XCTAssertTrue(authError.errorDescription?.contains("Network") ?? false)
     }
 }

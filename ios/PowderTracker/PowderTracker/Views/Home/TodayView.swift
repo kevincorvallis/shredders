@@ -4,7 +4,7 @@ import SwiftUI
 /// Shows today's conditions, recommendations, and quick access to favorites
 struct TodayView: View {
     var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @ObservedObject private var favoritesManager = FavoritesService.shared
     @State private var showingManageFavorites = false
     @State private var showingRegionPicker = false
     @State private var alertsDismissed = false
@@ -125,7 +125,7 @@ struct TodayView: View {
     private var currentRegionName: String {
         // Determine region from favorites
         let regions = favoritesManager.favoriteIds.compactMap { id -> String? in
-            viewModel.mountains.first(where: { $0.id == id })?.region
+            viewModel.mountainsById[id]?.region
         }
         let uniqueRegions = Set(regions)
 

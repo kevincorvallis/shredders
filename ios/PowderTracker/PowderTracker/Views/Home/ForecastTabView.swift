@@ -4,7 +4,7 @@ import SwiftUI
 /// Follows the Phase 4 layout improvements
 struct ForecastTabView: View {
     var viewModel: HomeViewModel
-    @StateObject private var favoritesService = FavoritesService.shared
+    @ObservedObject private var favoritesService = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: 12) {
@@ -109,17 +109,44 @@ struct ForecastTabView: View {
 
     // MARK: - Comparison Grid Section
 
+    /// Favorites sorted by personalized recommendation score.
+    private var rankedFavorites: (
+        favorites: [(mountain: Mountain, data: MountainBatchedResponse)],
+        reasons: [String: [String]],
+        topId: String?
+    ) {
+        let ranking = viewModel.getPersonalizedRanking()
+        let allFavorites = viewModel.getFavoritesWithData()
+
+        if ranking.isEmpty {
+            return (allFavorites, [:], nil)
+        }
+
+        let rankedIds = ranking.map(\.mountain.id)
+        let sorted = allFavorites.sorted { a, b in
+            let idxA = rankedIds.firstIndex(of: a.mountain.id) ?? .max
+            let idxB = rankedIds.firstIndex(of: b.mountain.id) ?? .max
+            return idxA < idxB
+        }
+        let reasons = Dictionary(
+            uniqueKeysWithValues: ranking.map { ($0.mountain.id, $0.reasons) }
+        )
+        return (sorted, reasons, ranking.first?.mountain.id)
+    }
+
     private var comparisonGridSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             SectionHeaderView(title: "Your Mountains")
 
-            let favoritesWithData = viewModel.getFavoritesWithData()
+            let ranked = rankedFavorites
 
-            if !favoritesWithData.isEmpty {
+            if !ranked.favorites.isEmpty {
                 ComparisonGrid(
-                    favorites: favoritesWithData,
+                    favorites: ranked.favorites,
                     bestMountainId: viewModel.getBestPowderToday()?.mountain.id,
-                    viewModel: viewModel
+                    viewModel: viewModel,
+                    recommendationReasons: ranked.reasons,
+                    topRecommendationId: ranked.topId
                 )
             } else {
                 emptyComparisonState
@@ -135,7 +162,7 @@ struct ForecastTabView: View {
 
             // Use forecast data directly instead of powder day plans
             let mountainsWithForecast = favoritesService.favoriteIds.compactMap { mountainId -> (mountain: Mountain, forecast: [ForecastDay])? in
-                guard let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
+                guard let mountain = viewModel.mountainsById[mountainId],
                       let data = viewModel.mountainData[mountainId],
                       !data.forecast.isEmpty else {
                     return nil

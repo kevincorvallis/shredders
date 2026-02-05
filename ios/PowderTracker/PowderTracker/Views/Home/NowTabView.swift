@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NowTabView: View {
     var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @ObservedObject private var favoritesManager = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: 20) {

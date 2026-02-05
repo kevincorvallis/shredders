@@ -190,6 +190,37 @@ struct AboutView: View {
                 sectionHeader("Data Sources")
 
                 VStack(alignment: .leading, spacing: .spacingM) {
+                    // Apple Weather attribution (required by WeatherKit terms)
+                    Link(destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!) {
+                        HStack(spacing: .spacingM) {
+                            Image(systemName: "apple.logo")
+                                .font(.title3)
+                                .foregroundStyle(.primary)
+                                .frame(width: 32)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 2) {
+                                    Image(systemName: "apple.logo")
+                                        .font(.caption)
+                                    Text("Weather")
+                                        .font(.subheadline.weight(.medium))
+                                }
+                                .foregroundStyle(.primary)
+                                Text("Current conditions, hourly & daily forecasts, weather alerts")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.caption)
+                                .foregroundStyle(.blue)
+                        }
+                    }
+
+                    Divider()
+
                     dataSourceRow(
                         icon: "sensor.fill",
                         color: .cyan,
@@ -505,7 +536,7 @@ struct AboutView: View {
                 VStack(alignment: .leading, spacing: .spacingM) {
                     creditItem(title: "Created by", value: "Kevin & Beryl")
                     creditItem(title: "Chief Morale Officer", value: "Brock 🐕")
-                    creditItem(title: "Weather Data", value: "NOAA, SNOTEL, Open-Meteo")
+                    creditItem(title: "Weather Data", value: " Weather, NOAA, SNOTEL")
                     creditItem(title: "Avalanche Data", value: "NWAC, Avalanche.org")
                     creditItem(title: "Icons", value: "SF Symbols")
                 }
@@ -565,6 +596,19 @@ struct AboutView: View {
                 sectionHeader("Legal")
 
                 VStack(spacing: 0) {
+                    linkRow(
+                        icon: "cloud.sun.fill",
+                        iconColor: .blue,
+                        title: " Weather Attribution",
+                        subtitle: "Data Sources & Legal"
+                    ) {
+                        if let url = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+
+                    Divider().padding(.leading, 44)
+
                     linkRow(
                         icon: "doc.text.fill",
                         iconColor: .gray,

@@ -10,7 +10,12 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const API_SLOW_THRESHOLD_MS = 2000;
+
 export async function middleware(request: NextRequest) {
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
+  const apiStart = isApiRoute ? Date.now() : 0;
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -61,6 +66,15 @@ export async function middleware(request: NextRequest) {
     const redirectUrl = new URL('/auth/login', request.url);
     redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
+  }
+
+  // Log API response times
+  if (isApiRoute) {
+    const duration = Date.now() - apiStart;
+    response.headers.set('Server-Timing', `middleware;dur=${duration}`);
+    if (duration > API_SLOW_THRESHOLD_MS) {
+      console.warn(`[Slow API] ${request.method} ${request.nextUrl.pathname} ${duration}ms`);
+    }
   }
 
   return response;

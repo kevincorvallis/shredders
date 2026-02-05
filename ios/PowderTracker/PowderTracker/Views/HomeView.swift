@@ -3,7 +3,7 @@ import SwiftUI
 /// Enhanced Homepage with time-based tabs and smart alerts
 struct HomeView: View {
     @State private var viewModel = HomeViewModel()
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @ObservedObject private var favoritesManager = FavoritesService.shared
     @StateObject private var scrollSync = TimelineScrollSync()
     @State private var selectedTab: HomeTab = .forecast
     @State private var showingManageFavorites = false
@@ -20,12 +20,27 @@ struct HomeView: View {
                     weatherAlerts: viewModel.getActiveAlerts()
                 )
 
+                // Last updated indicator
+                if let lastRefresh = viewModel.lastRefreshDate, !viewModel.isLoading {
+                    HStack {
+                        LastUpdatedPill(date: lastRefresh, source: nil, showIcon: true)
+                        Spacer()
+                    }
+                    .padding(.horizontal, .spacingL)
+                    .padding(.vertical, .spacingXS)
+                    .background(Color(.systemBackground))
+                }
+
                 // Tab Content with floating Leave Now banner
                 FloatingLeaveNowContainer(
                     leaveNowMountain: viewModel.getLeaveNowMountains().first
                 ) {
                     ScrollView {
-                        tabContent
+                        if viewModel.isLoading && viewModel.mountainData.isEmpty {
+                            loadingContent
+                        } else {
+                            tabContent
+                        }
                     }
                     .background(Color(.systemGroupedBackground))
                 }
@@ -66,6 +81,16 @@ struct HomeView: View {
         .padding(.horizontal, .spacingL)
         .padding(.vertical, .spacingS)
         .background(Color(.systemBackground))
+    }
+
+    private var loadingContent: some View {
+        VStack(spacing: .spacingM) {
+            ForEach(0..<3, id: \.self) { _ in
+                SkeletonMountainCard()
+            }
+        }
+        .padding(.horizontal, .spacingL)
+        .padding(.top, .spacingS)
     }
 
     @ViewBuilder

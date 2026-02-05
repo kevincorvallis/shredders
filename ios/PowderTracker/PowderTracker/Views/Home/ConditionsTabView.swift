@@ -3,7 +3,7 @@ import SwiftUI
 /// Real-time conditions tab showing live status and weather alerts
 struct ConditionsTabView: View {
     var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @ObservedObject private var favoritesManager = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: .spacingM) {
@@ -67,23 +67,36 @@ struct ConditionsTabView: View {
     // MARK: - Empty States
 
     private var emptyState: some View {
-        TabEmptyStateView(
-            icon: "star.slash",
+        BrockEmptyState(
             title: "No Favorites Yet",
-            message: "Add mountains to see live status updates"
+            message: "Brock wants to show you live conditions! Add some mountains to track.",
+            expression: .curious,
+            actionTitle: nil,
+            action: nil
         )
     }
 
     private var noAlertsState: some View {
         VStack(spacing: .spacingM) {
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: 50))
-                .foregroundStyle(.green)
+            // Happy Brock with checkmark
+            ZStack {
+                Circle()
+                    .fill(Color.brockGold.opacity(0.2))
+                    .frame(width: 80, height: 80)
 
-            Text("No Active Alerts")
+                Text("🐕")
+                    .font(.system(size: 40))
+
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(.green)
+                    .offset(x: 25, y: -20)
+            }
+
+            Text("All Clear!")
                 .font(.headline)
 
-            Text("All clear - no weather warnings for your favorites")
+            Text("Brock says no weather alerts for your favorites. Enjoy the slopes!")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

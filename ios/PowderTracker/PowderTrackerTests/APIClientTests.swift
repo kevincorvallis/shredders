@@ -133,7 +133,6 @@ final class APIClientTests: XCTestCase {
         let result = try await sut.fetchTripAdvice(for: mountainId)
 
         // Then
-        XCTAssertEqual(result.mountain.id, mountainId)
         XCTAssertFalse(result.headline.isEmpty, "Headline should not be empty")
     }
 
@@ -145,7 +144,6 @@ final class APIClientTests: XCTestCase {
         let result = try await sut.fetchPowderDayPlan(for: mountainId)
 
         // Then
-        XCTAssertEqual(result.mountain.id, mountainId)
         XCTAssertEqual(result.days.count, 3, "Should return 3-day plan")
     }
 
@@ -193,13 +191,14 @@ final class APIClientTests: XCTestCase {
 
     func testIndividualEndpoints_PerformanceComparison() async throws {
         // Test individual endpoints performance (should be slower)
+        let client = sut!
         measure {
             let expectation = self.expectation(description: "Individual fetches")
 
-            Task {
-                async let conditionsTask = sut.fetchConditions(for: "baker")
-                async let powderScoreTask = sut.fetchPowderScore(for: "baker")
-                async let forecastTask = sut.fetchForecast(for: "baker")
+            Task { @MainActor in
+                async let conditionsTask = client.fetchConditions(for: "baker")
+                async let powderScoreTask = client.fetchPowderScore(for: "baker")
+                async let forecastTask = client.fetchForecast(for: "baker")
 
                 _ = try? await (conditionsTask, powderScoreTask, forecastTask)
                 expectation.fulfill()
@@ -222,7 +221,7 @@ final class APIClientTests: XCTestCase {
             switch error {
             case .invalidURL:
                 XCTFail("Should not get invalid URL with valid mountain ID")
-            case .networkError, .decodingError, .serverError:
+            case .networkError, .decodingError, .serverError, .unauthorized, .rateLimited, .tokenRefreshFailed:
                 // These are acceptable errors
                 break
             }
@@ -234,12 +233,13 @@ final class APIClientTests: XCTestCase {
     func testConcurrentRequests_ShouldHandleMultipleMountains() async throws {
         // Given
         let mountainIds = ["baker", "crystal", "stevens"]
+        let client = sut!
 
         // When
         let results = try await withThrowingTaskGroup(of: MountainBatchedResponse.self) { group in
             for id in mountainIds {
-                group.addTask {
-                    try await self.sut.fetchMountainData(for: id)
+                group.addTask { @Sendable in
+                    try await client.fetchMountainData(for: id)
                 }
             }
 

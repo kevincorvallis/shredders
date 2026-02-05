@@ -46,127 +46,150 @@ struct SnowForecastChart: View {
     // Chart drawing animation state
     @State private var chartDrawingProgress: CGFloat = 0
 
-    // Computed properties for powder day analysis
-    private var powderDays: [(date: Date, maxSnowfall: Int)] {
-        var dayMap: [Date: Int] = [:]
-        let calendar = Calendar.current
+    // MARK: - Cached Forecast Metrics (single-pass computation)
 
-        for favorite in visibleFavorites {
-            let forecastDays = Array(favorite.forecast.prefix(selectedRange.days))
-            for (index, day) in forecastDays.enumerated() {
-                let chartDate = parseDate(day.date) ?? calendar.date(byAdding: .day, value: index, to: Date())!
-                let normalizedDate = calendar.startOfDay(for: chartDate)
-                if day.snowfall >= powderDayThreshold {
-                    dayMap[normalizedDate] = max(dayMap[normalizedDate] ?? 0, day.snowfall)
-                }
-            }
-        }
-        return dayMap.map { ($0.key, $0.value) }.sorted { $0.date < $1.date }
-    }
+    /// All summary metrics computed in a single pass over the data.
+    /// Recomputed only when inputs change (via .onChange), not on every render.
+    @State private var cachedMetrics = ForecastMetrics()
 
-    private var bestPowderDay: Date? {
-        powderDays.max(by: { $0.maxSnowfall < $1.maxSnowfall })?.date
-    }
-
-    /// Snow effect intensity based on max snowfall (0.0 to 1.0)
-    private var snowEffectIntensity: Double {
-        guard let maxSnow = powderDays.max(by: { $0.maxSnowfall < $1.maxSnowfall })?.maxSnowfall else {
-            return 0.3
-        }
-        // Scale from 0.3 (6") to 0.8 (12"+)
-        let normalized = Double(min(maxSnow, 12) - powderDayThreshold) / Double(epicPowderThreshold - powderDayThreshold)
-        return 0.3 + (normalized * 0.5)
+    private struct ForecastMetrics {
+        var powderDays: [(date: Date, maxSnowfall: Int)] = []
+        var bestPowderDay: Date? = nil
+        var snowEffectIntensity: Double = 0.3
+        var totalSnowfall: Int = 0
+        var next3DaysSnowfall: Int = 0
+        var days4to7Snowfall: Int = 0
+        var bestDayInfo: (date: Date, snowfall: Int, mountainName: String, mountainShortName: String)? = nil
+        var winningMountainId: String? = nil
+        var winningMountainName: String? = nil
+        var winningMountainShortName: String? = nil
+        var winningMountainTotal: Int = 0
     }
 
     private var visibleFavorites: [(mountain: Mountain, forecast: [ForecastDay])] {
         favorites.filter { !hiddenMountains.contains($0.mountain.id) }
     }
 
-    // MARK: - Computed Summary Metrics
-
-    /// Total snowfall across all visible mountains for selected range
-    private var totalSnowfall: Int {
-        visibleFavorites.map { favorite in
-            Array(favorite.forecast.prefix(selectedRange.days))
-                .map { $0.snowfall }
-                .reduce(0, +)
-        }.max() ?? 0
+    // Convenience accessors that read from the cache
+    private var powderDays: [(date: Date, maxSnowfall: Int)] { cachedMetrics.powderDays }
+    private var bestPowderDay: Date? { cachedMetrics.bestPowderDay }
+    private var snowEffectIntensity: Double { cachedMetrics.snowEffectIntensity }
+    private var totalSnowfall: Int { cachedMetrics.totalSnowfall }
+    private var next3DaysSnowfall: Int { cachedMetrics.next3DaysSnowfall }
+    private var days4to7Snowfall: Int { cachedMetrics.days4to7Snowfall }
+    private var bestDayInfo: (date: Date, snowfall: Int, mountainName: String, mountainShortName: String)? { cachedMetrics.bestDayInfo }
+    private var winningMountain: (id: String, shortName: String, total: Int)? {
+        guard let id = cachedMetrics.winningMountainId,
+              let name = cachedMetrics.winningMountainShortName else { return nil }
+        return (id, name, cachedMetrics.winningMountainTotal)
     }
 
-    /// Total snowfall for next 3 days
-    private var next3DaysSnowfall: Int {
-        visibleFavorites.map { favorite in
-            Array(favorite.forecast.prefix(min(3, selectedRange.days)))
-                .map { $0.snowfall }
-                .reduce(0, +)
-        }.max() ?? 0
-    }
+    /// Recompute all metrics in a single pass
+    private func recomputeMetrics() -> ForecastMetrics {
+        var metrics = ForecastMetrics()
+        let visible = visibleFavorites
+        let calendar = Calendar.current
+        let days = selectedRange.days
 
-    /// Total snowfall for days 4-7
-    private var days4to7Snowfall: Int {
-        guard selectedRange.days >= 7 else { return 0 }
-        return visibleFavorites.map { favorite in
-            let allDays = Array(favorite.forecast.prefix(selectedRange.days))
-            let laterDays = allDays.dropFirst(3).prefix(4)
-            return laterDays.map { $0.snowfall }.reduce(0, +)
-        }.max() ?? 0
-    }
+        var powderDayMap: [Date: Int] = [:]
+        var maxTotalSnowfall = 0
+        var maxNext3Days = 0
+        var maxDays4to7 = 0
+        var bestDay: (date: Date, snowfall: Int, mountainName: String, mountainShortName: String)?
+        var winnerId: String?
+        var winnerName: String?
+        var winnerShortName: String?
+        var winnerTotal = 0
 
-    /// Best single day with mountain name
-    private var bestDayInfo: (date: Date, snowfall: Int, mountain: Mountain)? {
-        var bestDay: (date: Date, snowfall: Int, mountain: Mountain)?
+        for favorite in visible {
+            let forecastDays = Array(favorite.forecast.prefix(days))
+            var totalForMountain = 0
+            var first3Total = 0
+            var days4to7Total = 0
 
-        for favorite in visibleFavorites {
-            let forecastDays = Array(favorite.forecast.prefix(selectedRange.days))
             for (index, day) in forecastDays.enumerated() {
-                if day.snowfall > (bestDay?.snowfall ?? 0) {
-                    let chartDate = parseDate(day.date) ?? Calendar.current.date(byAdding: .day, value: index, to: Date())!
-                    bestDay = (chartDate, day.snowfall, favorite.mountain)
+                let chartDate = parseDate(day.date) ?? calendar.date(byAdding: .day, value: index, to: Date())!
+                let normalizedDate = calendar.startOfDay(for: chartDate)
+
+                totalForMountain += day.snowfall
+
+                if index < 3 {
+                    first3Total += day.snowfall
+                } else if index < 7 {
+                    days4to7Total += day.snowfall
                 }
+
+                if day.snowfall >= powderDayThreshold {
+                    powderDayMap[normalizedDate] = max(powderDayMap[normalizedDate] ?? 0, day.snowfall)
+                }
+
+                if day.snowfall > (bestDay?.snowfall ?? 0) {
+                    bestDay = (chartDate, day.snowfall, favorite.mountain.name, favorite.mountain.shortName)
+                }
+            }
+
+            maxTotalSnowfall = max(maxTotalSnowfall, totalForMountain)
+            maxNext3Days = max(maxNext3Days, first3Total)
+            if days >= 7 {
+                maxDays4to7 = max(maxDays4to7, days4to7Total)
+            }
+
+            if totalForMountain > winnerTotal {
+                winnerTotal = totalForMountain
+                winnerId = favorite.mountain.id
+                winnerName = favorite.mountain.name
+                winnerShortName = favorite.mountain.shortName
             }
         }
 
-        return bestDay
-    }
+        let sortedPowderDays = powderDayMap.map { ($0.key, $0.value) }.sorted { $0.0 < $1.0 }
 
-    /// Mountain with most total snow in range
-    private var winningMountain: (mountain: Mountain, total: Int)? {
-        let mountainTotals = visibleFavorites.map { favorite -> (Mountain, Int) in
-            let total = Array(favorite.forecast.prefix(selectedRange.days))
-                .map { $0.snowfall }
-                .reduce(0, +)
-            return (favorite.mountain, total)
+        metrics.powderDays = sortedPowderDays
+        metrics.bestPowderDay = sortedPowderDays.max(by: { $0.1 < $1.1 })?.0
+        metrics.totalSnowfall = maxTotalSnowfall
+        metrics.next3DaysSnowfall = maxNext3Days
+        metrics.days4to7Snowfall = maxDays4to7
+        metrics.bestDayInfo = bestDay
+        metrics.winningMountainId = winnerId
+        metrics.winningMountainName = winnerName
+        metrics.winningMountainShortName = winnerShortName
+        metrics.winningMountainTotal = winnerTotal
+
+        // Snow effect intensity
+        if let maxSnow = sortedPowderDays.max(by: { $0.1 < $1.1 })?.1 {
+            let normalized = Double(min(maxSnow, 12) - powderDayThreshold) / Double(epicPowderThreshold - powderDayThreshold)
+            metrics.snowEffectIntensity = 0.3 + (max(0, normalized) * 0.5)
         }
 
-        return mountainTotals.max(by: { $0.1 < $1.1 })
+        return metrics
     }
 
     /// Accessibility label summarizing chart data for VoiceOver
     private var chartAccessibilityLabel: String {
         let rangeText = selectedRange == .threeDays ? "3-day" : selectedRange == .sevenDays ? "7-day" : "15-day"
         let mountainNames = visibleFavorites.map { $0.mountain.shortName }.joined(separator: ", ")
-        let powderDayCount = powderDays.count
+        let m = cachedMetrics
 
         var label = "\(rangeText) snow forecast for \(mountainNames)."
 
-        if totalSnowfall > 0 {
-            label += " Total expected: \(totalSnowfall) inches."
+        if m.totalSnowfall > 0 {
+            label += " Total expected: \(m.totalSnowfall) inches."
         }
 
-        if let winner = winningMountain, winner.total > 0 {
-            label += " \(winner.mountain.shortName) leading with \(winner.total) inches."
+        if let shortName = m.winningMountainShortName, m.winningMountainTotal > 0 {
+            label += " \(shortName) leading with \(m.winningMountainTotal) inches."
         }
 
-        if powderDayCount > 0 {
-            label += " \(powderDayCount) powder day\(powderDayCount == 1 ? "" : "s") expected."
+        if m.powderDays.count > 0 {
+            label += " \(m.powderDays.count) powder day\(m.powderDays.count == 1 ? "" : "s") expected."
         }
 
-        if let best = bestDayInfo {
-            label += " Best day is \(formatShortDate(best.date)) with \(best.snowfall) inches at \(best.mountain.shortName)."
+        if let best = m.bestDayInfo {
+            label += " Best day is \(formatShortDate(best.date)) with \(best.snowfall) inches at \(best.mountainShortName)."
         }
 
         if selectedRange == .sevenDays {
-            label += " Next 3 days: \(next3DaysSnowfall) inches. Days 4-7: \(days4to7Snowfall) inches."
+            label += " Next 3 days: \(m.next3DaysSnowfall) inches. Days 4-7: \(m.days4to7Snowfall) inches."
         }
 
         return label
@@ -248,6 +271,9 @@ struct SnowForecastChart: View {
         .animation(.easeInOut(duration: 0.3), value: isLoading)
         .animation(.easeInOut(duration: 0.3), value: error != nil)
         .onAppear {
+            // Compute initial metrics
+            cachedMetrics = recomputeMetrics()
+
             // Animate chart lines drawing in
             if chartDrawingProgress == 0 {
                 withAnimation(.easeOut(duration: 0.8).delay(0.2)) {
@@ -263,6 +289,9 @@ struct SnowForecastChart: View {
                     }
                 }
             }
+        }
+        .onChange(of: hiddenMountains) { _, _ in
+            cachedMetrics = recomputeMetrics()
         }
         .sheet(isPresented: $showingHourlySheet) {
             if let selected = selectedDataPoint {
@@ -290,6 +319,8 @@ struct SnowForecastChart: View {
                 hiddenMountains.removeAll()
                 selectedDate = nil
             }
+            // Recompute after hiddenMountains is cleared
+            cachedMetrics = recomputeMetrics()
             withAnimation(.easeOut(duration: 0.6).delay(0.1)) {
                 chartDrawingProgress = 1
             }
@@ -558,7 +589,7 @@ struct SnowForecastChart: View {
                         .font(.caption2)
                         .foregroundStyle(.orange)
 
-                    Text(winner.mountain.shortName)
+                    Text(winner.shortName)
                         .font(.caption.bold())
                         .foregroundColor(.primary)
 
@@ -616,7 +647,7 @@ struct SnowForecastChart: View {
             return AnyView(EmptyView())
         }
 
-        let forecast = favorites.first(where: { $0.mountain.id == bestMountain.mountain.id })?.forecast ?? []
+        let forecast = favorites.first(where: { $0.mountain.id == bestMountain.id })?.forecast ?? []
         let daysToShow = Array(forecast.prefix(selectedRange.days))
         let maxSnow = daysToShow.map { $0.snowfall }.max() ?? 1
 
@@ -624,7 +655,7 @@ struct SnowForecastChart: View {
             VStack(alignment: .leading, spacing: 4) {
                 // Label
                 HStack {
-                    Text("\(bestMountain.mountain.shortName) Daily")
+                    Text("\(bestMountain.shortName) Daily")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.secondary)
                     Spacer()

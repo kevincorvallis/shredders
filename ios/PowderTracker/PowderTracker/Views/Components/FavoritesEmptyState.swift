@@ -2,7 +2,7 @@
 //  FavoritesEmptyState.swift
 //  PowderTracker
 //
-//  Modern empty state for favorites with illustrated design.
+//  Brock-themed empty state for favorites.
 //
 
 import SwiftUI
@@ -11,17 +11,13 @@ struct FavoritesEmptyState: View {
     let onAddTapped: () -> Void
 
     var body: some View {
-        ModernEmptyStateView(
-            style: .noFavorites,
+        BrockEmptyState(
             title: "No Favorite Mountains Yet",
-            message: "Track your favorite resorts to quickly compare conditions and snowfall forecasts."
-        ) {
-            ModernEmptyStateButton(
-                title: "Add Mountains",
-                icon: "plus.circle.fill",
-                action: onAddTapped
-            )
-        }
+            message: "Brock wants to help you track your favorite resorts! Add some mountains to compare conditions.",
+            expression: .curious,
+            actionTitle: "Sniff Out Mountains",
+            action: onAddTapped
+        )
     }
 }
 

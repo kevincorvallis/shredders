@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getAuthUser } from './middleware';
+import { getAuthUserAsync } from './middleware';
 import { extractTokenFromHeader } from './jwt';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -69,7 +69,7 @@ export async function getDualAuthUser(
   req: NextRequest
 ): Promise<AuthenticatedUser | null> {
   // Try custom JWT first (for email/password login via backend)
-  const jwtUser = getAuthUser(req);
+  const jwtUser = await getAuthUserAsync(req);
 
   if (jwtUser) {
     // OPTIMIZATION: Check cache first for profile lookup

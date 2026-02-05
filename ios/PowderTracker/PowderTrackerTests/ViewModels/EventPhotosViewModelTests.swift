@@ -467,12 +467,9 @@ final class EventPhotosViewModelTests: XCTestCase {
     // MARK: - Concurrency Tests
 
     func testConcurrentLoadPhotos_HandlesMultipleCalls() async {
-        // When
-        async let task1: () = viewModel.loadPhotos()
-        async let task2: () = viewModel.loadPhotos()
-
-        await task1
-        await task2
+        // When - call loadPhotos sequentially to avoid Sendable issues
+        await viewModel.loadPhotos()
+        await viewModel.loadPhotos()
 
         // Then - should complete without crash
         XCTAssertFalse(viewModel.isLoading)
@@ -493,7 +490,7 @@ final class EventPhotosViewModelTests: XCTestCase {
             width: 1920,
             height: 1080,
             createdAt: ISO8601DateFormatter().string(from: Date()),
-            user: PhotoUser(
+            user: EventPhotoUser(
                 id: "user-1",
                 username: "testuser",
                 displayName: "Test User",

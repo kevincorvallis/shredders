@@ -139,7 +139,8 @@ final class EventServiceTests: XCTestCase {
             departureLocation: "Capitol Hill, Seattle",
             skillLevel: "intermediate",
             carpoolAvailable: true,
-            carpoolSeats: 4
+            carpoolSeats: 4,
+            maxAttendees: nil
         )
 
         // When
@@ -170,7 +171,8 @@ final class EventServiceTests: XCTestCase {
             departureLocation: nil,
             skillLevel: nil,
             carpoolAvailable: nil,
-            carpoolSeats: nil
+            carpoolSeats: nil,
+            maxAttendees: nil
         )
 
         // When

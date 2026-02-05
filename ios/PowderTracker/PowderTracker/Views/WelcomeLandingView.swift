@@ -37,33 +37,29 @@ struct WelcomeLandingView: View {
 
                     // Hero section
                     heroSection
-                        .opacity(animateContent ? 1 : 0)
-                        .offset(y: animateContent ? 0 : 20)
 
                     Spacer()
 
                     // Value propositions
                     valuePropositions
-                        .opacity(animateContent ? 1 : 0)
-                        .offset(y: animateContent ? 0 : 30)
 
                     Spacer()
 
                     // CTAs
                     ctaSection
-                        .opacity(animateContent ? 1 : 0)
-                        .offset(y: animateContent ? 0 : 40)
 
                     Spacer()
                         .frame(height: geometry.safeAreaInsets.bottom + 40)
                 }
                 .padding(.horizontal, .spacingXL)
+                .opacity(animateContent ? 1 : 0)
+                .offset(y: animateContent ? 0 : 24)
             }
         }
         .ignoresSafeArea()
         .onAppear {
             generateSnowflakes()
-            withAnimation(.easeOut(duration: 0.6).delay(0.2)) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                 animateContent = true
             }
         }
@@ -166,7 +162,7 @@ struct WelcomeLandingView: View {
                 RoundedRectangle(cornerRadius: 44, style: .continuous)
                     .fill(LinearGradient.pookieBSnow)
                     .frame(width: 180, height: 180)
-                    .shadow(color: .pookiePurple.opacity(0.5), radius: 30, y: 16)
+                    .shadow(color: .black.opacity(0.3), radius: 30, y: 16)
 
                 // Snowflake icon
                 Image(systemName: "snowflake")
@@ -237,7 +233,7 @@ struct WelcomeLandingView: View {
                 .padding(.vertical, .spacingM)
                 .background(LinearGradient.pookieBSnow)
                 .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusButton, style: .continuous))
-                .shadow(color: .pookiePurple.opacity(0.4), radius: 12, y: 6)
+                .shadow(color: .black.opacity(0.3), radius: 12, y: 6)
             }
             .accessibilityIdentifier("welcome_sign_in_button")
 

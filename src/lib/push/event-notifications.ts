@@ -190,7 +190,7 @@ export async function sendRSVPChangeNotification(options: {
   }
 
   let body: string;
-  if (options.newStatus === 'not_going') {
+  if (options.newStatus === 'declined') {
     body = `${options.attendeeName} can no longer make it`;
   } else if (options.newStatus === 'going' && options.oldStatus === 'maybe') {
     body = `${options.attendeeName} confirmed they're going!`;

@@ -146,7 +146,7 @@ final class TripPlanningViewModelTests: XCTestCase {
 
         // Then
         if let advice = sut.tripAdvice {
-            let validLevels: Set<String> = ["low", "medium", "high"]
+            let validLevels: Set<RiskLevel> = [.low, .medium, .high]
             XCTAssertTrue(validLevels.contains(advice.crowd))
             XCTAssertTrue(validLevels.contains(advice.trafficRisk))
             XCTAssertTrue(validLevels.contains(advice.roadRisk))

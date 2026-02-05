@@ -288,7 +288,7 @@ final class EventModelTests: XCTestCase {
 
     func testEventUser_DisplayNameOrUsername_WithDisplayName() {
         // Given
-        let user = EventUser(id: "1", username: "johndoe", displayName: "John Doe", avatarUrl: nil)
+        let user = EventUser(id: "1", username: "johndoe", displayName: "John Doe", avatarUrl: nil, ridingStyle: nil)
 
         // Then
         XCTAssertEqual(user.displayNameOrUsername, "John Doe")
@@ -296,7 +296,7 @@ final class EventModelTests: XCTestCase {
 
     func testEventUser_DisplayNameOrUsername_WithoutDisplayName() {
         // Given
-        let user = EventUser(id: "1", username: "johndoe", displayName: nil, avatarUrl: nil)
+        let user = EventUser(id: "1", username: "johndoe", displayName: nil, avatarUrl: nil, ridingStyle: nil)
 
         // Then
         XCTAssertEqual(user.displayNameOrUsername, "johndoe")
@@ -304,7 +304,7 @@ final class EventModelTests: XCTestCase {
 
     func testEventUser_Codable() throws {
         // Given
-        let user = EventUser(id: "123", username: "testuser", displayName: "Test User", avatarUrl: "https://example.com/avatar.jpg")
+        let user = EventUser(id: "123", username: "testuser", displayName: "Test User", avatarUrl: "https://example.com/avatar.jpg", ridingStyle: nil)
 
         // When
         let data = try JSONEncoder().encode(user)
@@ -525,7 +525,8 @@ final class EventModelTests: XCTestCase {
             departureLocation: "Seattle",
             skillLevel: "intermediate",
             carpoolAvailable: true,
-            carpoolSeats: 4
+            carpoolSeats: 4,
+            maxAttendees: nil
         )
 
         // When
@@ -695,13 +696,15 @@ final class EventModelTests: XCTestCase {
             skillLevel: .intermediate,
             carpoolAvailable: true,
             carpoolSeats: 4,
+            maxAttendees: nil,
             status: .active,
             createdAt: "2025-01-01T00:00:00Z",
             updatedAt: "2025-01-01T00:00:00Z",
             attendeeCount: goingCount + maybeCount,
             goingCount: goingCount,
             maybeCount: maybeCount,
-            creator: EventUser(id: "user-1", username: "testuser", displayName: "Test User", avatarUrl: nil),
+            waitlistCount: nil,
+            creator: EventUser(id: "user-1", username: "testuser", displayName: "Test User", avatarUrl: nil, ridingStyle: nil),
             userRSVPStatus: nil,
             isCreator: false
         )
@@ -726,13 +729,17 @@ final class EventModelTests: XCTestCase {
             skillLevel: .intermediate,
             carpoolAvailable: true,
             carpoolSeats: 4,
+            maxAttendees: nil,
             status: .active,
             createdAt: "2025-01-01T00:00:00Z",
             updatedAt: "2025-01-01T00:00:00Z",
             attendeeCount: 5,
             goingCount: 3,
             maybeCount: 2,
-            creator: EventUser(id: "user-1", username: "testuser", displayName: "Test User", avatarUrl: nil),
+            waitlistCount: nil,
+            commentCount: nil,
+            photoCount: nil,
+            creator: EventUser(id: "user-1", username: "testuser", displayName: "Test User", avatarUrl: nil, ridingStyle: nil),
             userRSVPStatus: nil,
             isCreator: true,
             attendees: attendees,
@@ -756,7 +763,7 @@ final class EventModelTests: XCTestCase {
             pickupLocation: nil,
             waitlistPosition: nil,
             respondedAt: "2025-01-01T00:00:00Z",
-            user: EventUser(id: "user-1", username: "testuser", displayName: "Test User", avatarUrl: nil)
+            user: EventUser(id: "user-1", username: "testuser", displayName: "Test User", avatarUrl: nil, ridingStyle: nil)
         )
     }
 }

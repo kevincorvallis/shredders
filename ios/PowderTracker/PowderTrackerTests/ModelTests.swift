@@ -43,7 +43,8 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(mock.mountain.id, "baker")
         XCTAssertTrue(mock.score >= 0 && mock.score <= 10)
         XCTAssertFalse(mock.factors.isEmpty)
-        XCTAssertFalse(mock.verdict.isEmpty)
+        XCTAssertNotNil(mock.verdict)
+        XCTAssertFalse(mock.verdict?.isEmpty ?? true)
     }
 
     func testMountainPowderScore_Codable() throws {
@@ -138,16 +139,16 @@ final class ModelTests: XCTestCase {
             snowfall: 5,
             precipProbability: 80,
             precipType: "snow",
-            wind: ForecastDay.Wind(speed: 10, gust: 15),
+            wind: ForecastDay.ForecastWind(speed: 10, gust: 15),
             conditions: "Snow",
-            icon: "snow",
-            iconEmoji: "❄️"
+            icon: "snow"
         )
 
         // Then
         XCTAssertEqual(forecast.dayOfWeek, "Mon")
         XCTAssertEqual(forecast.snowfall, 5)
         XCTAssertTrue(forecast.high >= forecast.low)
+        XCTAssertEqual(forecast.iconEmoji, "❄️")
     }
 
     // MARK: - APIError Tests
@@ -180,25 +181,43 @@ final class ModelTests: XCTestCase {
 
     // MARK: - Mountain Tests
 
-    func testMountain_SnotelConfiguration() {
+    func testMountain_MockData() {
         // Given
-        let mountain = Mountain(
-            id: "baker",
-            name: "Mt. Baker",
-            shortName: "Baker",
-            region: "washington",
-            color: "#3b82f6",
-            elevation: Mountain.Elevation(base: 3500, summit: 5089),
-            location: Mountain.Location(lat: 48.857, lng: -121.669),
-            website: "https://www.mtbaker.us",
-            snotel: Mountain.Snotel(stationId: "909", stationName: "Wells Creek"),
-            noaa: Mountain.NOAA(gridOffice: "SEW", gridX: 157, gridY: 123),
-            webcams: []
-        )
+        let mountain = Mountain.mock
 
         // Then
-        XCTAssertNotNil(mountain.snotel)
-        XCTAssertEqual(mountain.snotel?.stationName, "Wells Creek")
+        XCTAssertEqual(mountain.id, "baker")
+        XCTAssertEqual(mountain.name, "Mt. Baker")
+        XCTAssertEqual(mountain.shortName, "Baker")
+        XCTAssertEqual(mountain.region, "washington")
+        XCTAssertTrue(mountain.hasSnotel)
+        XCTAssertEqual(mountain.webcamCount, 3)
+        XCTAssertNotNil(mountain.logo)
+        XCTAssertNotNil(mountain.status)
+        XCTAssertEqual(mountain.passType, .independent)
+        XCTAssertEqual(mountain.elevation.base, 3500)
+        XCTAssertEqual(mountain.elevation.summit, 5089)
+        XCTAssertEqual(mountain.elevation.verticalDrop, 1589)
+    }
+
+    func testMountain_Hashable() {
+        // Given
+        let mountain1 = Mountain.mock
+        let mountain2 = Mountain.mock
+
+        // Then
+        XCTAssertEqual(mountain1, mountain2)
+        XCTAssertEqual(mountain1.hashValue, mountain2.hashValue)
+    }
+
+    func testMountain_MockList() {
+        // Given
+        let mountains = Mountain.mockMountains
+
+        // Then
+        XCTAssertEqual(mountains.count, 3)
+        XCTAssertTrue(mountains.allSatisfy { !$0.name.isEmpty })
+        XCTAssertTrue(mountains.allSatisfy { !$0.id.isEmpty })
     }
 
     // MARK: - HistoryDataPoint Tests
@@ -208,8 +227,7 @@ final class ModelTests: XCTestCase {
         let dataPoint = HistoryDataPoint(
             date: "2025-01-01",
             snowDepth: 100,
-            snowWaterEquivalent: 40.0,
-            newSnow: 5,
+            snowfall: 5,
             temperature: 28
         )
 
@@ -218,20 +236,29 @@ final class ModelTests: XCTestCase {
         XCTAssertTrue(dataPoint.snowDepth >= 0)
     }
 
-    // MARK: - PowderDayPlanResponse Tests
+    func testHistoryDataPoint_MockHistory() {
+        // Given/When
+        let history = HistoryDataPoint.mockHistory(days: 7)
 
-    func testPowderDayPlan_ThreeDayStructure() {
+        // Then
+        XCTAssertEqual(history.count, 7)
+        XCTAssertTrue(history.allSatisfy { $0.snowDepth >= 0 })
+    }
+
+    // MARK: - PowderDay Tests
+
+    func testPowderDay_Structure() {
         // Given
-        let day = PowderDayPlanDay(
+        let day = PowderDay(
             date: "2025-01-01",
             dayOfWeek: "Mon",
             predictedPowderScore: 7,
-            confidence: 85,
-            verdict: "send",
+            confidence: 0.85,
+            verdict: .send,
             bestWindow: "Morning",
-            crowdRisk: "medium",
+            crowdRisk: .medium,
             travelNotes: ["Good conditions"],
-            forecastSnapshot: PowderDayPlanDay.ForecastSnapshot(
+            forecastSnapshot: ForecastSnapshot(
                 snowfall: 8,
                 high: 32,
                 low: 25,
@@ -244,30 +271,45 @@ final class ModelTests: XCTestCase {
 
         // Then
         XCTAssertEqual(day.predictedPowderScore, 7)
-        XCTAssertTrue(day.confidence > 0 && day.confidence <= 100)
-        XCTAssertTrue(["send", "maybe", "wait"].contains(day.verdict))
+        XCTAssertTrue(day.confidence > 0 && day.confidence <= 1.0)
+        XCTAssertEqual(day.verdict, .send)
+        XCTAssertEqual(day.id, "2025-01-01")
+    }
+
+    func testPowderVerdict_DisplayValues() {
+        XCTAssertEqual(PowderVerdict.send.displayName, "SEND")
+        XCTAssertEqual(PowderVerdict.maybe.displayName, "MAYBE")
+        XCTAssertEqual(PowderVerdict.wait.displayName, "WAIT")
+        XCTAssertEqual(PowderVerdict.send.emoji, "🚀")
     }
 
     // MARK: - TripAdviceResponse Tests
 
     func testTripAdvice_RiskLevels() {
         // Given
-        let validLevels: Set<String> = ["low", "medium", "high"]
         let advice = TripAdviceResponse(
-            mountain: MountainInfo(id: "baker", name: "Mt. Baker", shortName: "Baker"),
             generated: "2025-01-01T00:00:00Z",
-            crowd: "medium",
-            trafficRisk: "low",
-            roadRisk: "medium",
+            crowd: .medium,
+            trafficRisk: .low,
+            roadRisk: .medium,
             headline: "Test headline",
             notes: ["Note 1"],
             suggestedDepartures: []
         )
 
         // Then
-        XCTAssertTrue(validLevels.contains(advice.crowd))
-        XCTAssertTrue(validLevels.contains(advice.trafficRisk))
-        XCTAssertTrue(validLevels.contains(advice.roadRisk))
+        XCTAssertEqual(advice.crowd, .medium)
+        XCTAssertEqual(advice.trafficRisk, .low)
+        XCTAssertEqual(advice.roadRisk, .medium)
+    }
+
+    func testRiskLevel_Properties() {
+        XCTAssertEqual(RiskLevel.low.displayName, "Low")
+        XCTAssertEqual(RiskLevel.medium.displayName, "Medium")
+        XCTAssertEqual(RiskLevel.high.displayName, "High")
+        XCTAssertEqual(RiskLevel.low.color, "green")
+        XCTAssertEqual(RiskLevel.medium.color, "amber")
+        XCTAssertEqual(RiskLevel.high.color, "red")
     }
 
     // MARK: - RoadsResponse Tests

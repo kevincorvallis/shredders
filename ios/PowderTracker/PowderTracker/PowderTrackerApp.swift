@@ -47,31 +47,30 @@ struct PowderTrackerApp: App {
                     deepLinkEventId: $deepLinkEventId,
                     deepLinkInviteToken: $deepLinkInviteToken
                 )
-                    .opacity(isLoadingInitialData ? 0.3 : 1)
+                    .opacity(isLoadingInitialData ? 0 : 1)
+                    .blur(radius: isLoadingInitialData ? 10 : 0)
                     .environment(authService)
 
                 if isLoadingInitialData {
                     BrockSkiingLoadingView()
-                        .transition(.opacity)
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
-            .animation(.smooth(duration: 0.5), value: isLoadingInitialData)
+            .animation(.smooth(duration: 0.4), value: isLoadingInitialData)
             .task {
                 await loadInitialData()
             }
             .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
                 // Detect logout: user was authenticated, now they're not
                 if wasAuthenticated && !isAuthenticated {
-                    // Small delay to let the sign-out complete cleanly
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation(.smooth(duration: 0.3)) {
                         showWelcomeLanding = true
                     }
                 }
 
                 // Check if user needs onboarding after authentication
                 if isAuthenticated && authService.needsOnboarding {
-                    // Small delay to let the UI settle
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    withAnimation(.smooth(duration: 0.3)) {
                         showOnboarding = true
                     }
                 }
@@ -109,6 +108,7 @@ struct PowderTrackerApp: App {
                         // When auth succeeds, this cover will auto-dismiss due to wasAuthenticated change
                     }
                 )
+                .environment(authService)
             }
             .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
                 // Auto-dismiss welcome landing when user signs back in
@@ -187,18 +187,25 @@ struct PowderTrackerApp: App {
     private func loadInitialData() async {
         // Start timing
         let startTime = Date()
+        let isAuthenticated = authService.isAuthenticated
 
-        // Fetch initial mountains data (this also warms the API connection)
-        _ = try? await APIClient.shared.fetchMountains()
-
-        // Sync favorites if authenticated
-        if authService.isAuthenticated {
-            await FavoritesService.shared.fetchFromBackend()
+        // Fetch initial data with a 10-second timeout
+        let dataTask = Task {
+            _ = try? await APIClient.shared.fetchMountains()
+            if isAuthenticated {
+                await FavoritesService.shared.fetchFromBackend()
+            }
         }
+        let timeoutTask = Task {
+            try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 seconds
+            dataTask.cancel()
+        }
+        await dataTask.value
+        timeoutTask.cancel()
 
-        // Ensure minimum display time for smooth UX (1.5 seconds)
+        // Ensure minimum display time for smooth UX (1.0 seconds)
         let elapsed = Date().timeIntervalSince(startTime)
-        let minimumDisplayTime: TimeInterval = 1.5
+        let minimumDisplayTime: TimeInterval = 1.0
         if elapsed < minimumDisplayTime {
             try? await Task.sleep(nanoseconds: UInt64((minimumDisplayTime - elapsed) * 1_000_000_000))
         }

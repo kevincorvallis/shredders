@@ -50,29 +50,26 @@ struct ConditionsView: View {
 
                 // Loading state
                 if viewModel.isLoading && viewModel.mountains.isEmpty {
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .scaleEffect(1.2)
-                        Text("Loading mountains...")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 60)
+                    BrockLoadingView(.randomBrockMessage)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
                 } else if sortedMountains.isEmpty {
-                    // Empty state
-                    VStack(spacing: 12) {
-                        Image(systemName: "mountain.2")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
-                        Text("No mountains found")
-                            .font(.headline)
-                        Text("Pull to refresh")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 60)
+                    // Empty state with Brock
+                    BrockEmptyState(
+                        title: "No Mountains Found",
+                        message: hasActiveFilters
+                            ? "Brock couldn't find any mountains matching your filters. Try adjusting them!"
+                            : "Brock is looking for mountains... Pull to refresh!",
+                        expression: hasActiveFilters ? .curious : .sleepy,
+                        actionTitle: hasActiveFilters ? "Clear Filters" : nil,
+                        action: hasActiveFilters ? {
+                            filterFreshPowder = false
+                            filterOpenOnly = false
+                            filterFavoritesOnly = false
+                            filterNearby = false
+                        } : nil
+                    )
+                    .padding(.top, 20)
                 } else {
                     // Conditions cards
                     ForEach(sortedMountains) { mountain in

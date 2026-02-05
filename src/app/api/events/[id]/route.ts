@@ -109,8 +109,9 @@ export async function GET(
         .order('responded_at', { ascending: true }),
 
       // 2. Get user's RSVP status (if authenticated)
+      // NOTE: Use adminClient to bypass RLS - regular client may not see user's own RSVP
       userProfileId
-        ? supabase
+        ? createAdminClient()
             .from('event_attendees')
             .select('status')
             .eq('event_id', id)

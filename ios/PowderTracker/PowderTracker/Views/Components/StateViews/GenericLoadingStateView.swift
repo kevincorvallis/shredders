@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Loading state with spinner and optional skeleton placeholder
+/// Loading state with Brock the golden doodle
 struct LoadingStateView: View {
     let message: String
     var showSkeleton: Bool = true
@@ -9,15 +9,8 @@ struct LoadingStateView: View {
         VStack(spacing: .spacingL) {
             Spacer()
 
-            // Spinner
-            ProgressView()
-                .scaleEffect(1.5)
-                .progressViewStyle(CircularProgressViewStyle())
-
-            // Message
-            Text(message)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            // Brock loading animation
+            BrockLoadingView(message)
 
             // Skeleton placeholder
             if showSkeleton {

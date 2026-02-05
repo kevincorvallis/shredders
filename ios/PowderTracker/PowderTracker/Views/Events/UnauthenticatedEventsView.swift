@@ -343,7 +343,6 @@ struct SampleEventCard: View {
                     .transition(.opacity)
             }
         }
-        .frame(height: 180)
         .contentShape(Rectangle())
         .onTapGesture {
             HapticFeedback.light.trigger()
@@ -362,85 +361,82 @@ struct SampleEventCard: View {
     }
 
     private var cardContent: some View {
-        VStack(alignment: .leading, spacing: .spacingM) {
-            // Header
-            HStack(alignment: .top, spacing: .spacingS) {
-                VStack(alignment: .leading, spacing: .spacingXS) {
+        HStack(alignment: .top, spacing: .spacingM) {
+            // Date Badge
+            EventDateBadge(dateString: event.eventDate)
+
+            // Event Details
+            VStack(alignment: .leading, spacing: .spacingS) {
+                // Title row with skill badge
+                HStack(alignment: .top) {
                     Text(event.title)
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(EventCardStyle.primaryText)
+                        .lineLimit(2)
 
-                    HStack(spacing: .spacingS) {
-                        Label(event.mountainName, systemImage: "mountain.2")
-                            .font(.subheadline)
-                            .foregroundStyle(Color(hex: "0EA5E9") ?? .blue)
+                    Spacer(minLength: .spacingS)
 
+                    SkillLevelBadge(level: event.skillLevel, size: .compact)
+                }
+
+                // Mountain & Time
+                HStack(spacing: .spacingS) {
+                    Label(event.mountainName, systemImage: "mountain.2")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(EventCardStyle.mountainIconColor)
+
+                    if let time = event.formattedTime {
                         Text("•")
-                            .foregroundStyle(.white.opacity(0.3))
-
-                        Text(event.formattedDate)
+                            .foregroundStyle(EventCardStyle.tertiaryText)
+                        Label(time, systemImage: "clock")
                             .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(EventCardStyle.secondaryText)
                     }
                 }
 
-                Spacer()
-
-                SkillLevelBadge(level: event.skillLevel, size: .compact)
-            }
-
-            // Details
-            VStack(alignment: .leading, spacing: .spacingXS) {
-                if let time = event.formattedTime {
-                    Label("Departing \(time)", systemImage: "clock")
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.6))
-                }
-
+                // Departure location
                 if let location = event.departureLocation {
                     Label(location, systemImage: "mappin.and.ellipse")
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.6))
-                }
-            }
-
-            // Footer
-            HStack(spacing: .spacingL) {
-                Label("\(event.goingCount) going", systemImage: "person.2.fill")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.6))
-
-                if event.maybeCount > 0 {
-                    Text("+\(event.maybeCount) maybe")
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(EventCardStyle.secondaryText)
+                        .lineLimit(1)
                 }
 
-                if event.carpoolAvailable, let seats = event.carpoolSeats {
+                // Bottom row: Attendees & Carpool
+                HStack(spacing: .spacingM) {
+                    HStack(spacing: .spacingXS) {
+                        Label("\(event.goingCount) going", systemImage: "person.2.fill")
+                            .font(.caption)
+                            .foregroundStyle(EventCardStyle.secondaryText)
+
+                        if event.maybeCount > 0 {
+                            Text("+\(event.maybeCount) maybe")
+                                .font(.caption)
+                                .foregroundStyle(EventCardStyle.tertiaryText)
+                        }
+                    }
+
+                    if event.carpoolAvailable, let seats = event.carpoolSeats {
+                        CarpoolBadge(seats: seats, size: .compact)
+                    }
+
                     Spacer()
-                    CarpoolBadge(seats: seats, size: .compact)
                 }
             }
         }
-        .padding(.spacingL)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill((Color(hex: "1E293B") ?? .gray).opacity(0.7))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke((Color(hex: "334155") ?? .gray).opacity(0.5), lineWidth: 1)
-        )
+        .eventCardBackground()
     }
 
     private var signInOverlay: some View {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: EventCardStyle.cornerRadius)
             .fill((Color(hex: "0F172A") ?? .black).opacity(0.9))
             .overlay(
                 VStack(spacing: .spacingS) {
                     Image(systemName: "lock.fill")
                         .font(.title2)
-                        .foregroundStyle(Color(hex: "0EA5E9") ?? .blue)
+                        .foregroundStyle(EventCardStyle.mountainIconColor)
 
                     Text("Sign in to view & join")
                         .font(.subheadline)

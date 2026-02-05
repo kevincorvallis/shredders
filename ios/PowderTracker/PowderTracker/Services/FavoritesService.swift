@@ -8,6 +8,7 @@ class FavoritesService: ObservableObject {
     private let maxFavorites = 5
     private let storageKey = "favoriteMountainIds"
     private var isSyncing = false
+    private var syncTask: Task<Void, Never>?
 
     // Default favorites for first-time users
     static let defaultFavorites = ["baker", "crystal", "stevens"]
@@ -47,14 +48,24 @@ class FavoritesService: ObservableObject {
 
         favoriteIds.append(mountainId)
         saveFavorites()
-        Task { await syncToBackend() }
+        debouncedSync()
         return true
     }
 
     func remove(_ mountainId: String) {
         favoriteIds.removeAll { $0 == mountainId }
         saveFavorites()
-        Task { await syncToBackend() }
+        debouncedSync()
+    }
+
+    /// Debounce backend sync to batch rapid toggling into a single request
+    private func debouncedSync() {
+        syncTask?.cancel()
+        syncTask = Task {
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s debounce
+            guard !Task.isCancelled else { return }
+            await syncToBackend()
+        }
     }
 
     func reorder(from source: IndexSet, to destination: Int) {

@@ -1,35 +1,36 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { sendPushNotification, sendWeatherAlert, sendPowderAlert } from '../apns';
 import http2 from 'http2';
 import jwt from 'jsonwebtoken';
 
 // Mock dependencies
 vi.mock('http2');
-vi.mock('fs', () => ({
-  default: {
-    readFileSync: vi.fn().mockReturnValue('mock_private_key_content'),
-  },
-  readFileSync: vi.fn().mockReturnValue('mock_private_key_content'),
-}));
 vi.mock('jsonwebtoken');
+
+// We need to reset modules to clear the cached private key between tests
+let sendPushNotification: any;
+let sendWeatherAlert: any;
+let sendPowderAlert: any;
+
+const MOCK_PEM_KEY = '-----BEGIN PRIVATE KEY-----\nMOCK_KEY_CONTENT\n-----END PRIVATE KEY-----';
 
 describe('APNs Service', () => {
   let mockClient: any;
   let mockRequest: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    vi.resetModules();
 
     // Mock environment variables
     process.env.APNS_KEY_ID = 'test_key_id';
     process.env.APNS_TEAM_ID = 'test_team_id';
-    process.env.APNS_KEY_PATH = '/path/to/key.p8';
+    process.env.APNS_KEY = MOCK_PEM_KEY;
     process.env.APNS_PRODUCTION = 'false';
     process.env.APNS_BUNDLE_ID = 'com.test.app';
 
     // Mock HTTP/2 client
     mockRequest = {
-      on: vi.fn((event, callback) => {
+      on: vi.fn((event: string, callback: any) => {
         if (event === 'response') {
           // Simulate successful response
           setTimeout(() => callback({ ':status': 200 }), 0);
@@ -49,12 +50,18 @@ describe('APNs Service', () => {
 
     // Mock JWT generation
     (jwt.sign as any).mockReturnValue('mock_jwt_token');
+
+    // Re-import after resetting modules to clear cached private key
+    const apns = await import('../apns');
+    sendPushNotification = apns.sendPushNotification;
+    sendWeatherAlert = apns.sendWeatherAlert;
+    sendPowderAlert = apns.sendPowderAlert;
   });
 
   afterEach(() => {
     delete process.env.APNS_KEY_ID;
     delete process.env.APNS_TEAM_ID;
-    delete process.env.APNS_KEY_PATH;
+    delete process.env.APNS_KEY;
     delete process.env.APNS_PRODUCTION;
     delete process.env.APNS_BUNDLE_ID;
   });
@@ -88,7 +95,7 @@ describe('APNs Service', () => {
 
     it('should handle APNs error response', async () => {
       // Mock error response
-      mockRequest.on = vi.fn((event, callback) => {
+      mockRequest.on = vi.fn((event: string, callback: any) => {
         if (event === 'response') {
           setTimeout(() => callback({ ':status': 400 }), 0);
         } else if (event === 'data') {
@@ -149,7 +156,7 @@ describe('APNs Service', () => {
     });
 
     it('should handle request errors', async () => {
-      mockRequest.on = vi.fn((event, callback) => {
+      mockRequest.on = vi.fn((event: string, callback: any) => {
         if (event === 'error') {
           setTimeout(() => callback(new Error('Network error')), 0);
         }

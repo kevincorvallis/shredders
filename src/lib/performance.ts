@@ -111,3 +111,49 @@ export function logPerformanceStats() {
   console.log('[Performance Stats]', JSON.stringify(stats, null, 2));
   return stats;
 }
+
+// Server-side API route timing
+const SLOW_THRESHOLD_MS = 2000;
+
+/**
+ * Wrap a Next.js API route handler with response time logging.
+ * Adds Server-Timing header and logs slow responses (>2s).
+ *
+ * @example
+ * export const GET = withTiming('GET /api/events', async (req) => {
+ *   // ... handler logic
+ *   return NextResponse.json(data);
+ * });
+ */
+export function withTiming<T extends (...args: any[]) => Promise<Response>>(
+  routeName: string,
+  handler: T
+): T {
+  return (async (...args: any[]) => {
+    const start = Date.now();
+    try {
+      const response = await handler(...args);
+      const duration = Date.now() - start;
+
+      // Add Server-Timing header for observability
+      const headers = new Headers(response.headers);
+      headers.set('Server-Timing', `handler;dur=${duration}`);
+
+      if (duration > SLOW_THRESHOLD_MS) {
+        console.warn(`[Slow API] ${routeName} took ${duration}ms (>${SLOW_THRESHOLD_MS}ms threshold)`);
+      } else {
+        console.log(`[API Timing] ${routeName} ${duration}ms`);
+      }
+
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    } catch (error) {
+      const duration = Date.now() - start;
+      console.error(`[API Error] ${routeName} failed after ${duration}ms`, error);
+      throw error;
+    }
+  }) as T;
+}

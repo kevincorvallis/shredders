@@ -18,6 +18,9 @@ class EventService {
     private static var tokenExpiry: Date?
     private static let tokenCacheDuration: TimeInterval = 300 // 5 minutes
 
+    // Single-flight token refresh: prevents concurrent refresh attempts
+    private var tokenRefreshTask: Task<String, Error>?
+
     private init() {
         self.baseURL = AppConfig.apiBaseURL
         self.decoder = JSONDecoder()
@@ -946,45 +949,57 @@ class EventService {
             return
         }
 
-        // First try Keychain JWT tokens (from email/password login)
-        if let accessToken = KeychainHelper.getAccessToken(), !KeychainHelper.isAccessTokenExpired() {
-            // Cache the token in memory
-            Self.cachedToken = accessToken
-            Self.tokenExpiry = Date().addingTimeInterval(Self.tokenCacheDuration)
-            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-            return
+        // Resolve token (with single-flight protection for refresh)
+        let token = try await resolveAuthToken()
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    /// Resolve a valid auth token, using single-flight pattern to prevent concurrent refresh races.
+    private func resolveAuthToken() async throws -> String {
+        // If a refresh is already in flight, await it instead of starting another
+        if let existing = tokenRefreshTask {
+            return try await existing.value
         }
 
-        // Try to refresh Keychain tokens if we have a refresh token
-        if KeychainHelper.getRefreshToken() != nil {
-            do {
-                // Delegate to AuthService for token refresh (single source of truth)
-                try await AuthService.shared.refreshTokens()
-                if let accessToken = KeychainHelper.getAccessToken() {
-                    // Cache the refreshed token
-                    Self.cachedToken = accessToken
-                    Self.tokenExpiry = Date().addingTimeInterval(Self.tokenCacheDuration)
-                    request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-                    return
-                }
-            } catch {
-                // Refresh failed, fall through to try Supabase session
+        let task = Task<String, Error> { @MainActor in
+            defer { tokenRefreshTask = nil }
+
+            // Try Keychain JWT tokens (from email/password login)
+            if let accessToken = KeychainHelper.getAccessToken(), !KeychainHelper.isAccessTokenExpired() {
+                Self.cachedToken = accessToken
+                Self.tokenExpiry = Date().addingTimeInterval(Self.tokenCacheDuration)
+                return accessToken
             }
+
+            // Try to refresh Keychain tokens if we have a refresh token
+            if KeychainHelper.getRefreshToken() != nil {
+                do {
+                    try await AuthService.shared.refreshTokens()
+                    if let accessToken = KeychainHelper.getAccessToken() {
+                        Self.cachedToken = accessToken
+                        Self.tokenExpiry = Date().addingTimeInterval(Self.tokenCacheDuration)
+                        return accessToken
+                    }
+                } catch {
+                    // Refresh failed, fall through to try Supabase session
+                }
+            }
+
+            // Fallback to Supabase session token (for Sign In with Apple users)
+            do {
+                let session = try await supabase.auth.session
+                Self.cachedToken = session.accessToken
+                Self.tokenExpiry = Date().addingTimeInterval(Self.tokenCacheDuration)
+                return session.accessToken
+            } catch {
+                // No Supabase session either
+            }
+
+            throw EventServiceError.notAuthenticated
         }
 
-        // Fallback to Supabase session token (for Sign In with Apple users)
-        do {
-            let session = try await supabase.auth.session
-            // Cache the Supabase token as well
-            Self.cachedToken = session.accessToken
-            Self.tokenExpiry = Date().addingTimeInterval(Self.tokenCacheDuration)
-            request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
-            return
-        } catch {
-            // No Supabase session either
-        }
-
-        throw EventServiceError.notAuthenticated
+        tokenRefreshTask = task
+        return try await task.value
     }
 }
 

@@ -4,7 +4,7 @@ import PhotosUI
 struct PhotoUploadView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AuthService.self) private var authService
-    @StateObject private var photoService = PhotoService.shared
+    @ObservedObject private var photoService = PhotoService.shared
 
     let mountainId: String
     let webcamId: String?

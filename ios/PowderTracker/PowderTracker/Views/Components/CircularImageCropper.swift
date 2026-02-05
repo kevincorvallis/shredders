@@ -4,11 +4,12 @@
 //
 //  Premium gesture-based circular image cropper for avatar editing.
 //  Features pinch-to-zoom, pan-to-position, rotation, flip, and image adjustments.
+//  Now with Brock-themed UI elements for a playful, on-brand experience!
 //
 //  Design principles:
 //  - Smooth spring animations (.bouncy, .snappy)
 //  - Haptic feedback for all interactions
-//  - Glassmorphic overlay styling
+//  - Glassmorphic overlay styling with Brock golden accents
 //  - Accessibility support
 //
 
@@ -48,6 +49,8 @@ struct CircularImageCropper: View {
     @State private var isRotating = false
     @State private var activeToolbar: ToolbarMode = .transform
     @State private var showingResetConfirmation = false
+    @State private var showBrockTip = false
+    @State private var brockExpression: BrockExpression = .happy
 
     // Configuration
     private let cropSize: CGFloat = 280
@@ -266,20 +269,52 @@ struct CircularImageCropper: View {
                 )
                 .allowsHitTesting(false)
 
-            // Circle border with glow
+            // Circle border with golden Brock glow
             Circle()
                 .stroke(
                     LinearGradient(
-                        colors: [.white.opacity(0.8), .white.opacity(0.4)],
+                        colors: [Color.brockGold.opacity(0.8), .white.opacity(0.4)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
                     lineWidth: 2
                 )
                 .frame(width: cropSize, height: cropSize)
-                .shadow(color: .white.opacity(0.3), radius: 8)
+                .shadow(color: Color.brockGold.opacity(0.4), radius: 12)
+            
+            // Decorative paw prints at corners of the crop circle
+            pawPrintDecorations
         }
         .allowsHitTesting(false)
+    }
+
+    // MARK: - Paw Print Decorations
+    
+    private var pawPrintDecorations: some View {
+        let offset: CGFloat = cropSize / 2 + 20
+        let pawColor = Color.brockGold.opacity(0.4)
+        
+        return Group {
+            // Top-right
+            PawPrintIcon(size: 14, color: pawColor)
+                .rotationEffect(.degrees(-45))
+                .offset(x: offset * 0.707, y: -offset * 0.707)
+            
+            // Bottom-right
+            PawPrintIcon(size: 14, color: pawColor)
+                .rotationEffect(.degrees(45))
+                .offset(x: offset * 0.707, y: offset * 0.707)
+            
+            // Bottom-left
+            PawPrintIcon(size: 14, color: pawColor)
+                .rotationEffect(.degrees(135))
+                .offset(x: -offset * 0.707, y: offset * 0.707)
+            
+            // Top-left
+            PawPrintIcon(size: 14, color: pawColor)
+                .rotationEffect(.degrees(-135))
+                .offset(x: -offset * 0.707, y: -offset * 0.707)
+        }
     }
 
     // MARK: - Grid Overlay
@@ -310,44 +345,99 @@ struct CircularImageCropper: View {
     // MARK: - Top Bar
 
     private var topBar: some View {
-        HStack {
-            Button {
-                HapticFeedback.light.trigger()
-                onCancel()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
-                    .background(.ultraThinMaterial, in: Circle())
+        VStack(spacing: .spacingM) {
+            HStack {
+                Button {
+                    HapticFeedback.light.trigger()
+                    onCancel()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+
+                Spacer()
+
+                // Brock-themed title with paw print
+                HStack(spacing: 6) {
+                    PawPrintIcon(size: 16, color: .brockGold)
+                    Text("Edit Photo")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                    PawPrintIcon(size: 16, color: .brockGold)
+                }
+
+                Spacer()
+
+                Button {
+                    showingResetConfirmation = true
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
             }
-
-            Spacer()
-
-            Text("Edit Photo")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
-
-            Spacer()
-
-            Button {
-                showingResetConfirmation = true
-            } label: {
-                Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
-                    .background(.ultraThinMaterial, in: Circle())
+            
+            // Brock tip bubble (shows on first appearance)
+            if showBrockTip {
+                brockTipBubble
+                    .transition(.asymmetric(
+                        insertion: .scale.combined(with: .opacity),
+                        removal: .opacity
+                    ))
             }
         }
         .padding(.horizontal, .spacingL)
         .padding(.top, .spacingM)
+        .onAppear {
+            // Show Brock's tip after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                    showBrockTip = true
+                }
+            }
+            // Auto-hide the tip
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                withAnimation(.easeOut(duration: 0.3)) {
+                    showBrockTip = false
+                }
+            }
+        }
+    }
+    
+    // MARK: - Brock Tip Bubble
+    
+    private var brockTipBubble: some View {
+        HStack(spacing: 8) {
+            Text("🐕")
+                .font(.system(size: 20))
+            
+            Text("Pinch to zoom, drag to move!")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundStyle(Color(red: 0.35, green: 0.25, blue: 0.15))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            Capsule()
+                .fill(Color.brockGold.opacity(0.9))
+                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+        )
     }
 
     // MARK: - Indicator View
 
     private var indicatorView: some View {
         HStack(spacing: 12) {
+            // Mini Brock watching
+            Text("🐕")
+                .font(.system(size: 18))
+            
             if isZooming {
                 Label(String(format: "%.1fx", scale), systemImage: "magnifyingglass")
             }
@@ -359,7 +449,14 @@ struct CircularImageCropper: View {
         .foregroundStyle(.white)
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(.ultraThinMaterial, in: Capsule())
+        .background(
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    Capsule()
+                        .stroke(Color.brockGold.opacity(0.3), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Toolbar Mode Selector
@@ -483,46 +580,62 @@ struct CircularImageCropper: View {
     // MARK: - Bottom Controls
 
     private var bottomControls: some View {
-        HStack(spacing: .spacingXL) {
-            // Cancel button
-            Button {
-                HapticFeedback.light.trigger()
-                onCancel()
-            } label: {
-                Text("Cancel")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 14)
-                    .background(.ultraThinMaterial, in: Capsule())
+        VStack(spacing: .spacingM) {
+            // Brock's encouraging message
+            HStack(spacing: 6) {
+                Text(brockExpression.emoji)
+                    .font(.system(size: 24))
+                Text(brockExpression.message)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.white.opacity(0.7))
             }
-
-            // Confirm button
-            Button {
-                HapticFeedback.medium.trigger()
-                cropImage()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .bold))
-                    Text("Done")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .fill(Color.brockGold.opacity(0.2))
+            )
+            
+            HStack(spacing: .spacingXL) {
+                // Cancel button
+                Button {
+                    HapticFeedback.light.trigger()
+                    onCancel()
+                } label: {
+                    Text("Cancel")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
+                        .background(.ultraThinMaterial, in: Capsule())
                 }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 14)
-                .background(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 1.0, green: 0.5, blue: 0.72),
-                            Color(red: 0.5, green: 0.7, blue: 1.0)
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
+
+                // Confirm button with paw print
+                Button {
+                    HapticFeedback.success.trigger()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                        brockExpression = .proud
+                    }
+                    // Small delay for the happy animation before cropping
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        cropImage()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        PawPrintIcon(size: 16, color: .white)
+                        Text("Looking Good!")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient.brockGolden
                     )
-                )
-                .clipShape(Capsule())
-                .shadow(color: .purple.opacity(0.4), radius: 12, y: 6)
+                    .clipShape(Capsule())
+                    .shadow(color: Color.brockGold.opacity(0.5), radius: 12, y: 6)
+                }
             }
         }
         .padding(.bottom, .spacingXL)

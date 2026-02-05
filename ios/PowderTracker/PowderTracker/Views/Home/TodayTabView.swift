@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TodayTabView: View {
     var viewModel: HomeViewModel
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @ObservedObject private var favoritesManager = FavoritesService.shared
     @State private var isVisible = false
     @State private var showAllFavorites = false
 
@@ -54,7 +54,7 @@ struct TodayTabView: View {
 
             // Comparison Grid - shows all favorites at once
             let favoritesWithData = favoritesManager.favoriteIds.compactMap { mountainId -> (Mountain, MountainBatchedResponse)? in
-                guard let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
+                guard let mountain = viewModel.mountainsById[mountainId],
                       let data = viewModel.mountainData[mountainId] else {
                     return nil
                 }
@@ -72,7 +72,7 @@ struct TodayTabView: View {
     private var forecastChartSection: some View {
         VStack(alignment: .leading, spacing: .spacingS) {
             let favoritesWithForecast = favoritesManager.favoriteIds.compactMap { mountainId -> (Mountain, [ForecastDay])? in
-                guard let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
+                guard let mountain = viewModel.mountainsById[mountainId],
                       let data = viewModel.mountainData[mountainId] else {
                     return nil
                 }
@@ -96,7 +96,7 @@ struct TodayTabView: View {
             let displayedFavorites = showAllFavorites ? favoritesManager.favoriteIds : Array(favoritesManager.favoriteIds.prefix(3))
 
             ForEach(displayedFavorites, id: \.self) { mountainId in
-                if let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
+                if let mountain = viewModel.mountainsById[mountainId],
                    let data = viewModel.mountainData[mountainId] {
                     MountainDetailRow(
                         mountain: mountain,

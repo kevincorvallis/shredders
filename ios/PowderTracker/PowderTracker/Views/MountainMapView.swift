@@ -3,8 +3,8 @@ import MapKit
 
 struct MountainMapView: View {
     @State private var viewModel = MountainSelectionViewModel()
-    @StateObject private var locationManager = LocationManager.shared
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @ObservedObject private var locationManager = LocationManager.shared
+    @ObservedObject private var favoritesManager = FavoritesService.shared
     @StateObject private var overlayState = MapOverlayState()
     @AppStorage("selectedMountainId") private var persistedMountainId = "baker"
     @State private var mapRegion = MKCoordinateRegion(
@@ -15,10 +15,10 @@ struct MountainMapView: View {
     @State private var showingOverlaySheet = false
     @State private var navigateToMountain: Mountain?
 
-    // Filter state (matching MountainsView)
-    @State private var searchText = ""
-    @State private var sortBy: SortOption = .distance
-    @State private var filterPass: PassFilter = .all
+    // Filter state — persisted across navigation via @AppStorage
+    @AppStorage("mapSearchText") private var searchText = ""
+    @AppStorage("mapSortBy") private var sortBy: SortOption = .distance
+    @AppStorage("mapFilterPass") private var filterPass: PassFilter = .all
 
     var body: some View {
         NavigationStack {
@@ -222,7 +222,7 @@ struct MountainMapView: View {
         // Apply pass filter
         if filterPass != .all {
             if let passType = filterPass.passTypeKey {
-                mountains = mountains.filter { ($0.passType ?? .independent) == passType }
+                mountains = mountains.filter { $0.passType == passType }
             } else if filterPass == .favorites {
                 mountains = mountains.filter { favoritesManager.isFavorite($0.id) }
             } else if filterPass == .freshPowder {
@@ -248,6 +248,12 @@ struct MountainMapView: View {
             case .name:
                 return m1.name < m2.name
             case .distance:
+                // Fall back to name sort if location not available
+                let hasLocation = locationManager.authorizationStatus == .authorizedWhenInUse ||
+                                  locationManager.authorizationStatus == .authorizedAlways
+                if !hasLocation {
+                    return m1.name < m2.name
+                }
                 let d1 = viewModel.getDistance(to: m1) ?? Double.infinity
                 let d2 = viewModel.getDistance(to: m2) ?? Double.infinity
                 return d1 < d2
@@ -263,7 +269,15 @@ struct MountainMapView: View {
                 let f1 = favoritesManager.isFavorite(m1.id)
                 let f2 = favoritesManager.isFavorite(m2.id)
                 if f1 != f2 { return f1 }
-                return m1.name < m2.name
+                // Preserve user's saved favorites order; non-favorites by powder score
+                if f1 && f2 {
+                    let idx1 = favoritesManager.favoriteIds.firstIndex(of: m1.id) ?? .max
+                    let idx2 = favoritesManager.favoriteIds.firstIndex(of: m2.id) ?? .max
+                    return idx1 < idx2
+                }
+                let s1 = viewModel.getScore(for: m1) ?? 0
+                let s2 = viewModel.getScore(for: m2) ?? 0
+                return s1 > s2
             }
         }
 

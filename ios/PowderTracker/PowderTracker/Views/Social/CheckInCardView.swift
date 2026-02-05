@@ -101,11 +101,23 @@ struct CheckInCardView: View {
                 }
             }
 
-            // Trip report
+            // Trip report with sentiment indicator
             if let tripReport = checkIn.tripReport, !tripReport.isEmpty {
-                Text(tripReport)
-                    .font(.body)
-                    .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(tripReport)
+                        .font(.body)
+                        .foregroundStyle(.primary)
+
+                    if let sentiment = SentimentAnalyzer.shared.analyzeCheckIn(checkIn) {
+                        HStack(spacing: 4) {
+                            Image(systemName: sentiment.label.icon)
+                                .font(.caption2)
+                            Text(sentiment.label.displayName)
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+                }
             }
 
             Divider()

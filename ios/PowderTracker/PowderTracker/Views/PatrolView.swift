@@ -3,7 +3,7 @@ import SwiftUI
 struct PatrolView: View {
     var mountainId: String? = nil  // Optional parameter from parent
     @AppStorage("selectedMountainId") private var selectedMountainId = "baker"
-    @StateObject private var mountainService = MountainService.shared
+    @ObservedObject private var mountainService = MountainService.shared
     @State private var safetyData: SafetyData?
     @State private var isLoading = true
     @State private var error: String?

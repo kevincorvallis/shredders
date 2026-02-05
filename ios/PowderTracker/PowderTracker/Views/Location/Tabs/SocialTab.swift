@@ -4,11 +4,20 @@ struct SocialTab: View {
     var viewModel: LocationViewModel
     let mountain: Mountain
 
+    @State private var checkIns: [CheckIn] = []
+    @State private var communityVibe: CommunityVibe?
+    @State private var isLoadingCheckIns = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: .spacingL) {
                 // Today's Activity
                 todayActivityCard
+
+                // Community Vibe (ML-powered sentiment)
+                if let vibe = communityVibe {
+                    communityVibeCard(vibe)
+                }
 
                 // Recent Check-ins
                 recentCheckInsCard
@@ -17,6 +26,24 @@ struct SocialTab: View {
                 photoGridCard
             }
             .padding(.spacingM)
+        }
+        .task {
+            await loadCheckIns()
+        }
+    }
+
+    private func loadCheckIns() async {
+        isLoadingCheckIns = true
+        defer { isLoadingCheckIns = false }
+
+        do {
+            let fetched = try await CheckInService.shared.fetchCheckIns(for: mountain.id, limit: 20)
+            checkIns = fetched
+            communityVibe = SentimentAnalyzer.shared.communityVibe(for: fetched)
+        } catch {
+            #if DEBUG
+            print("Failed to load check-ins for sentiment: \(error)")
+            #endif
         }
     }
 
@@ -128,6 +155,68 @@ struct SocialTab: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    // MARK: - Community Vibe
+
+    private func communityVibeCard(_ vibe: CommunityVibe) -> some View {
+        VStack(alignment: .leading, spacing: .spacingM) {
+            HStack {
+                Image(systemName: vibe.label.icon)
+                    .font(.title2)
+                    .foregroundStyle(vibeColor(for: vibe.label))
+                Text("Community Vibe")
+                    .font(.headline)
+                Spacer()
+                Text(vibe.summary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Divider()
+
+            HStack(spacing: .spacingXL) {
+                vibeStat(
+                    value: "\(vibe.positiveCount)",
+                    label: "Positive",
+                    color: .green
+                )
+                vibeStat(
+                    value: "\(vibe.neutralCount)",
+                    label: "Neutral",
+                    color: .secondary
+                )
+                vibeStat(
+                    value: "\(vibe.negativeCount)",
+                    label: "Negative",
+                    color: .red
+                )
+            }
+        }
+        .padding(.spacingM)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(.cornerRadiusCard)
+    }
+
+    private func vibeStat(value: String, label: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundStyle(color)
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func vibeColor(for label: SentimentLabel) -> Color {
+        switch label {
+        case .positive: return .green
+        case .neutral: return .orange
+        case .negative: return .red
         }
     }
 

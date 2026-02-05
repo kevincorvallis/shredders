@@ -8,6 +8,10 @@ struct ComparisonGrid: View {
     let bestMountainId: String?
     var viewModel: HomeViewModel
     var onWebcamTap: ((Mountain) -> Void)? = nil
+    /// Optional personalized recommendation reasons per mountain. Key = mountainId.
+    var recommendationReasons: [String: [String]] = [:]
+    /// Mountain ID of the top personalized recommendation (shows "For You" badge).
+    var topRecommendationId: String? = nil
 
     // 2-column grid layout with design system spacing
     private let columns = [
@@ -21,20 +25,45 @@ struct ComparisonGrid: View {
                 NavigationLink {
                     MountainDetailView(mountain: favorite.mountain)
                 } label: {
-                    ComparisonGridCard(
-                        mountain: favorite.mountain,
-                        conditions: favorite.data.conditions,
-                        powderScore: favorite.data.powderScore,
-                        trend: viewModel.getSnowTrend(for: favorite.mountain.id),
-                        isBest: favorite.mountain.id == bestMountainId,
-                        webcamCount: favorite.data.mountain.webcams.count,
-                        alertCount: favorite.data.alerts.count,
-                        crowdLevel: favorite.data.tripAdvice?.crowd,
-                        onWebcamTap: {
-                            HapticFeedback.light.trigger()
-                            onWebcamTap?(favorite.mountain)
+                    VStack(spacing: 4) {
+                        ComparisonGridCard(
+                            mountain: favorite.mountain,
+                            conditions: favorite.data.conditions,
+                            powderScore: favorite.data.powderScore,
+                            trend: viewModel.getSnowTrend(for: favorite.mountain.id),
+                            isBest: favorite.mountain.id == bestMountainId,
+                            webcamCount: favorite.data.mountain.webcams.count,
+                            alertCount: favorite.data.alerts.count,
+                            crowdLevel: favorite.data.tripAdvice?.crowd,
+                            onWebcamTap: {
+                                HapticFeedback.light.trigger()
+                                onWebcamTap?(favorite.mountain)
+                            }
+                        )
+
+                        // "For You" badge + reason chips from MountainRecommender
+                        if let reasons = recommendationReasons[favorite.mountain.id],
+                           !reasons.isEmpty {
+                            HStack(spacing: 4) {
+                                if favorite.mountain.id == topRecommendationId {
+                                    Text("For You")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Capsule().fill(.blue))
+                                }
+
+                                ForEach(reasons.prefix(2), id: \.self) { reason in
+                                    Text(reason)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
                         }
-                    )
+                    }
                     .scrollTransition(.animated(.bouncy)) { content, phase in
                         content
                             .opacity(phase.isIdentity ? 1 : 0.8)

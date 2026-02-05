@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct CheckInFormView: View {
     let mountainId: String
@@ -14,6 +15,13 @@ struct CheckInFormView: View {
     @State private var isPublic = true
     @State private var isSubmitting = false
     @State private var errorMessage: String?
+
+    // Photo + AI classification
+    @State private var selectedPhotoItem: PhotosPickerItem? = nil
+    @State private var selectedPhoto: UIImage? = nil
+    @State private var classificationResult: SnowClassification? = nil
+    @State private var isClassifying = false
+    @State private var snowQualityIsAISuggested = false
 
     var body: some View {
         NavigationStack {
@@ -45,12 +53,39 @@ struct CheckInFormView: View {
                     Text("Rating")
                 }
 
+                // Photo Section (with AI snow classifier)
+                Section {
+                    photoPickerSection
+                } header: {
+                    Text("Photo")
+                } footer: {
+                    Text("Optional - Add a slope photo to auto-detect snow conditions")
+                }
+
                 // Conditions Section
                 Section {
-                    Picker("Snow Quality", selection: $selectedSnowQuality) {
-                        Text("Select...").tag(nil as SnowQuality?)
-                        ForEach(SnowQuality.allCases, id: \.self) { quality in
-                            Text(quality.displayName).tag(quality as SnowQuality?)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Picker("Snow Quality", selection: Binding(
+                            get: { selectedSnowQuality },
+                            set: { newValue in
+                                selectedSnowQuality = newValue
+                                snowQualityIsAISuggested = false
+                            }
+                        )) {
+                            Text("Select...").tag(nil as SnowQuality?)
+                            ForEach(SnowQuality.allCases, id: \.self) { quality in
+                                Text(quality.displayName).tag(quality as SnowQuality?)
+                            }
+                        }
+
+                        if selectedSnowQuality != nil {
+                            HStack(spacing: 4) {
+                                Image(systemName: snowQualityIsAISuggested ? "sparkles" : "hand.tap")
+                                    .font(.caption2)
+                                Text(snowQualityIsAISuggested ? "AI suggested" : "Manual")
+                                    .font(.caption2)
+                            }
+                            .foregroundStyle(snowQualityIsAISuggested ? .blue : .secondary)
                         }
                     }
 
@@ -127,6 +162,112 @@ struct CheckInFormView: View {
             }
         }
     }
+
+    // MARK: - Photo Picker + AI Classification
+
+    @ViewBuilder
+    private var photoPickerSection: some View {
+        if let photo = selectedPhoto {
+            // Show selected photo with remove button
+            VStack(spacing: 8) {
+                Image(uiImage: photo)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxHeight: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                HStack {
+                    if isClassifying {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Analyzing snow conditions...")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else if let result = classificationResult {
+                        HStack(spacing: 4) {
+                            Image(systemName: "sparkles")
+                                .font(.caption)
+                                .foregroundStyle(.blue)
+                            Text("Detected: \(result.quality.displayName)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("(\(Int(result.confidence * 100))%)")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+
+                    Spacer()
+
+                    Button(role: .destructive) {
+                        withAnimation {
+                            selectedPhoto = nil
+                            selectedPhotoItem = nil
+                            classificationResult = nil
+                            if snowQualityIsAISuggested {
+                                selectedSnowQuality = nil
+                                snowQualityIsAISuggested = false
+                            }
+                        }
+                    } label: {
+                        Label("Remove", systemImage: "xmark.circle.fill")
+                            .font(.caption)
+                    }
+                }
+            }
+        } else {
+            // Photo picker button
+            PhotosPicker(
+                selection: $selectedPhotoItem,
+                matching: .images,
+                photoLibrary: .shared()
+            ) {
+                HStack {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.title3)
+                        .foregroundStyle(.blue)
+                    Text("Add Slope Photo")
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .onChange(of: selectedPhotoItem) { _, newItem in
+                Task {
+                    await loadAndClassifyPhoto(newItem)
+                }
+            }
+        }
+    }
+
+    private func loadAndClassifyPhoto(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+
+        // Load the image data
+        guard let data = try? await item.loadTransferable(type: Data.self),
+              let image = UIImage(data: data) else {
+            return
+        }
+
+        selectedPhoto = image
+
+        // Run the classifier
+        isClassifying = true
+        let result = await SnowConditionClassifier.shared.classify(image)
+        isClassifying = false
+
+        classificationResult = result
+
+        // Auto-populate snow quality if confidence is good and user hasn't manually selected
+        if let result, selectedSnowQuality == nil {
+            selectedSnowQuality = result.quality
+            snowQualityIsAISuggested = true
+        }
+    }
+
+    // MARK: - Submit
 
     private func submitCheckIn() async {
         guard authService.isAuthenticated else {

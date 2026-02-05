@@ -44,7 +44,7 @@ describe('GET /api/events/invite/[token]', () => {
                   mountain_id: 'stevens-pass',
                   title: 'Powder Day!',
                   notes: 'Lets go!',
-                  event_date: '2025-02-15',
+                  event_date: '2027-02-15',
                   departure_time: '06:00:00',
                   departure_location: 'Northgate',
                   skill_level: 'intermediate',
@@ -288,6 +288,7 @@ describe('POST /api/events/invite/[token]', () => {
     mockSupabase = {};
 
     mockAdminClient = {
+      rpc: vi.fn().mockResolvedValue({ error: null }),
       from: vi.fn().mockImplementation((table: string) => {
         if (table === 'event_invite_tokens') {
           return {
@@ -304,7 +305,7 @@ describe('POST /api/events/invite/[token]', () => {
                     event: {
                       id: 'event123',
                       status: 'active',
-                      event_date: '2025-02-15',
+                      event_date: '2027-02-15',
                     },
                   },
                   error: null,

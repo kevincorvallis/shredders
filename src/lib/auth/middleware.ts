@@ -142,8 +142,9 @@ export async function getAuthUserAsync(req: NextRequest): Promise<TokenPayload |
 }
 
 /**
- * Legacy sync version (doesn't check blacklist - use getAuthUserAsync instead)
- * @deprecated Use getAuthUserAsync for blacklist checking
+ * @deprecated SECURITY: This sync version does NOT check the token blacklist.
+ * Use getAuthUserAsync() instead, which properly checks for revoked tokens.
+ * This function will be removed in a future release.
  */
 export function getAuthUser(req: NextRequest): TokenPayload | null {
   const authHeader = req.headers.get('authorization');

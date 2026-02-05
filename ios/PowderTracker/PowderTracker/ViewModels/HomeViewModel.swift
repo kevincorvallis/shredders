@@ -25,7 +25,7 @@ class HomeViewModel {
     var isLoadingEnhancedData = false
 
     // O(1) mountain lookup by ID
-    private var mountainsById: [String: Mountain] = [:]
+    private(set) var mountainsById: [String: Mountain] = [:]
 
     private let apiClient = APIClient.shared
     private let favoritesService = FavoritesService.shared
@@ -389,6 +389,29 @@ class HomeViewModel {
         }
 
         return suggestion
+    }
+
+    /// Get a personalized ranking of favorite mountains using MountainRecommender.
+    /// Falls back to powder-score ordering when no user profile is available.
+    func getPersonalizedRanking(
+        userProfile: UserProfile? = nil,
+        checkInHistory: [CheckIn] = []
+    ) -> [RecommendationScore] {
+        let favoriteMountainIds = Set(favoritesService.favoriteIds)
+
+        let mountains: [(Mountain, MountainBatchedResponse)] = mountainData
+            .filter { favoriteMountainIds.contains($0.key) }
+            .compactMap { id, data in
+                guard let mountain = mountainsById[id] else { return nil }
+                return (mountain, data)
+            }
+
+        return MountainRecommender.shared.rank(
+            mountains: mountains,
+            userProfile: userProfile,
+            parkingPredictions: parkingPredictions,
+            checkInHistory: checkInHistory
+        )
     }
 
     /// Get favorite mountains with their data

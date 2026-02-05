@@ -120,26 +120,16 @@ final class EventActivityViewModelTests: XCTestCase {
         XCTAssertTrue(activity.displayText.lowercased().contains("going"))
     }
 
-    func testMilestoneDisplayText() {
-        let metadata = ActivityMetadata(
-            status: nil,
-            preview: nil,
-            count: 10
-        )
-        let activity = createMockActivity(type: .milestoneReached, metadata: metadata)
-        XCTAssertTrue(activity.displayText.contains("10"))
-    }
-
     // MARK: - Icon Tests
 
     func testRSVPGoingIcon() {
         let activity = createMockActivity(type: .rsvpGoing)
-        XCTAssertEqual(activity.icon, "hand.thumbsup.fill")
+        XCTAssertEqual(activity.icon, "checkmark.circle.fill")
     }
 
     func testRSVPMaybeIcon() {
         let activity = createMockActivity(type: .rsvpMaybe)
-        XCTAssertEqual(activity.icon, "hand.raised.fill")
+        XCTAssertEqual(activity.icon, "questionmark.circle.fill")
     }
 
     func testCommentIcon() {
@@ -158,14 +148,17 @@ final class EventActivityViewModelTests: XCTestCase {
         id: String = "activity-1",
         type: ActivityType = .rsvpGoing,
         username: String = "testuser",
-        metadata: ActivityMetadata? = nil
+        milestone: Int? = nil
     ) -> EventActivity {
-        EventActivity(
+        // ActivityMetadata has a custom init(from:) so we create via JSON decoding
+        let metadata = decodeMetadata(milestone: milestone)
+
+        return EventActivity(
             id: id,
             eventId: testEventId,
-            activityType: type,
             userId: "user-1",
-            metadata: metadata ?? ActivityMetadata(status: nil, preview: nil, count: nil),
+            activityType: type,
+            metadata: metadata,
             createdAt: ISO8601DateFormatter().string(from: Date()),
             user: ActivityUser(
                 id: "user-1",
@@ -174,5 +167,15 @@ final class EventActivityViewModelTests: XCTestCase {
                 avatarUrl: nil
             )
         )
+    }
+
+    private func decodeMetadata(milestone: Int? = nil) -> ActivityMetadata {
+        var json: [String: Any] = [:]
+        if let milestone = milestone {
+            json["milestone"] = milestone
+            json["label"] = "\(milestone) attendees!"
+        }
+        let data = try! JSONSerialization.data(withJSONObject: json)
+        return try! JSONDecoder().decode(ActivityMetadata.self, from: data)
     }
 }

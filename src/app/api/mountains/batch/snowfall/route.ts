@@ -47,19 +47,28 @@ export async function GET(request: Request) {
               const today = new Date();
               today.setHours(0, 0, 0, 0);
 
-              // Build snowfall array
+              // Build O(1) lookup maps from history and forecast arrays
+              const historyByDate = new Map<string, number>();
+              for (const h of history as any[]) {
+                const dateKey = h.date?.substring(0, 10);
+                if (dateKey) historyByDate.set(dateKey, h.snowfall || 0);
+              }
+
+              const forecastByDate = new Map<string, number>();
+              for (const f of forecast as any[]) {
+                const dateKey = f.date?.substring(0, 10);
+                if (dateKey) forecastByDate.set(dateKey, f.snowfall || 0);
+              }
+
+              // Build snowfall array using map lookups
               for (let i = daysBack; i > 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
                 const dateStr = date.toISOString().split('T')[0];
 
-                const historyPoint = history.find((h: any) =>
-                  h.date.startsWith(dateStr)
-                );
-
                 dates.push({
                   date: dateStr,
-                  snowfall: historyPoint?.snowfall || 0,
+                  snowfall: historyByDate.get(dateStr) || 0,
                   isForecast: false,
                   isToday: false,
                 });
@@ -67,10 +76,9 @@ export async function GET(request: Request) {
 
               // Today
               const todayStr = today.toISOString().split('T')[0];
-              const todayHistory = history.find((h: any) => h.date.startsWith(todayStr));
               dates.push({
                 date: todayStr,
-                snowfall: todayHistory?.snowfall || 0,
+                snowfall: historyByDate.get(todayStr) || 0,
                 isForecast: false,
                 isToday: true,
               });
@@ -81,13 +89,9 @@ export async function GET(request: Request) {
                 date.setDate(date.getDate() + i);
                 const dateStr = date.toISOString().split('T')[0];
 
-                const forecastDay = forecast.find((f: any) =>
-                  f.date.startsWith(dateStr)
-                );
-
                 dates.push({
                   date: dateStr,
-                  snowfall: forecastDay?.snowfall || 0,
+                  snowfall: forecastByDate.get(dateStr) || 0,
                   isForecast: true,
                   isToday: false,
                 });

@@ -364,7 +364,8 @@ struct CarpoolCoordinationView: View {
 struct RSVPCarpoolSheet: View {
     let eventId: String
     let currentStatus: RSVPStatus?
-    let onComplete: () -> Void
+    /// Callback with the new RSVP status after successful update
+    let onComplete: (RSVPStatus) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var selectedStatus: RSVPStatus = .going
@@ -477,7 +478,7 @@ struct RSVPCarpoolSheet: View {
         error = nil
 
         do {
-            _ = try await EventService.shared.rsvp(
+            let response = try await EventService.shared.rsvp(
                 eventId: eventId,
                 status: selectedStatus,
                 isDriver: isDriver,
@@ -486,7 +487,8 @@ struct RSVPCarpoolSheet: View {
             )
 
             HapticFeedback.success.trigger()
-            onComplete()
+            // Pass the new status from the response to update UI immediately
+            onComplete(response.attendee.status)
             dismiss()
         } catch let err as EventServiceError {
             error = err.localizedDescription
@@ -554,6 +556,6 @@ struct RSVPCarpoolSheet: View {
     RSVPCarpoolSheet(
         eventId: "test",
         currentStatus: nil,
-        onComplete: {}
+        onComplete: { _ in }
     )
 }

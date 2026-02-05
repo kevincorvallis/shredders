@@ -83,7 +83,7 @@ struct FilterChipView: View {
 /// Inspired by Apple's Weather app and App Store design patterns
 struct MountainsView: View {
     @State private var viewModel = MountainSelectionViewModel()
-    @StateObject private var favoritesManager = FavoritesService.shared
+    @ObservedObject private var favoritesManager = FavoritesService.shared
 
     @State private var searchText = ""
     @State private var isSearching = false
@@ -625,15 +625,30 @@ struct MountainsView: View {
     private var filteredMountains: [Mountain] {
         var mountains = viewModel.mountains
 
-        // Apply quick filters
-        for filter in selectedFilters {
+        // Apply quick filters — pass types use OR logic, others use AND
+        let passFilters = selectedFilters.intersection([.epic, .ikon])
+        let otherFilters = selectedFilters.subtracting(passFilters)
+
+        // OR: show mountains matching ANY selected pass type
+        if !passFilters.isEmpty {
+            let passTypes: Set<PassType> = Set(passFilters.compactMap { filter -> PassType? in
+                switch filter {
+                case .epic: return .epic
+                case .ikon: return .ikon
+                default: return nil
+                }
+            })
+            mountains = mountains.filter { mountain in
+                guard let pt = mountain.passType else { return false }
+                return passTypes.contains(pt)
+            }
+        }
+
+        // AND: each remaining filter further narrows the list
+        for filter in otherFilters {
             switch filter {
             case .favorites:
                 mountains = mountains.filter { favoritesManager.isFavorite($0.id) }
-            case .epic:
-                mountains = mountains.filter { $0.passType == .epic }
-            case .ikon:
-                mountains = mountains.filter { $0.passType == .ikon }
             case .freshPowder:
                 mountains = mountains.filter {
                     (viewModel.getConditions(for: $0)?.snowfall24h ?? 0) >= 6
@@ -642,6 +657,8 @@ struct MountainsView: View {
                 mountains = mountains.filter {
                     viewModel.getConditions(for: $0)?.liftStatus?.isOpen ?? false
                 }
+            default:
+                break // pass types already handled above
             }
         }
 

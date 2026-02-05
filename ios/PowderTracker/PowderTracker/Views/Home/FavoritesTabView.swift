@@ -4,7 +4,7 @@ import SwiftUI
 /// Shows complete list of favorite mountains with detailed information
 struct FavoritesTabView: View {
     var viewModel: HomeViewModel
-    @StateObject private var favoritesService = FavoritesService.shared
+    @ObservedObject private var favoritesService = FavoritesService.shared
 
     var body: some View {
         LazyVStack(spacing: .spacingM) {
@@ -43,7 +43,7 @@ struct FavoritesTabView: View {
 
             // All favorites (no "See All" toggle - this is a dedicated tab)
             ForEach(favoritesService.favoriteIds, id: \.self) { mountainId in
-                if let mountain = viewModel.mountains.first(where: { $0.id == mountainId }),
+                if let mountain = viewModel.mountainsById[mountainId],
                    let data = viewModel.mountainData[mountainId] {
                     MountainDetailRow(
                         mountain: mountain,
@@ -60,25 +60,13 @@ struct FavoritesTabView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        TabEmptyStateView(
-            icon: "star.slash",
+        BrockEmptyState(
             title: "No Favorites Yet",
-            message: "Add mountains to your favorites to see detailed comparisons"
-        ) {
-            NavigationLink(destination: Text("Mountains View")) {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Add Favorites")
-                }
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.white)
-                .padding(.horizontal, .spacingL)
-                .padding(.vertical, .spacingM)
-                .background(Color.blue)
-                .cornerRadius(.cornerRadiusButton)
-            }
-        }
+            message: "Brock wants to help you track your favorite mountains! Add some to compare conditions.",
+            expression: .curious,
+            actionTitle: "Sniff Out Mountains",
+            action: nil // Navigation handled by parent
+        )
     }
 }
 

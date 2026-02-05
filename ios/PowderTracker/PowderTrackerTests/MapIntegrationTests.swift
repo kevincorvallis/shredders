@@ -3,6 +3,7 @@ import MapKit
 @testable import PowderTracker
 
 /// Integration tests for map-related components working together
+@MainActor
 final class MapIntegrationTests: XCTestCase {
 
     // MARK: - MountainSelectionViewModel Tests
@@ -125,7 +126,7 @@ final class MapIntegrationTests: XCTestCase {
         XCTAssertEqual(state.activeOverlay, .radar)
 
         // Verify overlay can be created
-        let overlay = WeatherTileOverlay(overlayType: .radar, timestamp: nil)
+        let overlay = WeatherTileOverlay.create(overlayType: .radar, timestamp: nil)
         XCTAssertNotNil(overlay)
     }
 
@@ -308,7 +309,7 @@ final class AppConfigIntegrationTests: XCTestCase {
 
     func testAppConfig_BaseURL_ShouldBeValid() {
         // Given/When
-        let baseURL = AppConfig.baseURL
+        let baseURL = AppConfig.apiBaseURL
 
         // Then
         XCTAssertFalse(baseURL.isEmpty, "Base URL should not be empty")

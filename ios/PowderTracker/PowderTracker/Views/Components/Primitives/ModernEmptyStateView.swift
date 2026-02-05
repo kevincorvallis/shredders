@@ -128,6 +128,9 @@ enum EmptyStateStyle {
     case noNotifications
     case offline
     case error
+    case brockHappy
+    case brockSleepy
+    case brockExcited
     case custom(icon: String, color: Color, secondaryIcon: String?)
     
     var primaryColor: Color {
@@ -140,6 +143,7 @@ enum EmptyStateStyle {
         case .noNotifications: return .red
         case .offline: return .gray
         case .error: return .red
+        case .brockHappy, .brockSleepy, .brockExcited: return .brockGold
         case .custom(_, let color, _): return color
         }
     }
@@ -147,6 +151,7 @@ enum EmptyStateStyle {
     var hasIdleAnimation: Bool {
         switch self {
         case .offline, .error: return false
+        case .brockHappy, .brockSleepy, .brockExcited: return true
         default: return true
         }
     }
@@ -277,6 +282,69 @@ enum EmptyStateStyle {
                         .foregroundStyle(.white)
                         .offset(x: 20, y: -18)
                 }
+            }
+
+        case .brockHappy:
+            ZStack {
+                // Golden glow
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.brockGold.opacity(0.4), .clear],
+                            center: .center,
+                            startRadius: 10,
+                            endRadius: 50
+                        )
+                    )
+                    .frame(width: 100, height: 100)
+                Text("🐕")
+                    .font(.system(size: 50))
+                Text("✨")
+                    .font(.system(size: 18))
+                    .offset(x: 28, y: -22)
+            }
+
+        case .brockSleepy:
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.brockGold.opacity(0.3), .clear],
+                            center: .center,
+                            startRadius: 10,
+                            endRadius: 50
+                        )
+                    )
+                    .frame(width: 100, height: 100)
+                Text("🐕")
+                    .font(.system(size: 50))
+                Text("💤")
+                    .font(.system(size: 18))
+                    .offset(x: 28, y: -22)
+            }
+
+        case .brockExcited:
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.brockGold.opacity(0.5), .clear],
+                            center: .center,
+                            startRadius: 10,
+                            endRadius: 50
+                        )
+                    )
+                    .frame(width: 100, height: 100)
+                Text("🐕")
+                    .font(.system(size: 50))
+                Text("❄️")
+                    .font(.system(size: 18))
+                    .offset(x: 28, y: -22)
+                // Paw prints
+                PawPrintIcon(size: 12, color: .brockGold.opacity(0.5))
+                    .offset(x: -35, y: 25)
+                PawPrintIcon(size: 10, color: .brockGold.opacity(0.4))
+                    .offset(x: -25, y: 35)
             }
         }
     }

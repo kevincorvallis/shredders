@@ -140,17 +140,20 @@ extension Event {
             skillLevel: skillLevel,
             carpoolAvailable: carpoolAvailable,
             carpoolSeats: carpoolSeats,
+            maxAttendees: nil,
             status: status,
             createdAt: "2025-01-01T00:00:00Z",
             updatedAt: "2025-01-01T00:00:00Z",
             attendeeCount: attendeeCount,
             goingCount: goingCount,
             maybeCount: maybeCount,
+            waitlistCount: nil,
             creator: EventUser(
                 id: creatorId,
                 username: creatorUsername,
                 displayName: creatorDisplayName,
-                avatarUrl: creatorAvatarUrl
+                avatarUrl: creatorAvatarUrl,
+                ridingStyle: nil
             ),
             userRSVPStatus: userRSVPStatus,
             isCreator: isCreator
@@ -249,19 +252,22 @@ extension EventWithDetails {
             skillLevel: skillLevel,
             carpoolAvailable: carpoolAvailable,
             carpoolSeats: carpoolSeats,
+            maxAttendees: nil,
             status: status,
             createdAt: "2025-01-01T00:00:00Z",
             updatedAt: "2025-01-01T00:00:00Z",
             attendeeCount: attendeeCount,
             goingCount: goingCount,
             maybeCount: maybeCount,
+            waitlistCount: nil,
             commentCount: commentCount,
             photoCount: photoCount,
             creator: EventUser(
                 id: creatorId,
                 username: creatorUsername,
                 displayName: creatorDisplayName,
-                avatarUrl: nil
+                avatarUrl: nil,
+                ridingStyle: nil
             ),
             userRSVPStatus: userRSVPStatus,
             isCreator: isCreator,
@@ -304,6 +310,7 @@ extension UserProfile {
             lastLoginAt: Date(),
             isActive: isActive,
             hasCompletedOnboarding: hasCompletedOnboarding,
+            ridingStyle: nil,
             experienceLevel: experienceLevel,
             preferredTerrain: preferredTerrain,
             seasonPassType: seasonPassType,
@@ -375,8 +382,8 @@ extension EventComment {
         let replies = (0..<replyCount).map { i in
             mock(
                 id: "reply-\(i)",
-                parentId: "mock-comment-1",
-                content: "Reply \(i + 1)"
+                content: "Reply \(i + 1)",
+                parentId: "mock-comment-1"
             )
         }
         return mock(replies: replies)
@@ -677,7 +684,8 @@ extension EventAttendee {
                 id: userId,
                 username: username,
                 displayName: displayName,
-                avatarUrl: avatarUrl
+                avatarUrl: avatarUrl,
+                ridingStyle: nil
             )
         )
     }
@@ -698,7 +706,7 @@ extension EventAttendee {
             mock(id: "a1", status: .going, username: "going1"),
             mock(id: "a2", status: .going, username: "going2"),
             mock(id: "a3", status: .maybe, username: "maybe1"),
-            mock(id: "a4", status: .notGoing, username: "notgoing1")
+            mock(id: "a4", status: .declined, username: "notgoing1")
         ]
     }
 

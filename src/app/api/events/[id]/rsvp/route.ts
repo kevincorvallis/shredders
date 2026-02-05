@@ -105,6 +105,14 @@ export async function POST(
     // Create a compatible object for the rest of the code
     const userProfile = { id: userProfileId };
 
+    // Event creator cannot change their RSVP (they're always "going")
+    if (event.user_id === userProfile.id) {
+      return NextResponse.json(
+        { error: 'Event creator cannot change their RSVP status' },
+        { status: 400 }
+      );
+    }
+
     const body: RSVPRequest = await request.json();
     const { status, isDriver, needsRide, pickupLocation } = body;
 
@@ -121,7 +129,7 @@ export async function POST(
     // NOTE: Use adminClient to bypass RLS - regular client may not see user's own RSVP
     const { data: existingRSVP } = await adminClient
       .from('event_attendees')
-      .select('id, status')
+      .select('id, status, is_driver, needs_ride, pickup_location')
       .eq('event_id', eventId)
       .eq('user_id', userProfile.id)
       .single();
@@ -157,11 +165,14 @@ export async function POST(
     if (existingRSVP) {
       // Update existing RSVP
       // If changing from waitlist to something else, clear waitlist_position
+      // Preserve existing carpool fields if not explicitly provided in this request
       const updateData: Record<string, unknown> = {
         status: effectiveStatus,
-        is_driver: isDriver ?? false,
-        needs_ride: needsRide ?? false,
-        pickup_location: pickupLocation?.trim() || null,
+        is_driver: isDriver ?? existingRSVP.is_driver ?? false,
+        needs_ride: needsRide ?? existingRSVP.needs_ride ?? false,
+        pickup_location: pickupLocation !== undefined
+          ? (pickupLocation?.trim() || null)
+          : (existingRSVP.pickup_location ?? null),
         responded_at: new Date().toISOString(),
       };
 
@@ -247,28 +258,29 @@ export async function POST(
     }
 
     // Send notification to event creator (async, don't block response)
-    // Only notify if user is not the event creator
-    if (event.user_id !== userProfile.id && (status === 'going' || status === 'maybe')) {
+    // Notify for going, maybe, and declined (so hosts know when someone drops out)
+    // Use effectiveStatus to avoid misleading "is going" when actually waitlisted
+    if (event.user_id !== userProfile.id && ['going', 'maybe', 'declined'].includes(status)) {
       const attendeeName = attendeeData.user?.display_name || attendeeData.user?.username || 'Someone';
 
-      if (isNewRSVP) {
-        // New RSVP notification
+      if (isNewRSVP && (effectiveStatus === 'going' || effectiveStatus === 'maybe')) {
+        // New RSVP notification (skip for waitlisted users — don't mislead the host)
         sendNewRSVPNotification({
           eventId,
           eventTitle: event.title,
           creatorUserId: event.user_id,
           attendeeName,
-          rsvpStatus: status as 'going' | 'maybe',
+          rsvpStatus: effectiveStatus as 'going' | 'maybe',
         }).catch((err) => console.error('Failed to send RSVP notification:', err));
-      } else if (oldStatus && oldStatus !== status) {
-        // RSVP status changed notification
+      } else if (oldStatus && oldStatus !== effectiveStatus) {
+        // RSVP status changed notification (uses effectiveStatus for accuracy)
         sendRSVPChangeNotification({
           eventId,
           eventTitle: event.title,
           creatorUserId: event.user_id,
           attendeeName,
           oldStatus,
-          newStatus: status,
+          newStatus: effectiveStatus,
         }).catch((err) => console.error('Failed to send RSVP change notification:', err));
       }
     }
@@ -337,10 +349,10 @@ export async function DELETE(
       );
     }
 
-    // Verify event exists
+    // Verify event exists and is active
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, user_id')
+      .select('id, user_id, status, event_date')
       .eq('id', eventId)
       .single();
 
@@ -348,6 +360,21 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
+      );
+    }
+
+    if (event.status !== 'active') {
+      return NextResponse.json(
+        { error: 'Cannot modify RSVP for inactive events' },
+        { status: 400 }
+      );
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    if (event.event_date < today) {
+      return NextResponse.json(
+        { error: 'Cannot modify RSVP for past events' },
+        { status: 400 }
       );
     }
 
