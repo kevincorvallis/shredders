@@ -331,6 +331,24 @@ struct MountainBatchedResponse: Codable {
     let cachedAt: String
 }
 
+// MARK: - Batch Mountain Data Response
+struct BatchMountainAllResponse: Codable {
+    let mountains: [String: MountainBatchedResponse]
+    let errors: [String: String]?
+    let cachedAt: String
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        mountains = try container.decode([String: MountainBatchedResponse].self, forKey: .mountains)
+        errors = try container.decodeIfPresent([String: String].self, forKey: .errors)
+        cachedAt = try container.decode(String.self, forKey: .cachedAt)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case mountains, errors, cachedAt
+    }
+}
+
 // MARK: - Mock Data
 extension MountainConditions {
     static let mock = MountainConditions(

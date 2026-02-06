@@ -32,23 +32,55 @@ class HomeViewModel {
 
     // MARK: - Data Loading
 
-    /// Load the complete list of all mountains
+    /// Load the complete list of all mountains via MountainService singleton
     func loadMountains() async {
-        do {
-            let response = try await apiClient.fetchMountains()
-            mountains = response.mountains
-        } catch {
-            self.error = error.localizedDescription
-        }
+        await MountainService.shared.fetchMountains()
+        mountains = MountainService.shared.allMountains
     }
 
-    /// Batch load data for all favorited mountains in parallel
+    /// Batch load data for all favorited mountains using the batch endpoint
     func loadFavoritesData() async {
+        let favoriteIds = favoritesService.favoriteIds
+        guard !favoriteIds.isEmpty else {
+            isLoading = false
+            lastRefreshDate = Date()
+            return
+        }
+
         isLoading = true
         error = nil
 
         #if DEBUG
-        print("📡 [HomeVM] loadFavoritesData starting for: \(favoritesService.favoriteIds)")
+        print("📡 [HomeVM] loadFavoritesData (batch) starting for: \(favoriteIds)")
+        #endif
+
+        do {
+            let response = try await apiClient.fetchBatchMountainData(for: favoriteIds)
+            for (id, data) in response.mountains {
+                mountainData[id] = data
+            }
+            #if DEBUG
+            if let errors = response.errors, !errors.isEmpty {
+                print("⚠️ [HomeVM] Batch had errors: \(errors)")
+            }
+            print("📡 [HomeVM] loadFavoritesData (batch) complete. mountainData keys: \(Array(mountainData.keys))")
+            #endif
+        } catch {
+            #if DEBUG
+            print("❌ [HomeVM] Batch endpoint failed: \(error.localizedDescription), falling back to individual requests")
+            #endif
+            // Fallback to individual requests
+            await loadFavoritesDataIndividually()
+        }
+
+        isLoading = false
+        lastRefreshDate = Date()
+    }
+
+    /// Fallback: load favorites data individually if batch endpoint fails
+    private func loadFavoritesDataIndividually() async {
+        #if DEBUG
+        print("📡 [HomeVM] loadFavoritesDataIndividually starting for: \(favoritesService.favoriteIds)")
         #endif
 
         await withTaskGroup(of: (String, MountainBatchedResponse?).self) { group in
@@ -58,11 +90,6 @@ class HomeViewModel {
                         let data = try await self.apiClient.fetchMountainData(for: mountainId)
                         #if DEBUG
                         print("📡 [HomeVM] Loaded \(mountainId) - forecast count: \(data.forecast.count)")
-                        if data.forecast.isEmpty {
-                            print("⚠️ [HomeVM] API returned EMPTY forecast for \(mountainId)")
-                        } else {
-                            print("📡 [HomeVM] \(mountainId) forecast days: \(data.forecast.map { $0.dayOfWeek }.joined(separator: ", "))")
-                        }
                         #endif
                         return (mountainId, data)
                     } catch {
@@ -82,11 +109,8 @@ class HomeViewModel {
         }
 
         #if DEBUG
-        print("📡 [HomeVM] loadFavoritesData complete. mountainData keys: \(Array(mountainData.keys))")
+        print("📡 [HomeVM] loadFavoritesDataIndividually complete. mountainData keys: \(Array(mountainData.keys))")
         #endif
-
-        isLoading = false
-        lastRefreshDate = Date()
     }
 
     /// Refresh all data (mountains list + favorites data)
@@ -125,32 +149,16 @@ class HomeViewModel {
 
     /// Get all favorite mountains with their forecast data
     func getFavoritesWithForecast() -> [(mountain: Mountain, forecast: [ForecastDay])] {
-        #if DEBUG
-        print("🔍 [HomeVM] getFavoritesWithForecast called")
-        print("🔍 [HomeVM] favoriteIds: \(favoritesService.favoriteIds)")
-        print("🔍 [HomeVM] mountainsById count: \(mountainsById.count)")
-        print("🔍 [HomeVM] mountainData count: \(mountainData.count)")
-        #endif
+        // Skip lookup until both mountains and forecast data have loaded
+        guard !mountainsById.isEmpty, !mountainData.isEmpty else {
+            return []
+        }
 
         return favoritesService.favoriteIds.compactMap { mountainId in
-            guard let mountain = mountainsById[mountainId] else {
-                #if DEBUG
-                print("⚠️ [HomeVM] Mountain not found in mountainsById: \(mountainId)")
-                #endif
+            guard let mountain = mountainsById[mountainId],
+                  let data = mountainData[mountainId] else {
                 return nil
             }
-            guard let data = mountainData[mountainId] else {
-                #if DEBUG
-                print("⚠️ [HomeVM] Data not found in mountainData: \(mountainId)")
-                #endif
-                return nil
-            }
-            #if DEBUG
-            print("✅ [HomeVM] \(mountainId) forecast count: \(data.forecast.count)")
-            if data.forecast.isEmpty {
-                print("⚠️ [HomeVM] \(mountainId) has EMPTY forecast!")
-            }
-            #endif
             return (mountain, data.forecast)
         }
     }

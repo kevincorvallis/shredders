@@ -35,8 +35,8 @@ class MountainSelectionViewModel {
         #endif
 
         do {
-            let response = try await apiClient.fetchMountains()
-            mountains = response.mountains
+            await MountainService.shared.fetchMountains()
+            mountains = MountainService.shared.allMountains
 
             #if DEBUG
             print("🏔️ [MountainSelectionVM] Loaded \(mountains.count) mountains")

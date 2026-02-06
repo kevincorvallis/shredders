@@ -82,6 +82,12 @@ actor APIClient {
         try await fetch(endpoint: "/mountains/\(mountainId)/all")
     }
 
+    /// Fetch all data for multiple mountains in a single batch request
+    func fetchBatchMountainData(for mountainIds: [String]) async throws -> BatchMountainAllResponse {
+        let ids = mountainIds.joined(separator: ",")
+        return try await fetch(endpoint: "/mountains/batch/all?ids=\(ids)")
+    }
+
     func fetchConditions(for mountainId: String) async throws -> MountainConditions {
         try await fetch(endpoint: "/mountains/\(mountainId)/conditions")
     }

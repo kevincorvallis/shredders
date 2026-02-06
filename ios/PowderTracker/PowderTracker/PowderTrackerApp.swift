@@ -191,7 +191,7 @@ struct PowderTrackerApp: App {
 
         // Fetch initial data with a 10-second timeout
         let dataTask = Task {
-            _ = try? await APIClient.shared.fetchMountains()
+            await MountainService.shared.fetchMountains()
             if isAuthenticated {
                 await FavoritesService.shared.fetchFromBackend()
             }
@@ -244,13 +244,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             await PushNotificationService.shared.checkAuthorizationStatus()
         }
 
-        // Pre-warm Supabase connection in background
-        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 1.0) {
-            Task { @MainActor in
-                // Light API call to warm connection
-                _ = try? await APIClient.shared.fetchMountains()
-            }
-        }
+        // MountainService.shared.fetchMountains() in loadInitialData() handles pre-warming
     }
 
     // MARK: - Push Notification Registration
