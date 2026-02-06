@@ -31,6 +31,9 @@ struct PowderTrackerApp: App {
     /// Show loading screen while initial data loads (skip during UI tests)
     @State private var isLoadingInitialData: Bool = !ProcessInfo.processInfo.arguments.contains("UI_TESTING")
 
+    /// Loading progress (0.0 – 1.0)
+    @State private var loadingProgress: Double = 0
+
     init() {
         // Reset state during UI tests if requested
         if ProcessInfo.processInfo.arguments.contains("RESET_STATE") {
@@ -52,7 +55,7 @@ struct PowderTrackerApp: App {
                     .environment(authService)
 
                 if isLoadingInitialData {
-                    BrockSkiingLoadingView()
+                    BrockSkiingLoadingView(progress: loadingProgress)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
@@ -189,19 +192,30 @@ struct PowderTrackerApp: App {
         let startTime = Date()
         let isAuthenticated = authService.isAuthenticated
 
-        // Fetch initial data with a 10-second timeout
+        // Step 1: Fetch mountains list
+        loadingProgress = 0.1
+
         let dataTask = Task {
             await MountainService.shared.fetchMountains()
+            await MainActor.run { loadingProgress = isAuthenticated ? 0.5 : 0.9 }
+
+            // Step 2: Fetch favorites (if authenticated)
             if isAuthenticated {
                 await FavoritesService.shared.fetchFromBackend()
+                await MainActor.run { loadingProgress = 0.9 }
             }
         }
+
+        // 10-second timeout
         let timeoutTask = Task {
-            try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 seconds
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
             dataTask.cancel()
         }
         await dataTask.value
         timeoutTask.cancel()
+
+        // Complete
+        loadingProgress = 1.0
 
         // Ensure minimum display time for smooth UX (1.0 seconds)
         let elapsed = Date().timeIntervalSince(startTime)

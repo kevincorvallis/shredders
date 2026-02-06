@@ -26,6 +26,9 @@ struct SkiingSnowflake: Identifiable {
 // MARK: - BrockSkiingLoadingView
 
 struct BrockSkiingLoadingView: View {
+    /// Binding to actual loading progress (0.0 – 1.0)
+    var progress: Double = 0
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Animation states
@@ -338,27 +341,46 @@ struct BrockSkiingLoadingView: View {
                     .multilineTextAlignment(.center)
                     .opacity(messageOpacity)
 
-                // Loading dots
-                HStack(spacing: 6) {
-                    ForEach(0..<3, id: \.self) { index in
-                        Circle()
-                            .fill(.white.opacity(0.6))
-                            .frame(width: 8, height: 8)
-                            .scaleEffect(reduceMotion ? 1.0 : loadingDotScale(for: index))
+                // Progress bar
+                VStack(spacing: 6) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            // Track
+                            Capsule()
+                                .fill(.white.opacity(0.15))
+                                .frame(height: 6)
+
+                            // Fill
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 0.45, green: 0.85, blue: 1.0),
+                                            Color(red: 1.0, green: 0.55, blue: 0.75)
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: max(0, geo.size.width * progress), height: 6)
+                                .animation(.smooth(duration: 0.4), value: progress)
+                        }
                     }
+                    .frame(height: 6)
+                    .frame(maxWidth: 220)
+
+                    // Percentage text
+                    Text("\(Int(progress * 100))%")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .monospacedDigit()
+                        .animation(.smooth(duration: 0.3), value: progress)
                 }
                 .padding(.top, 8)
             }
             .padding(.bottom, 80)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    @State private var loadingDotPhase: Int = 0
-
-    private func loadingDotScale(for index: Int) -> CGFloat {
-        let phase = (loadingDotPhase + index) % 3
-        return phase == 0 ? 1.3 : 1.0
     }
 
     // MARK: - Animation Sequence
@@ -397,9 +419,6 @@ struct BrockSkiingLoadingView: View {
 
         // Cycle loading messages
         startMessageCycle()
-
-        // Animate loading dots
-        startLoadingDots()
     }
 
     private func startSkiingAnimation() {
@@ -434,16 +453,6 @@ struct BrockSkiingLoadingView: View {
                 messageIndex = (messageIndex + 1) % loadingMessages.count
                 withAnimation(.easeInOut(duration: 0.3)) {
                     messageOpacity = 1.0
-                }
-            }
-        }
-    }
-
-    private func startLoadingDots() {
-        Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { [self] _ in
-            Task { @MainActor in
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    loadingDotPhase = (loadingDotPhase + 1) % 3
                 }
             }
         }
@@ -490,5 +499,5 @@ struct BrockSkiingLoadingView: View {
 // MARK: - Preview
 
 #Preview {
-    BrockSkiingLoadingView()
+    BrockSkiingLoadingView(progress: 0.65)
 }
