@@ -33,6 +33,7 @@ export async function GET(
         departure_time,
         departure_location,
         mountain_id,
+        status,
         creator:user_id (
           display_name
         )
@@ -44,6 +45,14 @@ export async function GET(
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
+      );
+    }
+
+    // Block calendar export for cancelled events
+    if (event.status === 'cancelled') {
+      return NextResponse.json(
+        { error: 'Cannot export a cancelled event to calendar' },
+        { status: 400 }
       );
     }
 
@@ -114,6 +123,7 @@ export async function GET(
       endTime,
       url: eventUrl,
       organizer: creatorName,
+      status: event.status === 'completed' ? 'CONFIRMED' : 'CONFIRMED',
     });
 
     return new NextResponse(icsContent, {
@@ -144,8 +154,9 @@ function generateICS(params: {
   endTime: Date;
   url: string;
   organizer: string;
+  status?: string;
 }): string {
-  const { uid, title, description, location, startTime, endTime, url, organizer } = params;
+  const { uid, title, description, location, startTime, endTime, url, organizer, status = 'CONFIRMED' } = params;
 
   const now = new Date();
   const lines = [
@@ -164,7 +175,7 @@ function generateICS(params: {
     `LOCATION:${escapeICS(location)}`,
     `URL:${url}`,
     `ORGANIZER;CN=${escapeICS(organizer)}:mailto:events@shredders-bay.vercel.app`,
-    'STATUS:CONFIRMED',
+    `STATUS:${status}`,
     'SEQUENCE:0',
     'END:VEVENT',
     'END:VCALENDAR',

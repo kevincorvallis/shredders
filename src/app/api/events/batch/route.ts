@@ -54,8 +54,11 @@ export async function GET(request: NextRequest) {
       userProfileId = userProfile?.id || null;
     }
 
+    // Support optional status filter (defaults to active only)
+    const includeStatus = searchParams.get('includeStatus');
+
     // Fetch all events with their creators in a single query
-    const { data: events, error: eventsError } = await supabase
+    let eventsQuery = supabase
       .from('events')
       .select(`
         id,
@@ -85,6 +88,13 @@ export async function GET(request: NextRequest) {
         )
       `)
       .in('id', ids);
+
+    // Filter out cancelled events by default
+    if (!includeStatus) {
+      eventsQuery = eventsQuery.neq('status', 'cancelled');
+    }
+
+    const { data: events, error: eventsError } = await eventsQuery;
 
     if (eventsError) {
       console.error('Error fetching batch events:', eventsError);

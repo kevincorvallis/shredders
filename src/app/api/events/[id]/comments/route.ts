@@ -244,7 +244,7 @@ export async function POST(
     // Check if event exists
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, user_id, title')
+      .select('id, user_id, title, status')
       .eq('id', eventId)
       .single();
 
@@ -252,6 +252,14 @@ export async function POST(
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
+      );
+    }
+
+    // Block comments on cancelled or completed events
+    if (event.status !== 'active') {
+      return NextResponse.json(
+        { error: 'Cannot comment on a cancelled or completed event' },
+        { status: 400 }
       );
     }
 
