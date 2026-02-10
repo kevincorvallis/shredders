@@ -5,29 +5,21 @@ struct SunData: Codable {
     let sunset: String  // ISO 8601 time
 
     var sunriseDate: Date? {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: sunrise) ?? ISO8601DateFormatter().date(from: sunrise)
+        DateFormatters.parseISO8601(sunrise)
     }
 
     var sunsetDate: Date? {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: sunset) ?? ISO8601DateFormatter().date(from: sunset)
+        DateFormatters.parseISO8601(sunset)
     }
 
     var sunriseTime: String {
         guard let date = sunriseDate else { return "--:--" }
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return DateFormatters.time.string(from: date)
     }
 
     var sunsetTime: String {
         guard let date = sunsetDate else { return "--:--" }
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return DateFormatters.time.string(from: date)
     }
 
     var daylightHours: String {

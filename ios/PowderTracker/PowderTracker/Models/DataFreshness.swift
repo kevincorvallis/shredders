@@ -81,15 +81,11 @@ struct DataProvenance {
     }
 
     var timeAgoString: String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: lastUpdated, relativeTo: Date())
+        DateFormatters.formatRelative(lastUpdated)
     }
 
     var fullTimeAgoString: String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        return formatter.localizedString(for: lastUpdated, relativeTo: Date())
+        DateFormatters.relativeFull.localizedString(for: lastUpdated, relativeTo: Date())
     }
 
     var minutesAgo: Int {

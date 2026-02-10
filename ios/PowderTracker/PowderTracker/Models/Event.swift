@@ -84,46 +84,21 @@ struct Event: Codable, Identifiable {
         case isCreator
     }
 
-    // Static formatters to avoid expensive instantiation in computed properties
-    private static let dateParser: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
-
-    private static let eventDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE, MMM d"
-        return formatter
-    }()
-
-    private static let dateTimeParser: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm"
-        return formatter
-    }()
-
     var formattedDate: String {
-        guard let date = Self.dateParser.date(from: eventDate) else { return eventDate }
-        return Self.eventDateFormatter.string(from: date)
+        guard let date = DateFormatters.dateParser.date(from: eventDate) else { return eventDate }
+        return DateFormatters.eventDate.string(from: date)
     }
 
     var formattedTime: String? {
         guard let time = departureTime else { return nil }
-        let components = time.split(separator: ":")
-        guard components.count >= 2,
-              let hour = Int(components[0]) else { return time }
-
-        let h12 = hour % 12 == 0 ? 12 : hour % 12
-        let ampm = hour >= 12 ? "PM" : "AM"
-        return "\(h12):\(components[1]) \(ampm)"
+        return DateFormatters.formatDepartureTime(time)
     }
 
     // MARK: - Last Minute Crew Properties
 
     /// Whether this event is happening today
     var isToday: Bool {
-        eventDate == Self.dateParser.string(from: Date())
+        eventDate == DateFormatters.dateParser.string(from: Date())
     }
 
     /// Whether this event is happening tomorrow
@@ -131,14 +106,14 @@ struct Event: Codable, Identifiable {
         guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) else {
             return false
         }
-        return eventDate == Self.dateParser.string(from: tomorrow)
+        return eventDate == DateFormatters.dateParser.string(from: tomorrow)
     }
 
     /// Calculates time until departure in seconds
     var timeUntilDeparture: TimeInterval? {
         guard let time = departureTime else { return nil }
 
-        guard let departureDate = Self.dateTimeParser.date(from: "\(eventDate) \(time)") else {
+        guard let departureDate = DateFormatters.dateTimeParser.date(from: "\(eventDate) \(time)") else {
             return nil
         }
 
@@ -234,39 +209,20 @@ struct EventWithDetails: Codable, Identifiable {
         case inviteToken
     }
 
-    // Static formatters to avoid expensive instantiation in computed properties
-    private static let dateParser: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
-
-    private static let fullDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE, MMMM d, yyyy"
-        return formatter
-    }()
-
     var formattedDate: String {
-        guard let date = Self.dateParser.date(from: eventDate) else { return eventDate }
-        return Self.fullDateFormatter.string(from: date)
+        guard let date = DateFormatters.dateParser.date(from: eventDate) else { return eventDate }
+        return DateFormatters.fullDateWithYear.string(from: date)
     }
 
     var formattedTime: String? {
         guard let time = departureTime else { return nil }
-        let components = time.split(separator: ":")
-        guard components.count >= 2,
-              let hour = Int(components[0]) else { return time }
-
-        let h12 = hour % 12 == 0 ? 12 : hour % 12
-        let ampm = hour >= 12 ? "PM" : "AM"
-        return "\(h12):\(components[1]) \(ampm)"
+        return DateFormatters.formatDepartureTime(time)
     }
 }
 
 struct EventUser: Codable {
     let id: String
-    let username: String
+    let username: String?
     let displayName: String?
     let avatarUrl: String?
     let ridingStyle: String?
@@ -280,7 +236,7 @@ struct EventUser: Codable {
     }
 
     var displayNameOrUsername: String {
-        displayName ?? username
+        displayName ?? username ?? "User"
     }
 
     /// Returns the riding style as enum for display

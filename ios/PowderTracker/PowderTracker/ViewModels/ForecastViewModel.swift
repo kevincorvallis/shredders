@@ -57,21 +57,15 @@ class ForecastViewModel {
     
     // Convert WeatherKit daily forecast to app's ForecastDay model
     func convertedDailyForecast() -> [ForecastDay] {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "EEEE"
-        
         return weatherKitDailyForecast.map { day in
             let fahrenheitHigh = weatherKitService.celsiusToFahrenheit(day.highTemperature)
             let fahrenheitLow = weatherKitService.celsiusToFahrenheit(day.lowTemperature)
             let snowfallInches = weatherKitService.millimetersToInches(day.snowfallAmount ?? 0)
             let windMph = weatherKitService.metersPerSecondToMph(day.windSpeed)
-            
+
             return ForecastDay(
-                date: dateFormatter.string(from: day.date),
-                dayOfWeek: dayFormatter.string(from: day.date),
+                date: DateFormatters.dateParser.string(from: day.date),
+                dayOfWeek: DateFormatters.dayOfWeek.string(from: day.date),
                 high: Int(fahrenheitHigh),
                 low: Int(fahrenheitLow),
                 snowfall: Int(snowfallInches),

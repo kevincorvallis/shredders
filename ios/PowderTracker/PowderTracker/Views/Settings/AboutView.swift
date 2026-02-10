@@ -17,13 +17,8 @@ struct AboutView: View {
     @State private var demoScore: Double = 7.5
     @State private var expandedTip: String? = nil
 
-    private var appVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-    }
-
-    private var buildNumber: String {
-        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-    }
+    private var appVersion: String { Bundle.main.appVersion }
+    private var buildNumber: String { Bundle.main.buildNumber }
 
     var body: some View {
         NavigationStack {

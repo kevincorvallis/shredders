@@ -27,9 +27,7 @@ struct LastUpdatedPill: View {
     }
 
     private var timeAgoString: String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
+        DateFormatters.formatRelative(date)
     }
 }
 
@@ -82,18 +80,11 @@ struct TimestampPill: View {
     private var formattedDate: String {
         switch format {
         case .relative:
-            let formatter = RelativeDateTimeFormatter()
-            formatter.unitsStyle = .abbreviated
-            return formatter.localizedString(for: date, relativeTo: Date())
+            return DateFormatters.formatRelative(date)
         case .time:
-            let formatter = DateFormatter()
-            formatter.timeStyle = .short
-            return formatter.string(from: date)
+            return DateFormatters.time.string(from: date)
         case .dateTime:
-            let formatter = DateFormatter()
-            formatter.dateStyle = .short
-            formatter.timeStyle = .short
-            return formatter.string(from: date)
+            return DateFormatters.shortDateTime.string(from: date)
         }
     }
 }

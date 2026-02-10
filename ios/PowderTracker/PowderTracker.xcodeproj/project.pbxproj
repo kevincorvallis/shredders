@@ -288,7 +288,9 @@
 		C44D5CCFFADE094858452487 /* MountainMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1553DC46450DCEDE1C88CCB /* MountainMapView.swift */; };
 		C4E1435B1D56AE17AA59B222 /* SmartAlertsBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41F12DEC4621D5BFF6BE700 /* SmartAlertsBanner.swift */; };
 		C74DA7539E5D7B9C4C45B8B3 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C89D64282F6DE19B90A062 /* Date+Extensions.swift */; };
+		WIDGET01DATEEXT001SOURCE1 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C89D64282F6DE19B90A062 /* Date+Extensions.swift */; };
 		C8A2B3D4E5F6A7B8C9D0E1F2 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF8A1B2C3E4F5A6D7B8C9E0F /* DateFormatters.swift */; };
+		WIDGET01DATEFMT001SOURCE1 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF8A1B2C3E4F5A6D7B8C9E0F /* DateFormatters.swift */; };
 		C941F5FE2745765CA068DA9B /* MountainTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69AE8D5CABB0D51AF515752 /* MountainTab.swift */; };
 		CA30E630ED0E974A9D724ACF /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2157D2D009AB7E7771B8E03B /* LocationManager.swift */; };
 		CADF7548E2BB570D96110D58 /* FavoritesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73D5AA5B3D2A61B4E794D42 /* FavoritesService.swift */; };
@@ -1997,6 +1999,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				WIDGET01DATEFMT001SOURCE1 /* DateFormatters.swift in Sources */,
+				WIDGET01DATEEXT001SOURCE1 /* Date+Extensions.swift in Sources */,
 				FE79F6E8474B4AB52887B253 /* AlertSubscription.swift in Sources */,
 				BB7E8C849252F476877234AF /* ArrivalTime.swift in Sources */,
 				A4AB7832C4CDFD5C0822FFFD /* ChatMessage.swift in Sources */,

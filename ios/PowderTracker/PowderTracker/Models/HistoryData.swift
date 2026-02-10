@@ -51,15 +51,13 @@ extension HistoryDataPoint {
 
         for i in (0..<days).reversed() {
             let date = calendar.date(byAdding: .day, value: -i, to: today)!
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
 
             let snowfall = Int.random(in: 0...12)
             let melt = Int.random(in: 0...2)
             currentDepth = max(80, currentDepth - snowfall + melt)
 
             history.append(HistoryDataPoint(
-                date: formatter.string(from: date),
+                date: DateFormatters.dateParser.string(from: date),
                 snowDepth: currentDepth + snowfall,
                 snowfall: snowfall,
                 temperature: Int.random(in: 20...40)

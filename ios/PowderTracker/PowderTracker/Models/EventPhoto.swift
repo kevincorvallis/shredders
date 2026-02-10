@@ -42,43 +42,8 @@ struct EventPhoto: Codable, Identifiable {
 
     /// Formatted relative time
     var relativeTime: String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        guard let date = formatter.date(from: createdAt) else {
-            formatter.formatOptions = [.withInternetDateTime]
-            guard let date = formatter.date(from: createdAt) else {
-                return createdAt
-            }
-            return formatRelativeTime(from: date)
-        }
-        return formatRelativeTime(from: date)
-    }
-
-    private func formatRelativeTime(from date: Date) -> String {
-        let now = Date()
-        let interval = now.timeIntervalSince(date)
-
-        if interval < 60 {
-            return "Just now"
-        } else if interval < 3600 {
-            let minutes = Int(interval / 60)
-            return "\(minutes)m ago"
-        } else if interval < 86400 {
-            let hours = Int(interval / 3600)
-            return "\(hours)h ago"
-        } else if interval < 172800 {
-            return "Yesterday"
-        } else {
-            let days = Int(interval / 86400)
-            if days < 7 {
-                return "\(days)d ago"
-            } else {
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "MMM d"
-                return dateFormatter.string(from: date)
-            }
-        }
+        guard let date = DateFormatters.parseISO8601(createdAt) else { return createdAt }
+        return DateFormatters.relativeTimeString(from: date)
     }
 
     /// Aspect ratio for layout (default to square if unknown)

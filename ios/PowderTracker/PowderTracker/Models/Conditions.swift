@@ -38,23 +38,19 @@ struct Conditions: Codable, Identifiable {
     let visibility: String
 
     var formattedTimestamp: Date? {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: timestamp)
+        DateFormatters.parseISO8601(timestamp)
     }
 
     var lastUpdatedString: String {
         guard let date = formattedTimestamp else { return "Unknown" }
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
+        return DateFormatters.formatRelative(date)
     }
 }
 
 // MARK: - Mock Data
 extension Conditions {
     static let mock = Conditions(
-        timestamp: ISO8601DateFormatter().string(from: Date()),
+        timestamp: DateFormatters.iso8601.string(from: Date()),
         mountain: MountainBasic(id: "baker", name: "Mt. Baker", elevation: .init(base: 3500, summit: 5089)),
         temperature: Temperature(base: 28, summit: 18),
         snowDepth: 142,

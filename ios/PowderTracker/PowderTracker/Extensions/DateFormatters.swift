@@ -87,6 +87,13 @@ enum DateFormatters {
         return formatter
     }()
 
+    /// "2 hours ago", "3 days ago" - Full relative time
+    nonisolated(unsafe) static let relativeFull: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return formatter
+    }()
+
     // MARK: - ISO8601 Formatters
 
     /// Standard ISO8601 format for API communication
@@ -155,6 +162,27 @@ enum DateFormatters {
         return formatter
     }()
 
+    /// Format: "MMM d" - Short month and day (e.g., "Jan 15")
+    static let monthDay: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
+    /// Format: "EEEE, MMMM d, yyyy" - Full date with year
+    static let fullDateWithYear: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, MMMM d, yyyy"
+        return formatter
+    }()
+
+    /// Format: "yyyy-MM-dd HH:mm" - Date and time parser
+    static let dateTimeParser: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        return formatter
+    }()
+
     // MARK: - Convenience Methods
 
     /// Format a date using the appropriate formatter for event display
@@ -170,5 +198,42 @@ enum DateFormatters {
     /// Format a date as relative time (e.g., "2 hours ago")
     static func formatRelative(_ date: Date) -> String {
         relative.localizedString(for: date, relativeTo: Date())
+    }
+
+    /// Parse an ISO8601 date string, trying fractional seconds first then simple
+    static func parseISO8601(_ string: String) -> Date? {
+        iso8601.date(from: string) ?? iso8601Simple.date(from: string)
+    }
+
+    /// Format a "HH:mm" or "HH:mm:ss" time string to "h:mm AM/PM"
+    static func formatDepartureTime(_ time: String) -> String? {
+        let components = time.split(separator: ":")
+        guard components.count >= 2,
+              let hour = Int(components[0]) else { return time }
+        let h12 = hour % 12 == 0 ? 12 : hour % 12
+        let ampm = hour >= 12 ? "PM" : "AM"
+        return "\(h12):\(components[1]) \(ampm)"
+    }
+
+    /// Human-friendly relative time (e.g., "Just now", "2h ago", "Yesterday", "3d ago", "Jan 15")
+    static func relativeTimeString(from date: Date) -> String {
+        let interval = Date().timeIntervalSince(date)
+
+        if interval < 60 {
+            return "Just now"
+        } else if interval < 3600 {
+            return "\(Int(interval / 60))m ago"
+        } else if interval < 86400 {
+            return "\(Int(interval / 3600))h ago"
+        } else if interval < 172800 {
+            return "Yesterday"
+        } else {
+            let days = Int(interval / 86400)
+            if days < 7 {
+                return "\(days)d ago"
+            } else {
+                return monthDay.string(from: date)
+            }
+        }
     }
 }

@@ -236,20 +236,13 @@ struct SampleEvent: Identifiable {
     let carpoolSeats: Int?
 
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        guard let date = formatter.date(from: eventDate) else { return eventDate }
-        formatter.dateFormat = "EEE, MMM d"
-        return formatter.string(from: date)
+        guard let date = DateFormatters.dateParser.date(from: eventDate) else { return eventDate }
+        return DateFormatters.eventDate.string(from: date)
     }
 
     var formattedTime: String? {
         guard let time = departureTime else { return nil }
-        let components = time.split(separator: ":")
-        guard components.count >= 2, let hour = Int(components[0]) else { return time }
-        let h12 = hour % 12 == 0 ? 12 : hour % 12
-        let ampm = hour >= 12 ? "PM" : "AM"
-        return "\(h12):\(components[1]) \(ampm)"
+        return DateFormatters.formatDepartureTime(time)
     }
 
     static let samples: [SampleEvent] = [

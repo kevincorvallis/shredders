@@ -941,15 +941,6 @@ struct SnowForecastChart: View {
                 Rectangle()
                     .fill(Color.clear)
                     .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { _ in
-                                if !hasInteracted {
-                                    hasInteracted = true
-                                    dismissHint()
-                                }
-                            }
-                    )
                     .onTapGesture(count: 2) {
                         // Double-tap to open chart detail view
                         if let firstFavorite = visibleFavorites.first {

@@ -185,9 +185,7 @@ struct ProfileView: View {
 
     // MARK: - Computed Properties
 
-    private var appVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-    }
+    private var appVersion: String { Bundle.main.appVersion }
 
     private var unitsSubtitle: String {
         let temp = temperatureUnit == "F" ? "°F" : "°C"
