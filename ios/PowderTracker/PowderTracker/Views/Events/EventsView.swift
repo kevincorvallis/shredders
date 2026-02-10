@@ -58,6 +58,7 @@ struct EventsView: View {
     // Powder day suggestion state
     @State private var powderDayMountain: (mountain: Mountain, score: Int)?
     @State private var showPowderDayHint = false
+    @State private var suggestedMountainForEvent: String?
 
     var body: some View {
         Group {
@@ -88,9 +89,12 @@ struct EventsView: View {
             .toolbar { toolbarContent }
             .enhancedRefreshable { await loadEvents() }
             .sheet(isPresented: $showingCreateSheet) {
-                EventCreateView(onEventCreated: { _ in
-                    Task { await loadEvents(bustCache: true) }
-                })
+                EventCreateView(
+                    suggestedMountainId: suggestedMountainForEvent,
+                    onEventCreated: { _ in
+                        Task { await loadEvents(bustCache: true) }
+                    }
+                )
             }
             .navigationDestination(for: String.self) { eventId in
                 EventDetailView(eventId: eventId)
@@ -142,7 +146,9 @@ struct EventsView: View {
             List {
                 // Powder Day Finder Banner
                 Section {
-                    PowderDayFinderBanner {
+                    PowderDayFinderBanner(
+                        suggestedMountainName: powderDayMountain?.mountain.name
+                    ) {
                         showingCreateSheet = true
                     }
                 }
@@ -414,6 +420,7 @@ struct EventsView: View {
                let mountain = mountains.first(where: { $0.id == best.mountainId }) {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                     powderDayMountain = (mountain, Int(best.score))
+                    suggestedMountainForEvent = best.mountainId
                 }
             }
         }
@@ -489,6 +496,7 @@ private struct PowderDayHintPopover: View {
 // MARK: - Powder Day Finder Banner
 
 private struct PowderDayFinderBanner: View {
+    var suggestedMountainName: String?
     let action: () -> Void
 
     var body: some View {
@@ -522,10 +530,17 @@ private struct PowderDayFinderBanner: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
 
-                    Text("AI picks the best day & mountain for your trip")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                    if let mountainName = suggestedMountainName {
+                        Text("Best conditions at \(mountainName)")
+                            .font(.caption)
+                            .foregroundStyle(.cyan)
+                            .lineLimit(1)
+                    } else {
+                        Text("AI picks the best day & mountain for your trip")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
                 }
 
                 Spacer()

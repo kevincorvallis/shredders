@@ -3,6 +3,7 @@ import SwiftUI
 struct EventCreateView: View {
     @Environment(\.dismiss) private var dismiss
 
+    var suggestedMountainId: String?
     var onEventCreated: ((Event) -> Void)?
 
     @State private var selectedMountainId = ""
@@ -27,6 +28,9 @@ struct EventCreateView: View {
     @State private var allForecasts: [ForecastDay] = []
     @State private var isLoadingForecast = false
     @State private var bestPowderDay: ForecastDay?
+    @State private var hasAppliedPowderSuggestion = false
+    @State private var autoFilledMountainId: String?
+    @State private var autoFilledDate: Date?
 
     // All mountains from the app config (IDs must match backend)
     private let mountains: [(id: String, name: String)] = [
@@ -70,6 +74,16 @@ struct EventCreateView: View {
                     .onChange(of: selectedMountainId) { _, _ in
                         Task { await loadForecast() }
                     }
+
+                    if let suggestedId = autoFilledMountainId, selectedMountainId == suggestedId {
+                        HStack(spacing: 4) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 10))
+                            Text("Suggested based on forecast")
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(.cyan)
+                    }
                 }
 
                 // Event details
@@ -87,9 +101,19 @@ struct EventCreateView: View {
                     .onChange(of: eventDate) { _, _ in
                         Task { await loadForecast() }
                     }
-                    
+
+                    if let filledDate = autoFilledDate, Calendar.current.isDate(eventDate, inSameDayAs: filledDate) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "wand.and.stars")
+                                .font(.system(size: 10))
+                            Text("Auto-filled · Best powder day")
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(.cyan)
+                    }
+
                     // Auto-fill best powder day button
-                    if !selectedMountainId.isEmpty {
+                    if !selectedMountainId.isEmpty && !hasAppliedPowderSuggestion {
                         autoFillBestDayButton
                     }
                 }
@@ -237,6 +261,12 @@ struct EventCreateView: View {
             }
             .sheet(isPresented: $showingLocationPicker) {
                 LocationPickerView(selectedLocation: $departureLocation)
+            }
+            .onAppear {
+                if let suggested = suggestedMountainId, selectedMountainId.isEmpty {
+                    selectedMountainId = suggested
+                    autoFilledMountainId = suggested
+                }
             }
         }
     }
@@ -470,27 +500,28 @@ struct EventCreateView: View {
                 }
             }
 
-            // Find best powder day from FUTURE dates only (fix for past dates bug)
-            // Lower threshold to 3" for more frequent suggestions
-            // Also consider days with good snow conditions (fresh snow + cold temps)
-            let futureDays = forecast.filter { day in
-                day.date >= todayStr && day.date != eventDateStr
-            }
+            // Only suggest powder day if user hasn't already applied a suggestion
+            if !hasAppliedPowderSuggestion {
+                // Find best powder day from FUTURE dates only
+                // Lower threshold to 3" for more frequent suggestions
+                let futureDays = forecast.filter { day in
+                    day.date >= todayStr && day.date != eventDateStr
+                }
 
-            // Primary: Find day with most snowfall (3"+ threshold)
-            if let snowDay = futureDays.filter({ $0.snowfall >= 3 }).max(by: { $0.snowfall < $1.snowfall }) {
-                bestPowderDay = snowDay
-            } else {
-                // Secondary: Find best conditions day (cold temps, any snow expected)
-                bestPowderDay = futureDays
-                    .filter { $0.snowfall > 0 || $0.precipProbability >= 60 }
-                    .sorted { day1, day2 in
-                        // Score: snowfall + precip probability bonus + cold temp bonus
-                        let score1 = day1.snowfall * 10 + (day1.precipProbability > 70 ? 5 : 0) + (day1.high < 32 ? 3 : 0)
-                        let score2 = day2.snowfall * 10 + (day2.precipProbability > 70 ? 5 : 0) + (day2.high < 32 ? 3 : 0)
-                        return score1 > score2
-                    }
-                    .first
+                // Primary: Find day with most snowfall (3"+ threshold)
+                if let snowDay = futureDays.filter({ $0.snowfall >= 3 }).max(by: { $0.snowfall < $1.snowfall }) {
+                    bestPowderDay = snowDay
+                } else {
+                    // Secondary: Find best conditions day (cold temps, any snow expected)
+                    bestPowderDay = futureDays
+                        .filter { $0.snowfall > 0 || $0.precipProbability >= 60 }
+                        .sorted { day1, day2 in
+                            let score1 = day1.snowfall * 10 + (day1.precipProbability > 70 ? 5 : 0) + (day1.high < 32 ? 3 : 0)
+                            let score2 = day2.snowfall * 10 + (day2.precipProbability > 70 ? 5 : 0) + (day2.high < 32 ? 3 : 0)
+                            return score1 > score2
+                        }
+                        .first
+                }
             }
 
         } catch {
@@ -539,7 +570,9 @@ struct EventCreateView: View {
             forecastPreview = day
             HapticFeedback.selection.trigger()
 
-            // Clear best powder day since we just selected it
+            // Disable further suggestions and track auto-filled date
+            hasAppliedPowderSuggestion = true
+            autoFilledDate = date
             bestPowderDay = nil
         }
     }
