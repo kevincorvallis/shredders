@@ -119,8 +119,8 @@ export async function GET(
             .single()
         : Promise.resolve({ data: null }),
 
-      // 3. Get invite token (if user is the creator)
-      userProfileId && event.user_id === userProfileId
+      // 3. Get invite token (if user is the creator and event is active)
+      userProfileId && event.user_id === userProfileId && event.status === 'active'
         ? supabase
             .from('event_invite_tokens')
             .select('token')
@@ -128,8 +128,8 @@ export async function GET(
             .single()
         : Promise.resolve({ data: null }),
 
-      // 4. Fetch mountain conditions
-      mountain
+      // 4. Fetch mountain conditions (skip for cancelled/completed events to save API call)
+      mountain && event.status === 'active'
         ? fetch(`${baseUrl}/api/mountains/${event.mountain_id}/all`, {
             headers: { 'Accept': 'application/json' },
             next: { revalidate: 600 },

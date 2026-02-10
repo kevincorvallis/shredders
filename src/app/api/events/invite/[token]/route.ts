@@ -103,30 +103,42 @@ export async function GET(
       }
     }
 
+    // For invalid/cancelled events, return minimal info to avoid leaking stale data
+    const eventData = isValid
+      ? {
+          id: event.id,
+          creatorId: event.user_id,
+          mountainId: event.mountain_id,
+          mountainName: mountain?.name,
+          title: event.title,
+          notes: event.notes,
+          eventDate: event.event_date,
+          departureTime: event.departure_time,
+          departureLocation: event.departure_location,
+          skillLevel: event.skill_level,
+          carpoolAvailable: event.carpool_available,
+          carpoolSeats: event.carpool_seats,
+          maxAttendees: event.max_attendees,
+          status: event.status,
+          createdAt: event.created_at,
+          updatedAt: event.updated_at,
+          attendeeCount: event.attendee_count,
+          goingCount: event.going_count,
+          maybeCount: event.maybe_count,
+          waitlistCount: event.waitlist_count ?? 0,
+          creator: event.creator,
+        }
+      : {
+          id: event.id,
+          mountainId: event.mountain_id,
+          mountainName: mountain?.name,
+          title: event.title,
+          eventDate: event.event_date,
+          status: event.status,
+        };
+
     const inviteInfo: InviteInfo = {
-      event: {
-        id: event.id,
-        creatorId: event.user_id,
-        mountainId: event.mountain_id,
-        mountainName: mountain?.name,
-        title: event.title,
-        notes: event.notes,
-        eventDate: event.event_date,
-        departureTime: event.departure_time,
-        departureLocation: event.departure_location,
-        skillLevel: event.skill_level,
-        carpoolAvailable: event.carpool_available,
-        carpoolSeats: event.carpool_seats,
-        maxAttendees: event.max_attendees,
-        status: event.status,
-        createdAt: event.created_at,
-        updatedAt: event.updated_at,
-        attendeeCount: event.attendee_count,
-        goingCount: event.going_count,
-        maybeCount: event.maybe_count,
-        waitlistCount: event.waitlist_count ?? 0,
-        creator: event.creator,
-      },
+      event: eventData as any,
       conditions,
       isValid,
       isExpired: isExpired || isEventPast,

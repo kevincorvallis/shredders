@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { PATCH, DELETE } from '../[id]/route';
+import { GET as EventGet, PATCH, DELETE } from '../[id]/route';
 import { POST as RSVPPost, DELETE as RSVPDelete } from '../[id]/rsvp/route';
 import { POST as CommentPost } from '../[id]/comments/route';
 import { GET as CalendarGet } from '../[id]/calendar/route';
@@ -20,6 +20,8 @@ import { GET as ActivityGet } from '../[id]/activity/route';
 import { GET as CarpoolGet } from '../[id]/carpool/route';
 import { POST as ClonePost } from '../[id]/clone/route';
 import { POST as ReactivatePost } from '../[id]/reactivate/route';
+import { GET as InviteGet, POST as InvitePost } from '../invite/[token]/route';
+import { GET as EventsListGet } from '../route';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
 
@@ -1083,5 +1085,250 @@ describe('Authentication Required for Mutation Endpoints', () => {
       params: Promise.resolve({ id: eventId }),
     });
     expect(response.status).toBe(401);
+  });
+});
+
+// ─── Invite GET for Cancelled Events ─────────────────────────────────────────
+
+describe('GET /api/events/invite/[token] - Cancelled Event', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return minimal event data for cancelled event invites', async () => {
+    const mockAdmin = {
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: 'invite123',
+                event_id: eventId,
+                token: 'test-token',
+                created_by: 'user123',
+                uses_count: 0,
+                max_uses: null,
+                expires_at: null,
+                event: {
+                  id: eventId,
+                  user_id: 'user123',
+                  mountain_id: 'stevens-pass',
+                  title: 'Cancelled Trip',
+                  notes: 'Secret plans that should be hidden',
+                  event_date: FUTURE_DATE,
+                  departure_time: '06:00:00',
+                  departure_location: 'Northgate',
+                  skill_level: 'expert',
+                  carpool_available: true,
+                  carpool_seats: 4,
+                  max_attendees: 10,
+                  status: 'cancelled',
+                  created_at: '2025-01-01',
+                  updated_at: '2025-01-01',
+                  attendee_count: 5,
+                  going_count: 3,
+                  maybe_count: 2,
+                  waitlist_count: 0,
+                  creator: {
+                    id: 'user123',
+                    username: 'testuser',
+                    display_name: 'Test User',
+                    avatar_url: null,
+                  },
+                },
+              },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    };
+
+    (createAdminClient as any).mockReturnValue(mockAdmin);
+
+    const request = new Request('http://localhost:3000/api/events/invite/test-token', {
+      method: 'GET',
+    });
+
+    const response = await InviteGet(request as any, {
+      params: Promise.resolve({ token: 'test-token' }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.invite.isValid).toBe(false);
+    // Should NOT contain sensitive details for cancelled event
+    expect(data.invite.event.notes).toBeUndefined();
+    expect(data.invite.event.creator).toBeUndefined();
+    expect(data.invite.event.goingCount).toBeUndefined();
+    expect(data.invite.event.attendeeCount).toBeUndefined();
+    // Should still contain basic identification
+    expect(data.invite.event.title).toBe('Cancelled Trip');
+    expect(data.invite.event.status).toBe('cancelled');
+    expect(data.invite.event.id).toBe(eventId);
+  });
+
+  it('should return full event data for valid active invites', async () => {
+    const mockAdmin = {
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: 'invite123',
+                event_id: eventId,
+                token: 'test-token',
+                created_by: 'user123',
+                uses_count: 0,
+                max_uses: null,
+                expires_at: null,
+                event: {
+                  id: eventId,
+                  user_id: 'user123',
+                  mountain_id: 'stevens-pass',
+                  title: 'Active Trip',
+                  notes: 'Bring snacks',
+                  event_date: FUTURE_DATE,
+                  departure_time: '06:00:00',
+                  departure_location: 'Northgate',
+                  skill_level: 'intermediate',
+                  carpool_available: true,
+                  carpool_seats: 4,
+                  max_attendees: 10,
+                  status: 'active',
+                  created_at: '2025-01-01',
+                  updated_at: '2025-01-01',
+                  attendee_count: 5,
+                  going_count: 3,
+                  maybe_count: 2,
+                  waitlist_count: 0,
+                  creator: {
+                    id: 'user123',
+                    username: 'testuser',
+                    display_name: 'Test User',
+                    avatar_url: null,
+                  },
+                },
+              },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    };
+
+    (createAdminClient as any).mockReturnValue(mockAdmin);
+
+    const request = new Request('http://localhost:3000/api/events/invite/test-token', {
+      method: 'GET',
+    });
+
+    const response = await InviteGet(request as any, {
+      params: Promise.resolve({ token: 'test-token' }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.invite.isValid).toBe(true);
+    // Full details for active event
+    expect(data.invite.event.notes).toBe('Bring snacks');
+    expect(data.invite.event.creator).toBeDefined();
+    expect(data.invite.event.goingCount).toBe(3);
+  });
+});
+
+// ─── Invite POST for Cancelled Events ────────────────────────────────────────
+
+describe('POST /api/events/invite/[token] - Cancelled Event', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should reject using invite for cancelled event', async () => {
+    const mockSupabase = createMockSupabase({});
+    const mockAdmin = {
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: 'invite123',
+                event_id: eventId,
+                token: 'test-token',
+                uses_count: 0,
+                max_uses: null,
+                expires_at: null,
+                event: {
+                  id: eventId,
+                  status: 'cancelled',
+                  event_date: FUTURE_DATE,
+                },
+              },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    };
+
+    (createClient as any).mockResolvedValue(mockSupabase);
+    (createAdminClient as any).mockReturnValue(mockAdmin);
+
+    const request = new Request('http://localhost:3000/api/events/invite/test-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const response = await InvitePost(request as any, {
+      params: Promise.resolve({ token: 'test-token' }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain('no longer valid');
+  });
+
+  it('should reject using invite for past event', async () => {
+    const mockSupabase = createMockSupabase({});
+    const mockAdmin = {
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: 'invite123',
+                event_id: eventId,
+                token: 'test-token',
+                uses_count: 0,
+                max_uses: null,
+                expires_at: null,
+                event: {
+                  id: eventId,
+                  status: 'active',
+                  event_date: PAST_DATE,
+                },
+              },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    };
+
+    (createClient as any).mockResolvedValue(mockSupabase);
+    (createAdminClient as any).mockReturnValue(mockAdmin);
+
+    const request = new Request('http://localhost:3000/api/events/invite/test-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const response = await InvitePost(request as any, {
+      params: Promise.resolve({ token: 'test-token' }),
+    });
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain('no longer valid');
   });
 });
