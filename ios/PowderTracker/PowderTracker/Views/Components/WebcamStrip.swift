@@ -1,4 +1,6 @@
 import SwiftUI
+import NukeUI
+import Nuke
 
 /// Horizontal scroll of webcam thumbnails from favorite mountains
 /// Provides quick access to live webcam feeds
@@ -51,8 +53,6 @@ struct WebcamThumbnailCard: View {
     let webcam: MountainDetail.Webcam
     var onTap: (() -> Void)? = nil
 
-    @State private var imageLoaded = false
-
     var body: some View {
         Button {
             onTap?()
@@ -61,21 +61,19 @@ struct WebcamThumbnailCard: View {
                 // Webcam image
                 ZStack {
                     // Placeholder or actual image
-                    AsyncImage(url: URL(string: webcam.url)) { phase in
-                        switch phase {
-                        case .empty:
-                            webcamPlaceholder
-                        case .success(let image):
+                    LazyImage(url: URL(string: webcam.url)) { state in
+                        if let image = state.image {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .onAppear { imageLoaded = true }
-                        case .failure:
+                        } else if state.error != nil {
                             webcamErrorPlaceholder
-                        @unknown default:
+                        } else {
                             webcamPlaceholder
                         }
                     }
+                    .processors([ImageProcessors.Resize(width: 160)])
+                    .priority(.high)
                     .frame(width: 160, height: 100)
                     .clipped()
 
