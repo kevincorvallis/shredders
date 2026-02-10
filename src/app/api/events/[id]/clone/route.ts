@@ -112,6 +112,7 @@ export async function POST(
         skill_level: originalEvent.skill_level,
         carpool_available: originalEvent.carpool_available,
         carpool_seats: originalEvent.carpool_seats,
+        max_attendees: originalEvent.max_attendees,
       })
       .select(`
         *,

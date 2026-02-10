@@ -76,6 +76,26 @@ describe('POST /api/events/[id]/rsvp', () => {
 
     mockAdminClient = {
       from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'events') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: eventId,
+                    status: 'active',
+                    event_date: FUTURE_DATE,
+                    user_id: 'creator123',
+                    title: 'Powder Day',
+                    max_attendees: null,
+                    going_count: 0,
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
         if (table === 'event_attendees') {
           return {
             select: vi.fn().mockReturnValue({
@@ -254,7 +274,8 @@ describe('POST /api/events/[id]/rsvp', () => {
   });
 
   it('should reject RSVP for cancelled event', async () => {
-    mockSupabase.from = vi.fn().mockReturnValue({
+    // RSVP route uses adminClient for events query
+    mockAdminClient.from = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
@@ -290,7 +311,8 @@ describe('POST /api/events/[id]/rsvp', () => {
   });
 
   it('should return 404 for non-existent event', async () => {
-    mockSupabase.from = vi.fn().mockReturnValue({
+    // RSVP route uses adminClient for events query
+    mockAdminClient.from = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
@@ -378,6 +400,28 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
 
     mockAdminClient = {
       from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'events') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: eventId,
+                    status: 'active',
+                    event_date: FUTURE_DATE,
+                    user_id: 'creator123',
+                    title: 'Powder Day',
+                    max_attendees: null,
+                    going_count: 2,
+                    maybe_count: 1,
+                    attendee_count: 3,
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
         if (table === 'event_attendees') {
           return {
             select: vi.fn().mockReturnValue({
@@ -429,8 +473,8 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
   });
 
   it('should reject RSVP from event creator', async () => {
-    // Set event creator to same user as authenticated user
-    mockSupabase.from = vi.fn().mockReturnValue({
+    // Set event creator to same user as authenticated user (route uses adminClient for events)
+    mockAdminClient.from = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
@@ -465,7 +509,8 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
   });
 
   it('should reject RSVP for past event', async () => {
-    mockSupabase.from = vi.fn().mockReturnValue({
+    // Route uses adminClient for events query
+    mockAdminClient.from = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
@@ -501,27 +546,9 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
 
   it('should auto-waitlist when event is at capacity', async () => {
     // Event at capacity: max_attendees=2, going_count=2
-    mockSupabase.from = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: eventId,
-              status: 'active',
-              event_date: FUTURE_DATE,
-              user_id: 'creator123',
-              max_attendees: 2,
-              going_count: 2,
-              maybe_count: 0,
-              attendee_count: 2,
-            },
-            error: null,
-          }),
-        }),
-      }),
-    });
+    // Note: the waitlist test needs special handling since adminClient.from is overridden below
 
-    // Admin client needs to handle: existing RSVP check, waitlist position query, insert
+    // Admin client needs to handle: events query, existing RSVP check, waitlist position query, insert
     const insertMock = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         single: vi.fn().mockResolvedValue({
@@ -548,6 +575,26 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
 
     let adminCallCount = 0;
     mockAdminClient.from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'events') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id: eventId,
+                  status: 'active',
+                  event_date: FUTURE_DATE,
+                  user_id: 'creator123',
+                  title: 'Powder Day',
+                  max_attendees: 2,
+                  going_count: 2,
+                },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
       if (table === 'event_attendees') {
         adminCallCount++;
         if (adminCallCount === 1) {
@@ -644,15 +691,40 @@ describe('DELETE /api/events/[id]/rsvp', () => {
     };
 
     mockAdminClient = {
-      from: vi.fn().mockReturnValue({
-        delete: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({
-              data: null,
-              error: null,
+      from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'events') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: eventId,
+                    user_id: 'creator123',
+                    status: 'active',
+                    event_date: FUTURE_DATE,
+                    going_count: 1,
+                    maybe_count: 0,
+                    attendee_count: 1,
+                  },
+                  error: null,
+                }),
+              }),
             }),
-          }),
-        }),
+          };
+        }
+        if (table === 'event_attendees') {
+          return {
+            delete: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return {};
       }),
     };
 
@@ -680,20 +752,26 @@ describe('DELETE /api/events/[id]/rsvp', () => {
   });
 
   it('should prevent event creator from removing their RSVP', async () => {
-    mockSupabase.from = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: eventId,
-              user_id: 'user123', // Same as test user (creator)
-              status: 'active',
-              event_date: FUTURE_DATE,
-            },
-            error: null,
+    // Route uses adminClient for events query
+    mockAdminClient.from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'events') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id: eventId,
+                  user_id: 'user123', // Same as test user (creator)
+                  status: 'active',
+                  event_date: FUTURE_DATE,
+                },
+                error: null,
+              }),
+            }),
           }),
-        }),
-      }),
+        };
+      }
+      return {};
     });
 
     mockRequest = new Request('http://localhost:3000/api/events/event123/rsvp', {
@@ -726,20 +804,26 @@ describe('DELETE /api/events/[id]/rsvp', () => {
   });
 
   it('should reject DELETE for cancelled event', async () => {
-    mockSupabase.from = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: eventId,
-              user_id: 'creator123',
-              status: 'cancelled',
-              event_date: FUTURE_DATE,
-            },
-            error: null,
+    // Route uses adminClient for events query
+    mockAdminClient.from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'events') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id: eventId,
+                  user_id: 'creator123',
+                  status: 'cancelled',
+                  event_date: FUTURE_DATE,
+                },
+                error: null,
+              }),
+            }),
           }),
-        }),
-      }),
+        };
+      }
+      return {};
     });
 
     mockRequest = new Request('http://localhost:3000/api/events/event123/rsvp', {
@@ -756,20 +840,26 @@ describe('DELETE /api/events/[id]/rsvp', () => {
   });
 
   it('should reject DELETE for past event', async () => {
-    mockSupabase.from = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: eventId,
-              user_id: 'creator123',
-              status: 'active',
-              event_date: '2020-01-01', // Past date
-            },
-            error: null,
+    // Route uses adminClient for events query
+    mockAdminClient.from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'events') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id: eventId,
+                  user_id: 'creator123',
+                  status: 'active',
+                  event_date: '2020-01-01', // Past date
+                },
+                error: null,
+              }),
+            }),
           }),
-        }),
-      }),
+        };
+      }
+      return {};
     });
 
     mockRequest = new Request('http://localhost:3000/api/events/event123/rsvp', {

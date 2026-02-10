@@ -172,7 +172,16 @@ export async function PATCH(
     if (carpoolSeats !== undefined) updateData.carpool_seats = carpoolSeats || null;
     if (maxAttendees !== undefined) updateData.max_attendees = maxAttendees || null;
     if (endDate !== undefined) updateData.end_date = endDate || null;
-    if (status !== undefined) updateData.status = status;
+    if (status !== undefined) {
+      const validSeriesStatuses = ['active', 'paused', 'ended'];
+      if (!validSeriesStatuses.includes(status)) {
+        return NextResponse.json(
+          { error: 'Invalid series status. Must be active, paused, or ended.' },
+          { status: 400 }
+        );
+      }
+      updateData.status = status;
+    }
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(

@@ -294,3 +294,42 @@ export async function sendCommentReplyNotification(options: {
 
   return result;
 }
+
+/**
+ * Send notification when a cancelled event is reactivated
+ * Includes waitlisted users so everyone knows it's back on
+ */
+export async function sendEventReactivationNotification(options: {
+  eventId: string;
+  eventTitle: string;
+  mountainName: string;
+  reactivatedByUserId: string;
+}): Promise<{ sent: number; failed: number }> {
+  // Include waitlisted users - they should know the event is back on
+  const attendeeIds = await getEventAttendeeIds(options.eventId, options.reactivatedByUserId, true);
+
+  if (attendeeIds.length === 0) {
+    return { sent: 0, failed: 0 };
+  }
+
+  const deviceTokens = await getDeviceTokensForUsers(attendeeIds);
+
+  if (deviceTokens.length === 0) {
+    return { sent: 0, failed: 0 };
+  }
+
+  const result = await sendBulkPushNotifications(deviceTokens, {
+    title: `Event Reactivated: ${options.eventTitle}`,
+    body: `The trip to ${options.mountainName} is back on!`,
+    category: 'event-update',
+    sound: 'default',
+    data: {
+      type: 'event-reactivated',
+      eventId: options.eventId,
+    },
+    threadId: `event-${options.eventId}`,
+  });
+
+  console.log(`Event reactivation notifications: ${result.sent} sent, ${result.failed} failed`);
+  return { sent: result.sent, failed: result.failed };
+}

@@ -525,6 +525,7 @@ export async function PATCH(
         attendeeCount: updatedEvent.attendee_count,
         goingCount: updatedEvent.going_count,
         maybeCount: updatedEvent.maybe_count,
+        waitlistCount: updatedEvent.waitlist_count ?? 0,
         creator: updatedEvent.creator,
         isCreator: true,
       },
