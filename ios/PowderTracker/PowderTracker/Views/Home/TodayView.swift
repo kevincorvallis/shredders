@@ -56,8 +56,11 @@ struct TodayView: View {
                 await viewModel.loadEnhancedData()
             }
             .task {
-                await viewModel.loadData()
-                await viewModel.loadEnhancedData()
+                // Skip if data was already pre-fetched during the loading screen
+                if viewModel.mountainData.isEmpty {
+                    await viewModel.loadData()
+                    await viewModel.loadEnhancedData()
+                }
             }
             .sheet(isPresented: $showingManageFavorites) {
                 FavoritesManagementSheet()

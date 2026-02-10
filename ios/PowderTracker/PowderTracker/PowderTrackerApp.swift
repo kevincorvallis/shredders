@@ -28,6 +28,9 @@ struct PowderTrackerApp: App {
         ProcessInfo.processInfo.arguments.contains("RESET_STATE")
     }
 
+    /// Home view model – created here so loadInitialData() can pre-fetch
+    @State private var homeViewModel = HomeViewModel()
+
     /// Show loading screen while initial data loads (skip during UI tests)
     @State private var isLoadingInitialData: Bool = !ProcessInfo.processInfo.arguments.contains("UI_TESTING")
 
@@ -48,7 +51,8 @@ struct PowderTrackerApp: App {
                 ContentView(
                     deepLinkMountainId: $deepLinkMountainId,
                     deepLinkEventId: $deepLinkEventId,
-                    deepLinkInviteToken: $deepLinkInviteToken
+                    deepLinkInviteToken: $deepLinkInviteToken,
+                    homeViewModel: homeViewModel
                 )
                     .opacity(isLoadingInitialData ? 0 : 1)
                     .blur(radius: isLoadingInitialData ? 10 : 0)
@@ -197,18 +201,26 @@ struct PowderTrackerApp: App {
 
         let dataTask = Task {
             await MountainService.shared.fetchMountains()
-            await MainActor.run { loadingProgress = isAuthenticated ? 0.5 : 0.9 }
+            await MainActor.run { loadingProgress = 0.25 }
 
-            // Step 2: Fetch favorites (if authenticated)
+            // Step 2: Fetch favorites list (if authenticated)
             if isAuthenticated {
                 await FavoritesService.shared.fetchFromBackend()
-                await MainActor.run { loadingProgress = 0.9 }
+                await MainActor.run { loadingProgress = 0.4 }
             }
+
+            // Step 3: Pre-fetch mountain data (forecasts, conditions, graphs)
+            await homeViewModel.loadData()
+            await MainActor.run { loadingProgress = 0.7 }
+
+            // Step 4: Pre-fetch enhanced data (arrival times, parking)
+            await homeViewModel.loadEnhancedData()
+            await MainActor.run { loadingProgress = 0.95 }
         }
 
-        // 10-second timeout
+        // 15-second timeout
         let timeoutTask = Task {
-            try? await Task.sleep(nanoseconds: 10_000_000_000)
+            try? await Task.sleep(nanoseconds: 15_000_000_000)
             dataTask.cancel()
         }
         await dataTask.value
@@ -217,9 +229,10 @@ struct PowderTrackerApp: App {
         // Complete
         loadingProgress = 1.0
 
-        // Ensure minimum display time for smooth UX (1.0 seconds)
+        // Ensure minimum display time so the user can enjoy the loading animation
+        // (Brock skis across in 3.5s, messages cycle every 2s)
         let elapsed = Date().timeIntervalSince(startTime)
-        let minimumDisplayTime: TimeInterval = 1.0
+        let minimumDisplayTime: TimeInterval = 3.0
         if elapsed < minimumDisplayTime {
             try? await Task.sleep(nanoseconds: UInt64((minimumDisplayTime - elapsed) * 1_000_000_000))
         }

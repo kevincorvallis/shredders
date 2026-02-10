@@ -13,7 +13,7 @@ struct ContentView: View {
     @State private var selectedSection: NavigationSection? = .today
     @State private var columnVisibility = NavigationSplitViewVisibility.all
     @State private var mountainsViewModel = MountainSelectionViewModel()
-    @State private var homeViewModel = HomeViewModel()
+    var homeViewModel: HomeViewModel
 
     var body: some View {
         Group {
@@ -221,6 +221,7 @@ struct InviteSheetToken: Identifiable {
     ContentView(
         deepLinkMountainId: .constant(nil),
         deepLinkEventId: .constant(nil),
-        deepLinkInviteToken: .constant(nil)
+        deepLinkInviteToken: .constant(nil),
+        homeViewModel: HomeViewModel()
     )
 }
