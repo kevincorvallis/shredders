@@ -101,7 +101,7 @@ export async function GET(
     // Check if event exists
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, user_id')
+      .select('id, user_id, status')
       .eq('id', eventId)
       .single();
 
@@ -110,6 +110,16 @@ export async function GET(
         { error: 'Event not found' },
         { status: 404 }
       );
+    }
+
+    // Return empty activity for cancelled events
+    if (event.status === 'cancelled') {
+      return NextResponse.json({
+        activities: [],
+        activityCount: 0,
+        gated: false,
+        message: 'This event has been cancelled',
+      });
     }
 
     // Get activity count (always returned)

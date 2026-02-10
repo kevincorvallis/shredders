@@ -292,7 +292,7 @@ export async function PATCH(
     // Fetch additional fields needed for change detection and validation
     const { data: existingEvent, error: fetchError } = await supabase
       .from('events')
-      .select('user_id, title, mountain_id, event_date, departure_time, departure_location, going_count, max_attendees')
+      .select('user_id, title, mountain_id, event_date, departure_time, departure_location, going_count, max_attendees, status')
       .eq('id', id)
       .single();
 
@@ -300,6 +300,21 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
+      );
+    }
+
+    // Block editing cancelled or completed events
+    if (existingEvent.status === 'cancelled') {
+      return NextResponse.json(
+        { error: 'Cannot edit a cancelled event. Reactivate it first or clone it.' },
+        { status: 400 }
+      );
+    }
+
+    if (existingEvent.status === 'completed') {
+      return NextResponse.json(
+        { error: 'Cannot edit a completed event' },
+        { status: 400 }
       );
     }
 
@@ -550,7 +565,7 @@ export async function DELETE(
     // Check if event exists and user is the creator
     const { data: existingEvent, error: fetchError } = await supabase
       .from('events')
-      .select('user_id, title, mountain_id, event_date')
+      .select('user_id, title, mountain_id, event_date, status')
       .eq('id', id)
       .single();
 
@@ -558,6 +573,31 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
+      );
+    }
+
+    // Prevent double-cancellation (would send duplicate notifications)
+    if (existingEvent.status === 'cancelled') {
+      return NextResponse.json(
+        { error: 'Event is already cancelled' },
+        { status: 400 }
+      );
+    }
+
+    // Prevent cancelling completed events
+    if (existingEvent.status === 'completed') {
+      return NextResponse.json(
+        { error: 'Cannot cancel a completed event' },
+        { status: 400 }
+      );
+    }
+
+    // Prevent cancelling past events
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+    if (existingEvent.event_date < today) {
+      return NextResponse.json(
+        { error: 'Cannot cancel a past event' },
+        { status: 400 }
       );
     }
 

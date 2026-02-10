@@ -35,16 +35,20 @@ async function getDeviceTokensForUsers(userIds: string[]): Promise<string[]> {
 }
 
 /**
- * Get attendee user IDs for an event (going or maybe)
+ * Get attendee user IDs for an event (going, maybe, or optionally waitlisted)
  */
-async function getEventAttendeeIds(eventId: string, excludeUserId?: string): Promise<string[]> {
+async function getEventAttendeeIds(eventId: string, excludeUserId?: string, includeWaitlist = false): Promise<string[]> {
   const supabase = createAdminClient();
+
+  const statuses = includeWaitlist
+    ? ['going', 'maybe', 'waitlist']
+    : ['going', 'maybe'];
 
   let query = supabase
     .from('event_attendees')
     .select('user_id')
     .eq('event_id', eventId)
-    .in('status', ['going', 'maybe']);
+    .in('status', statuses);
 
   if (excludeUserId) {
     query = query.neq('user_id', excludeUserId);
@@ -109,8 +113,8 @@ export async function sendEventCancellationNotification(options: {
   eventDate: string;
   cancelledByUserId: string;
 }): Promise<{ sent: number; failed: number }> {
-  // Get all attendees except the person who cancelled
-  const attendeeIds = await getEventAttendeeIds(options.eventId, options.cancelledByUserId);
+  // Get all attendees (including waitlisted) except the person who cancelled
+  const attendeeIds = await getEventAttendeeIds(options.eventId, options.cancelledByUserId, true);
 
   if (attendeeIds.length === 0) {
     return { sent: 0, failed: 0 };

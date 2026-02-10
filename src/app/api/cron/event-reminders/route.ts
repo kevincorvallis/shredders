@@ -57,6 +57,12 @@ export async function POST(request: Request) {
 
     for (const event of eventsNeedingReminders) {
       try {
+        // Skip cancelled events (safety check in case RPC doesn't filter them)
+        if (event.status === 'cancelled') {
+          console.log(`Skipping cancelled event ${event.id}`);
+          continue;
+        }
+
         // Get mountain name
         const mountain = getMountain(event.mountain_id);
         const mountainName = mountain?.name || event.mountain_id;

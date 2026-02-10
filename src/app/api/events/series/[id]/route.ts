@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
 import { getMountain } from '@shredders/shared';
+import { sendEventCancellationNotification } from '@/lib/push/event-notifications';
 import type { EventSeries, RecurrencePattern } from '../route';
 
 /**
@@ -325,6 +326,23 @@ export async function DELETE(
       );
     }
 
+    // Prevent cancelling an already-cancelled series
+    if (series.status === 'ended' || series.status === 'paused') {
+      return NextResponse.json(
+        { error: 'Series is already cancelled' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch future active events BEFORE cancelling so we can notify their attendees
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+    const { data: futureEvents } = await adminClient
+      .from('events')
+      .select('id, title, mountain_id, event_date')
+      .eq('series_id', seriesId)
+      .eq('status', 'active')
+      .gte('event_date', today);
+
     // Use the cancel_series function
     const { data: cancelledCount, error: cancelError } = await adminClient
       .rpc('cancel_series', {
@@ -337,6 +355,20 @@ export async function DELETE(
         { error: 'Failed to cancel series' },
         { status: 500 }
       );
+    }
+
+    // Send cancellation notifications for each affected event (async, don't block response)
+    if (futureEvents && futureEvents.length > 0) {
+      const mountain = getMountain(series.mountain_id);
+      for (const event of futureEvents) {
+        sendEventCancellationNotification({
+          eventId: event.id,
+          eventTitle: event.title,
+          mountainName: mountain?.name || event.mountain_id,
+          eventDate: event.event_date,
+          cancelledByUserId: userProfile.id,
+        }).catch((err) => console.error(`Failed to send cancellation notification for series event ${event.id}:`, err));
+      }
     }
 
     return NextResponse.json({

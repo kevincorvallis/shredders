@@ -50,7 +50,7 @@ export async function GET(
     // Verify event exists
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, carpool_available, carpool_seats')
+      .select('id, carpool_available, carpool_seats, status')
       .eq('id', eventId)
       .single();
 
@@ -59,6 +59,22 @@ export async function GET(
         { error: 'Event not found' },
         { status: 404 }
       );
+    }
+
+    // Return empty carpool data for cancelled events
+    if (event.status === 'cancelled') {
+      return NextResponse.json({
+        eventId,
+        drivers: [],
+        riders: [],
+        summary: {
+          totalSeatsOffered: 0,
+          totalSeatsTaken: 0,
+          totalSeatsAvailable: 0,
+          ridersNeedingRides: 0,
+        },
+        message: 'This event has been cancelled',
+      });
     }
 
     // Fetch all attendees with their carpool info
