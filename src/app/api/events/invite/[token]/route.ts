@@ -62,7 +62,7 @@ export async function GET(
     const isEventInactive = event.status !== 'active';
 
     // Check if event date has passed
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     const isEventPast = event.event_date < today;
 
     const isValid = !isExpired && !isMaxUsesExceeded && !isEventInactive && !isEventPast;
@@ -186,7 +186,7 @@ export async function POST(
     const isMaxUsesExceeded = inviteData.max_uses && inviteData.uses_count >= inviteData.max_uses;
     const event = inviteData.event;
     const isEventInactive = event.status !== 'active';
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     const isEventPast = event.event_date < today;
 
     if (isExpired || isMaxUsesExceeded || isEventInactive || isEventPast) {

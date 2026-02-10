@@ -355,7 +355,7 @@ export async function PATCH(
     }
 
     if (body.eventDate !== undefined) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
       if (body.eventDate < today) {
         return NextResponse.json(
           { error: 'Event date cannot be in the past' },

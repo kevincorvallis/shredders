@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 import type { RSVPRequest, RSVPResponse, RSVPStatus } from '@/types/event';
@@ -22,7 +22,6 @@ export async function POST(
 ) {
   try {
     const { id: eventId } = await params;
-    const supabase = await createClient();
     const adminClient = createAdminClient();
 
     // Check authentication
@@ -51,8 +50,8 @@ export async function POST(
       );
     }
 
-    // Verify event exists and is active
-    const { data: event, error: eventError } = await supabase
+    // Verify event exists and is active (use adminClient to bypass RLS for iOS Bearer token requests)
+    const { data: event, error: eventError } = await adminClient
       .from('events')
       .select('id, status, event_date, user_id, title, max_attendees, going_count')
       .eq('id', eventId)
@@ -72,8 +71,8 @@ export async function POST(
       );
     }
 
-    // Check if event date has passed
-    const today = new Date().toISOString().split('T')[0];
+    // Check if event date has passed (use Pacific time for US ski mountains)
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     if (event.event_date < today) {
       return NextResponse.json(
         { error: 'Cannot RSVP to a past event' },
@@ -246,8 +245,8 @@ export async function POST(
       attendeeData = data;
     }
 
-    // Fetch updated event counts
-    const { data: updatedEvent, error: countError } = await supabase
+    // Fetch updated event counts (use adminClient to bypass RLS for iOS Bearer token requests)
+    const { data: updatedEvent, error: countError } = await adminClient
       .from('events')
       .select('going_count, maybe_count, attendee_count, waitlist_count, max_attendees')
       .eq('id', eventId)
@@ -337,7 +336,6 @@ export async function DELETE(
 ) {
   try {
     const { id: eventId } = await params;
-    const supabase = await createClient();
     const adminClient = createAdminClient();
 
     // Check authentication
@@ -349,8 +347,8 @@ export async function DELETE(
       );
     }
 
-    // Verify event exists and is active
-    const { data: event, error: eventError } = await supabase
+    // Verify event exists and is active (use adminClient to bypass RLS for iOS Bearer token requests)
+    const { data: event, error: eventError } = await adminClient
       .from('events')
       .select('id, user_id, status, event_date')
       .eq('id', eventId)
@@ -370,7 +368,8 @@ export async function DELETE(
       );
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    // Use Pacific time for date comparison (US ski mountains)
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     if (event.event_date < today) {
       return NextResponse.json(
         { error: 'Cannot modify RSVP for past events' },
@@ -423,8 +422,8 @@ export async function DELETE(
       );
     }
 
-    // Fetch updated event counts
-    const { data: updatedEvent } = await supabase
+    // Fetch updated event counts (use adminClient to bypass RLS for iOS Bearer token requests)
+    const { data: updatedEvent } = await adminClient
       .from('events')
       .select('going_count, maybe_count, attendee_count')
       .eq('id', eventId)

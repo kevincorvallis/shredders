@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
     if (attendingOnly && userProfileId && !createdByMe) {
       // OPTIMIZATION: Query events directly with inner join on attendees
       // This allows database-side filtering instead of fetching all events
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
 
       // Calculate weekend dates if needed
       let weekendStart = '';
@@ -278,7 +278,7 @@ export async function GET(request: NextRequest) {
         if (dateFrom) {
           query = query.gte('event_date', dateFrom);
         } else if (upcoming) {
-          const today = new Date().toISOString().split('T')[0];
+          const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
           query = query.gte('event_date', today);
         }
 
@@ -500,7 +500,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate date is not in the past
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     if (eventDate < today) {
       return NextResponse.json(
         { error: 'Event date cannot be in the past' },

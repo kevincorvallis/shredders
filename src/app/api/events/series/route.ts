@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     if (startDate < today) {
       return NextResponse.json(
         { error: 'Start date cannot be in the past' },

@@ -31,7 +31,7 @@ export async function GET(
     }
 
     // Fetch upcoming events for this series
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     const { data: events } = await supabase
       .from('events')
       .select(`
@@ -199,7 +199,7 @@ export async function PATCH(
     // Optionally update future events
     let updatedEventsCount = 0;
     if (updateFutureEvents) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
 
       // Build event update (only fields that apply to events)
       const eventUpdateData: Record<string, unknown> = {};

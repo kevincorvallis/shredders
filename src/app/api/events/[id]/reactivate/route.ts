@@ -74,7 +74,7 @@ export async function POST(
     }
 
     // Check if event date is in the future
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     if (event.event_date < today) {
       return NextResponse.json(
         { error: 'Cannot reactivate a past event. Consider cloning it instead.' },
