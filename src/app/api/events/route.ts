@@ -48,7 +48,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const mountainId = searchParams.get('mountainId');
-    const status = searchParams.get('status') || 'active';
+    const statusParam = searchParams.get('status') || 'active';
+    const validStatuses = ['active', 'cancelled', 'completed'];
+    const status = validStatuses.includes(statusParam) ? statusParam : 'active';
     const upcoming = searchParams.get('upcoming') !== 'false';
     const createdByMe = searchParams.get('createdByMe') === 'true';
     const attendingOnly = searchParams.get('attendingOnly') === 'true';
