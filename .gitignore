@@ -45,8 +45,9 @@ project.pbxproj.backup
 *.tsbuildinfo
 next-env.d.ts
 
-# claude code
-.claude/
+# claude code (keep rules/, ignore the rest)
+.claude/*
+!.claude/rules/
 
 # iOS
 ios/PowderTracker/PowderTracker.xcodeproj/project.xcworkspace/
