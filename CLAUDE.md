@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Shredders - Ski Trip Planning App
 
 ## Project Overview
@@ -7,7 +11,7 @@ Shredders is a full-stack ski trip planning application with:
 - **Backend**: Supabase (PostgreSQL, Auth, Storage)
 
 ## Tech Stack
-- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS 4
 - **iOS**: SwiftUI, UIKit (maps), Supabase Swift SDK
 - **Backend**: Supabase (PostgreSQL + Auth + Storage)
 - **Deployment**: Vercel (auto-deploy from main branch)
@@ -29,7 +33,15 @@ packages/shared/    # Shared types and utilities
 
 ### Run locally
 ```bash
-npm run dev        # Start Next.js dev server
+pnpm dev           # Start Next.js dev server (localhost:3000)
+pnpm build         # Production build
+pnpm test          # Run all tests (vitest)
+pnpm test:watch    # Watch mode
+pnpm lint          # ESLint on src/
+pnpm type-check    # TypeScript --noEmit
+
+# Run a single test file
+pnpm vitest run path/to/file.test.ts
 ```
 
 ### Deploy to production
