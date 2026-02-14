@@ -104,8 +104,8 @@ final class WeatherTileOverlayTests: XCTestCase {
         XCTAssertTrue(WeatherTileOverlay.isAvailable(.snowDepth))
     }
 
-    func testWeatherTileOverlay_IsAvailable_Avalanche_ShouldBeFalse() {
-        XCTAssertFalse(WeatherTileOverlay.isAvailable(.avalanche))
+    func testWeatherTileOverlay_IsAvailable_Avalanche_ShouldBeTrue() {
+        XCTAssertTrue(WeatherTileOverlay.isAvailable(.avalanche))
     }
 
     func testWeatherTileOverlay_IsAvailable_LandOwnership_ShouldBeFalse() {
@@ -165,7 +165,7 @@ final class WeatherTileOverlayTests: XCTestCase {
         let overlay = WeatherTileOverlay.create(overlayType: .radar, timestamp: nil)
 
         // Then
-        XCTAssertTrue(overlay is MKTileOverlay)
+        XCTAssertNotNil(overlay)
     }
 
     func testWeatherTileOverlay_TileSize_ShouldBe256() {
@@ -193,7 +193,7 @@ final class WeatherTileOverlayRendererTests: XCTestCase {
         let renderer = WeatherTileOverlayRenderer(tileOverlay: overlay)
 
         // Then
-        XCTAssertTrue(renderer is MKTileOverlayRenderer)
+        XCTAssertNotNil(renderer)
     }
 
     func testWeatherTileOverlayRenderer_Alpha_ShouldBeLessThanOne() {

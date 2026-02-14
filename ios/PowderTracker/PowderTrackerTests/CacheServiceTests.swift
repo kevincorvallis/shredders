@@ -7,15 +7,13 @@ final class EventCacheServiceTests: XCTestCase {
 
     private var cacheService: EventCacheService!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
         cacheService = EventCacheService.shared
         cacheService.clearCache()
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         cacheService.clearCache()
-        super.tearDown()
     }
 
     // MARK: - Events List Cache
@@ -180,15 +178,13 @@ final class RSVPCacheServiceTests: XCTestCase {
 
     private var rsvpCache: RSVPCacheService!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
         rsvpCache = RSVPCacheService.shared
         rsvpCache.clearCache()
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         rsvpCache.clearCache()
-        super.tearDown()
     }
 
     // MARK: - Cache RSVP

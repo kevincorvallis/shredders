@@ -185,7 +185,7 @@ final class EventCreationScenariosUITests: XCTestCase {
             Thread.sleep(forTimeInterval: 1)
 
             // Check for error message or validation indicator
-            let errorText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'required' OR label CONTAINS[c] 'title'")).firstMatch
+            _ = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'required' OR label CONTAINS[c] 'title'")).firstMatch
             addScreenshot(named: "Event Creation - Validation Error")
 
             // The form should still be visible (not dismissed)

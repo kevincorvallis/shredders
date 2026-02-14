@@ -7,14 +7,12 @@ final class MountainSelectionViewModelTests: XCTestCase {
 
     private var viewModel: MountainSelectionViewModel!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
         viewModel = MountainSelectionViewModel()
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
     }
 
     // MARK: - Initial State

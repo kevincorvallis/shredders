@@ -227,7 +227,7 @@ class WeatherKitService: ObservableObject {
             snowfall = weather.snowfallAmount.value
             rainfall = weather.precipitationAmountByType.rainfall.value
         } else {
-            rainfall = weather.rainfallAmount.value
+            rainfall = weather.precipitationAmount.value
         }
         
         return DailyWeather(

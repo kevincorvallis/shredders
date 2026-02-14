@@ -112,11 +112,9 @@ final class AuthServiceTests: XCTestCase {
     func testKeychainHelper_HasValidTokens_OnlyAccessToken() throws {
         try KeychainHelper.saveAccessToken("access")
 
-        // hasValidTokens checks for access token existence
-        // Behavior depends on implementation - verify it's consistent
+        // hasValidTokens requires both access and refresh tokens
         let hasValid = KeychainHelper.hasValidTokens()
-        // Access token alone should be enough for validity check
-        XCTAssertTrue(hasValid, "Should be valid with just access token")
+        XCTAssertFalse(hasValid, "Should require both access and refresh tokens")
     }
 
     // MARK: - SaveTokens Bundle Tests

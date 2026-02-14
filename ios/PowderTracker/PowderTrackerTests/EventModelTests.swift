@@ -109,7 +109,7 @@ final class EventModelTests: XCTestCase {
         formatter.dateFormat = "yyyy-MM-dd"
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
         let eventDate = formatter.string(from: yesterday)
-        let event = createMockEvent(eventDate: eventDate, departureTime: "06:00:00")
+        let event = createMockEvent(eventDate: eventDate, departureTime: "06:00")
 
         // Then
         XCTAssertEqual(event.urgencyLevel, .departed)

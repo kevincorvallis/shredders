@@ -218,16 +218,19 @@ struct ProfileSettingsView: View {
     private var avatarView: some View {
         let size: CGFloat = 120
         let initial = String(authService.userProfile?.displayName?.first ?? authService.userProfile?.username.first ?? "?").uppercased()
+        let currentImage = selectedImage
+        let avatarUrl = authService.userProfile?.avatarUrl
+        let uploading = isUploadingAvatar
 
         return PhotosPicker(selection: $selectedItem, matching: .images) {
             ZStack {
                 // Avatar image or placeholder
                 Group {
-                    if let image = selectedImage {
+                    if let image = currentImage {
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFill()
-                    } else if let avatarUrl = authService.userProfile?.avatarUrl,
+                    } else if let avatarUrl,
                               let url = URL(string: avatarUrl) {
                         AsyncImage(url: url) { phase in
                             switch phase {
@@ -269,7 +272,7 @@ struct ProfileSettingsView: View {
                     .frame(width: 36, height: 36)
                     .overlay(
                         Group {
-                            if isUploadingAvatar {
+                            if uploading {
                                 ProgressView()
                                     .scaleEffect(0.7)
                             } else {
@@ -287,7 +290,7 @@ struct ProfileSettingsView: View {
                     .offset(x: size / 2 - 18, y: size / 2 - 18)
             }
         }
-        .disabled(isUploadingAvatar)
+        .disabled(uploading)
         .buttonStyle(.plain)
     }
 

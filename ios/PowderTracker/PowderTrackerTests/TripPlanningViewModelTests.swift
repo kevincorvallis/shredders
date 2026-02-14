@@ -5,11 +5,11 @@ import XCTest
 final class TripPlanningViewModelTests: XCTestCase {
     var sut: TripPlanningViewModel!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         sut = TripPlanningViewModel()
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         sut = nil
     }
 
@@ -98,7 +98,7 @@ final class TripPlanningViewModelTests: XCTestCase {
         // Given
         let mountainId = "baker"
         await sut.fetchAll(for: mountainId)
-        let firstLoad = sut.tripAdvice
+        _ = sut.tripAdvice
 
         // When
         await sut.refresh(for: mountainId)

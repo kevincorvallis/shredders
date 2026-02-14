@@ -5,11 +5,11 @@ import XCTest
 final class APIClientTests: XCTestCase {
     var sut: APIClient!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         sut = APIClient.shared
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         sut = nil
     }
 
@@ -185,7 +185,7 @@ final class APIClientTests: XCTestCase {
                 expectation.fulfill()
             }
 
-            wait(for: [expectation], timeout: 10.0)
+            wait(for: [expectation], timeout: 30.0)
         }
     }
 

@@ -163,7 +163,7 @@ final class EventActivityViewModelTests: XCTestCase {
             user: ActivityUser(
                 id: "user-1",
                 username: username,
-                displayName: "Test User",
+                displayName: username,
                 avatarUrl: nil
             )
         )

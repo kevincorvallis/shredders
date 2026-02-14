@@ -34,47 +34,36 @@ class MountainSelectionViewModel {
         print("🏔️ [MountainSelectionVM] Starting loadMountains()")
         #endif
 
-        do {
-            await MountainService.shared.fetchMountains()
-            mountains = MountainService.shared.allMountains
+        await MountainService.shared.fetchMountains()
+        mountains = MountainService.shared.allMountains
 
-            #if DEBUG
-            print("🏔️ [MountainSelectionVM] Loaded \(mountains.count) mountains")
-            // Debug: Print pass types to verify decoding
-            let epicCount = mountains.filter { $0.passType == .epic }.count
-            let ikonCount = mountains.filter { $0.passType == .ikon }.count
-            let independentCount = mountains.filter { $0.passType == .independent }.count
-            let nilCount = mountains.filter { $0.passType == nil }.count
-            print("🏔️ [MountainSelectionVM] Pass types - Epic: \(epicCount), Ikon: \(ikonCount), Independent: \(independentCount), Nil: \(nilCount)")
-            if let firstMountain = mountains.first {
-                print("🏔️ [MountainSelectionVM] First mountain: \(firstMountain.shortName), passType: \(firstMountain.passType?.rawValue ?? "nil")")
-            }
-            #endif
+        #if DEBUG
+        print("🏔️ [MountainSelectionVM] Loaded \(mountains.count) mountains")
+        // Debug: Print pass types to verify decoding
+        let epicCount = mountains.filter { $0.passType == .epic }.count
+        let ikonCount = mountains.filter { $0.passType == .ikon }.count
+        let independentCount = mountains.filter { $0.passType == .independent }.count
+        let nilCount = mountains.filter { $0.passType == nil }.count
+        print("🏔️ [MountainSelectionVM] Pass types - Epic: \(epicCount), Ikon: \(ikonCount), Independent: \(independentCount), Nil: \(nilCount)")
+        if let firstMountain = mountains.first {
+            print("🏔️ [MountainSelectionVM] First mountain: \(firstMountain.shortName), passType: \(firstMountain.passType?.rawValue ?? "nil")")
+        }
+        #endif
 
-            // Request location to calculate distances
-            locationManager.requestLocation()
+        // Request location to calculate distances
+        locationManager.requestLocation()
 
-            // Fetch powder scores and conditions for all mountains
-            await fetchAllPowderScores()
-            await fetchAllConditions()
+        // Fetch powder scores and conditions for all mountains
+        await fetchAllPowderScores()
+        await fetchAllConditions()
 
-            #if DEBUG
-            print("🏔️ [MountainSelectionVM] Loaded \(mountainConditions.count) conditions, \(mountainScores.count) scores")
-            #endif
+        #if DEBUG
+        print("🏔️ [MountainSelectionVM] Loaded \(mountainConditions.count) conditions, \(mountainScores.count) scores")
+        #endif
 
-            // Set default selection if none
-            if selectedMountain == nil, let first = mountains.first {
-                selectedMountain = first
-            }
-        } catch {
-            self.error = error
-            // Trigger error haptic feedback
-            await MainActor.run {
-                HapticFeedback.error.trigger()
-            }
-            #if DEBUG
-            print("🏔️ [MountainSelectionVM] ERROR: \(error.localizedDescription)")
-            #endif
+        // Set default selection if none
+        if selectedMountain == nil, let first = mountains.first {
+            selectedMountain = first
         }
 
         isLoading = false

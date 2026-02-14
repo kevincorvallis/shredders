@@ -7,22 +7,19 @@
 
 import XCTest
 
+@MainActor
 final class LogoutFlowTest: XCTestCase {
     var app: XCUIApplication!
 
-    @MainActor
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["UI_TESTING"]
         app.launch()
     }
 
-    @MainActor
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         app = nil
-        try super.tearDownWithError()
     }
 
     @MainActor

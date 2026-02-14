@@ -101,9 +101,9 @@ final class AccessibilityUITests: XCTestCase {
 
         // Check filter chips have identifiers
         let freshPowderFilter = app.buttons["mountains_filter_fresh_powder"]
-        let openOnlyFilter = app.buttons["mountains_filter_open_only"]
-        let favoritesFilter = app.buttons["mountains_filter_favorites"]
-        let nearbyFilter = app.buttons["mountains_filter_nearby"]
+        _ = app.buttons["mountains_filter_open_only"]
+        _ = app.buttons["mountains_filter_favorites"]
+        _ = app.buttons["mountains_filter_nearby"]
 
         // Scroll down to find filters if needed
         let scrollView = app.scrollViews.firstMatch
@@ -159,8 +159,8 @@ final class AccessibilityUITests: XCTestCase {
 
         // Check profile rows have identifiers
         let favoritesRow = app.buttons["profile_favorites_row"]
-        let regionRow = app.buttons["profile_region_row"]
-        let passRow = app.buttons["profile_pass_row"]
+        _ = app.buttons["profile_region_row"]
+        _ = app.buttons["profile_pass_row"]
 
         // Scroll to find rows if needed
         let scrollView = app.scrollViews.firstMatch

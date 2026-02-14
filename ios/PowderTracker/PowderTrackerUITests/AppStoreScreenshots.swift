@@ -8,25 +8,20 @@
 
 import XCTest
 
+@MainActor
 final class AppStoreScreenshots: XCTestCase {
-    @MainActor var app: XCUIApplication!
+    var app: XCUIApplication!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
         continueAfterFailure = true
-        MainActor.assumeIsolated {
-            app = XCUIApplication()
-            app.launchArguments = ["UI_TESTING", "SCREENSHOTS"]
-            setupSnapshot(app)
-            app.launch()
-        }
+        app = XCUIApplication()
+        app.launchArguments = ["UI_TESTING", "SCREENSHOTS"]
+        setupSnapshot(app)
+        app.launch()
     }
 
-    override func tearDown() {
-        MainActor.assumeIsolated {
-            app = nil
-        }
-        super.tearDown()
+    override func tearDown() async throws {
+        app = nil
     }
 
 	

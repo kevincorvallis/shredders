@@ -158,7 +158,7 @@ final class ModelTests: XCTestCase {
         let error = APIError.invalidURL
 
         // Then
-        XCTAssertEqual(error.errorDescription, "Invalid URL")
+        XCTAssertEqual(error.errorDescription, "Unable to connect. Please try again.")
     }
 
     func testAPIError_ServerError_ShouldIncludeStatusCode() {
@@ -166,7 +166,7 @@ final class ModelTests: XCTestCase {
         let error = APIError.serverError(404)
 
         // Then
-        XCTAssertEqual(error.errorDescription, "Server error: 404")
+        XCTAssertEqual(error.errorDescription, "Something went wrong. Please try again.")
     }
 
     func testAPIError_NetworkError_ShouldIncludeUnderlyingError() {
@@ -176,7 +176,7 @@ final class ModelTests: XCTestCase {
 
         // Then
         XCTAssertNotNil(error.errorDescription)
-        XCTAssertTrue(error.errorDescription?.contains("Network error") ?? false)
+        XCTAssertTrue(error.errorDescription?.contains("Connection failed") ?? false)
     }
 
     // MARK: - Mountain Tests

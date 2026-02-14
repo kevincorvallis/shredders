@@ -8,19 +8,17 @@ final class FavoritesServiceTests: XCTestCase {
     private var service: FavoritesService!
     private let testStorageKey = "favoriteMountainIds"
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
         // Clear UserDefaults before each test
         UserDefaults.standard.removeObject(forKey: testStorageKey)
         UserDefaults.standard.removeObject(forKey: "selectedMountainId")
         service = FavoritesService()
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         UserDefaults.standard.removeObject(forKey: testStorageKey)
         UserDefaults.standard.removeObject(forKey: "selectedMountainId")
         service = nil
-        super.tearDown()
     }
 
     // MARK: - Default Favorites

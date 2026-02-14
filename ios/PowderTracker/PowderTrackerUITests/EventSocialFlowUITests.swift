@@ -244,7 +244,7 @@ final class EventSocialFlowUITests: XCTestCase {
                 Thread.sleep(forTimeInterval: 0.5)
 
                 // Check that gated message is shown
-                let gatedMessage = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'RSVP'")).firstMatch
+                _ = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'RSVP'")).firstMatch
                 addScreenshot(named: "Gated_Content_Unauthenticated")
             }
         }
@@ -264,8 +264,8 @@ final class EventSocialFlowUITests: XCTestCase {
         let rsvpStatus = app.otherElements["event_detail_rsvp_status"]
 
         // At least one of these should exist (unless user is host)
-        let hasRSVPButtons = goingButton.waitForExistence(timeout: 3) || maybeButton.exists
-        let hasRSVPStatus = rsvpStatus.waitForExistence(timeout: 3)
+        _ = goingButton.waitForExistence(timeout: 3) || maybeButton.exists
+        _ = rsvpStatus.waitForExistence(timeout: 3)
 
         // For non-host users, one of these should be true
         // (Host users won't see RSVP buttons)

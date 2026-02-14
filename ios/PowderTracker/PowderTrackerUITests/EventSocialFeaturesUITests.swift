@@ -11,18 +11,18 @@ import XCTest
 @MainActor
 final class EventSocialFeaturesUITests: XCTestCase {
 
-    nonisolated(unsafe) var app: XCUIApplication!
+    var app: XCUIApplication!
     private let testEmail = "test@example.com"
     private let testPassword = "password123"
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
         app.launch()
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         app = nil
     }
 
@@ -118,7 +118,7 @@ final class EventSocialFeaturesUITests: XCTestCase {
     // MARK: - Helper Methods
 
     private func ensureLoggedIn() {
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         guard profileTab.waitForExistence(timeout: 5) else { return }
         profileTab.tap()
         Thread.sleep(forTimeInterval: 1)

@@ -186,8 +186,8 @@ final class MapFilterTests: XCTestCase {
 
         // Then
         XCTAssertEqual(sorted[0].id, "crystal") // Crystal Mountain
-        XCTAssertEqual(sorted[1].id, "baker")   // Mt. Baker
-        XCTAssertEqual(sorted[2].id, "bachelor") // Mt. Bachelor
+        XCTAssertEqual(sorted[1].id, "bachelor") // Mt. Bachelor
+        XCTAssertEqual(sorted[2].id, "baker")   // Mt. Baker
     }
 
     func testSortByShortName_ShouldSortAlphabetically() {

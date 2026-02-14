@@ -153,7 +153,7 @@ final class EventDiscussionViewModelTests: XCTestCase {
             user: EventCommentUser(
                 id: "user-1",
                 username: username,
-                displayName: "Test User",
+                displayName: username,
                 avatarUrl: nil
             ),
             replies: nil
