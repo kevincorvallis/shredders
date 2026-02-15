@@ -245,15 +245,15 @@ struct PowderTrackerApp: App {
                 await MainActor.run { loadingProgress = 0.4 }
             }
 
-            // Step 3: Pre-fetch mountain data (forecasts, conditions, graphs)
+            // Step 3: Pre-fetch mountain data + enhanced data in parallel
             let homeSpan = PerformanceLogger.beginHomeRefresh()
-            await homeViewModel.loadData()
+            let enhancedSpan = PerformanceLogger.beginEnhancedDataLoad()
+            async let mainData: Void = homeViewModel.loadData()
+            async let enhancedData: Void = homeViewModel.loadEnhancedData()
+            await mainData
             homeSpan.end()
             await MainActor.run { loadingProgress = 0.7 }
-
-            // Step 4: Pre-fetch enhanced data (arrival times, parking)
-            let enhancedSpan = PerformanceLogger.beginEnhancedDataLoad()
-            await homeViewModel.loadEnhancedData()
+            await enhancedData
             enhancedSpan.end()
             await MainActor.run { loadingProgress = 0.95 }
         }
@@ -269,10 +269,9 @@ struct PowderTrackerApp: App {
         // Complete
         loadingProgress = 1.0
 
-        // Ensure minimum display time so the user can enjoy the loading animation
-        // (Brock skis across in 3.5s, messages cycle every 2s)
+        // Brief minimum display for smooth transition
         let elapsed = Date().timeIntervalSince(startTime)
-        let minimumDisplayTime: TimeInterval = 3.0
+        let minimumDisplayTime: TimeInterval = 1.5
         if elapsed < minimumDisplayTime {
             try? await Task.sleep(nanoseconds: UInt64((minimumDisplayTime - elapsed) * 1_000_000_000))
         }

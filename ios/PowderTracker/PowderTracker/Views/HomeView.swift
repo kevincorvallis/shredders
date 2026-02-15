@@ -106,6 +106,8 @@ struct HomeView: View {
     }
 
     private func loadData() async {
+        // Skip if already pre-fetched during app launch
+        guard viewModel.mountainData.isEmpty else { return }
         await viewModel.loadData()
         await viewModel.loadEnhancedData()
     }

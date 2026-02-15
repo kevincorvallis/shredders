@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NukeUI
 
 struct ProfileView: View {
     @Environment(AuthService.self) private var authService
@@ -533,19 +534,16 @@ private struct ProfileAvatarView: View {
         
         ZStack {
             if let avatarUrl = profile.avatarUrl, let url = URL(string: avatarUrl) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
+                LazyImage(url: url) { state in
+                    if let image = state.image {
                         image
                             .resizable()
                             .scaledToFill()
-                    case .failure:
+                    } else if state.error != nil {
                         ProfileAvatarPlaceholder(initial: initial, size: size)
-                    case .empty:
+                    } else {
                         ProgressView()
                             .frame(width: size, height: size)
-                    @unknown default:
-                        ProfileAvatarPlaceholder(initial: initial, size: size)
                     }
                 }
             } else {

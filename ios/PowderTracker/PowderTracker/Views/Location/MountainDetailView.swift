@@ -1,4 +1,5 @@
 import SwiftUI
+import NukeUI
 
 /// Unified mountain detail view with collapsible header and sticky tab bar
 /// Replaces LocationView and TabbedLocationView with a modern, scrollable interface
@@ -164,13 +165,12 @@ struct MountainDetailView: View {
             // Background - webcam image or gradient
             Group {
                 if let webcam = viewModel.locationData?.mountain.webcams.first {
-                    AsyncImage(url: URL(string: webcam.url)) { phase in
-                        switch phase {
-                        case .success(let image):
+                    LazyImage(url: URL(string: webcam.url)) { state in
+                        if let image = state.image {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                        default:
+                        } else {
                             mountainGradient
                         }
                     }

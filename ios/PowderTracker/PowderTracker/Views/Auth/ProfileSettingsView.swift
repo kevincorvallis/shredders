@@ -8,6 +8,7 @@
 
 import SwiftUI
 import PhotosUI
+import NukeUI
 
 struct ProfileSettingsView: View {
     @Environment(AuthService.self) private var authService
@@ -269,19 +270,16 @@ struct ProfileSettingsView: View {
                             .scaledToFill()
                     } else if let avatarUrl,
                               let url = URL(string: avatarUrl) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
+                        LazyImage(url: url) { state in
+                            if let image = state.image {
                                 image
                                     .resizable()
                                     .scaledToFill()
-                            case .failure:
+                            } else if state.error != nil {
                                 AvatarPlaceholderView(initial: initial, size: size)
-                            case .empty:
+                            } else {
                                 ProgressView()
                                     .frame(width: size, height: size)
-                            @unknown default:
-                                AvatarPlaceholderView(initial: initial, size: size)
                             }
                         }
                     } else {

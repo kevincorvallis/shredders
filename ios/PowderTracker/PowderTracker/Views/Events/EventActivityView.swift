@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NukeUI
 
 struct EventActivityView: View {
     let eventId: String
@@ -175,13 +176,12 @@ struct ActivityRowView: View {
                     HStack(spacing: .spacingS) {
                         // Avatar (if user exists)
                         if let user = activity.user {
-                            AsyncImage(url: URL(string: user.avatarUrl ?? "")) { phase in
-                                switch phase {
-                                case .success(let image):
+                            LazyImage(url: URL(string: user.avatarUrl ?? "")) { state in
+                                if let image = state.image {
                                     image
                                         .resizable()
                                         .scaledToFill()
-                                default:
+                                } else {
                                     Circle()
                                         .fill(avatarGradient)
                                         .overlay(

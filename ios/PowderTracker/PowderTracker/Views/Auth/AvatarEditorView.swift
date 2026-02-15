@@ -9,6 +9,7 @@
 import SwiftUI
 import PhotosUI
 import UIKit
+import NukeUI
 
 /// SwiftUI wrapper for PHPickerViewController to select profile images
 struct ProfileImagePicker: UIViewControllerRepresentable {
@@ -95,18 +96,15 @@ struct AvatarEditorView: View {
                                     .stroke(Color.blue.opacity(0.3), lineWidth: 4)
                             )
                     } else if let urlString = currentAvatarUrl, let url = URL(string: urlString) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
+                        LazyImage(url: url) { state in
+                            if let image = state.image {
                                 image
                                     .resizable()
                                     .scaledToFill()
-                            case .failure:
+                            } else if state.error != nil {
                                 placeholderAvatar
-                            case .empty:
+                            } else {
                                 ProgressView()
-                            @unknown default:
-                                placeholderAvatar
                             }
                         }
                         .frame(width: 150, height: 150)

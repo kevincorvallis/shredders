@@ -1,4 +1,5 @@
 import SwiftUI
+import NukeUI
 
 // MARK: - Comment List View
 
@@ -325,10 +326,12 @@ struct CommentRowView: View {
             HStack(alignment: .top, spacing: 12) {
                 // User avatar
                 if let avatarUrl = comment.user?.avatarUrl, let url = URL(string: avatarUrl) {
-                    AsyncImage(url: url) { image in
-                        image.resizable()
-                    } placeholder: {
-                        avatarPlaceholder
+                    LazyImage(url: url) { state in
+                        if let image = state.image {
+                            image.resizable()
+                        } else {
+                            avatarPlaceholder
+                        }
                     }
                     .frame(width: 32, height: 32)
                     .clipShape(Circle())

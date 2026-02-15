@@ -1,4 +1,5 @@
 import SwiftUI
+import NukeUI
 
 struct CheckInCardView: View {
     let checkIn: CheckIn
@@ -29,10 +30,12 @@ struct CheckInCardView: View {
             HStack(alignment: .top) {
                 // User avatar
                 if let avatarUrl = checkIn.user?.avatarUrl, let url = URL(string: avatarUrl) {
-                    AsyncImage(url: url) { image in
-                        image.resizable()
-                    } placeholder: {
-                        avatarPlaceholder
+                    LazyImage(url: url) { state in
+                        if let image = state.image {
+                            image.resizable()
+                        } else {
+                            avatarPlaceholder
+                        }
                     }
                     .frame(width: 48, height: 48)
                     .clipShape(Circle())

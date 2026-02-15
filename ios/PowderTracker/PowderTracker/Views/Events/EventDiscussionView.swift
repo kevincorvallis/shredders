@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NukeUI
 
 struct EventDiscussionView: View {
     let eventId: String
@@ -266,13 +267,12 @@ private struct EventCommentRowView: View {
             }
 
             // Avatar
-            AsyncImage(url: URL(string: comment.user.avatarUrl ?? "")) { phase in
-                switch phase {
-                case .success(let image):
+            LazyImage(url: URL(string: comment.user.avatarUrl ?? "")) { state in
+                if let image = state.image {
                     image
                         .resizable()
                         .scaledToFill()
-                default:
+                } else {
                     Circle()
                         .fill(avatarGradient)
                         .overlay(

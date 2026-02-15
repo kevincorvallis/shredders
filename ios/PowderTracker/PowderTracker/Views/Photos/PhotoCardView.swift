@@ -1,4 +1,5 @@
 import SwiftUI
+import NukeUI
 
 struct PhotoCardView: View {
     let photo: Photo
@@ -22,27 +23,22 @@ struct PhotoCardView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Photo image
             ZStack(alignment: .topTrailing) {
-                AsyncImage(url: URL(string: photo.cloudfrontUrl)) { phase in
-                    switch phase {
-                    case .empty:
-                        Rectangle()
-                            .fill(Color(.systemGray6))
-                            .overlay {
-                                ProgressView()
-                            }
-                    case .success(let image):
+                LazyImage(url: URL(string: photo.cloudfrontUrl)) { state in
+                    if let image = state.image {
                         image
                             .resizable()
                             .scaledToFill()
-                    case .failure:
+                    } else if state.error != nil {
                         Rectangle()
                             .fill(Color(.systemGray6))
                             .overlay {
                                 Image(systemName: "photo")
                                     .foregroundStyle(.secondary)
                             }
-                    @unknown default:
-                        EmptyView()
+                    } else {
+                        Rectangle()
+                            .fill(Color(.systemGray6))
+                            .overlay { ProgressView() }
                     }
                 }
                 .frame(height: 120)

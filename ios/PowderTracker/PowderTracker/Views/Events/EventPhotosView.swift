@@ -7,6 +7,7 @@
 
 import SwiftUI
 import PhotosUI
+import NukeUI
 
 struct EventPhotosView: View {
     let eventId: String
@@ -303,26 +304,22 @@ struct PhotoThumbnailView: View {
     let photo: EventPhoto
 
     var body: some View {
-        AsyncImage(url: URL(string: photo.displayUrl)) { phase in
-            switch phase {
-            case .success(let image):
+        LazyImage(url: URL(string: photo.displayUrl)) { state in
+            if let image = state.image {
                 image
                     .resizable()
                     .scaledToFill()
-            case .failure:
+            } else if state.error != nil {
                 Rectangle()
                     .fill(Color(.tertiarySystemBackground))
                     .overlay(
                         Image(systemName: "photo")
                             .foregroundStyle(.secondary)
                     )
-            case .empty:
+            } else {
                 Rectangle()
                     .fill(Color(.tertiarySystemBackground))
                     .overlay(ProgressView())
-            @unknown default:
-                Rectangle()
-                    .fill(Color(.tertiarySystemBackground))
             }
         }
     }
@@ -353,13 +350,12 @@ struct PhotoViewerView: View {
             TabView(selection: $currentIndex) {
                 ForEach(Array(photos.enumerated()), id: \.element.id) { index, photo in
                     VStack {
-                        AsyncImage(url: URL(string: photo.url)) { phase in
-                            switch phase {
-                            case .success(let image):
+                        LazyImage(url: URL(string: photo.url)) { state in
+                            if let image = state.image {
                                 image
                                     .resizable()
                                     .scaledToFit()
-                            case .failure:
+                            } else if state.error != nil {
                                 VStack {
                                     Image(systemName: "photo")
                                         .font(.largeTitle)
@@ -367,10 +363,8 @@ struct PhotoViewerView: View {
                                         .font(.caption)
                                 }
                                 .foregroundStyle(.secondary)
-                            case .empty:
+                            } else {
                                 ProgressView()
-                            @unknown default:
-                                EmptyView()
                             }
                         }
 

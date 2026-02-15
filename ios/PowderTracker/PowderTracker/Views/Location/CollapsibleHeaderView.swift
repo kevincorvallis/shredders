@@ -1,4 +1,5 @@
 import SwiftUI
+import NukeUI
 
 /// Collapsible header with hero webcam and mountain info
 /// Animates between full and collapsed states on scroll
@@ -77,17 +78,12 @@ struct CollapsibleHeaderView: View {
     @ViewBuilder
     private var backgroundLayer: some View {
         if let webcam = webcam {
-            AsyncImage(url: URL(string: webcam.url)) { phase in
-                switch phase {
-                case .empty:
-                    placeholderGradient
-                case .success(let image):
+            LazyImage(url: URL(string: webcam.url)) { state in
+                if let image = state.image {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                case .failure:
-                    placeholderGradient
-                @unknown default:
+                } else {
                     placeholderGradient
                 }
             }

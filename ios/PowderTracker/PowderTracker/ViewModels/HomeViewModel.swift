@@ -5,11 +5,10 @@ import SwiftUI
 @Observable
 class HomeViewModel {
     var mountainData: [String: MountainBatchedResponse] = [:] {
-        didSet { rebuildCachedHelpers() }
+        didSet { setNeedsHelperRebuild() }
     }
     var mountains: [Mountain] = [] {
         didSet {
-            // Rebuild lookup dictionary when mountains change
             mountainsById = Dictionary(uniqueKeysWithValues: mountains.map { ($0.id, $0) })
         }
     }
@@ -19,11 +18,14 @@ class HomeViewModel {
 
     // Enhanced data for homepage redesign
     var arrivalTimes: [String: ArrivalTimeRecommendation] = [:] {
-        didSet { rebuildCachedHelpers() }
+        didSet { setNeedsHelperRebuild() }
     }
     var parkingPredictions: [String: ParkingPredictionResponse] = [:] {
-        didSet { rebuildCachedHelpers() }
+        didSet { setNeedsHelperRebuild() }
     }
+
+    /// Coalesces rapid didSet calls into a single rebuild
+    private var helperRebuildTask: Task<Void, Never>?
 
     // Cached computed helpers — rebuilt when data changes
     private(set) var cachedBestPowder: (mountain: Mountain, score: MountainPowderScore, data: MountainBatchedResponse)?
@@ -283,10 +285,16 @@ class HomeViewModel {
 
     // MARK: - Cached Helper Rebuild
 
-    private func rebuildCachedHelpers() {
-        cachedBestPowder = getBestPowderToday()
-        cachedSmartSuggestion = generateSmartSuggestion()
-        cachedLeaveNowMountains = getLeaveNowMountains()
+    /// Debounce rapid didSet calls (e.g. batch loop setting mountainData per-key)
+    private func setNeedsHelperRebuild() {
+        helperRebuildTask?.cancel()
+        helperRebuildTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms coalesce window
+            guard !Task.isCancelled else { return }
+            cachedBestPowder = getBestPowderToday()
+            cachedSmartSuggestion = generateSmartSuggestion()
+            cachedLeaveNowMountains = getLeaveNowMountains()
+        }
     }
 
     // MARK: - Smart Helpers

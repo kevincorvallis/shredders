@@ -12,7 +12,7 @@ class LocationViewModel {
     var safetyData: SafetyData?
     var snowHistory: [SnowHistoryPoint] = []
     var snowHistoryLoading = false
-    
+
     // WeatherKit integration
     var weatherKitData: WeatherKitService.WeatherData?
     var weatherKitLoading = false
@@ -20,8 +20,41 @@ class LocationViewModel {
 
     let mountain: Mountain
 
+    // MARK: - In-memory cache for satellite endpoints (10min TTL)
+
+    private static var satelliteCache: [String: (data: SatelliteCacheEntry, timestamp: Date)] = [:]
+    private static let cacheTTL: TimeInterval = 600 // 10 minutes
+
+    private struct SatelliteCacheEntry {
+        var liftData: LiftGeoJSON?
+        var snowComparison: SnowComparisonResponse?
+        var safetyData: SafetyData?
+        var snowHistory: [SnowHistoryPoint]
+    }
+
     init(mountain: Mountain) {
         self.mountain = mountain
+
+        // Restore from cache if fresh
+        if let cached = Self.satelliteCache[mountain.id],
+           Date().timeIntervalSince(cached.timestamp) < Self.cacheTTL {
+            liftData = cached.data.liftData
+            snowComparison = cached.data.snowComparison
+            safetyData = cached.data.safetyData
+            snowHistory = cached.data.snowHistory
+        }
+    }
+
+    private func saveSatelliteCache() {
+        Self.satelliteCache[mountain.id] = (
+            data: SatelliteCacheEntry(
+                liftData: liftData,
+                snowComparison: snowComparison,
+                safetyData: safetyData,
+                snowHistory: snowHistory
+            ),
+            timestamp: Date()
+        )
     }
 
     func fetchData() async {
@@ -29,12 +62,8 @@ class LocationViewModel {
         error = nil
 
         do {
-            // Add a small delay to ensure view is stable before fetching
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-
             let data = try await APIClient.shared.fetchMountainData(for: mountain.id)
 
-            // Check if task was cancelled
             guard !Task.isCancelled else {
                 isLoading = false
                 return
@@ -43,17 +72,26 @@ class LocationViewModel {
             locationData = data
             isLoading = false
 
-            // Fetch lift data, snow comparison, safety data, snow history, and WeatherKit data (don't block on errors)
-            await fetchLiftData()
-            await fetchSnowComparison()
-            await fetchSafetyData()
-            await fetchSnowHistory()
-            await fetchWeatherKitData()
+            // Skip satellite fetches if cache is fresh
+            let hasFreshCache = Self.satelliteCache[mountain.id].map {
+                Date().timeIntervalSince($0.timestamp) < Self.cacheTTL
+            } ?? false
+
+            if !hasFreshCache {
+                async let l: Void = fetchLiftData()
+                async let sc: Void = fetchSnowComparison()
+                async let s: Void = fetchSafetyData()
+                async let sh: Void = fetchSnowHistory()
+                async let w: Void = fetchWeatherKitData()
+                _ = await (l, sc, s, sh, w)
+                saveSatelliteCache()
+            } else {
+                // Still fetch WeatherKit (local, no network cost)
+                await fetchWeatherKitData()
+            }
         } catch {
-            // Ignore cancellation errors
             if (error as NSError).code == NSURLErrorCancelled {
-                // Retry once after a delay
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                try? await Task.sleep(nanoseconds: 500_000_000)
                 if !Task.isCancelled {
                     await fetchData()
                 }
