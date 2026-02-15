@@ -92,9 +92,9 @@ export function CommentInput({
 
   if (!isAuthenticated) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-        <p className="text-gray-600 text-sm">
-          <a href="/auth/login" className="text-blue-600 hover:underline">
+      <div className="bg-surface-primary border border-border-secondary rounded-lg p-4 text-center">
+        <p className="text-text-quaternary text-sm">
+          <a href="/auth/login" className="text-accent hover:underline">
             Sign in
           </a>{' '}
           to leave a comment
@@ -116,7 +116,7 @@ export function CommentInput({
             />
           ) : (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white text-sm font-semibold">
+              <span className="text-text-primary text-sm font-semibold">
                 {(profile?.display_name || profile?.username || 'U')[0].toUpperCase()}
               </span>
             </div>
@@ -133,9 +133,9 @@ export function CommentInput({
             autoFocus={autoFocus}
             disabled={isSubmitting}
             className="
-              w-full px-3 py-2 border border-gray-300 rounded-lg
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-              disabled:bg-gray-100 disabled:cursor-not-allowed
+              w-full px-3 py-2 border border-border-primary rounded-lg
+              focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent
+              disabled:bg-surface-secondary disabled:cursor-not-allowed
               resize-none
             "
             rows={parentCommentId ? 2 : 3}
@@ -149,7 +149,7 @@ export function CommentInput({
 
           {/* Character count */}
           <div className="flex items-center justify-between mt-1">
-            <p className="text-gray-400 text-xs">
+            <p className="text-text-tertiary text-xs">
               {content.length}/2000
               {!parentCommentId && (
                 <span className="ml-2">
@@ -165,9 +165,9 @@ export function CommentInput({
               type="submit"
               disabled={isSubmitting || !content.trim()}
               className="
-                px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg
-                hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                disabled:bg-gray-300 disabled:cursor-not-allowed
+                px-4 py-1.5 bg-accent text-text-primary text-sm font-medium rounded-lg
+                hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2
+                disabled:bg-surface-secondary disabled:cursor-not-allowed
                 transition-colors duration-200
               "
             >
@@ -180,8 +180,8 @@ export function CommentInput({
                 onClick={onCancel}
                 disabled={isSubmitting}
                 className="
-                  px-4 py-1.5 text-gray-600 text-sm font-medium rounded-lg
-                  hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2
+                  px-4 py-1.5 text-text-quaternary text-sm font-medium rounded-lg
+                  hover:bg-surface-secondary focus:outline-none focus:ring-2 focus:ring-border-primary focus:ring-offset-2
                   disabled:opacity-50 disabled:cursor-not-allowed
                   transition-colors duration-200
                 "

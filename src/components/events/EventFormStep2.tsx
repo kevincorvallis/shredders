@@ -26,18 +26,18 @@ export function EventFormStep2({ form }: EventFormStep2Props) {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-white mb-1">Event Details</h2>
-        <p className="text-sm text-gray-400">Name your event and set preferences</p>
+        <h2 className="text-lg font-semibold text-text-primary mb-1">Event Details</h2>
+        <p className="text-sm text-text-tertiary">Name your event and set preferences</p>
       </div>
 
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Event Title *</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">Event Title *</label>
         <input
           type="text"
           {...register('title')}
           placeholder="e.g., Powder Day at Stevens!"
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-sky-500"
+          className="w-full bg-surface-secondary border border-border-primary rounded-xl px-4 py-3 text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent"
           maxLength={100}
         />
         <div className="flex justify-between mt-1">
@@ -46,16 +46,16 @@ export function EventFormStep2({ form }: EventFormStep2Props) {
           ) : (
             <span />
           )}
-          <p className="text-xs text-gray-500">{title.length}/100</p>
+          <p className="text-xs text-text-quaternary">{title.length}/100</p>
         </div>
       </div>
 
       {/* Skill Level */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Skill Level</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">Skill Level</label>
         <select
           {...register('skillLevel')}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500"
+          className="w-full bg-surface-secondary border border-border-primary rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent"
         >
           {Object.entries(skillLevelLabels).map(([value, label]) => (
             <option key={value} value={value}>
@@ -79,9 +79,9 @@ export function EventFormStep2({ form }: EventFormStep2Props) {
                 setValue('maxAttendees', 10);
               }
             }}
-            className="w-5 h-5 rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-sky-500"
+            className="w-5 h-5 rounded bg-surface-secondary border-border-primary text-accent focus:ring-accent"
           />
-          <span className="text-gray-300">Limit group size</span>
+          <span className="text-text-secondary">Limit group size</span>
         </label>
 
         {limitEnabled && (
@@ -96,14 +96,14 @@ export function EventFormStep2({ form }: EventFormStep2Props) {
                 }}
                 min={2}
                 max={1000}
-                className="w-24 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500"
+                className="w-24 bg-surface-secondary border border-border-primary rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent"
               />
-              <span className="text-sm text-gray-400">max attendees</span>
+              <span className="text-sm text-text-tertiary">max attendees</span>
               {maxAttendees && (
-                <span className="text-xs text-sky-400">{groupSizeHint(maxAttendees)}</span>
+                <span className="text-xs text-accent">{groupSizeHint(maxAttendees)}</span>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-text-quaternary mt-1">
               Extra RSVPs will be added to a waitlist automatically
             </p>
           </div>
@@ -112,15 +112,15 @@ export function EventFormStep2({ form }: EventFormStep2Props) {
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Additional Notes</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">Additional Notes</label>
         <textarea
           {...register('notes')}
           placeholder="Any other details for your group..."
           rows={3}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-sky-500 resize-none"
+          className="w-full bg-surface-secondary border border-border-primary rounded-xl px-4 py-3 text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent resize-none"
           maxLength={2000}
         />
-        <p className="text-xs text-gray-500 mt-1 text-right">{notes.length}/2000</p>
+        <p className="text-xs text-text-quaternary mt-1 text-right">{notes.length}/2000</p>
       </div>
     </div>
   );

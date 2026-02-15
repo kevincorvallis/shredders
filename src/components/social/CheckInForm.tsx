@@ -79,9 +79,9 @@ export function CheckInForm({
 
   if (!isAuthenticated) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-        <p className="text-gray-600">
-          <a href="/auth/login" className="text-blue-600 hover:underline">
+      <div className="bg-surface-primary border border-border-secondary rounded-lg p-6 text-center">
+        <p className="text-text-quaternary">
+          <a href="/auth/login" className="text-accent hover:underline">
             Sign in
           </a>{' '}
           to check in at this mountain
@@ -91,14 +91,14 @@ export function CheckInForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg border border-gray-200 p-6">
+    <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg border border-border-secondary p-6">
       <div>
         <h3 className="text-lg font-semibold mb-4">Check In</h3>
       </div>
 
       {/* Rating */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-text-secondary mb-2">
           Overall Rating
         </label>
         <div className="flex gap-2">
@@ -113,7 +113,7 @@ export function CheckInForm({
                 ${
                   rating === value
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                    : 'border-border-primary hover:border-border-primary text-text-quaternary'
                 }
               `}
             >
@@ -125,14 +125,14 @@ export function CheckInForm({
 
       {/* Snow Quality */}
       <div>
-        <label htmlFor="snowQuality" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="snowQuality" className="block text-sm font-medium text-text-secondary mb-2">
           Snow Quality
         </label>
         <select
           id="snowQuality"
           value={snowQuality}
           onChange={(e) => setSnowQuality(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 py-2 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
         >
           <option value="">Select...</option>
           <option value="powder">Powder</option>
@@ -147,14 +147,14 @@ export function CheckInForm({
 
       {/* Crowd Level */}
       <div>
-        <label htmlFor="crowdLevel" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="crowdLevel" className="block text-sm font-medium text-text-secondary mb-2">
           Crowd Level
         </label>
         <select
           id="crowdLevel"
           value={crowdLevel}
           onChange={(e) => setCrowdLevel(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 py-2 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
         >
           <option value="">Select...</option>
           <option value="empty">Empty</option>
@@ -167,7 +167,7 @@ export function CheckInForm({
 
       {/* Trip Report */}
       <div>
-        <label htmlFor="tripReport" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="tripReport" className="block text-sm font-medium text-text-secondary mb-2">
           Trip Report (Optional)
         </label>
         <textarea
@@ -177,9 +177,9 @@ export function CheckInForm({
           placeholder="Share your experience..."
           rows={6}
           maxLength={5000}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="w-full px-3 py-2 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-text-quaternary mt-1">
           {tripReport.length}/5000 characters
         </p>
       </div>
@@ -191,9 +191,9 @@ export function CheckInForm({
           type="checkbox"
           checked={isPublic}
           onChange={(e) => setIsPublic(e.target.checked)}
-          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          className="w-4 h-4 text-accent border-border-primary rounded focus:ring-accent"
         />
-        <label htmlFor="isPublic" className="ml-2 text-sm text-gray-700">
+        <label htmlFor="isPublic" className="ml-2 text-sm text-text-secondary">
           Make this check-in public
         </label>
       </div>
@@ -211,9 +211,9 @@ export function CheckInForm({
           type="submit"
           disabled={isSubmitting}
           className="
-            flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg
-            hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-            disabled:bg-gray-300 disabled:cursor-not-allowed
+            flex-1 px-6 py-3 bg-accent text-text-primary font-semibold rounded-lg
+            hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2
+            disabled:bg-surface-secondary disabled:cursor-not-allowed
             transition-colors duration-200
           "
         >
@@ -226,8 +226,8 @@ export function CheckInForm({
             onClick={onCancel}
             disabled={isSubmitting}
             className="
-              px-6 py-3 text-gray-600 font-semibold rounded-lg
-              hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2
+              px-6 py-3 text-text-quaternary font-semibold rounded-lg
+              hover:bg-surface-secondary focus:outline-none focus:ring-2 focus:ring-border-primary focus:ring-offset-2
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-colors duration-200
             "

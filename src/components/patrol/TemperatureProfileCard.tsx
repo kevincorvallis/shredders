@@ -66,7 +66,7 @@ export function TemperatureProfileCard({
               className="absolute top-0 bottom-0 w-px bg-blue-500/50"
               style={{ left: `calc(72px + (100% - 72px) * ${freezingX / 100})` }}
             >
-              <div className="absolute -top-1 left-0 -translate-x-1/2 text-[10px] text-blue-400 whitespace-nowrap">
+              <div className="absolute -top-1 left-0 -translate-x-1/2 text-[10px] text-accent whitespace-nowrap">
                 32°F
               </div>
             </div>
@@ -84,8 +84,8 @@ export function TemperatureProfileCard({
                 >
                   {/* Elevation label */}
                   <div className="w-[72px] flex-shrink-0 text-right pr-3">
-                    <div className="text-xs font-medium text-slate-300">{level.label}</div>
-                    <div className="text-[10px] text-slate-500">{level.elevation.toLocaleString()}ft</div>
+                    <div className="text-xs font-medium text-text-secondary">{level.label}</div>
+                    <div className="text-[10px] text-text-quaternary">{level.elevation.toLocaleString()}ft</div>
                   </div>
 
                   {/* Temperature bar */}
@@ -108,7 +108,7 @@ export function TemperatureProfileCard({
                           level.temp < 32 ? 'bg-blue-500 border-blue-300' : 'bg-amber-500 border-amber-300'
                         }`}
                       />
-                      <span className="ml-2 text-sm font-medium text-slate-200 whitespace-nowrap">
+                      <span className="ml-2 text-sm font-medium text-text-primary whitespace-nowrap">
                         {level.temp}°F
                       </span>
                     </div>
@@ -119,9 +119,9 @@ export function TemperatureProfileCard({
           </div>
 
           {/* Freezing level indicator */}
-          <div className="flex items-center justify-between text-sm border-t border-slate-800 pt-3">
-            <span className="text-slate-400">Freezing Level</span>
-            <span className="font-medium text-blue-400">
+          <div className="flex items-center justify-between text-sm border-t border-border-secondary pt-3">
+            <span className="text-text-tertiary">Freezing Level</span>
+            <span className="font-medium text-accent">
               {freezingLevel < baseElevation
                 ? 'Below base'
                 : freezingLevel > summitElevation
@@ -133,10 +133,10 @@ export function TemperatureProfileCard({
           {/* 24hr range */}
           {tempMax !== null && tempMin !== null && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">24hr Range</span>
+              <span className="text-text-tertiary">24hr Range</span>
               <span className="font-medium">
-                <span className="text-blue-400">{tempMin}°F</span>
-                <span className="text-slate-500 mx-1">→</span>
+                <span className="text-accent">{tempMin}°F</span>
+                <span className="text-text-quaternary mx-1">→</span>
                 <span className="text-amber-400">{tempMax}°F</span>
               </span>
             </div>

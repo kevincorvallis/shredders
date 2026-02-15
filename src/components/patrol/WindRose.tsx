@@ -79,7 +79,7 @@ export function WindRose({
                 y={y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className={`text-xs font-medium ${isLoaded ? 'fill-amber-400' : 'fill-slate-400'}`}
+                className={`text-xs font-medium ${isLoaded ? 'fill-amber-400' : 'fill-text-tertiary'}`}
               >
                 {dir}
               </text>
@@ -161,12 +161,12 @@ export function WindRose({
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-blue-500" />
-              <span className="text-slate-400">Wind: {currentSpeed} mph {currentDirectionCardinal}</span>
+              <span className="text-text-tertiary">Wind: {currentSpeed} mph {currentDirectionCardinal}</span>
             </div>
             {currentGust && (
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full border-2 border-dashed border-red-500" />
-                <span className="text-slate-400">Gust: {currentGust} mph</span>
+                <span className="text-text-tertiary">Gust: {currentGust} mph</span>
               </div>
             )}
           </div>

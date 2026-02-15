@@ -34,9 +34,9 @@ export function ComparisonWidget({ mountains }: ComparisonWidgetProps) {
   const getBetterIndicator = (val1: number, val2: number, higherIsBetter: boolean = true) => {
     if (val1 === val2) return ['', ''];
     if (higherIsBetter) {
-      return val1 > val2 ? ['text-green-400', 'text-gray-400'] : ['text-gray-400', 'text-green-400'];
+      return val1 > val2 ? ['text-green-400', 'text-text-tertiary'] : ['text-text-tertiary', 'text-green-400'];
     }
-    return val1 < val2 ? ['text-green-400', 'text-gray-400'] : ['text-gray-400', 'text-green-400'];
+    return val1 < val2 ? ['text-green-400', 'text-text-tertiary'] : ['text-text-tertiary', 'text-green-400'];
   };
 
   if (mountains.length < 2) return null;
@@ -46,23 +46,23 @@ export function ComparisonWidget({ mountains }: ComparisonWidgetProps) {
   return (
     <div className="bg-gradient-to-br from-amber-500/20 to-orange-600/10 rounded-xl p-4 border border-amber-500/30">
       <div className="mb-4">
-        <h3 className="text-white font-semibold text-sm">Mountain Comparison</h3>
-        <p className="text-gray-400 text-xs">
+        <h3 className="text-text-primary font-semibold text-sm">Mountain Comparison</h3>
+        <p className="text-text-tertiary text-xs">
           {m1.name} vs {m2.name}
         </p>
       </div>
 
       {/* Header Row */}
       <div className="grid grid-cols-3 gap-2 mb-3 pb-2 border-b border-white/10">
-        <div className="text-gray-500 text-xs"></div>
+        <div className="text-text-quaternary text-xs"></div>
         <div className="text-center">
-          <span className={`font-semibold text-sm ${winner === m1.name ? 'text-green-400' : 'text-white'}`}>
+          <span className={`font-semibold text-sm ${winner === m1.name ? 'text-green-400' : 'text-text-primary'}`}>
             {m1.name}
           </span>
           {winner === m1.name && <span className="ml-1">🏆</span>}
         </div>
         <div className="text-center">
-          <span className={`font-semibold text-sm ${winner === m2.name ? 'text-green-400' : 'text-white'}`}>
+          <span className={`font-semibold text-sm ${winner === m2.name ? 'text-green-400' : 'text-text-primary'}`}>
             {m2.name}
           </span>
           {winner === m2.name && <span className="ml-1">🏆</span>}
@@ -71,7 +71,7 @@ export function ComparisonWidget({ mountains }: ComparisonWidgetProps) {
 
       {/* Powder Score */}
       <div className="grid grid-cols-3 gap-2 py-2">
-        <div className="text-gray-400 text-xs">Powder Score</div>
+        <div className="text-text-tertiary text-xs">Powder Score</div>
         <div className={`text-center text-lg font-bold ${getScoreColor(m1.powderScore)}`}>
           {m1.powderScore}
         </div>
@@ -82,7 +82,7 @@ export function ComparisonWidget({ mountains }: ComparisonWidgetProps) {
 
       {/* Snow Depth */}
       <div className="grid grid-cols-3 gap-2 py-2 border-t border-white/5">
-        <div className="text-gray-400 text-xs">Snow Depth</div>
+        <div className="text-text-tertiary text-xs">Snow Depth</div>
         <div className={`text-center text-sm font-medium ${getBetterIndicator(m1.snowDepth, m2.snowDepth)[0]}`}>
           {m1.snowDepth}"
         </div>
@@ -93,7 +93,7 @@ export function ComparisonWidget({ mountains }: ComparisonWidgetProps) {
 
       {/* New Snow */}
       <div className="grid grid-cols-3 gap-2 py-2 border-t border-white/5">
-        <div className="text-gray-400 text-xs">24h Snow</div>
+        <div className="text-text-tertiary text-xs">24h Snow</div>
         <div className={`text-center text-sm font-medium ${getBetterIndicator(m1.newSnow, m2.newSnow)[0]}`}>
           {m1.newSnow}"
         </div>
@@ -104,7 +104,7 @@ export function ComparisonWidget({ mountains }: ComparisonWidgetProps) {
 
       {/* Temperature */}
       <div className="grid grid-cols-3 gap-2 py-2 border-t border-white/5">
-        <div className="text-gray-400 text-xs">Temperature</div>
+        <div className="text-text-tertiary text-xs">Temperature</div>
         <div className={`text-center text-sm font-medium ${getBetterIndicator(m1.temperature, m2.temperature, false)[0]}`}>
           {m1.temperature}°F
         </div>
@@ -115,7 +115,7 @@ export function ComparisonWidget({ mountains }: ComparisonWidgetProps) {
 
       {/* Wind */}
       <div className="grid grid-cols-3 gap-2 py-2 border-t border-white/5">
-        <div className="text-gray-400 text-xs">Wind</div>
+        <div className="text-text-tertiary text-xs">Wind</div>
         <div className={`text-center text-sm font-medium ${getBetterIndicator(m1.wind, m2.wind, false)[0]}`}>
           {m1.wind} mph
         </div>

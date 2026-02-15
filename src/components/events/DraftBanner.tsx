@@ -23,7 +23,7 @@ export function DraftBanner({ savedAt, onResume, onDiscard }: DraftBannerProps) 
         <button
           type="button"
           onClick={onDiscard}
-          className="text-xs text-gray-400 hover:text-white transition-colors px-2 py-1"
+          className="text-xs text-text-tertiary hover:text-text-primary transition-colors px-2 py-1"
         >
           Discard
         </button>

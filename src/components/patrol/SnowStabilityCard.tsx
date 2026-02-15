@@ -66,29 +66,29 @@ export function SnowStabilityCard({
             <div className={`text-sm font-medium ${snowTypeStyle.color}`}>
               {snowTypeStyle.label}
             </div>
-            <div className="text-xs text-slate-400">Current snow type</div>
+            <div className="text-xs text-text-tertiary">Current snow type</div>
           </div>
         </div>
 
         {/* Key metrics */}
         <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="bg-slate-800/50 rounded p-2">
-            <div className="text-lg font-bold text-slate-200">
+          <div className="bg-surface-secondary/50 rounded p-2">
+            <div className="text-lg font-bold text-text-primary">
               {snowfall24h > 0 ? `${snowfall24h}"` : '--'}
             </div>
-            <div className="text-[10px] text-slate-500 uppercase">24hr Snow</div>
+            <div className="text-[10px] text-text-quaternary uppercase">24hr Snow</div>
           </div>
-          <div className="bg-slate-800/50 rounded p-2">
-            <div className="text-lg font-bold text-slate-200">
+          <div className="bg-surface-secondary/50 rounded p-2">
+            <div className="text-lg font-bold text-text-primary">
               {density !== null ? `${density}%` : '--'}
             </div>
-            <div className="text-[10px] text-slate-500 uppercase">Density</div>
+            <div className="text-[10px] text-text-quaternary uppercase">Density</div>
           </div>
-          <div className="bg-slate-800/50 rounded p-2">
-            <div className="text-lg font-bold text-slate-200">
+          <div className="bg-surface-secondary/50 rounded p-2">
+            <div className="text-lg font-bold text-text-primary">
               {settlingRate !== null ? `${settlingRate.toFixed(1)}"` : '--'}
             </div>
-            <div className="text-[10px] text-slate-500 uppercase">Settling/Day</div>
+            <div className="text-[10px] text-text-quaternary uppercase">Settling/Day</div>
           </div>
         </div>
 
@@ -96,8 +96,8 @@ export function SnowStabilityCard({
         {density !== null && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-slate-400">Snow Density</span>
-              <span className="text-slate-300">{density}%</span>
+              <span className="text-text-tertiary">Snow Density</span>
+              <span className="text-text-secondary">{density}%</span>
             </div>
             <Progress
               value={density}
@@ -105,10 +105,10 @@ export function SnowStabilityCard({
               indicatorClassName={
                 density < 25 ? 'bg-cyan-500' :
                 density < 40 ? 'bg-blue-500' :
-                'bg-slate-400'
+                'bg-text-tertiary'
               }
             />
-            <div className="flex justify-between text-[10px] text-slate-500">
+            <div className="flex justify-between text-[10px] text-text-quaternary">
               <span>Light/Dry</span>
               <span>Dense/Settled</span>
             </div>
@@ -117,7 +117,7 @@ export function SnowStabilityCard({
 
         {/* Stability factors */}
         <div className="space-y-2">
-          <div className="text-xs font-medium text-slate-400 uppercase">Factors</div>
+          <div className="text-xs font-medium text-text-tertiary uppercase">Factors</div>
           {factors.map((factor, i) => (
             <div
               key={i}
@@ -126,20 +126,20 @@ export function SnowStabilityCard({
               <span className={
                 factor.status === 'positive' ? 'text-emerald-400' :
                 factor.status === 'negative' ? 'text-red-400' :
-                'text-slate-400'
+                'text-text-tertiary'
               }>
                 {factor.status === 'positive' ? '✓' : factor.status === 'negative' ? '✗' : '•'}
               </span>
               <div>
-                <span className="font-medium text-slate-300">{factor.name}:</span>{' '}
-                <span className="text-slate-400">{factor.description}</span>
+                <span className="font-medium text-text-secondary">{factor.name}:</span>{' '}
+                <span className="text-text-tertiary">{factor.description}</span>
               </div>
             </div>
           ))}
         </div>
 
         {/* Summary message */}
-        <div className="text-xs text-slate-400 border-t border-slate-800 pt-3">
+        <div className="text-xs text-text-tertiary border-t border-border-secondary pt-3">
           {message}
         </div>
       </CardContent>

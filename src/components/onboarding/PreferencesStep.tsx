@@ -75,7 +75,7 @@ export function PreferencesStep({ onComplete, onSkip, initialSelected = [] }: Pr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-background via-blue-900 to-background overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -110,7 +110,7 @@ export function PreferencesStep({ onComplete, onSkip, initialSelected = [] }: Pr
       {Array.from({ length: 15 }).map((_, i) => (
         <motion.div
           key={i}
-          className="absolute text-white text-xl opacity-60"
+          className="absolute text-text-primary text-xl opacity-60"
           style={{
             left: `${Math.random() * 100}%`,
             top: '-10%',
@@ -138,7 +138,7 @@ export function PreferencesStep({ onComplete, onSkip, initialSelected = [] }: Pr
         <div className="absolute top-4 right-4">
           <button
             onClick={onSkip}
-            className="text-slate-400 hover:text-white text-sm font-medium transition-colors"
+            className="text-text-tertiary hover:text-text-primary text-sm font-medium transition-colors"
           >
             Skip
           </button>
@@ -150,7 +150,7 @@ export function PreferencesStep({ onComplete, onSkip, initialSelected = [] }: Pr
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">What Gets You Stoked?</h1>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">What Gets You Stoked?</h1>
           <p className="text-blue-200/70">
             We&apos;ll personalize your experience based on what you love
           </p>
@@ -186,7 +186,7 @@ export function PreferencesStep({ onComplete, onSkip, initialSelected = [] }: Pr
                       exit={{ scale: 0 }}
                       className={`absolute top-3 right-3 w-6 h-6 rounded-full bg-gradient-to-r ${pref.color} flex items-center justify-center`}
                     >
-                      <Check className="w-4 h-4 text-white" />
+                      <Check className="w-4 h-4 text-text-primary" />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -197,8 +197,8 @@ export function PreferencesStep({ onComplete, onSkip, initialSelected = [] }: Pr
                 </div>
 
                 {/* Text */}
-                <div className="font-semibold text-white text-lg mb-1">{pref.title}</div>
-                <div className="text-sm text-slate-400">{pref.description}</div>
+                <div className="font-semibold text-text-primary text-lg mb-1">{pref.title}</div>
+                <div className="text-sm text-text-tertiary">{pref.description}</div>
               </motion.button>
             );
           })}
@@ -212,7 +212,7 @@ export function PreferencesStep({ onComplete, onSkip, initialSelected = [] }: Pr
         >
           <motion.button
             onClick={handleContinue}
-            className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-200"
+            className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-text-primary font-semibold rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-200"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >

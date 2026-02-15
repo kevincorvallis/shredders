@@ -27,10 +27,10 @@ export function NavigateButton({
 
   const variantClasses = {
     primary:
-      'bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg hover:shadow-xl',
+      'bg-accent hover:bg-accent text-text-primary font-semibold shadow-lg hover:shadow-xl',
     secondary:
-      'bg-slate-700 hover:bg-slate-600 text-white font-medium border border-slate-600',
-    icon: 'bg-slate-800 hover:bg-slate-700 text-white p-2',
+      'bg-surface-tertiary hover:bg-surface-tertiary text-text-primary font-medium border border-border-primary',
+    icon: 'bg-surface-secondary hover:bg-surface-tertiary text-text-primary p-2',
   };
 
   if (variant === 'icon') {

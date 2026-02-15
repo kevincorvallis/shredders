@@ -68,7 +68,7 @@ export function PhotoGrid({ mountainId, webcamId }: PhotoGridProps) {
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="aspect-square bg-gray-200 rounded-lg animate-pulse"
+            className="aspect-square bg-surface-secondary rounded-lg animate-pulse"
           />
         ))}
       </div>
@@ -87,7 +87,7 @@ export function PhotoGrid({ mountainId, webcamId }: PhotoGridProps) {
     return (
       <div className="text-center py-12">
         <svg
-          className="w-16 h-16 mx-auto mb-4 text-gray-400"
+          className="w-16 h-16 mx-auto mb-4 text-text-tertiary"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -99,8 +99,8 @@ export function PhotoGrid({ mountainId, webcamId }: PhotoGridProps) {
             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
           />
         </svg>
-        <p className="text-lg font-medium text-gray-700 mb-1">No photos yet</p>
-        <p className="text-sm text-gray-500">
+        <p className="text-lg font-medium text-text-secondary mb-1">No photos yet</p>
+        <p className="text-sm text-text-quaternary">
           Be the first to upload a photo!
         </p>
       </div>

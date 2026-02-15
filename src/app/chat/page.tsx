@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function ChatPage() {
   return (
-    <main className="h-screen bg-slate-900">
+    <main className="h-screen bg-background">
       <ChatInterface />
     </main>
   );

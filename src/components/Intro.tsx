@@ -96,7 +96,7 @@ export function Intro({ onComplete, duration = 3500 }: IntroProps) {
             {snowflakes.map((flake) => (
               <motion.div
                 key={flake.id}
-                className="absolute text-white"
+                className="absolute text-text-primary"
                 style={{
                   left: `${flake.x}%`,
                   fontSize: flake.size,
@@ -345,12 +345,12 @@ export function Intro({ onComplete, duration = 3500 }: IntroProps) {
                     />
                   ))}
                 </div>
-                <span className="text-slate-500 text-xs">Loading conditions...</span>
+                <span className="text-text-quaternary text-xs">Loading conditions...</span>
               </motion.div>
 
               {/* Skip hint */}
               <motion.p
-                className="absolute bottom-8 text-slate-600 text-xs"
+                className="absolute bottom-8 text-text-quaternary text-xs"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 2.5 }}

@@ -42,9 +42,9 @@ export function ChartWidget({ mountain, chartType, days, data }: ChartWidgetProp
   const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload: { fullDate: string } }>; label?: string }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 shadow-lg">
-          <p className="text-gray-400 text-xs mb-1">{label}</p>
-          <p className="text-white font-semibold">
+        <div className="bg-surface-secondary border border-border-primary rounded-lg px-3 py-2 shadow-lg">
+          <p className="text-text-tertiary text-xs mb-1">{label}</p>
+          <p className="text-text-primary font-semibold">
             {chartType === 'snow_depth' ? `${payload[0].value}" depth` : `${payload[0].value}" snowfall`}
           </p>
         </div>
@@ -62,13 +62,13 @@ export function ChartWidget({ mountain, chartType, days, data }: ChartWidgetProp
     <div className="bg-gradient-to-br from-violet-500/20 to-purple-600/10 rounded-xl p-4 border border-violet-500/30">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-white font-semibold text-sm">{mountain}</h3>
-          <p className="text-gray-400 text-xs">
+          <h3 className="text-text-primary font-semibold text-sm">{mountain}</h3>
+          <p className="text-text-tertiary text-xs">
             {chartType === 'snow_depth' ? 'Snow Depth' : 'Daily Snowfall'} - {days} Days
           </p>
         </div>
         <div className="text-right">
-          <div className="text-white text-lg font-bold">{lastValue}"</div>
+          <div className="text-text-primary text-lg font-bold">{lastValue}"</div>
           <div className={`text-xs ${change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {change >= 0 ? '+' : ''}{change}" from start
           </div>
@@ -116,16 +116,16 @@ export function ChartWidget({ mountain, chartType, days, data }: ChartWidgetProp
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-white/10">
         <div className="text-center">
-          <div className="text-gray-500 text-xs">Min</div>
-          <div className="text-white text-sm font-medium">{Math.round(minValue)}"</div>
+          <div className="text-text-quaternary text-xs">Min</div>
+          <div className="text-text-primary text-sm font-medium">{Math.round(minValue)}"</div>
         </div>
         <div className="text-center">
-          <div className="text-gray-500 text-xs">Max</div>
-          <div className="text-white text-sm font-medium">{Math.round(maxValue)}"</div>
+          <div className="text-text-quaternary text-xs">Max</div>
+          <div className="text-text-primary text-sm font-medium">{Math.round(maxValue)}"</div>
         </div>
         <div className="text-center">
-          <div className="text-gray-500 text-xs">Avg</div>
-          <div className="text-white text-sm font-medium">
+          <div className="text-text-quaternary text-xs">Avg</div>
+          <div className="text-text-primary text-sm font-medium">
             {Math.round(values.reduce((a, b) => a + b, 0) / values.length)}"
           </div>
         </div>

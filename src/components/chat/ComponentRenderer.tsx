@@ -45,8 +45,8 @@ export function ComponentRenderer({ toolInvocations }: ComponentRendererProps) {
 
     if (pendingCalls.length > 0) {
       return (
-        <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-gray-400"></div>
+        <div className="flex items-center gap-2 text-text-tertiary text-sm py-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-border-primary border-t-text-tertiary"></div>
           <span>Fetching data...</span>
         </div>
       );

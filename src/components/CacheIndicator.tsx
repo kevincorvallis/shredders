@@ -40,7 +40,7 @@ export function CacheIndicator({ cachedAt, isLoading, className = '' }: CacheInd
     return (
       <div className={`flex items-center gap-1.5 text-xs ${className}`}>
         <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-        <span className="text-blue-400">Loading...</span>
+        <span className="text-accent">Loading...</span>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export function CacheIndicator({ cachedAt, isLoading, className = '' }: CacheInd
   return (
     <div className={`flex items-center gap-1.5 text-xs ${className}`}>
       <div className="w-2 h-2 rounded-full bg-green-500" />
-      <span className="text-gray-400">
+      <span className="text-text-tertiary">
         Updated {timeAgo}
       </span>
     </div>

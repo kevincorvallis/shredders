@@ -174,7 +174,7 @@ export function WelcomeFlow({ onComplete, userName, showExtendedOnboarding = tru
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-background via-blue-900 to-background overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -209,7 +209,7 @@ export function WelcomeFlow({ onComplete, userName, showExtendedOnboarding = tru
       {Array.from({ length: 20 }).map((_, i) => (
         <motion.div
           key={i}
-          className="absolute text-white text-2xl opacity-70"
+          className="absolute text-text-primary text-2xl opacity-70"
           style={{
             left: `${Math.random() * 100}%`,
             top: '-10%',
@@ -237,7 +237,7 @@ export function WelcomeFlow({ onComplete, userName, showExtendedOnboarding = tru
         <div className="absolute top-4 right-4">
           <button
             onClick={handleSkip}
-            className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors"
           >
             Skip
           </button>
@@ -289,13 +289,13 @@ export function WelcomeFlow({ onComplete, userName, showExtendedOnboarding = tru
                 delay: 0.1,
               }}
             >
-              <div className="text-white">{step.icon}</div>
+              <div className="text-text-primary">{step.icon}</div>
             </motion.div>
 
             {/* Greeting (first step only) */}
             {currentStep === 0 && userName && (
               <motion.p
-                className="text-slate-300 text-lg mb-2"
+                className="text-text-secondary text-lg mb-2"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -306,7 +306,7 @@ export function WelcomeFlow({ onComplete, userName, showExtendedOnboarding = tru
 
             {/* Title */}
             <motion.h2
-              className="text-4xl md:text-5xl font-bold text-white mb-4"
+              className="text-4xl md:text-5xl font-bold text-text-primary mb-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -316,7 +316,7 @@ export function WelcomeFlow({ onComplete, userName, showExtendedOnboarding = tru
 
             {/* Description */}
             <motion.p
-              className="text-slate-300 text-lg max-w-xl mx-auto leading-relaxed"
+              className="text-text-secondary text-lg max-w-xl mx-auto leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -339,7 +339,7 @@ export function WelcomeFlow({ onComplete, userName, showExtendedOnboarding = tru
             className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
               currentStep === 0
                 ? 'opacity-0 pointer-events-none'
-                : 'text-white hover:bg-white/10'
+                : 'text-text-primary hover:bg-white/10'
             }`}
           >
             <svg
@@ -360,7 +360,7 @@ export function WelcomeFlow({ onComplete, userName, showExtendedOnboarding = tru
 
           <motion.button
             onClick={handleNext}
-            className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-lg shadow-lg shadow-blue-500/50 transition-all duration-200"
+            className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-text-primary font-semibold rounded-lg shadow-lg shadow-blue-500/50 transition-all duration-200"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >

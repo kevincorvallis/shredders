@@ -32,10 +32,10 @@ export function StepIndicator({ currentStep, onStepClick, completedSteps }: Step
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-sky-500 text-white'
+                    ? 'bg-accent text-text-primary'
                     : isCompleted
-                      ? 'bg-sky-500/20 text-sky-400'
-                      : 'bg-slate-700 text-gray-500'
+                      ? 'bg-sky-500/20 text-accent'
+                      : 'bg-surface-tertiary text-text-quaternary'
                 }`}
               >
                 {isCompleted && !isActive ? (
@@ -48,7 +48,7 @@ export function StepIndicator({ currentStep, onStepClick, completedSteps }: Step
               </div>
               <span
                 className={`text-xs hidden sm:block ${
-                  isActive ? 'text-sky-400 font-medium' : isCompleted ? 'text-gray-400' : 'text-gray-600'
+                  isActive ? 'text-accent font-medium' : isCompleted ? 'text-text-tertiary' : 'text-text-quaternary'
                 }`}
               >
                 {step.shortLabel}
@@ -57,7 +57,7 @@ export function StepIndicator({ currentStep, onStepClick, completedSteps }: Step
             {index < STEPS.length - 1 && (
               <div
                 className={`flex-1 h-0.5 mx-2 mt-[-1.25rem] sm:mt-[-0.5rem] ${
-                  isCompleted ? 'bg-sky-500/40' : 'bg-slate-700'
+                  isCompleted ? 'bg-sky-500/40' : 'bg-surface-tertiary'
                 }`}
               />
             )}

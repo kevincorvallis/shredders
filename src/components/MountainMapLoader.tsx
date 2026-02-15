@@ -8,8 +8,8 @@ import { getAllMountains, type MountainConfig, calculateDistance } from '@shredd
 const LeafletMap = dynamic(() => import('./LeafletMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-      <div className="flex items-center gap-2 text-white">
+    <div className="w-full h-full bg-surface-secondary flex items-center justify-center">
+      <div className="flex items-center gap-2 text-text-primary">
         <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
           <path
@@ -129,7 +129,7 @@ export function MountainMap({
   }, [mountains, userLocation]);
 
   const getScoreColor = (score?: number) => {
-    if (score === undefined) return 'bg-slate-500';
+    if (score === undefined) return 'bg-text-quaternary';
     if (score >= 7) return 'bg-green-500';
     if (score >= 5) return 'bg-yellow-500';
     return 'bg-red-500';
@@ -140,18 +140,18 @@ export function MountainMap({
       onClick={() => onMountainSelect?.(mountain.id)}
       className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
         mountain.id === selectedMountainId
-          ? 'bg-sky-500/20 border border-sky-500'
-          : 'bg-slate-700/50 hover:bg-slate-700 border border-transparent'
+          ? 'bg-accent/20 border border-accent'
+          : 'bg-surface-tertiary hover:bg-surface-tertiary border border-transparent'
       }`}
     >
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${getScoreColor(mountain.powderScore)}`}
+        className={`w-8 h-8 rounded-full flex items-center justify-center text-text-primary text-sm font-bold ${getScoreColor(mountain.powderScore)}`}
       >
         {mountain.powderScore?.toFixed(0) ?? '?'}
       </div>
       <div className="flex-1 text-left">
-        <div className="text-white font-medium">{mountain.shortName}</div>
-        <div className="text-xs text-gray-400">
+        <div className="text-text-primary font-medium">{mountain.shortName}</div>
+        <div className="text-xs text-text-tertiary">
           {mountain.elevation.summit.toLocaleString()}ft
           {mountain.distance !== undefined && ` • ${mountain.distance.toFixed(0)} mi`}
         </div>
@@ -160,7 +160,7 @@ export function MountainMap({
   );
 
   return (
-    <div className="w-full h-full bg-slate-800 flex flex-col overflow-hidden">
+    <div className="w-full h-full bg-surface-secondary flex flex-col overflow-hidden">
       {/* Leaflet Map */}
       <div className="flex-1 min-h-0 relative">
         <LeafletMap
@@ -172,28 +172,28 @@ export function MountainMap({
         />
 
         {/* Legend overlay */}
-        <div className="absolute bottom-4 left-4 bg-slate-900/90 rounded-lg px-3 py-2 flex items-center gap-4 text-xs z-[1000]">
+        <div className="absolute bottom-4 left-4 bg-surface-primary/90 rounded-lg px-3 py-2 flex items-center gap-4 text-xs z-[1000]">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-green-500" />
-            <span className="text-gray-300">7+ Great</span>
+            <span className="text-text-secondary">7+ Great</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-yellow-500" />
-            <span className="text-gray-300">5-7 Good</span>
+            <span className="text-text-secondary">5-7 Good</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-gray-300">&lt;5 Fair</span>
+            <span className="text-text-secondary">&lt;5 Fair</span>
           </div>
         </div>
       </div>
 
       {/* Mountain list by region */}
-      <div className="bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 p-6 max-h-96 overflow-y-auto rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
+      <div className="bg-surface-primary/95 backdrop-blur-sm border-t border-border-primary/50 p-6 max-h-96 overflow-y-auto rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
         <div className="grid md:grid-cols-3 gap-6">
           {/* Washington */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wider mb-4">
               Washington ({mountainsByRegion.washington.length})
             </h3>
             <div className="space-y-3">
@@ -205,7 +205,7 @@ export function MountainMap({
 
           {/* Oregon */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wider mb-4">
               Oregon ({mountainsByRegion.oregon.length})
             </h3>
             <div className="space-y-3">
@@ -217,7 +217,7 @@ export function MountainMap({
 
           {/* Idaho */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+            <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wider mb-4">
               Idaho ({mountainsByRegion.idaho.length})
             </h3>
             <div className="space-y-3">
@@ -230,7 +230,7 @@ export function MountainMap({
 
         {/* User location status */}
         {showUserLocation && userLocation && (
-          <div className="mt-4 text-center text-xs text-gray-500">
+          <div className="mt-4 text-center text-xs text-text-quaternary">
             Sorted by distance from your location
           </div>
         )}

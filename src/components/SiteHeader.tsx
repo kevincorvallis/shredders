@@ -38,13 +38,13 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+    <header className="sticky top-0 z-50 bg-[var(--header-bg)] backdrop-blur-xl backdrop-saturate-150 border-b border-border-secondary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <span className="text-2xl">🏔️</span>
-            <span className="text-xl font-bold text-white hidden sm:block">Shredders</span>
+            <span className="text-xl font-bold text-text-primary hidden sm:block">Shredders</span>
           </Link>
 
           {/* Mountain Selector */}
@@ -65,8 +65,8 @@ export function SiteHeader() {
                   href={link.href}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-slate-800 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-slate-800/50'
+                      ? 'bg-accent-subtle text-accent'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary'
                   }`}
                 >
                   {link.label}

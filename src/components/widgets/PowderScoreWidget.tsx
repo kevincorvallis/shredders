@@ -44,14 +44,14 @@ export function PowderScoreWidget({ mountain, data }: PowderScoreWidgetProps) {
     <div className={`bg-gradient-to-br ${getScoreBg(data.score)} rounded-xl p-4 border`}>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-white font-semibold text-sm">{mountain}</h3>
-          <p className="text-gray-400 text-xs">Powder Score</p>
+          <h3 className="text-text-primary font-semibold text-sm">{mountain}</h3>
+          <p className="text-text-tertiary text-xs">Powder Score</p>
         </div>
         <div className="text-right">
           <div className={`text-4xl font-bold ${getScoreColor(data.score)}`}>
             {data.score}
           </div>
-          <div className="text-gray-500 text-xs">/ {data.maxScore}</div>
+          <div className="text-text-quaternary text-xs">/ {data.maxScore}</div>
         </div>
       </div>
 
@@ -59,9 +59,9 @@ export function PowderScoreWidget({ mountain, data }: PowderScoreWidgetProps) {
         <span className={`px-2 py-0.5 rounded text-xs font-medium ${getScoreColor(data.score)} bg-black/30`}>
           {getScoreLabel(data.score)}
         </span>
-        <span className="text-gray-500 text-xs">{data.confidence}% confidence</span>
+        <span className="text-text-quaternary text-xs">{data.confidence}% confidence</span>
         {data.trend && (
-          <span className="text-gray-500 text-xs">
+          <span className="text-text-quaternary text-xs">
             {data.trend === 'improving' ? '📈' : data.trend === 'declining' ? '📉' : '➡️'}
           </span>
         )}
@@ -70,8 +70,8 @@ export function PowderScoreWidget({ mountain, data }: PowderScoreWidgetProps) {
       <div className="space-y-1.5">
         {data.factors.map((factor, idx) => (
           <div key={idx} className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">{factor.name}</span>
-            <span className={factor.value.startsWith('+') ? 'text-green-400' : factor.value.startsWith('-') ? 'text-red-400' : 'text-gray-300'}>
+            <span className="text-text-tertiary">{factor.name}</span>
+            <span className={factor.value.startsWith('+') ? 'text-green-400' : factor.value.startsWith('-') ? 'text-red-400' : 'text-text-secondary'}>
               {factor.value}
             </span>
           </div>

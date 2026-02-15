@@ -14,28 +14,28 @@ export function EventFormStep3({ form }: EventFormStep3Props) {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-white mb-1">Logistics</h2>
-        <p className="text-sm text-gray-400">Set meeting details and carpool options</p>
+        <h2 className="text-lg font-semibold text-text-primary mb-1">Logistics</h2>
+        <p className="text-sm text-text-tertiary">Set meeting details and carpool options</p>
       </div>
 
       {/* Departure Time */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Departure Time</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">Departure Time</label>
         <input
           type="time"
           {...register('departureTime')}
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500"
+          className="w-full bg-surface-secondary border border-border-primary rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent"
         />
       </div>
 
       {/* Meeting Point */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Meeting Point</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">Meeting Point</label>
         <input
           type="text"
           {...register('departureLocation')}
           placeholder="e.g., Northgate Park & Ride"
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-sky-500"
+          className="w-full bg-surface-secondary border border-border-primary rounded-xl px-4 py-3 text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent"
           maxLength={255}
         />
       </div>
@@ -46,20 +46,20 @@ export function EventFormStep3({ form }: EventFormStep3Props) {
           <input
             type="checkbox"
             {...register('carpoolAvailable')}
-            className="w-5 h-5 rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-sky-500"
+            className="w-5 h-5 rounded bg-surface-secondary border-border-primary text-accent focus:ring-accent"
           />
-          <span className="text-gray-300">I can give rides</span>
+          <span className="text-text-secondary">I can give rides</span>
         </label>
 
         {carpoolAvailable && (
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Available Seats</label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Available Seats</label>
             <input
               type="number"
               {...register('carpoolSeats', { valueAsNumber: true })}
               min={0}
               max={8}
-              className="w-24 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500"
+              className="w-24 bg-surface-secondary border border-border-primary rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-accent"
             />
           </div>
         )}

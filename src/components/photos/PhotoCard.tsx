@@ -62,7 +62,7 @@ export function PhotoCard({ photo, onDeleted }: PhotoCardProps) {
           <div className="absolute top-2 right-2">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+              className="bg-black bg-opacity-50 text-text-primary p-2 rounded-full hover:bg-opacity-70"
             >
               <svg
                 className="w-5 h-5"
@@ -83,7 +83,7 @@ export function PhotoCard({ photo, onDeleted }: PhotoCardProps) {
                 <button
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 disabled:opacity-50"
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-surface-secondary disabled:opacity-50"
                 >
                   {deleting ? 'Deleting...' : 'Delete Photo'}
                 </button>
@@ -95,22 +95,22 @@ export function PhotoCard({ photo, onDeleted }: PhotoCardProps) {
 
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-text-primary font-semibold text-sm">
             {photo.users.display_name?.[0] || photo.users.username[0]}
           </div>
           <Link
             href={`/profile/${photo.users.username}`}
-            className="font-medium text-gray-900 hover:text-blue-600"
+            className="font-medium text-text-primary hover:text-accent"
           >
             {photo.users.display_name || photo.users.username}
           </Link>
         </div>
 
         {photo.caption && (
-          <p className="text-gray-700 text-sm mb-2">{photo.caption}</p>
+          <p className="text-text-secondary text-sm mb-2">{photo.caption}</p>
         )}
 
-        <div className="flex items-center gap-4 text-sm text-gray-500">
+        <div className="flex items-center gap-4 text-sm text-text-quaternary">
           <span className="flex items-center gap-1">
             <svg
               className="w-4 h-4"

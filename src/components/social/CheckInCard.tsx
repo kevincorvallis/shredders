@@ -82,7 +82,7 @@ export function CheckInCard({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+    <div className="bg-white rounded-lg border border-border-secondary p-6 space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export function CheckInCard({
             />
           ) : (
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white text-lg font-semibold">
+              <span className="text-text-primary text-lg font-semibold">
                 {displayName[0].toUpperCase()}
               </span>
             </div>
@@ -103,14 +103,14 @@ export function CheckInCard({
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-900">{displayName}</span>
+              <span className="font-semibold text-text-primary">{displayName}</span>
               {!checkIn.is_public && (
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                <span className="text-xs bg-surface-secondary text-text-quaternary px-2 py-0.5 rounded">
                   Private
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-text-quaternary">
               Checked in {formatDate(checkIn.check_in_time)}
             </p>
           </div>
@@ -125,7 +125,7 @@ export function CheckInCard({
             >
               <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
             </svg>
-            <span className="font-semibold text-gray-900">{checkIn.rating}/5</span>
+            <span className="font-semibold text-text-primary">{checkIn.rating}/5</span>
           </div>
         )}
       </div>
@@ -134,7 +134,7 @@ export function CheckInCard({
       {(checkIn.snow_quality || checkIn.crowd_level) && (
         <div className="flex flex-wrap gap-2">
           {checkIn.snow_quality && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-secondary text-text-secondary text-sm rounded-full">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
               </svg>
@@ -142,7 +142,7 @@ export function CheckInCard({
             </span>
           )}
           {checkIn.crowd_level && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-secondary text-text-secondary text-sm rounded-full">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
@@ -155,13 +155,13 @@ export function CheckInCard({
       {/* Trip Report */}
       {checkIn.trip_report && (
         <div className="prose max-w-none">
-          <p className="text-gray-700 whitespace-pre-wrap">{checkIn.trip_report}</p>
+          <p className="text-text-secondary whitespace-pre-wrap">{checkIn.trip_report}</p>
         </div>
       )}
 
       {/* Actions */}
       {showActions && (
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-4 border-t border-border-secondary">
           <div className="flex items-center gap-4">
             <LikeButton
               targetType="checkIn"
@@ -170,7 +170,7 @@ export function CheckInCard({
               size="sm"
             />
 
-            <button className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900">
+            <button className="inline-flex items-center gap-1.5 text-sm text-text-quaternary hover:text-text-primary">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
@@ -189,7 +189,7 @@ export function CheckInCard({
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Are you sure?</span>
+                  <span className="text-sm text-text-quaternary">Are you sure?</span>
                   <button
                     onClick={handleDelete}
                     disabled={isDeleting}
@@ -200,7 +200,7 @@ export function CheckInCard({
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
                     disabled={isDeleting}
-                    className="text-sm text-gray-600 hover:text-gray-900 font-medium disabled:opacity-50"
+                    className="text-sm text-text-quaternary hover:text-text-primary font-medium disabled:opacity-50"
                   >
                     No
                   </button>

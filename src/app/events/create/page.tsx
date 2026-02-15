@@ -169,17 +169,17 @@ export default function CreateEventPage() {
   const isLastStep = currentStep === TOTAL_STEPS - 1;
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-surface-primary">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+      <header className="sticky top-0 z-10 bg-surface-primary/95 backdrop-blur-sm border-b border-border-secondary">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <Link href="/events" className="text-gray-400 hover:text-white transition-colors">
+            <Link href="/events" className="text-text-tertiary hover:text-text-primary transition-colors">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </Link>
-            <h1 className="text-xl font-bold text-white">Create Event</h1>
+            <h1 className="text-xl font-bold text-text-primary">Create Event</h1>
           </div>
         </div>
       </header>
@@ -215,7 +215,7 @@ export default function CreateEventPage() {
         {/* Quick Presets (only on step 0 when form is mostly empty) */}
         {currentStep === 0 && !form.getValues().title && (
           <div className="mb-5">
-            <p className="text-xs text-gray-500 mb-2">Quick start</p>
+            <p className="text-xs text-text-quaternary mb-2">Quick start</p>
             <QuickPresets form={form} />
           </div>
         )}
@@ -237,7 +237,7 @@ export default function CreateEventPage() {
             <button
               type="button"
               onClick={handleBack}
-              className="flex-1 py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors border border-slate-700"
+              className="flex-1 py-3.5 bg-surface-secondary hover:bg-surface-tertiary text-text-primary rounded-xl font-medium transition-colors border border-border-primary"
             >
               Back
             </button>
@@ -247,7 +247,7 @@ export default function CreateEventPage() {
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="flex-1 py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-colors"
+              className="flex-1 py-3.5 bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-text-primary rounded-xl font-semibold transition-colors"
             >
               {isSubmitting ? 'Creating...' : 'Create Event'}
             </button>
@@ -255,7 +255,7 @@ export default function CreateEventPage() {
             <button
               type="button"
               onClick={handleNext}
-              className="flex-1 py-3.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors"
+              className="flex-1 py-3.5 bg-accent hover:bg-accent-hover text-text-primary rounded-xl font-semibold transition-colors"
             >
               Next
             </button>

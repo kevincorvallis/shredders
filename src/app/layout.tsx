@@ -65,18 +65,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background min-h-screen`}
       >
         <NextTopLoader
-          color="#38bdf8"
+          color="var(--accent)"
           initialPosition={0.08}
           crawlSpeed={200}
-          height={3}
+          height={2}
           crawl={true}
           showSpinner={false}
           easing="ease"
           speed={200}
-          shadow="0 0 10px #38bdf8,0 0 5px #38bdf8"
+          shadow={false}
         />
         <MountainProvider>
           <SiteHeader />

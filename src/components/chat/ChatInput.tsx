@@ -37,7 +37,7 @@ export function ChatInput({ input, setInput, onSubmit, isLoading }: ChatInputPro
   ];
 
   return (
-    <div className="border-t border-slate-700 bg-slate-900/95 backdrop-blur-sm">
+    <div className="border-t border-border-secondary bg-[var(--header-bg)] backdrop-blur-xl backdrop-saturate-150">
       {/* Quick suggestions */}
       {input === '' && (
         <div className="px-4 pt-3 pb-1 flex flex-wrap gap-2">
@@ -45,7 +45,7 @@ export function ChatInput({ input, setInput, onSubmit, isLoading }: ChatInputPro
             <button
               key={idx}
               onClick={() => setInput(suggestion)}
-              className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-full transition-colors"
+              className="px-3 py-1.5 text-xs bg-surface-secondary hover:bg-surface-tertiary text-text-secondary rounded-full transition-colors"
             >
               {suggestion}
             </button>
@@ -55,7 +55,7 @@ export function ChatInput({ input, setInput, onSubmit, isLoading }: ChatInputPro
 
       {/* Input area */}
       <form onSubmit={onSubmit} className="p-4">
-        <div className="flex items-end gap-3 bg-slate-800 rounded-2xl p-2 border border-slate-700 focus-within:border-sky-500/50 transition-colors">
+        <div className="flex items-end gap-3 bg-surface-secondary rounded-2xl p-2 border border-border-primary focus-within:border-accent/50 transition-colors">
           <textarea
             ref={textareaRef}
             value={input}
@@ -63,7 +63,7 @@ export function ChatInput({ input, setInput, onSubmit, isLoading }: ChatInputPro
             onKeyDown={handleKeyDown}
             placeholder="Ask about conditions, forecasts, comparisons..."
             rows={1}
-            className="flex-1 bg-transparent text-white placeholder-gray-500 resize-none focus:outline-none px-2 py-1.5 max-h-[120px]"
+            className="flex-1 bg-transparent text-text-primary placeholder-text-tertiary resize-none focus:outline-none px-2 py-1.5 max-h-[120px]"
             disabled={isLoading}
           />
           <button
@@ -71,12 +71,12 @@ export function ChatInput({ input, setInput, onSubmit, isLoading }: ChatInputPro
             disabled={isLoading || !input.trim()}
             className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
               isLoading || !input.trim()
-                ? 'bg-slate-700 text-gray-500 cursor-not-allowed'
-                : 'bg-sky-500 hover:bg-sky-600 text-white'
+                ? 'bg-surface-tertiary text-text-quaternary cursor-not-allowed'
+                : 'bg-accent hover:bg-accent-hover text-white'
             }`}
           >
             {isLoading ? (
-              <div className="w-5 h-5 border-2 border-gray-500 border-t-white rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-text-tertiary border-t-white rounded-full animate-spin"></div>
             ) : (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -89,7 +89,7 @@ export function ChatInput({ input, setInput, onSubmit, isLoading }: ChatInputPro
             )}
           </button>
         </div>
-        <p className="text-center text-xs text-gray-600 mt-2">
+        <p className="text-center text-xs text-text-quaternary mt-2">
           Press Enter to send, Shift+Enter for new line
         </p>
       </form>

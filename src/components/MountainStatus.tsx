@@ -35,9 +35,9 @@ export function MountainStatus({ status, variant = 'compact' }: MountainStatusPr
   }
 
   return (
-    <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
+    <div className="bg-surface-secondary/50 rounded-xl p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+        <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wider">
           Mountain Status
         </h3>
         <div className={`px-3 py-1 rounded-lg border ${statusColor} font-bold text-sm`}>
@@ -50,12 +50,12 @@ export function MountainStatus({ status, variant = 'compact' }: MountainStatusPr
           {status.percentOpen !== undefined && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Terrain Open</span>
+                <span className="text-sm text-text-tertiary">Terrain Open</span>
                 <span className={`text-2xl font-bold ${percentColor}`}>
                   {status.percentOpen}%
                 </span>
               </div>
-              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-2 bg-surface-tertiary rounded-full overflow-hidden">
                 <div
                   className={`h-full ${
                     status.percentOpen >= 80
@@ -72,15 +72,15 @@ export function MountainStatus({ status, variant = 'compact' }: MountainStatusPr
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             {status.liftsOpen && (
-              <div className="bg-slate-700/50 rounded-lg p-3">
-                <div className="text-gray-400 text-xs mb-1">Lifts</div>
-                <div className="text-white font-bold">{status.liftsOpen}</div>
+              <div className="bg-surface-tertiary rounded-lg p-3">
+                <div className="text-text-tertiary text-xs mb-1">Lifts</div>
+                <div className="text-text-primary font-bold">{status.liftsOpen}</div>
               </div>
             )}
             {status.runsOpen && (
-              <div className="bg-slate-700/50 rounded-lg p-3">
-                <div className="text-gray-400 text-xs mb-1">Runs</div>
-                <div className="text-white font-bold">{status.runsOpen}</div>
+              <div className="bg-surface-tertiary rounded-lg p-3">
+                <div className="text-text-tertiary text-xs mb-1">Runs</div>
+                <div className="text-text-primary font-bold">{status.runsOpen}</div>
               </div>
             )}
           </div>
@@ -88,13 +88,13 @@ export function MountainStatus({ status, variant = 'compact' }: MountainStatusPr
       )}
 
       {status.message && (
-        <div className="text-sm text-gray-300 pt-2 border-t border-slate-700">
+        <div className="text-sm text-text-secondary pt-2 border-t border-border-primary">
           {status.message}
         </div>
       )}
 
       {status.lastUpdated && (
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-text-quaternary">
           Updated: {new Date(status.lastUpdated).toLocaleString()}
         </div>
       )}

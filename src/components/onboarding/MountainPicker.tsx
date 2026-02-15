@@ -48,7 +48,7 @@ export function MountainPicker({ onComplete, onSkip, initialSelected = [] }: Mou
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-background via-blue-900 to-background overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -87,14 +87,14 @@ export function MountainPicker({ onComplete, onSkip, initialSelected = [] }: Mou
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <h1 className="text-2xl font-bold text-white">Pick Your Mountains</h1>
+              <h1 className="text-2xl font-bold text-text-primary">Pick Your Mountains</h1>
               <p className="text-blue-200/70 text-sm mt-1">
                 Select your home mountains for personalized alerts
               </p>
             </motion.div>
             <button
               onClick={onSkip}
-              className="text-slate-400 hover:text-white text-sm font-medium transition-colors"
+              className="text-text-tertiary hover:text-text-primary text-sm font-medium transition-colors"
             >
               Skip
             </button>
@@ -113,7 +113,7 @@ export function MountainPicker({ onComplete, onSkip, initialSelected = [] }: Mou
               placeholder="Search mountains..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-text-primary placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
             />
           </motion.div>
 
@@ -130,13 +130,13 @@ export function MountainPicker({ onComplete, onSkip, initialSelected = [] }: Mou
                   return m ? (
                     <div
                       key={id}
-                      className="w-6 h-6 rounded-full border-2 border-slate-900"
+                      className="w-6 h-6 rounded-full border-2 border-background"
                       style={{ backgroundColor: m.color }}
                     />
                   ) : null;
                 })}
                 {selected.size > 3 && (
-                  <div className="w-6 h-6 rounded-full bg-slate-700 border-2 border-slate-900 flex items-center justify-center text-xs text-white">
+                  <div className="w-6 h-6 rounded-full bg-surface-tertiary border-2 border-background flex items-center justify-center text-xs text-text-primary">
                     +{selected.size - 3}
                   </div>
                 )}
@@ -183,11 +183,11 @@ export function MountainPicker({ onComplete, onSkip, initialSelected = [] }: Mou
       </div>
 
       {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent pt-8 pb-6 px-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/95 to-transparent pt-8 pb-6 px-4">
         <div className="max-w-2xl mx-auto">
           <motion.button
             onClick={handleContinue}
-            className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-200"
+            className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-text-primary font-semibold rounded-xl shadow-lg shadow-blue-500/30 transition-all duration-200"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -243,8 +243,8 @@ function MountainCard({ mountain, isSelected, onToggle }: MountainCardProps) {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-white truncate">{mountain.name}</div>
-        <div className="text-xs text-slate-400">
+        <div className="font-medium text-text-primary truncate">{mountain.name}</div>
+        <div className="text-xs text-text-tertiary">
           {mountain.elevation.summit.toLocaleString()}ft summit
         </div>
       </div>
@@ -258,7 +258,7 @@ function MountainCard({ mountain, isSelected, onToggle }: MountainCardProps) {
             exit={{ scale: 0 }}
             className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shrink-0"
           >
-            <Check className="w-4 h-4 text-white" />
+            <Check className="w-4 h-4 text-text-primary" />
           </motion.div>
         )}
       </AnimatePresence>

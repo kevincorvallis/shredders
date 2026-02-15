@@ -318,7 +318,7 @@ struct MountainDetailView: View {
     // MARK: - Overview Tab
 
     private var overviewTab: some View {
-        LazyVStack(spacing: .spacingL) {
+        LazyVStack(spacing: .spacingXL) {
             // At a glance stats
             AtAGlanceCard(viewModel: viewModel, onNavigateToLifts: { selectedTab = .lifts })
 
@@ -373,7 +373,7 @@ struct MountainDetailView: View {
     // MARK: - Conditions Tab
 
     private var conditionsTab: some View {
-        LazyVStack(spacing: .spacingL) {
+        LazyVStack(spacing: .spacingXL) {
             SnowDepthSection(viewModel: viewModel, onNavigateToHistory: {})
             WeatherConditionsSection(viewModel: viewModel, onNavigateToForecast: {})
 
@@ -452,7 +452,7 @@ struct MountainDetailView: View {
     // MARK: - Lifts Tab
 
     private var liftsTab: some View {
-        LazyVStack(spacing: .spacingL) {
+        LazyVStack(spacing: .spacingXL) {
             if let liftData = viewModel.liftData, !liftData.features.isEmpty {
                 LiftStatusSection(viewModel: viewModel)
             } else if let liftStatus = viewModel.locationData?.conditions.liftStatus {
@@ -523,7 +523,7 @@ struct MountainDetailView: View {
     // MARK: - Social Tab
 
     private var socialTab: some View {
-        LazyVStack(spacing: .spacingL) {
+        LazyVStack(spacing: .spacingXL) {
             SocialTab(viewModel: viewModel, mountain: mountain)
         }
     }

@@ -22,7 +22,7 @@ struct AtAGlanceCard: View {
                 // Snow section
                 glanceSection(
                     icon: "snowflake",
-                    title: "SNOW",
+                    title: "Snow",
                     metrics: snowMetrics,
                     status: snowStatus,
                     color: .blue,
@@ -34,7 +34,7 @@ struct AtAGlanceCard: View {
                 // Weather section
                 glanceSection(
                     icon: "cloud.sun.fill",
-                    title: "WEATHER",
+                    title: "Weather",
                     metrics: weatherMetrics,
                     status: weatherStatus,
                     color: weatherColor,
@@ -46,7 +46,7 @@ struct AtAGlanceCard: View {
                 // Lifts section
                 glanceSection(
                     icon: "cablecar.fill",
-                    title: "LIFTS",
+                    title: "Lifts",
                     metrics: liftMetrics,
                     status: liftStatus,
                     color: liftColor,

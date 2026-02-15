@@ -68,10 +68,10 @@ export default function HistoryPage({
 
   if (!mountain) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-primary flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">Mountain Not Found</h1>
-          <Link href="/mountains" className="text-sky-400 hover:text-sky-300">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Mountain Not Found</h1>
+          <Link href="/mountains" className="text-accent hover:text-accent-hover">
             View all mountains
           </Link>
         </div>
@@ -85,14 +85,14 @@ export default function HistoryPage({
   })) || [];
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-surface-primary">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+      <header className="sticky top-0 z-10 bg-surface-primary/95 backdrop-blur-sm border-b border-border-secondary">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Link
               href={`/mountains/${mountainId}`}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-text-tertiary hover:text-text-primary transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
@@ -101,38 +101,38 @@ export default function HistoryPage({
                 className="w-4 h-4 rounded-full"
                 style={{ backgroundColor: mountain.color }}
               />
-              <h1 className="text-xl font-bold text-white">{mountain.name}</h1>
+              <h1 className="text-xl font-bold text-text-primary">{mountain.name}</h1>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
         <div className="max-w-4xl mx-auto px-4">
-          <nav className="flex gap-1 border-t border-slate-800 pt-2 pb-2 overflow-x-auto">
+          <nav className="flex gap-1 border-t border-border-secondary pt-2 pb-2 overflow-x-auto">
             <Link
               href={`/mountains/${mountainId}`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:text-white hover:bg-slate-800/50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-text-tertiary hover:text-text-primary hover:bg-surface-secondary/50"
             >
               <Home className="w-4 h-4" />
               Overview
             </Link>
             <Link
               href={`/mountains/${mountainId}/patrol`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:text-white hover:bg-slate-800/50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-text-tertiary hover:text-text-primary hover:bg-surface-secondary/50"
             >
               <Shield className="w-4 h-4" />
               Patrol
             </Link>
             <Link
               href={`/mountains/${mountainId}/history`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-slate-800 text-white"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-surface-secondary text-text-primary"
             >
               <History className="w-4 h-4" />
               History
             </Link>
             <Link
               href={`/mountains/${mountainId}/webcams`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:text-white hover:bg-slate-800/50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-text-tertiary hover:text-text-primary hover:bg-surface-secondary/50"
             >
               <Camera className="w-4 h-4" />
               Webcams
@@ -144,17 +144,17 @@ export default function HistoryPage({
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Period Selector */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Snow History</h2>
+          <h2 className="text-lg font-semibold text-text-primary">Snow History</h2>
           <div className="flex items-center gap-2">
-            <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
+            <div className="flex gap-1 bg-surface-secondary rounded-lg p-1">
               {[30, 60, 90].map((d) => (
                 <button
                   key={d}
                   onClick={() => setDays(d)}
                   className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                     days === d
-                      ? 'bg-slate-700 text-white'
-                      : 'text-gray-400 hover:text-white'
+                      ? 'bg-surface-tertiary text-text-primary'
+                      : 'text-text-tertiary hover:text-text-primary'
                   }`}
                 >
                   {d}d
@@ -164,16 +164,16 @@ export default function HistoryPage({
             <button
               onClick={() => fetchHistory(days)}
               disabled={isLoading}
-              className="p-2 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              className="p-2 rounded-lg hover:bg-surface-secondary transition-colors disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 text-gray-400 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-text-tertiary ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="bg-slate-800 rounded-xl p-8 flex items-center justify-center">
-            <div className="flex items-center gap-2 text-gray-400">
+          <div className="bg-surface-secondary rounded-xl p-8 flex items-center justify-center">
+            <div className="flex items-center gap-2 text-text-tertiary">
               <RefreshCw className="w-5 h-5 animate-spin" />
               <span>Loading history...</span>
             </div>
@@ -185,8 +185,8 @@ export default function HistoryPage({
         ) : (
           <>
             {/* Snow Depth Chart */}
-            <div className="bg-slate-800 rounded-xl p-6">
-              <h3 className="text-sm font-medium text-gray-400 mb-4">Snow Depth (inches)</h3>
+            <div className="bg-surface-secondary rounded-xl p-6">
+              <h3 className="text-sm font-medium text-text-tertiary mb-4">Snow Depth (inches)</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={formattedHistory}>
@@ -221,8 +221,8 @@ export default function HistoryPage({
             </div>
 
             {/* Daily Snowfall Chart */}
-            <div className="bg-slate-800 rounded-xl p-6">
-              <h3 className="text-sm font-medium text-gray-400 mb-4">Daily Snowfall (inches)</h3>
+            <div className="bg-surface-secondary rounded-xl p-6">
+              <h3 className="text-sm font-medium text-text-tertiary mb-4">Daily Snowfall (inches)</h3>
               <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={formattedHistory}>
@@ -256,8 +256,8 @@ export default function HistoryPage({
             </div>
 
             {/* Temperature Chart */}
-            <div className="bg-slate-800 rounded-xl p-6">
-              <h3 className="text-sm font-medium text-gray-400 mb-4">Temperature (°F)</h3>
+            <div className="bg-surface-secondary rounded-xl p-6">
+              <h3 className="text-sm font-medium text-text-tertiary mb-4">Temperature (°F)</h3>
               <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={formattedHistory}>
@@ -292,7 +292,7 @@ export default function HistoryPage({
 
             {/* Data Source */}
             {historyData?.source && (
-              <div className="text-center text-xs text-slate-500">
+              <div className="text-center text-xs text-text-quaternary">
                 Data source: {historyData.source.provider} - {historyData.source.stationName}
               </div>
             )}

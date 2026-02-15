@@ -291,8 +291,8 @@ export default function LeafletMap({
       `}</style>
       <div ref={containerRef} className="w-full h-full" />
       {isLoading && (
-        <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center z-[1001]">
-          <div className="flex items-center gap-2 text-white">
+        <div className="absolute inset-0 bg-surface-primary/50 flex items-center justify-center z-[1001]">
+          <div className="flex items-center gap-2 text-text-primary">
             <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path

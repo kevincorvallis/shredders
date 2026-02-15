@@ -41,8 +41,8 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
           <div
             className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
               isUser
-                ? 'bg-sky-500'
-                : 'bg-gradient-to-br from-violet-500 to-purple-600'
+                ? 'bg-accent'
+                : 'bg-accent'
             }`}
           >
             {isUser ? (
@@ -66,7 +66,7 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
 
           <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
             {/* Label */}
-            <span className="text-xs text-gray-500 mb-1">
+            <span className="text-xs text-text-tertiary mb-1">
               {isUser ? 'You' : 'Shredders AI'}
             </span>
 
@@ -74,17 +74,17 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
             <div
               className={`rounded-2xl px-4 py-2 ${
                 isUser
-                  ? 'bg-sky-500 text-white rounded-tr-sm'
-                  : 'bg-slate-800 text-gray-100 rounded-tl-sm'
+                  ? 'bg-accent text-white rounded-tr-sm'
+                  : 'bg-surface-secondary text-text-primary rounded-tl-sm'
               }`}
             >
               {textContent ? (
                 <div className="whitespace-pre-wrap">{textContent}</div>
               ) : isStreaming ? (
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-2 h-2 bg-text-tertiary rounded-full animate-bounce"></div>
                 </div>
               ) : null}
             </div>

@@ -177,14 +177,12 @@ struct EventDiscussionView: View {
 
     private var commentInputBar: some View {
         VStack(spacing: 0) {
-            Divider()
-
             // Reply indicator
             if viewModel.isReplying, let replyingTo = viewModel.replyingTo {
-                HStack {
-                    Image(systemName: "arrowshape.turn.up.left.fill")
-                        .font(.caption)
-                        .foregroundStyle(.blue)
+                HStack(spacing: .spacingS) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(.blue)
+                        .frame(width: 3, height: 20)
 
                     Text("Replying to \(replyingTo.user.displayNameOrUsername)")
                         .font(.caption)
@@ -196,25 +194,30 @@ struct EventDiscussionView: View {
                         viewModel.cancelReply()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
+                            .font(.subheadline)
+                            .foregroundStyle(.tertiary)
                     }
                     .accessibilityLabel("Cancel reply")
                 }
-                .padding(.horizontal, .spacingM)
+                .padding(.horizontal, .spacingL)
                 .padding(.vertical, .spacingS)
-                .background(Color(.secondarySystemBackground))
                 .accessibilityElement(children: .combine)
             }
 
             // Input field
-            HStack(spacing: .spacingS) {
+            HStack(alignment: .bottom, spacing: .spacingS) {
                 TextField(viewModel.replyPlaceholder, text: $viewModel.newCommentText, axis: .vertical)
                     .textFieldStyle(.plain)
+                    .font(.subheadline)
                     .lineLimit(1...4)
-                    .padding(.horizontal, .spacingM)
-                    .padding(.vertical, .spacingS)
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(.cornerRadiusPill)
+                    .padding(.horizontal, .spacingL)
+                    .padding(.vertical, 10)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusBubble))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: .cornerRadiusBubble)
+                            .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+                    )
                     .accessibilityLabel("Comment text field")
                     .accessibilityHint(viewModel.isReplying ? "Type your reply" : "Type your comment")
 
@@ -235,14 +238,15 @@ struct EventDiscussionView: View {
                     .frame(width: 36, height: 36)
                 }
                 .disabled(!viewModel.canPost)
-                .foregroundStyle(viewModel.canPost ? .blue : .secondary)
+                .foregroundStyle(viewModel.canPost ? Color.blue : Color.secondary.opacity(0.3))
+                .animation(.easeInOut(duration: 0.2), value: viewModel.canPost)
                 .accessibilityLabel(viewModel.isPostingComment ? "Posting comment" : "Send comment")
                 .accessibilityHint(viewModel.canPost ? "Double tap to post your comment" : "Enter text to enable")
             }
             .padding(.horizontal, .spacingM)
             .padding(.vertical, .spacingS)
-            .background(Color(.systemBackground))
         }
+        .background(.regularMaterial)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Comment input area")
     }
@@ -263,7 +267,7 @@ private struct EventCommentRowView: View {
             // Indent for replies
             if isReply {
                 Color.clear
-                    .frame(width: 24)
+                    .frame(width: 20)
             }
 
             // Avatar
@@ -277,16 +281,16 @@ private struct EventCommentRowView: View {
                         .fill(avatarGradient)
                         .overlay(
                             Text(comment.user.displayNameOrUsername.prefix(1).uppercased())
-                                .font(.caption)
+                                .font(isReply ? .caption2 : .caption)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.white)
                         )
                 }
             }
-            .frame(width: isReply ? 28 : 36, height: isReply ? 28 : 36)
+            .frame(width: isReply ? 28 : 32, height: isReply ? 28 : 32)
             .clipShape(Circle())
 
-            // Content
+            // Content bubble
             VStack(alignment: .leading, spacing: .spacingXS) {
                 // Name and time
                 HStack(spacing: .spacingXS) {
@@ -294,47 +298,40 @@ private struct EventCommentRowView: View {
                         .font(isReply ? .caption : .subheadline)
                         .fontWeight(.semibold)
 
-                    Text("·")
-                        .foregroundStyle(.tertiary)
-
                     Text(comment.relativeTime)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
 
                 // Comment text
                 Text(comment.content)
                     .font(isReply ? .caption : .subheadline)
                     .foregroundStyle(.primary)
-
-                // Actions
-                HStack(spacing: .spacingM) {
-                    Button {
-                        onReply()
-                    } label: {
-                        Label("Reply", systemImage: "arrowshape.turn.up.left")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    // Only show delete for own comments (simplified check)
-                    Button {
-                        showingDeleteConfirmation = true
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.top, .spacingXS)
             }
+            .padding(.horizontal, .spacingM)
+            .padding(.vertical, .spacingS)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: .cornerRadiusBubble))
 
-            Spacer()
+            Spacer(minLength: 40)
         }
-        .padding(.vertical, .spacingXS)
+        .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(comment.user.displayNameOrUsername) said: \(comment.content). \(comment.relativeTime)")
-        .accessibilityHint("Double tap to reply, or swipe right for more options")
+        .accessibilityHint("Double tap to reply, swipe for options")
+        .contextMenu {
+            Button {
+                onReply()
+            } label: {
+                Label("Reply", systemImage: "arrowshape.turn.up.left")
+            }
+
+            Button(role: .destructive) {
+                showingDeleteConfirmation = true
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
         .confirmationDialog(
             "Delete Comment",
             isPresented: $showingDeleteConfirmation,

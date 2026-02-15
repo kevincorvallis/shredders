@@ -69,13 +69,13 @@ function TopPickBanner({ mountain, onClick }: { mountain: MountainData; onClick:
 
   // Determine badge text and style
   let badgeText = 'Featured';
-  let badgeClass = 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+  let badgeClass = 'bg-surface-secondary text-text-secondary border-border-primary';
   if (hasPowderScore) {
     badgeText = 'Top Pick';
     badgeClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
   } else if (hasSnow) {
     badgeText = 'Fresh Snow';
-    badgeClass = 'bg-sky-500/20 text-sky-400 border-sky-500/30';
+    badgeClass = 'bg-sky-500/20 text-accent border-sky-500/30';
   } else if (hasBase) {
     badgeText = 'Deep Base';
     badgeClass = 'bg-purple-500/20 text-purple-400 border-purple-500/30';
@@ -85,7 +85,7 @@ function TopPickBanner({ mountain, onClick }: { mountain: MountainData; onClick:
     <button
       onClick={onClick}
       onMouseEnter={() => prefetchMountainData(mountain.id)}
-      className="flex-1 flex items-center gap-2 px-3 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:border-slate-600 transition-all text-left group"
+      className="flex-1 flex items-center gap-2 px-3 py-2 bg-surface-secondary/50 border border-border-primary/50 rounded-lg hover:border-border-primary transition-all text-left group"
     >
       <Badge className={`text-xs shrink-0 ${badgeClass}`}>
         {badgeText}
@@ -94,18 +94,18 @@ function TopPickBanner({ mountain, onClick }: { mountain: MountainData; onClick:
         className="w-1 h-5 rounded-full shrink-0"
         style={{ backgroundColor: mountain.color }}
       />
-      <span className="font-medium text-white group-hover:text-sky-400 transition-colors truncate text-sm">
+      <span className="font-medium text-text-primary group-hover:text-accent transition-colors truncate text-sm">
         {mountain.shortName}
       </span>
       <div className="flex items-center gap-2 ml-auto shrink-0 text-xs">
         {hasSnow && (
-          <span className="text-sky-400 font-medium">
+          <span className="text-accent font-medium">
             <Snowflake className="w-3 h-3 inline mr-0.5" />
             {mountain.conditions?.snowfall24h}" new
           </span>
         )}
         {hasBase && (
-          <span className="text-slate-400">
+          <span className="text-text-secondary">
             {mountain.conditions?.snowDepth}" base
           </span>
         )}
@@ -114,7 +114,7 @@ function TopPickBanner({ mountain, onClick }: { mountain: MountainData; onClick:
             {mountain.powderScore?.toFixed(1)}
           </span>
         )}
-        <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-sky-400" />
+        <ChevronRight className="w-3.5 h-3.5 text-text-tertiary group-hover:text-accent" />
       </div>
     </button>
   );
@@ -127,9 +127,9 @@ function AlertStrip({ alerts }: { alerts: Array<{ mountain: string; type: string
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg text-sm">
-      <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-      <span className="text-red-400 font-medium">{highSeverityAlerts.length} Alert{highSeverityAlerts.length > 1 ? 's' : ''}</span>
-      <span className="text-slate-400 truncate">
+      <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
+      <span className="text-danger font-medium">{highSeverityAlerts.length} Alert{highSeverityAlerts.length > 1 ? 's' : ''}</span>
+      <span className="text-text-secondary truncate">
         {highSeverityAlerts[0].mountain}: {highSeverityAlerts[0].title}
       </span>
     </div>
@@ -295,7 +295,7 @@ export default function Dashboard() {
     return (
       <>
         {showIntro && <Intro onComplete={handleIntroComplete} />}
-        <div className="min-h-screen bg-slate-950 text-slate-100 pt-16">
+        <div className="min-h-screen bg-background text-text-primary pt-16">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <Skeleton className="h-10 w-full mb-3 rounded-lg" />
             <Skeleton className="h-[400px] w-full rounded-xl" />
@@ -314,33 +314,33 @@ export default function Dashboard() {
           userName={profile?.display_name || profile?.username}
         />
       )}
-      <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="min-h-screen bg-background text-text-primary">
       {/* Compact Action Bar */}
-      <div className="sticky top-16 z-30 bg-slate-950/95 backdrop-blur-lg border-b border-slate-800">
+      <div className="sticky top-16 z-30 bg-[var(--header-bg)] backdrop-blur-xl backdrop-saturate-150 border-b border-border-secondary">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex items-center gap-4">
             {/* Stats - hidden on mobile */}
             <div className="hidden lg:flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
-                <Snowflake className="w-3.5 h-3.5 text-sky-400" />
-                <span className="text-white font-medium">
+                <Snowflake className="w-3.5 h-3.5 text-accent" />
+                <span className="text-text-primary font-medium">
                   {mountains.reduce((sum, m) => sum + (m.conditions?.snowfall24h ?? 0), 0).toFixed(0)}"
                 </span>
-                <span className="text-slate-500">24hr</span>
+                <span className="text-text-tertiary">24hr</span>
               </div>
-              <div className="w-px h-3 bg-slate-700" />
+              <div className="w-px h-3 bg-border-primary" />
               <div className="flex items-center gap-1">
                 <Thermometer className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-white font-medium">
+                <span className="text-text-primary font-medium">
                   {(mountains.filter(m => m.conditions).reduce((sum, m) => sum + (m.conditions?.temperature ?? 0), 0) /
                     Math.max(1, mountains.filter(m => m.conditions).length)).toFixed(0)}°
                 </span>
               </div>
-              <div className="w-px h-3 bg-slate-700" />
+              <div className="w-px h-3 bg-border-primary" />
               <div className="flex items-center gap-1">
                 <Mountain className="w-3.5 h-3.5 text-purple-400" />
-                <span className="text-white font-medium">{mountains.filter(m => m.conditions).length}</span>
-                <span className="text-slate-500">resorts</span>
+                <span className="text-text-primary font-medium">{mountains.filter(m => m.conditions).length}</span>
+                <span className="text-text-tertiary">resorts</span>
               </div>
             </div>
 
@@ -350,34 +350,34 @@ export default function Dashboard() {
             {/* Quick Links */}
             <Link
               href="/mountains"
-              className="text-xs text-slate-400 hover:text-white transition-colors hidden sm:block"
+              className="text-xs text-text-secondary hover:text-text-primary transition-colors hidden sm:block"
             >
               All Mountains
             </Link>
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-600 hidden md:block">
+              <span className="text-xs text-text-quaternary hidden md:block">
                 {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
               </span>
               <button
                 onClick={() => fetchAllData(true)}
                 disabled={isRefreshing}
-                className="p-1.5 rounded-md bg-slate-800 hover:bg-slate-700 transition-colors disabled:opacity-50"
+                className="p-1.5 rounded-md bg-surface-secondary hover:bg-border-primary transition-colors disabled:opacity-50"
                 title="Refresh data"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </button>
               <button
                 onClick={() => setShowMap(!showMap)}
-                className={`p-1.5 rounded-md transition-colors ${showMap ? 'bg-sky-500 text-white' : 'bg-slate-800 hover:bg-slate-700'}`}
+                className={`p-1.5 rounded-md transition-colors ${showMap ? 'bg-accent text-white' : 'bg-surface-secondary hover:bg-border-primary'}`}
                 title="Toggle map"
               >
                 <MapPin className="w-4 h-4" />
               </button>
               <Link
                 href="/chat"
-                className="px-3 py-1.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-xs font-medium rounded-md transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-md transition-colors flex items-center gap-1.5"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">AI</span>
@@ -401,7 +401,7 @@ export default function Dashboard() {
 
         {/* Map Toggle Section */}
         {showMap && (
-          <div className="mb-3 h-[280px] rounded-lg overflow-hidden border border-slate-800">
+          <div className="mb-3 h-[280px] rounded-lg overflow-hidden border border-border-secondary">
             <MountainMap
               onMountainSelect={handleMountainClick}
               showUserLocation
@@ -413,8 +413,8 @@ export default function Dashboard() {
         <SnowfallTable daysBack={7} daysForward={7} />
 
         {/* Compact Footer */}
-        <footer className="text-center py-3 mt-3 border-t border-slate-800">
-          <p className="text-xs text-slate-600">
+        <footer className="text-center py-3 mt-3 border-t border-border-secondary">
+          <p className="text-xs text-text-quaternary">
             NRCS SNOTEL • NOAA NWS • Open-Meteo
           </p>
         </footer>

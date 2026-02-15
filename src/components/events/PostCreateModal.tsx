@@ -46,7 +46,7 @@ export function PostCreateModal({ response, onClose }: PostCreateModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-surface-secondary border border-border-primary rounded-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="p-6 text-center">
           <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -54,21 +54,21 @@ export function PostCreateModal({ response, onClose }: PostCreateModalProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-white">Event Created!</h2>
-          <p className="text-gray-400 text-sm mt-1">{event.title}</p>
+          <h2 className="text-xl font-bold text-text-primary">Event Created!</h2>
+          <p className="text-text-tertiary text-sm mt-1">{event.title}</p>
         </div>
 
         {/* Share section */}
         <div className="px-6 pb-4 space-y-4">
           {/* Invite Link */}
           <div>
-            <p className="text-xs text-gray-400 mb-2">Share invite link</p>
+            <p className="text-xs text-text-tertiary mb-2">Share invite link</p>
             <div className="flex gap-2">
               <input
                 type="text"
                 readOnly
                 value={inviteUrl}
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-300 truncate"
+                className="flex-1 bg-surface-primary border border-border-primary rounded-lg px-3 py-2 text-sm text-text-secondary truncate"
               />
               <button
                 type="button"
@@ -76,7 +76,7 @@ export function PostCreateModal({ response, onClose }: PostCreateModalProps) {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   copied
                     ? 'bg-green-500/20 text-green-400'
-                    : 'bg-sky-500 hover:bg-sky-600 text-white'
+                    : 'bg-accent hover:bg-accent-hover text-text-primary'
                 }`}
               >
                 {copied ? 'Copied!' : 'Copy'}
@@ -86,42 +86,42 @@ export function PostCreateModal({ response, onClose }: PostCreateModalProps) {
 
           {/* Calendar buttons */}
           <div>
-            <p className="text-xs text-gray-400 mb-2">Add to calendar</p>
+            <p className="text-xs text-text-tertiary mb-2">Add to calendar</p>
             <div className="grid grid-cols-3 gap-2">
               <a
                 href={`${calendarBaseUrl}?format=google`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col items-center gap-1 p-3 bg-slate-900 hover:bg-slate-700 rounded-lg transition-colors"
+                className="flex flex-col items-center gap-1 p-3 bg-surface-primary hover:bg-surface-tertiary rounded-lg transition-colors"
               >
                 <span className="text-lg">📅</span>
-                <span className="text-xs text-gray-400">Google</span>
+                <span className="text-xs text-text-tertiary">Google</span>
               </a>
               <a
                 href={`${calendarBaseUrl}?format=apple`}
-                className="flex flex-col items-center gap-1 p-3 bg-slate-900 hover:bg-slate-700 rounded-lg transition-colors"
+                className="flex flex-col items-center gap-1 p-3 bg-surface-primary hover:bg-surface-tertiary rounded-lg transition-colors"
               >
                 <span className="text-lg">🍎</span>
-                <span className="text-xs text-gray-400">Apple</span>
+                <span className="text-xs text-text-tertiary">Apple</span>
               </a>
               <a
                 href={`${calendarBaseUrl}?format=ics`}
                 download
-                className="flex flex-col items-center gap-1 p-3 bg-slate-900 hover:bg-slate-700 rounded-lg transition-colors"
+                className="flex flex-col items-center gap-1 p-3 bg-surface-primary hover:bg-surface-tertiary rounded-lg transition-colors"
               >
                 <span className="text-lg">📥</span>
-                <span className="text-xs text-gray-400">.ics File</span>
+                <span className="text-xs text-text-tertiary">.ics File</span>
               </a>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-700">
+        <div className="p-4 border-t border-border-primary">
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors"
+            className="w-full py-3 bg-accent hover:bg-accent-hover text-text-primary rounded-xl font-semibold transition-colors"
           >
             View Event
           </button>

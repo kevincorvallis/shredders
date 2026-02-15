@@ -37,7 +37,7 @@ struct LiftLinePredictorCard: View {
                 HStack(spacing: .spacingXS) {
                     Image(systemName: "brain.head.profile")
                         .font(.caption2)
-                    Text("AI PREDICTED")
+                    Text("AI Predicted")
                         .badge()
                 }
                 .foregroundColor(.purple)

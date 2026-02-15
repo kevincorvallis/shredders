@@ -30,11 +30,11 @@ export function SafetyAlertBanner({ alerts, lastUpdated }: SafetyAlertBannerProp
           </div>
           <div className="flex-1">
             <div className="font-medium text-emerald-400">No Active Alerts</div>
-            <div className="text-sm text-slate-400">
+            <div className="text-sm text-text-tertiary">
               Conditions are favorable. Continue monitoring.
             </div>
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-text-quaternary">
             Updated {new Date(lastUpdated).toLocaleTimeString()}
           </div>
         </div>
@@ -70,23 +70,23 @@ export function SafetyAlertBanner({ alerts, lastUpdated }: SafetyAlertBannerProp
               {style.label}
             </span>
             {alerts.length > 1 && (
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-text-tertiary">
                 +{alerts.length - 1} more
               </span>
             )}
           </div>
-          <div className="text-sm text-slate-300 truncate">
+          <div className="text-sm text-text-secondary truncate">
             {primaryAlert.message}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-text-quaternary">
             {new Date(lastUpdated).toLocaleTimeString()}
           </div>
           {expanded ? (
-            <ChevronUp className="w-4 h-4 text-slate-400" />
+            <ChevronUp className="w-4 h-4 text-text-tertiary" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400" />
+            <ChevronDown className="w-4 h-4 text-text-tertiary" />
           )}
         </div>
       </button>
@@ -111,7 +111,7 @@ export function SafetyAlertBanner({ alerts, lastUpdated }: SafetyAlertBannerProp
                       {alertStyle.label}
                     </span>
                   </div>
-                  <div className="text-sm text-slate-400 mt-0.5">
+                  <div className="text-sm text-text-tertiary mt-0.5">
                     {alert.message}
                   </div>
                 </div>

@@ -848,6 +848,8 @@ class EventService {
         }
 
         guard httpResponse.statusCode == 201 else {
+            let responseBody = String(data: data, encoding: .utf8) ?? "nil"
+            print("[EventService] postComment failed: status=\(httpResponse.statusCode) body=\(responseBody)")
             if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
                let errorMessage = errorData["error"] {
                 throw EventServiceError.validationError(errorMessage)

@@ -134,10 +134,10 @@ export default function ResetPasswordPage() {
   // Show loading while processing auth callback
   if (!isReady && !sessionError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <div className="text-gray-600">Processing reset link...</div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto mb-4"></div>
+          <div className="text-text-secondary">Processing reset link...</div>
         </div>
       </div>
     );
@@ -146,17 +146,19 @@ export default function ResetPasswordPage() {
   // Show error if session setup failed
   if (sessionError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full space-y-8 text-center">
-          <div className="text-6xl">:(</div>
-          <h2 className="text-2xl font-bold text-gray-900">Reset Link Invalid</h2>
-          <p className="text-gray-600">{sessionError}</p>
-          <Link
-            href="/auth/login"
-            className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Back to Login
-          </Link>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="bg-surface-primary rounded-2xl p-8 shadow-lg border border-border-secondary">
+            <div className="text-6xl mb-4">:(</div>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Reset Link Invalid</h2>
+            <p className="text-text-secondary mb-6">{sessionError}</p>
+            <Link
+              href="/auth/login"
+              className="inline-block px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-xl transition-colors"
+            >
+              Back to Login
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -164,38 +166,42 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full space-y-8 text-center">
-          <div className="text-6xl text-green-500">&#10003;</div>
-          <h2 className="text-2xl font-bold text-gray-900">Password Reset Successful!</h2>
-          <p className="text-gray-600">
-            Your password has been updated. Redirecting to login...
-          </p>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="bg-surface-primary rounded-2xl p-8 shadow-lg border border-border-secondary">
+            <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Password Reset Successful!</h2>
+            <p className="text-text-secondary">
+              Your password has been updated. Redirecting to login...
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="max-w-md w-full">
+        <div className="bg-surface-primary rounded-2xl p-8 shadow-lg border border-border-secondary">
+          <h2 className="text-2xl font-semibold text-text-primary mb-2">
             Reset Your Password
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="text-text-secondary mb-6 text-sm">
             Enter a new password for your account
           </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          )}
-          <div className="rounded-md shadow-sm space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                <p className="text-sm text-danger">{error}</p>
+              </div>
+            )}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1.5">
                 New Password
               </label>
               <input
@@ -205,7 +211,7 @@ export default function ResetPasswordPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="w-full px-3 py-2.5 bg-surface-secondary border border-border-primary rounded-xl text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
                 placeholder="Enter new password"
               />
               {password && (
@@ -213,7 +219,7 @@ export default function ResetPasswordPage() {
                   {['At least 12 characters', 'One uppercase letter', 'One lowercase letter', 'One number', 'One special character'].map((req) => {
                     const met = !passwordErrors.includes(req);
                     return (
-                      <div key={req} className={`text-xs flex items-center gap-1 ${met ? 'text-green-600' : 'text-gray-500'}`}>
+                      <div key={req} className={`text-xs flex items-center gap-1 ${met ? 'text-green-500' : 'text-text-tertiary'}`}>
                         <span>{met ? '\u2713' : '\u25CB'}</span>
                         <span>{req}</span>
                       </div>
@@ -223,7 +229,7 @@ export default function ResetPasswordPage() {
               )}
             </div>
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary mb-1.5">
                 Confirm Password
               </label>
               <input
@@ -233,25 +239,23 @@ export default function ResetPasswordPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="w-full px-3 py-2.5 bg-surface-secondary border border-border-primary rounded-xl text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
                 placeholder="Confirm new password"
               />
               {confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
+                <p className="mt-1 text-xs text-danger">Passwords do not match</p>
               )}
             </div>
-          </div>
 
-          <div>
             <button
               type="submit"
               disabled={loading || !isPasswordValid || password !== confirmPassword}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? 'Resetting...' : 'Reset Password'}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

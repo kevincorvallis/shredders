@@ -44,7 +44,7 @@ export function ForecastTimeline({ forecast }: ForecastTimelineProps) {
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">7-Day Forecast</h2>
+      <h2 className="text-lg font-semibold text-text-primary mb-4">7-Day Forecast</h2>
 
       {/* Chart */}
       <div className="h-48 mb-4">
@@ -71,8 +71,8 @@ export function ForecastTimeline({ forecast }: ForecastTimelineProps) {
                     <div className="bg-white shadow-lg rounded-lg p-3 border">
                       <p className="font-semibold">{data.name}</p>
                       <p className="text-sm text-blue-600">{data.snowfall}&quot; snow</p>
-                      <p className="text-sm text-gray-500">{data.conditions}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-text-quaternary">{data.conditions}</p>
+                      <p className="text-sm text-text-quaternary">
                         {data.high}° / {data.low}°
                       </p>
                     </div>
@@ -96,17 +96,17 @@ export function ForecastTimeline({ forecast }: ForecastTimelineProps) {
           <div
             key={index}
             className={`text-center p-2 rounded-lg ${
-              index === 0 ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
+              index === 0 ? 'bg-accent-subtle border border-accent/20' : 'bg-surface-secondary'
             }`}
           >
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-text-quaternary">
               {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
             </p>
             <p className="text-2xl my-1">{weatherIcons[day.icon]}</p>
-            <p className="text-sm font-semibold text-gray-900">
+            <p className="text-sm font-semibold text-text-primary">
               {day.snowfall > 0 ? `${day.snowfall}"` : '-'}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-text-quaternary">
               {day.high}° / {day.low}°
             </p>
           </div>
@@ -114,7 +114,7 @@ export function ForecastTimeline({ forecast }: ForecastTimelineProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-500">
+      <div className="flex items-center justify-center gap-4 mt-4 text-xs text-text-quaternary">
         <div className="flex items-center gap-1">
           <span className="w-3 h-3 rounded bg-green-500" />
           <span>10&quot;+ (Epic)</span>

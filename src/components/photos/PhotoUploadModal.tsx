@@ -101,10 +101,10 @@ export function PhotoUploadModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Upload Photo</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Upload Photo</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-text-quaternary hover:text-text-secondary"
           >
             <svg
               className="w-6 h-6"
@@ -131,10 +131,10 @@ export function PhotoUploadModal({
         {!selectedFile ? (
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center cursor-pointer hover:border-blue-500 transition-colors"
+            className="border-2 border-dashed border-border-primary rounded-lg p-12 text-center cursor-pointer hover:border-accent transition-colors"
           >
             <svg
-              className="w-16 h-16 mx-auto mb-4 text-gray-400"
+              className="w-16 h-16 mx-auto mb-4 text-text-tertiary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -146,10 +146,10 @@ export function PhotoUploadModal({
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            <p className="text-lg font-medium text-gray-700 mb-1">
+            <p className="text-lg font-medium text-text-secondary mb-1">
               Click to upload photo
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-text-quaternary">
               JPEG, PNG, WebP up to 5MB
             </p>
             <input
@@ -173,7 +173,7 @@ export function PhotoUploadModal({
                   setSelectedFile(null);
                   setPreview(null);
                 }}
-                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                className="absolute top-2 right-2 bg-red-500 text-text-primary p-2 rounded-full hover:bg-red-600"
               >
                 <svg
                   className="w-5 h-5"
@@ -194,7 +194,7 @@ export function PhotoUploadModal({
             <div>
               <label
                 htmlFor="caption"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-text-secondary mb-1"
               >
                 Caption (optional)
               </label>
@@ -203,7 +203,7 @@ export function PhotoUploadModal({
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 placeholder="Add a caption to your photo..."
               />
             </div>
@@ -211,14 +211,14 @@ export function PhotoUploadModal({
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="flex-1 px-4 py-2 border border-border-primary text-text-secondary rounded-lg hover:bg-surface-primary"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpload}
                 disabled={uploading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-accent text-text-primary rounded-lg hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {uploading ? 'Uploading...' : 'Upload Photo'}
               </button>

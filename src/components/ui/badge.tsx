@@ -8,7 +8,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-slate-800 text-slate-300 ring-slate-700",
+          "bg-surface-secondary text-text-secondary ring-border-primary",
         success:
           "bg-emerald-500/20 text-emerald-400 ring-emerald-500/30",
         warning:
@@ -18,7 +18,7 @@ const badgeVariants = cva(
         info:
           "bg-blue-500/20 text-blue-400 ring-blue-500/30",
         outline:
-          "bg-transparent text-slate-300 ring-slate-600",
+          "bg-transparent text-text-secondary ring-border-primary",
       },
     },
     defaultVariants: {

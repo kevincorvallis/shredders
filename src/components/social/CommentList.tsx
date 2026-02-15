@@ -118,10 +118,10 @@ export function CommentList({
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
           <div key={i} className="animate-pulse flex gap-3">
-            <div className="w-8 h-8 bg-gray-200 rounded-full" />
+            <div className="w-8 h-8 bg-surface-secondary rounded-full" />
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-1/4" />
-              <div className="h-3 bg-gray-200 rounded w-3/4" />
+              <div className="h-4 bg-surface-secondary rounded w-1/4" />
+              <div className="h-3 bg-surface-secondary rounded w-3/4" />
             </div>
           </div>
         ))}
@@ -155,7 +155,7 @@ export function CommentList({
       {/* Comments list */}
       {comments.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">
+          <p className="text-text-quaternary text-sm">
             No comments yet. Be the first to comment!
           </p>
         </div>
@@ -232,7 +232,7 @@ function CommentItem({
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <span className="text-white text-sm font-semibold">
+            <span className="text-text-primary text-sm font-semibold">
               {displayName[0].toUpperCase()}
             </span>
           </div>
@@ -243,19 +243,19 @@ function CommentItem({
       <div className="flex-1 min-w-0">
         {/* Header */}
         <div className="flex items-center gap-2 mb-1">
-          <span className="font-medium text-sm text-gray-900">
+          <span className="font-medium text-sm text-text-primary">
             {displayName}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-text-quaternary">
             {formatDate(comment.created_at)}
           </span>
           {comment.updated_at !== comment.created_at && (
-            <span className="text-xs text-gray-400">(edited)</span>
+            <span className="text-xs text-text-tertiary">(edited)</span>
           )}
         </div>
 
         {/* Content */}
-        <p className={`text-sm text-gray-700 mb-2 whitespace-pre-wrap ${comment.is_deleted ? 'italic text-gray-400' : ''}`}>
+        <p className={`text-sm text-text-secondary mb-2 whitespace-pre-wrap ${comment.is_deleted ? 'italic text-text-tertiary' : ''}`}>
           {comment.content}
         </p>
 
@@ -271,7 +271,7 @@ function CommentItem({
 
             <button
               onClick={onReply}
-              className="text-xs text-gray-600 hover:text-gray-900 font-medium"
+              className="text-xs text-text-quaternary hover:text-text-primary font-medium"
             >
               Reply
             </button>
@@ -304,7 +304,7 @@ function CommentItem({
 
         {/* Replies */}
         {replies.length > 0 && (
-          <div className="mt-4 space-y-4 pl-4 border-l-2 border-gray-200">
+          <div className="mt-4 space-y-4 pl-4 border-l-2 border-border-secondary">
             {replies.map((reply) => (
               <CommentItem
                 key={reply.id}

@@ -165,15 +165,15 @@ export default function MountainPage({
 
   if (!mountain) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">Mountain Not Found</h1>
-          <p className="text-gray-400 mb-4">
+          <h1 className="text-2xl font-semibold text-text-primary mb-2">Mountain Not Found</h1>
+          <p className="text-text-secondary mb-4">
             The mountain &quot;{mountainId}&quot; doesn&apos;t exist.
           </p>
           <Link
             href="/mountains"
-            className="text-sky-400 hover:text-sky-300 transition-colors"
+            className="text-accent hover:text-accent-hover transition-colors"
           >
             View all mountains
           </Link>
@@ -197,30 +197,15 @@ export default function MountainPage({
     }
   };
 
-  // Dynamic background based on powder score
-  const getBackgroundClass = () => {
-    if (!powderScore) return 'bg-slate-900';
-
-    if (powderScore.score >= 8) {
-      return 'bg-gradient-to-br from-blue-900 via-slate-900 to-slate-900';
-    } else if (powderScore.score >= 6) {
-      return 'bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900';
-    } else if (powderScore.score >= 4) {
-      return 'bg-gradient-to-br from-gray-800 via-slate-900 to-slate-900';
-    } else {
-      return 'bg-gradient-to-br from-slate-800 via-slate-900 to-slate-900';
-    }
-  };
-
   return (
-    <div className={`min-h-screen ${getBackgroundClass()}`}>
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+      <header className="sticky top-0 z-10 bg-[var(--header-bg)] backdrop-blur-xl backdrop-saturate-150 border-b border-border-secondary">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <Link
               href="/mountains"
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-text-secondary hover:text-text-primary transition-colors"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -279,7 +264,7 @@ export default function MountainPage({
                 href={mountain.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-gray-400 hover:text-white transition-colors hidden sm:block"
+                className="text-sm text-text-secondary hover:text-text-primary transition-colors hidden sm:block"
               >
                 Official Site ↗
               </a>
@@ -289,31 +274,31 @@ export default function MountainPage({
 
         {/* Tab Navigation */}
         <div className="max-w-4xl mx-auto px-4">
-          <nav className="flex gap-1 border-t border-slate-800 pt-2 pb-2 overflow-x-auto">
+          <nav className="flex gap-1 border-t border-border-secondary pt-2 pb-2 overflow-x-auto">
             <Link
               href={`/mountains/${mountainId}`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-slate-800 text-white"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-accent-subtle text-accent"
             >
               <Home className="w-4 h-4" />
               Overview
             </Link>
             <Link
               href={`/mountains/${mountainId}/patrol`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:text-white hover:bg-slate-800/50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-text-secondary hover:text-text-primary hover:bg-surface-primary/50"
             >
               <Shield className="w-4 h-4" />
               Patrol
             </Link>
             <Link
               href={`/mountains/${mountainId}/history`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:text-white hover:bg-slate-800/50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-text-secondary hover:text-text-primary hover:bg-surface-primary/50"
             >
               <History className="w-4 h-4" />
               History
             </Link>
             <Link
               href={`/mountains/${mountainId}/webcams`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:text-white hover:bg-slate-800/50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-text-secondary hover:text-text-primary hover:bg-surface-primary/50"
             >
               <Camera className="w-4 h-4" />
               Webcams
@@ -325,7 +310,7 @@ export default function MountainPage({
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-text-secondary">
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path
@@ -338,7 +323,7 @@ export default function MountainPage({
             </div>
           </div>
         ) : error ? (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400">
             {error}
           </div>
         ) : (
@@ -373,17 +358,17 @@ export default function MountainPage({
                     Severe: 'bg-orange-500/20 border-orange-500 text-orange-200',
                     Moderate: 'bg-yellow-500/20 border-yellow-500 text-yellow-200',
                     Minor: 'bg-blue-500/20 border-blue-500 text-blue-200',
-                    Unknown: 'bg-gray-500/20 border-gray-500 text-gray-200',
+                    Unknown: 'bg-gray-500/20 border-gray-500 text-text-primary',
                   };
 
                   const colorClass = severityColors[alert.severity as keyof typeof severityColors] || severityColors.Unknown;
 
                   return (
-                    <div key={alert.id} className={`rounded-xl p-4 border-2 ${colorClass}`}>
+                    <div key={alert.id} className={`rounded-2xl p-4 border-2 ${colorClass}`}>
                       <div className="flex items-start gap-3">
                         <div className="text-2xl">⚠️</div>
                         <div className="flex-1">
-                          <h3 className="font-bold text-lg mb-1">{alert.event}</h3>
+                          <h3 className="font-semibold text-lg mb-1">{alert.event}</h3>
                           <p className="font-medium mb-2">{alert.headline}</p>
                           <p className="text-sm opacity-90 mb-2 whitespace-pre-wrap">
                             {alert.description.substring(0, 300)}
@@ -410,11 +395,11 @@ export default function MountainPage({
 
             {/* Powder Score */}
             {powderScore && (
-              <div className="bg-slate-800 rounded-xl p-6">
+              <div className="bg-surface-primary rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-white">Powder Score</h2>
+                  <h2 className="text-lg font-semibold text-text-primary">Powder Score</h2>
                   <div
-                    className={`text-4xl font-bold ${
+                    className={`text-4xl font-semibold ${
                       powderScore.score >= 7
                         ? 'text-green-400'
                         : powderScore.score >= 5
@@ -423,10 +408,10 @@ export default function MountainPage({
                     }`}
                   >
                     {powderScore.score.toFixed(1)}
-                    <span className="text-lg text-gray-500">/10</span>
+                    <span className="text-lg text-text-tertiary">/10</span>
                   </div>
                 </div>
-                <p className="text-gray-300 mb-4">{powderScore.verdict}</p>
+                <p className="text-text-secondary mb-4">{powderScore.verdict}</p>
 
                 {/* Navigate CTA */}
                 <div className="mb-4">
@@ -442,9 +427,9 @@ export default function MountainPage({
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {powderScore.factors.map((factor: any, i: number) => (
-                    <div key={i} className="bg-slate-700/50 rounded-lg p-3">
-                      <div className="text-xs text-gray-400 mb-1">{factor.name}</div>
-                      <div className="text-sm text-white">{factor.description}</div>
+                    <div key={i} className="bg-surface-secondary rounded-lg p-3">
+                      <div className="text-xs text-text-secondary mb-1">{factor.name}</div>
+                      <div className="text-sm text-text-primary">{factor.description}</div>
                     </div>
                   ))}
                 </div>
@@ -453,36 +438,36 @@ export default function MountainPage({
 
             {/* Current Conditions */}
             {conditions && (
-              <div className="bg-slate-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white mb-4">Current Conditions</h2>
+              <div className="bg-surface-primary rounded-2xl p-6">
+                <h2 className="text-lg font-semibold text-text-primary mb-4">Current Conditions</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+                  <div className="bg-surface-secondary rounded-lg p-4 text-center">
                     <div className="text-3xl mb-1">❄️</div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-2xl font-semibold text-text-primary">
                       {conditions.snowDepth ?? '--'}&quot;
                     </div>
-                    <div className="text-xs text-gray-400">Base Depth</div>
+                    <div className="text-xs text-text-secondary">Base Depth</div>
                   </div>
-                  <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+                  <div className="bg-surface-secondary rounded-lg p-4 text-center">
                     <div className="text-3xl mb-1">🌨️</div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-2xl font-semibold text-text-primary">
                       {conditions.snowfall24h}&quot;
                     </div>
-                    <div className="text-xs text-gray-400">24hr Snowfall</div>
+                    <div className="text-xs text-text-secondary">24hr Snowfall</div>
                   </div>
-                  <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+                  <div className="bg-surface-secondary rounded-lg p-4 text-center">
                     <div className="text-3xl mb-1">🌡️</div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-2xl font-semibold text-text-primary">
                       {conditions.temperature ?? '--'}°F
                     </div>
-                    <div className="text-xs text-gray-400">Temperature</div>
+                    <div className="text-xs text-text-secondary">Temperature</div>
                   </div>
-                  <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+                  <div className="bg-surface-secondary rounded-lg p-4 text-center">
                     <div className="text-3xl mb-1">💨</div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-2xl font-semibold text-text-primary">
                       {conditions.wind?.speed ?? '--'} mph
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-text-secondary">
                       Wind {conditions.wind?.direction ?? ''}
                     </div>
                   </div>
@@ -490,15 +475,15 @@ export default function MountainPage({
 
                 {/* Freezing Level / Snow Line */}
                 {conditions.freezingLevel !== null && (
-                  <div className="mt-4 bg-slate-700/30 rounded-lg p-4">
+                  <div className="mt-4 bg-surface-secondary/60 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="text-2xl">🏔️</div>
                         <div>
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium text-text-primary">
                             Snow Line: {conditions.freezingLevel.toLocaleString()}&apos;
                           </div>
-                          <div className="text-xs text-gray-400">
+                          <div className="text-xs text-text-secondary">
                             {conditions.rainRisk?.description ?? 'Freezing level elevation'}
                           </div>
                         </div>
@@ -522,7 +507,7 @@ export default function MountainPage({
                       )}
                     </div>
                     {conditions.elevation && conditions.freezingLevel !== null && (
-                      <div className="mt-3 h-2 bg-slate-600 rounded-full overflow-hidden relative">
+                      <div className="mt-3 h-2 bg-surface-tertiary rounded-full overflow-hidden relative">
                         {/* Base to Summit gradient */}
                         <div
                           className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-sky-400"
@@ -540,7 +525,7 @@ export default function MountainPage({
                       </div>
                     )}
                     {conditions.elevation && (
-                      <div className="mt-1 flex justify-between text-xs text-gray-500">
+                      <div className="mt-1 flex justify-between text-xs text-text-tertiary">
                         <span>Base {conditions.elevation.base.toLocaleString()}&apos;</span>
                         <span>Summit {conditions.elevation.summit.toLocaleString()}&apos;</span>
                       </div>
@@ -558,50 +543,50 @@ export default function MountainPage({
 
             {/* Road & Pass Conditions */}
             {roads && (
-              <div className="bg-slate-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white mb-2">Road &amp; Pass Conditions</h2>
-                <p className="text-sm text-gray-400 mb-4">
+              <div className="bg-surface-primary rounded-2xl p-6">
+                <h2 className="text-lg font-semibold text-text-primary mb-2">Road &amp; Pass Conditions</h2>
+                <p className="text-sm text-text-secondary mb-4">
                   Closures and restrictions can change fast. Always verify before you drive.
                 </p>
 
                 {!roads.supported ? (
-                  <div className="text-gray-300">{roads.message ?? 'Road data not supported for this mountain.'}</div>
+                  <div className="text-text-secondary">{roads.message ?? 'Road data not supported for this mountain.'}</div>
                 ) : !roads.configured ? (
-                  <div className="text-gray-300">{roads.message ?? 'Road data not configured.'}</div>
+                  <div className="text-text-secondary">{roads.message ?? 'Road data not configured.'}</div>
                 ) : roads.passes.length === 0 ? (
-                  <div className="text-gray-300">No relevant pass data found.</div>
+                  <div className="text-text-secondary">No relevant pass data found.</div>
                 ) : (
                   <div className="space-y-3">
                     {roads.passes.slice(0, 2).map((p: any) => (
-                      <div key={p.id} className="bg-slate-700/50 rounded-lg p-4">
+                      <div key={p.id} className="bg-surface-secondary rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <div className="text-white font-medium">{p.name}</div>
-                          <div className="text-xs text-gray-400">{roads.provider ?? ''}</div>
+                          <div className="text-text-primary font-medium">{p.name}</div>
+                          <div className="text-xs text-text-secondary">{roads.provider ?? ''}</div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div>
-                            <div className="text-xs text-gray-400">Road</div>
-                            <div className="text-sm text-white">{p.roadCondition ?? 'Unknown'}</div>
+                            <div className="text-xs text-text-secondary">Road</div>
+                            <div className="text-sm text-text-primary">{p.roadCondition ?? 'Unknown'}</div>
                           </div>
                           <div>
-                            <div className="text-xs text-gray-400">Weather</div>
-                            <div className="text-sm text-white">{p.weatherCondition ?? 'Unknown'}</div>
+                            <div className="text-xs text-text-secondary">Weather</div>
+                            <div className="text-sm text-text-primary">{p.weatherCondition ?? 'Unknown'}</div>
                           </div>
                           <div>
-                            <div className="text-xs text-gray-400">Pass Temp</div>
-                            <div className="text-sm text-white">
+                            <div className="text-xs text-text-secondary">Pass Temp</div>
+                            <div className="text-sm text-text-primary">
                               {(p.temperatureF ?? null) !== null ? `${p.temperatureF}°F` : '—'}
                             </div>
                           </div>
                         </div>
 
                         {p.restrictions?.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-white/10">
-                            <div className="text-xs text-gray-400 mb-1">Restrictions</div>
-                            <div className="text-sm text-gray-200 space-y-1">
+                          <div className="mt-3 pt-3 border-t border-border-primary">
+                            <div className="text-xs text-text-secondary mb-1">Restrictions</div>
+                            <div className="text-sm text-text-primary space-y-1">
                               {p.restrictions.slice(0, 3).map((r: any, idx: number) => (
                                 <div key={idx}>
-                                  <span className="text-gray-400">{r.direction ? `${r.direction}: ` : ''}</span>
+                                  <span className="text-text-secondary">{r.direction ? `${r.direction}: ` : ''}</span>
                                   <span>{r.text}</span>
                                 </div>
                               ))}
@@ -621,31 +606,31 @@ export default function MountainPage({
 
             {/* Trip & Traffic */}
             {tripAdvice && (
-              <div className="bg-slate-800 rounded-xl p-6">
+              <div className="bg-surface-primary rounded-2xl p-6">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
-                    <h2 className="text-lg font-semibold text-white">Trip &amp; Traffic</h2>
-                    <p className="text-sm text-gray-400">Heuristic guidance based on weather + powder demand.</p>
+                    <h2 className="text-lg font-semibold text-text-primary">Trip &amp; Traffic</h2>
+                    <p className="text-sm text-text-secondary">Heuristic guidance based on weather + powder demand.</p>
                   </div>
                   <div className="flex gap-2">
-                    <span className="text-xs px-2 py-1 rounded border border-slate-600 text-gray-200 bg-slate-700/40">
+                    <span className="text-xs px-2 py-1 rounded border border-border-primary text-text-primary bg-surface-secondary/80">
                       Traffic: {tripAdvice.trafficRisk}
                     </span>
-                    <span className="text-xs px-2 py-1 rounded border border-slate-600 text-gray-200 bg-slate-700/40">
+                    <span className="text-xs px-2 py-1 rounded border border-border-primary text-text-primary bg-surface-secondary/80">
                       Roads: {tripAdvice.roadRisk}
                     </span>
                   </div>
                 </div>
 
-                <div className="text-gray-200 text-sm font-medium mb-3">{tripAdvice.headline}</div>
+                <div className="text-text-primary text-sm font-medium mb-3">{tripAdvice.headline}</div>
 
                 {tripAdvice.suggestedDepartures?.length > 0 && (
-                  <div className="bg-slate-700/50 rounded-lg p-4 mb-3">
-                    <div className="text-xs text-gray-400 mb-2">Suggested timing</div>
-                    <div className="space-y-1 text-sm text-gray-200">
+                  <div className="bg-surface-secondary rounded-lg p-4 mb-3">
+                    <div className="text-xs text-text-secondary mb-2">Suggested timing</div>
+                    <div className="space-y-1 text-sm text-text-primary">
                       {tripAdvice.suggestedDepartures.slice(0, 2).map((s: any, idx: number) => (
                         <div key={idx}>
-                          <span className="text-gray-400">{s.from}: </span>
+                          <span className="text-text-secondary">{s.from}: </span>
                           <span>{s.suggestion}</span>
                         </div>
                       ))}
@@ -654,7 +639,7 @@ export default function MountainPage({
                 )}
 
                 {tripAdvice.notes?.length > 0 && (
-                  <div className="text-sm text-gray-300 space-y-1">
+                  <div className="text-sm text-text-secondary space-y-1">
                     {tripAdvice.notes.slice(0, 3).map((n: any, idx: number) => (
                       <div key={idx}>• {n}</div>
                     ))}
@@ -665,39 +650,39 @@ export default function MountainPage({
 
             {/* Powder Day Planner */}
             {powderDayPlan && powderDayPlan.days?.length > 0 && (
-              <div className="bg-slate-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white mb-2">Powder Day Planner</h2>
-                <p className="text-sm text-gray-400 mb-4">
+              <div className="bg-surface-primary rounded-2xl p-6">
+                <h2 className="text-lg font-semibold text-text-primary mb-2">Powder Day Planner</h2>
+                <p className="text-sm text-text-secondary mb-4">
                   Prediction-style view combining forecast + travel considerations.
                 </p>
 
                 <div className="grid md:grid-cols-3 gap-3">
                   {powderDayPlan.days.slice(0, 3).map((d: any, idx: number) => (
-                    <div key={idx} className="bg-slate-700/50 rounded-lg p-4">
+                    <div key={idx} className="bg-surface-secondary rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <div className="text-white font-medium">
+                          <div className="text-text-primary font-medium">
                             {idx === 0 ? 'Today' : d.dayOfWeek}
                           </div>
-                          <div className="text-xs text-gray-400">{d.forecastSnapshot.conditions}</div>
+                          <div className="text-xs text-text-secondary">{d.forecastSnapshot.conditions}</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-white">{d.predictedPowderScore}/10</div>
-                          <div className="text-xs text-gray-400">Conf {d.confidence}%</div>
+                          <div className="text-2xl font-semibold text-text-primary">{d.predictedPowderScore}/10</div>
+                          <div className="text-xs text-text-secondary">Conf {d.confidence}%</div>
                         </div>
                       </div>
 
-                      <div className="text-xs text-gray-300 mb-2">
+                      <div className="text-xs text-text-secondary mb-2">
                         {d.forecastSnapshot.snowfall}&quot; snow • {d.forecastSnapshot.high}°/{d.forecastSnapshot.low}° • {d.forecastSnapshot.windSpeed} mph
                       </div>
 
-                      <div className="text-sm text-gray-200">
-                        <span className="text-gray-400">Window: </span>
+                      <div className="text-sm text-text-primary">
+                        <span className="text-text-secondary">Window: </span>
                         <span>{d.bestWindow}</span>
                       </div>
 
                       {d.travelNotes?.length > 0 && (
-                        <div className="mt-2 text-xs text-gray-400 space-y-1">
+                        <div className="mt-2 text-xs text-text-secondary space-y-1">
                           {d.travelNotes.slice(0, 2).map((n: any, i: number) => (
                             <div key={i}>• {n}</div>
                           ))}
@@ -711,16 +696,16 @@ export default function MountainPage({
 
             {/* 7-Day Forecast */}
             {forecast.length > 0 && (
-              <div className="bg-slate-800 rounded-xl p-6">
+              <div className="bg-surface-primary rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-white">7-Day Forecast</h2>
+                  <h2 className="text-lg font-semibold text-text-primary">7-Day Forecast</h2>
                   {weatherGovLinks && (
                     <div className="flex gap-2">
                       <a
                         href={weatherGovLinks.hourly}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center gap-1"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-text-primary transition-colors flex items-center gap-1"
                       >
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -731,7 +716,7 @@ export default function MountainPage({
                         href={weatherGovLinks.forecast}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center gap-1"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-text-primary transition-colors flex items-center gap-1"
                       >
                         Weather.gov
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -745,22 +730,22 @@ export default function MountainPage({
                   {forecast.map((day, i) => (
                     <div
                       key={i}
-                      className="bg-slate-700/50 rounded-lg p-3 text-center"
+                      className="bg-surface-secondary rounded-lg p-3 text-center"
                     >
-                      <div className="text-xs text-gray-400 mb-1">{day.dayOfWeek}</div>
+                      <div className="text-xs text-text-secondary mb-1">{day.dayOfWeek}</div>
                       <div className="text-2xl mb-1">{getWeatherIcon(day.icon)}</div>
-                      <div className="text-sm text-white font-medium">
+                      <div className="text-sm text-text-primary font-medium">
                         {day.high}° / {day.low}°
                       </div>
                       {day.snowfall > 0 && (
-                        <div className="text-xs text-sky-400 mt-1">
+                        <div className="text-xs text-accent mt-1">
                           {day.snowfall}&quot; snow
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between text-xs text-gray-400">
+                <div className="mt-4 pt-4 border-t border-border-primary flex items-center justify-between text-xs text-text-secondary">
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -772,7 +757,7 @@ export default function MountainPage({
                       href={weatherGovLinks.discussion}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:text-gray-300 transition-colors underline"
+                      className="hover:text-text-secondary transition-colors underline"
                     >
                       Forecast Discussion
                     </a>
@@ -783,12 +768,12 @@ export default function MountainPage({
 
             {/* Webcams */}
             {mountain.webcams.length > 0 && (
-              <div className="bg-slate-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white mb-4">Webcams</h2>
+              <div className="bg-surface-primary rounded-2xl p-6">
+                <h2 className="text-lg font-semibold text-text-primary mb-4">Webcams</h2>
                 <div className="grid md:grid-cols-2 gap-4">
                   {mountain.webcams.map((webcam) => (
-                    <div key={webcam.id} className="bg-slate-700/50 rounded-lg overflow-hidden">
-                      <div className="aspect-video bg-slate-700 relative">
+                    <div key={webcam.id} className="bg-surface-secondary rounded-lg overflow-hidden">
+                      <div className="aspect-video bg-surface-secondary relative">
                         <img
                           src={webcam.url}
                           alt={webcam.name}
@@ -799,13 +784,13 @@ export default function MountainPage({
                         />
                       </div>
                       <div className="p-3">
-                        <div className="text-sm text-white font-medium">{webcam.name}</div>
+                        <div className="text-sm text-text-primary font-medium">{webcam.name}</div>
                         {webcam.refreshUrl && (
                           <a
                             href={webcam.refreshUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-sky-400 hover:text-sky-300"
+                            className="text-xs text-accent hover:text-accent-hover"
                           >
                             View on website ↗
                           </a>
@@ -818,43 +803,43 @@ export default function MountainPage({
             )}
 
             {/* Mountain Info */}
-            <div className="bg-slate-800 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">Mountain Info</h2>
+            <div className="bg-surface-primary rounded-2xl p-6">
+              <h2 className="text-lg font-semibold text-text-primary mb-4">Mountain Info</h2>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Base Elevation</span>
-                    <span className="text-white">
+                    <span className="text-text-secondary">Base Elevation</span>
+                    <span className="text-text-primary">
                       {mountain.elevation.base.toLocaleString()}ft
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Summit Elevation</span>
-                    <span className="text-white">
+                    <span className="text-text-secondary">Summit Elevation</span>
+                    <span className="text-text-primary">
                       {mountain.elevation.summit.toLocaleString()}ft
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Vertical Drop</span>
-                    <span className="text-white">
+                    <span className="text-text-secondary">Vertical Drop</span>
+                    <span className="text-text-primary">
                       {(mountain.elevation.summit - mountain.elevation.base).toLocaleString()}ft
                     </span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Region</span>
-                    <span className="text-white capitalize">{mountain.region}</span>
+                    <span className="text-text-secondary">Region</span>
+                    <span className="text-text-primary capitalize">{mountain.region}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">SNOTEL Station</span>
-                    <span className="text-white">
+                    <span className="text-text-secondary">SNOTEL Station</span>
+                    <span className="text-text-primary">
                       {mountain.snotel?.stationName ?? 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">NOAA Grid</span>
-                    <span className="text-white">
+                    <span className="text-text-secondary">NOAA Grid</span>
+                    <span className="text-text-primary">
                       {mountain.noaa ? `${mountain.noaa.gridOffice}/${mountain.noaa.gridX},${mountain.noaa.gridY}` : 'N/A'}
                     </span>
                   </div>

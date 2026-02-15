@@ -35,8 +35,8 @@ export function PowderScore({ prediction }: PowderScoreProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Powder Score</h2>
-        <span className="text-sm text-gray-500">{dayName}</span>
+        <h2 className="text-lg font-semibold text-text-primary">Powder Score</h2>
+        <span className="text-sm text-text-quaternary">{dayName}</span>
       </div>
 
       {/* Score Gauge */}
@@ -73,22 +73,22 @@ export function PowderScore({ prediction }: PowderScoreProps) {
           {/* Score text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className={`text-4xl font-bold ${getScoreColor(score)}`}>{score}</span>
-            <span className="text-sm text-gray-500">{getScoreLabel(score)}</span>
+            <span className="text-sm text-text-quaternary">{getScoreLabel(score)}</span>
           </div>
         </div>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-text-quaternary mt-2">
           {confidence}% confidence
         </p>
       </div>
 
       {/* Contributing Factors */}
       <div className="mt-4 space-y-3">
-        <h3 className="text-sm font-medium text-gray-700">Contributing Factors</h3>
+        <h3 className="text-sm font-medium text-text-tertiary">Contributing Factors</h3>
         {factors.map((factor) => (
           <div key={factor.name} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${factor.contribution > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-gray-700">{factor.name}</span>
+              <span className="text-text-tertiary">{factor.name}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className={factor.contribution > 0 ? 'text-green-600' : 'text-red-600'}>

@@ -38,16 +38,16 @@ export function ChatInterface() {
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full bg-slate-900">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <header className="flex-shrink-0 px-4 py-3 border-b border-slate-700 bg-slate-900/95 backdrop-blur-sm">
+      <header className="flex-shrink-0 px-4 py-3 border-b border-border-secondary bg-[var(--header-bg)] backdrop-blur-xl backdrop-saturate-150">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
             <span className="text-xl">🏔️</span>
           </div>
           <div>
-            <h1 className="text-white font-semibold">Shredders AI</h1>
-            <p className="text-gray-500 text-xs">Your mountain conditions assistant</p>
+            <h1 className="text-text-primary font-semibold">Shredders AI</h1>
+            <p className="text-text-tertiary text-xs">Your mountain conditions assistant</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <span className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 text-green-400 rounded-full text-xs">
@@ -65,11 +65,11 @@ export function ChatInterface() {
       >
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 flex items-center justify-center mb-4">
+            <div className="w-20 h-20 rounded-2xl bg-accent-subtle flex items-center justify-center mb-4">
               <span className="text-4xl">🏔️</span>
             </div>
-            <h2 className="text-white text-xl font-semibold mb-2">Welcome to Shredders AI</h2>
-            <p className="text-gray-400 max-w-sm mb-6">
+            <h2 className="text-text-primary text-xl font-semibold mb-2">Welcome to Shredders AI</h2>
+            <p className="text-text-secondary max-w-sm mb-6">
               Ask me about mountain conditions, weather forecasts, powder scores, or compare resorts.
             </p>
             <div className="grid grid-cols-2 gap-2 max-w-md">
@@ -82,10 +82,10 @@ export function ChatInterface() {
                 <button
                   key={idx}
                   onClick={() => setInput(item.text)}
-                  className="flex items-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-left transition-colors"
+                  className="flex items-center gap-2 px-4 py-3 bg-surface-secondary hover:bg-surface-tertiary rounded-xl text-left transition-colors"
                 >
                   <span className="text-lg">{item.icon}</span>
-                  <span className="text-gray-300 text-sm">{item.text}</span>
+                  <span className="text-text-secondary text-sm">{item.text}</span>
                 </button>
               ))}
             </div>

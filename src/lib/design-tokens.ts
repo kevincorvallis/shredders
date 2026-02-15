@@ -81,14 +81,14 @@ export const STABILITY_STYLES: Record<StabilityRating, { label: string; color: s
   good: { label: 'Good', color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
   fair: { label: 'Fair', color: 'text-amber-400', bg: 'bg-amber-500/20' },
   poor: { label: 'Poor', color: 'text-red-400', bg: 'bg-red-500/20' },
-  unknown: { label: 'Unknown', color: 'text-slate-400', bg: 'bg-slate-500/20' },
+  unknown: { label: 'Unknown', color: 'text-text-tertiary', bg: 'bg-surface-tertiary/40' },
 } as const;
 
 export type Trend = 'improving' | 'stable' | 'declining';
 
 export const TREND_STYLES: Record<Trend, { label: string; color: string; icon: string }> = {
   improving: { label: 'Improving', color: 'text-emerald-400', icon: '↑' },
-  stable: { label: 'Stable', color: 'text-slate-400', icon: '→' },
+  stable: { label: 'Stable', color: 'text-text-tertiary', icon: '→' },
   declining: { label: 'Declining', color: 'text-red-400', icon: '↓' },
 } as const;
 

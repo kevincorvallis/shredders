@@ -23,26 +23,26 @@ function MetricCard({ label, value, unit, icon, trend, status, subValue }: Metri
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
 
   return (
-    <Card className="bg-slate-900/30">
+    <Card className="bg-surface-primary/30">
       <CardContent className="p-3">
         <div className="flex items-start justify-between">
-          <div className="text-slate-500">{icon}</div>
+          <div className="text-text-quaternary">{icon}</div>
           {trend && (
             <TrendIcon className={`w-3 h-3 ${
               trend === 'up' ? 'text-emerald-400' :
               trend === 'down' ? 'text-red-400' :
-              'text-slate-400'
+              'text-text-tertiary'
             }`} />
           )}
         </div>
         <div className="mt-2">
-          <div className={`text-2xl font-bold ${status ? statusColors[status] : 'text-slate-100'}`}>
+          <div className={`text-2xl font-bold ${status ? statusColors[status] : 'text-text-primary'}`}>
             {value}
-            {unit && <span className="text-sm font-normal text-slate-400 ml-1">{unit}</span>}
+            {unit && <span className="text-sm font-normal text-text-tertiary ml-1">{unit}</span>}
           </div>
-          <div className="text-xs text-slate-500 uppercase tracking-wide mt-0.5">{label}</div>
+          <div className="text-xs text-text-quaternary uppercase tracking-wide mt-0.5">{label}</div>
           {subValue && (
-            <div className="text-xs text-slate-400 mt-1">{subValue}</div>
+            <div className="text-xs text-text-tertiary mt-1">{subValue}</div>
           )}
         </div>
       </CardContent>

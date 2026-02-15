@@ -89,7 +89,7 @@ export function QuickPresets({ form }: QuickPresetsProps) {
           key={preset.label}
           type="button"
           onClick={() => applyPreset(preset)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full text-sm text-gray-300 hover:text-white transition-colors whitespace-nowrap shrink-0"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-secondary hover:bg-surface-tertiary border border-border-primary rounded-full text-sm text-text-secondary hover:text-text-primary transition-colors whitespace-nowrap shrink-0"
         >
           <span>{preset.icon}</span>
           <span>{preset.label}</span>

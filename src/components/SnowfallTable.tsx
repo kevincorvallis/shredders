@@ -117,12 +117,12 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
   }, [daysBack, daysForward]);
 
   const getSnowfallColor = (snowfall: number, isForecast: boolean) => {
-    if (snowfall === 0) return isForecast ? 'bg-slate-800/30' : 'bg-slate-800/50';
-    if (snowfall < 2) return 'bg-blue-900/40 text-blue-200';
-    if (snowfall < 4) return 'bg-blue-700/50 text-blue-100';
-    if (snowfall < 6) return 'bg-blue-600/60 text-white';
-    if (snowfall < 10) return 'bg-blue-500/70 text-white';
-    return 'bg-blue-400/80 text-white font-bold';
+    if (snowfall === 0) return isForecast ? 'bg-surface-secondary/30' : 'bg-surface-secondary/50';
+    if (snowfall < 2) return 'bg-snow-1 text-text-primary';
+    if (snowfall < 4) return 'bg-snow-2 text-text-primary';
+    if (snowfall < 6) return 'bg-snow-3 text-text-primary';
+    if (snowfall < 10) return 'bg-snow-4 text-text-primary';
+    return 'bg-snow-5 text-text-primary font-bold';
   };
 
   const formatDate = (dateStr: string) => {
@@ -147,9 +147,9 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
 
   if (isLoading) {
     return (
-      <div className="bg-slate-900 rounded-xl p-8">
+      <div className="bg-surface-primary rounded-2xl p-8">
         <div className="flex items-center justify-center">
-          <div className="flex items-center gap-2 text-gray-400">
+          <div className="flex items-center gap-2 text-text-secondary">
             <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path
@@ -166,27 +166,27 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
   }
 
   return (
-    <div className="bg-slate-900 rounded-xl overflow-hidden">
+    <div className="bg-surface-primary rounded-2xl overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-4 border-b border-border-secondary flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white">Snowfall Tracker</h2>
-          <p className="text-sm text-gray-400">Past {daysBack} days • Next {daysForward} days</p>
+          <h2 className="text-xl font-semibold text-text-primary tracking-tight">Snowfall Tracker</h2>
+          <p className="text-sm text-text-secondary">Past {daysBack} days • Next {daysForward} days</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={scrollLeft}
-            className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-2 bg-surface-secondary hover:bg-surface-tertiary rounded-lg transition-colors"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-5 h-5 text-white" />
+            <ChevronLeft className="w-5 h-5 text-text-primary" />
           </button>
           <button
             onClick={scrollRight}
-            className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-2 bg-surface-secondary hover:bg-surface-tertiary rounded-lg transition-colors"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-5 h-5 text-white" />
+            <ChevronRight className="w-5 h-5 text-text-primary" />
           </button>
         </div>
       </div>
@@ -194,16 +194,16 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
       {/* Table */}
       <div className="relative">
         {/* Fixed mountain names column */}
-        <div className="absolute left-0 top-0 bottom-0 w-48 bg-slate-900 z-10 border-r border-slate-800">
+        <div className="absolute left-0 top-0 bottom-0 w-48 bg-surface-primary z-10 border-r border-border-secondary">
           {/* Header spacer */}
-          <div className="h-20 border-b border-slate-800" />
+          <div className="h-20 border-b border-border-secondary" />
 
           {/* Mountain names */}
           {mountains.map((mountain) => (
             <Link
               key={mountain.id}
               href={`/mountains/${mountain.id}`}
-              className="flex items-center gap-3 p-3 h-16 border-b border-slate-800 hover:bg-slate-800/50 transition-colors"
+              className="flex items-center gap-3 p-3 h-16 border-b border-border-secondary hover:bg-accent-subtle transition-colors"
             >
               {mountain.logo ? (
                 <Image
@@ -222,10 +222,10 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-white truncate">
+                <div className="text-sm font-medium text-text-primary truncate">
                   {mountain.shortName}
                 </div>
-                <div className="text-xs text-gray-500 truncate capitalize">
+                <div className="text-xs text-text-tertiary truncate capitalize">
                   {mountain.region}
                 </div>
               </div>
@@ -236,25 +236,25 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
         {/* Scrollable data area */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto pl-48 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900"
+          className="overflow-x-auto pl-48 scrollbar-thin "
         >
           <div className="inline-block min-w-full">
             {/* Date headers */}
-            <div className="flex border-b border-slate-800 bg-slate-900/95 sticky top-0 z-5">
+            <div className="flex border-b border-border-secondary bg-surface-primary/95 sticky top-0 z-5">
               {dateRange.map((dateInfo, index) => {
                 const { month, day, dayOfWeek } = formatDate(dateInfo.date);
                 return (
                   <div
                     key={index}
-                    className={`w-20 p-2 text-center border-r border-slate-800 ${
-                      dateInfo.isToday ? 'bg-sky-900/30' : ''
+                    className={`w-20 p-2 text-center border-r border-border-secondary ${
+                      dateInfo.isToday ? 'bg-accent-subtle' : ''
                     }`}
                   >
-                    <div className="text-xs text-gray-500">{dayOfWeek}</div>
-                    <div className={`text-sm font-semibold ${dateInfo.isToday ? 'text-sky-400' : 'text-white'}`}>
+                    <div className="text-xs text-text-tertiary">{dayOfWeek}</div>
+                    <div className={`text-sm font-semibold ${dateInfo.isToday ? 'text-accent' : 'text-text-primary'}`}>
                       {month} {day}
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-text-quaternary">
                       {dateInfo.isForecast ? 'forecast' : 'actual'}
                     </div>
                   </div>
@@ -268,12 +268,12 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
               if (!mountain) return null;
 
               return (
-                <div key={mountain.id} className="flex border-b border-slate-800">
+                <div key={mountain.id} className="flex border-b border-border-secondary">
                   {mountainData.dates.map((dateData, index) => (
                     <div
                       key={index}
-                      className={`w-20 h-16 p-2 flex items-center justify-center border-r border-slate-800 ${
-                        dateData.isToday ? 'bg-sky-900/10' : ''
+                      className={`w-20 h-16 p-2 flex items-center justify-center border-r border-border-secondary ${
+                        dateData.isToday ? 'bg-accent-subtle/50' : ''
                       } ${getSnowfallColor(dateData.snowfall, dateData.isForecast)}`}
                     >
                       <div className="text-center">
@@ -285,7 +285,7 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
                             )}
                           </>
                         ) : (
-                          <div className="text-gray-600 text-sm">—</div>
+                          <div className="text-text-quaternary text-sm">—</div>
                         )}
                       </div>
                     </div>
@@ -298,31 +298,31 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
       </div>
 
       {/* Legend */}
-      <div className="p-4 border-t border-slate-800 bg-slate-900/50">
-        <div className="flex items-center gap-6 text-xs text-gray-400">
+      <div className="p-4 border-t border-border-secondary bg-surface-primary/50">
+        <div className="flex items-center gap-6 text-xs text-text-secondary">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-900/40" />
+            <div className="w-4 h-4 rounded bg-snow-1" />
             <span>1-2"</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-700/50" />
+            <div className="w-4 h-4 rounded bg-snow-2" />
             <span>2-4"</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-600/60" />
+            <div className="w-4 h-4 rounded bg-snow-3" />
             <span>4-6"</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-500/70" />
+            <div className="w-4 h-4 rounded bg-snow-4" />
             <span>6-10"</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-400/80" />
+            <div className="w-4 h-4 rounded bg-snow-5" />
             <span>10"+</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-sky-400" />
-            <span className="text-sky-400">Today</span>
+            <div className="w-3 h-3 rounded-full bg-accent" />
+            <span className="text-accent">Today</span>
           </div>
         </div>
       </div>

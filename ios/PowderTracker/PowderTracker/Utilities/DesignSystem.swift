@@ -404,14 +404,14 @@ extension View {
 
     func sectionHeader() -> some View {
         self
-            .font(.headline)
-            .fontWeight(.semibold)
+            .font(.system(.headline, design: .serif))
+            .fontWeight(.medium)
     }
 
     func cardTitle() -> some View {
         self
-            .font(.title3)
-            .fontWeight(.semibold)
+            .font(.system(.title3, design: .serif))
+            .fontWeight(.medium)
     }
 
     func metric() -> some View {
@@ -430,8 +430,8 @@ extension View {
 // MARK: - Standard Modifiers
 
 extension View {
-    /// Standard card styling with tight spacing
-    func standardCard(padding: CGFloat = .spacingM) -> some View {
+    /// Standard card styling
+    func standardCard(padding: CGFloat = .spacingL) -> some View {
         self
             .padding(padding)
             .background(Color(.secondarySystemBackground))

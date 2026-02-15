@@ -78,26 +78,26 @@ export default function MountainsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+      <header className="sticky top-0 z-10 bg-[var(--header-bg)] backdrop-blur-xl backdrop-saturate-150 border-b border-border-secondary">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+              <Link href="/" className="text-text-secondary hover:text-text-primary transition-colors">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </Link>
-              <h1 className="text-xl font-bold text-white">PNW Mountains</h1>
+              <h1 className="text-xl font-semibold text-text-primary">PNW Mountains</h1>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode('map')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   viewMode === 'map'
-                    ? 'bg-sky-500 text-white'
-                    : 'bg-slate-800 text-gray-400 hover:text-white'
+                    ? 'bg-accent text-white'
+                    : 'bg-surface-secondary text-text-secondary hover:text-text-primary'
                 }`}
               >
                 Map
@@ -106,8 +106,8 @@ export default function MountainsPage() {
                 onClick={() => setViewMode('list')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   viewMode === 'list'
-                    ? 'bg-sky-500 text-white'
-                    : 'bg-slate-800 text-gray-400 hover:text-white'
+                    ? 'bg-accent text-white'
+                    : 'bg-surface-secondary text-text-secondary hover:text-text-primary'
                 }`}
               >
                 List
@@ -129,7 +129,7 @@ export default function MountainsPage() {
       ) : (
         <div className="max-w-2xl mx-auto px-4 py-6">
           {userLocation && (
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-text-secondary mb-4">
               Sorted by distance from your location
             </p>
           )}

@@ -30,11 +30,11 @@ function badge(level: RiskLevel) {
 
 export function TripAdviceWidget({ mountain, data }: TripAdviceWidgetProps) {
   return (
-    <div className="bg-gradient-to-br from-slate-500/20 to-slate-700/10 rounded-xl p-4 border border-slate-500/30">
+    <div className="bg-gradient-to-br from-surface-tertiary/40 to-surface-tertiary/20 rounded-xl p-4 border border-border-primary/30">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-white font-semibold text-sm">{mountain}</h3>
-          <p className="text-gray-400 text-xs">Trip &amp; Traffic</p>
+          <h3 className="text-text-primary font-semibold text-sm">{mountain}</h3>
+          <p className="text-text-tertiary text-xs">Trip &amp; Traffic</p>
         </div>
         <div className="flex gap-2">
           <span className={`text-xs px-2 py-0.5 rounded border ${badge(data.trafficRisk)}`}>Traffic: {data.trafficRisk}</span>
@@ -42,15 +42,15 @@ export function TripAdviceWidget({ mountain, data }: TripAdviceWidgetProps) {
         </div>
       </div>
 
-      <div className="text-gray-200 text-sm font-medium mb-2">{data.headline}</div>
+      <div className="text-text-secondary text-sm font-medium mb-2">{data.headline}</div>
 
       {data.suggestedDepartures?.length > 0 && (
         <div className="bg-black/20 rounded-lg p-2.5 mb-2">
-          <div className="text-gray-400 text-xs mb-1">Suggested timing</div>
-          <div className="text-gray-200 text-sm">
+          <div className="text-text-tertiary text-xs mb-1">Suggested timing</div>
+          <div className="text-text-secondary text-sm">
             {data.suggestedDepartures.slice(0, 2).map((s, idx) => (
               <div key={idx}>
-                <span className="text-gray-400">{s.from}: </span>
+                <span className="text-text-tertiary">{s.from}: </span>
                 <span>{s.suggestion}</span>
               </div>
             ))}
@@ -59,7 +59,7 @@ export function TripAdviceWidget({ mountain, data }: TripAdviceWidgetProps) {
       )}
 
       {data.notes?.length > 0 && (
-        <div className="text-xs text-gray-400 space-y-1">
+        <div className="text-xs text-text-tertiary space-y-1">
           {data.notes.slice(0, 3).map((n, idx) => (
             <div key={idx}>• {n}</div>
           ))}

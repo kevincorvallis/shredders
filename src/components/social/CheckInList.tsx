@@ -89,17 +89,17 @@ export function CheckInList({
           <h2 className="text-2xl font-bold">Recent Check-ins</h2>
         </div>
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+          <div key={i} className="bg-white rounded-lg border border-border-secondary p-6 animate-pulse">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gray-200 rounded-full" />
+              <div className="w-12 h-12 bg-surface-secondary rounded-full" />
               <div className="flex-1">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2" />
-                <div className="h-3 bg-gray-200 rounded w-1/3" />
+                <div className="h-4 bg-surface-secondary rounded w-1/4 mb-2" />
+                <div className="h-3 bg-surface-secondary rounded w-1/3" />
               </div>
             </div>
             <div className="space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-full" />
-              <div className="h-3 bg-gray-200 rounded w-5/6" />
+              <div className="h-3 bg-surface-secondary rounded w-full" />
+              <div className="h-3 bg-surface-secondary rounded w-5/6" />
             </div>
           </div>
         ))}
@@ -137,8 +137,8 @@ export function CheckInList({
           <button
             onClick={() => setShowCheckInForm(true)}
             className="
-              inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg
-              hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+              inline-flex items-center gap-2 px-4 py-2 bg-accent text-text-primary font-semibold rounded-lg
+              hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2
               transition-colors duration-200
             "
           >
@@ -161,9 +161,9 @@ export function CheckInList({
 
       {/* Check-ins list */}
       {checkIns.length === 0 ? (
-        <div className="bg-gray-50 rounded-lg border border-gray-200 p-12 text-center">
+        <div className="bg-surface-primary rounded-lg border border-border-secondary p-12 text-center">
           <svg
-            className="w-16 h-16 mx-auto text-gray-400 mb-4"
+            className="w-16 h-16 mx-auto text-text-tertiary mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -175,16 +175,16 @@ export function CheckInList({
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
             />
           </svg>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-semibold text-text-primary mb-2">
             No check-ins yet
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-text-quaternary mb-4">
             Be the first to check in at this mountain!
           </p>
           {showForm && !showCheckInForm && (
             <button
               onClick={() => setShowCheckInForm(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-text-primary font-semibold rounded-lg hover:bg-accent-hover"
             >
               Check In Now
             </button>

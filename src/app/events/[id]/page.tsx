@@ -237,34 +237,34 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900">
-        <header className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+      <div className="min-h-screen bg-surface-primary">
+        <header className="sticky top-0 z-10 bg-surface-primary/95 backdrop-blur-sm border-b border-border-secondary">
           <div className="max-w-2xl mx-auto px-4 py-4">
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 bg-slate-700 rounded animate-pulse" />
-              <div className="h-6 w-32 bg-slate-700 rounded animate-pulse" />
+              <div className="w-6 h-6 bg-surface-tertiary rounded animate-pulse" />
+              <div className="h-6 w-32 bg-surface-tertiary rounded animate-pulse" />
             </div>
           </div>
         </header>
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
           {/* Event Info Skeleton */}
-          <div className="bg-slate-800 rounded-xl p-6 animate-pulse">
-            <div className="h-8 bg-slate-700 rounded w-3/4 mb-3" />
-            <div className="h-5 bg-slate-700 rounded w-1/3 mb-4" />
+          <div className="bg-surface-secondary rounded-xl p-6 animate-pulse">
+            <div className="h-8 bg-surface-tertiary rounded w-3/4 mb-3" />
+            <div className="h-5 bg-surface-tertiary rounded w-1/3 mb-4" />
             <div className="space-y-3">
-              <div className="h-4 bg-slate-700 rounded w-2/3" />
-              <div className="h-4 bg-slate-700 rounded w-1/2" />
-              <div className="h-4 bg-slate-700 rounded w-1/3" />
+              <div className="h-4 bg-surface-tertiary rounded w-2/3" />
+              <div className="h-4 bg-surface-tertiary rounded w-1/2" />
+              <div className="h-4 bg-surface-tertiary rounded w-1/3" />
             </div>
           </div>
           {/* Attendees Skeleton */}
-          <div className="bg-slate-800 rounded-xl p-6 animate-pulse">
-            <div className="h-6 bg-slate-700 rounded w-1/2 mb-4" />
+          <div className="bg-surface-secondary rounded-xl p-6 animate-pulse">
+            <div className="h-6 bg-surface-tertiary rounded w-1/2 mb-4" />
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-slate-700 rounded-full" />
-                  <div className="h-4 bg-slate-700 rounded w-32" />
+                  <div className="w-8 h-8 bg-surface-tertiary rounded-full" />
+                  <div className="h-4 bg-surface-tertiary rounded w-32" />
                 </div>
               ))}
             </div>
@@ -276,24 +276,24 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <p className="text-gray-400">Event not found</p>
+      <div className="min-h-screen bg-surface-primary flex items-center justify-center">
+        <p className="text-text-tertiary">Event not found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-surface-primary">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+      <header className="sticky top-0 z-10 bg-surface-primary/95 backdrop-blur-sm border-b border-border-secondary">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <Link href="/events" className="text-gray-400 hover:text-white transition-colors">
+            <Link href="/events" className="text-text-tertiary hover:text-text-primary transition-colors">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1 className="text-xl font-bold text-white">Event Details</h1>
+            <h1 className="text-xl font-bold text-text-primary">Event Details</h1>
           </div>
         </div>
       </header>
@@ -301,21 +301,21 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       {/* Content */}
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Event Info Card */}
-        <div className="bg-slate-800 rounded-xl p-6">
-          <h2 className="text-2xl font-bold text-white">{event.title}</h2>
-          <p className="text-sky-400 mt-1">{event.mountainName || event.mountainId}</p>
+        <div className="bg-surface-secondary rounded-xl p-6">
+          <h2 className="text-2xl font-bold text-text-primary">{event.title}</h2>
+          <p className="text-accent mt-1">{event.mountainName || event.mountainId}</p>
 
           <div className="mt-4 space-y-3">
-            <div className="flex items-center gap-3 text-gray-300">
-              <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center gap-3 text-text-secondary">
+              <svg className="w-5 h-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               {formatDate(event.eventDate)}
             </div>
 
             {event.departureTime && (
-              <div className="flex items-center gap-3 text-gray-300">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center gap-3 text-text-secondary">
+                <svg className="w-5 h-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Departing at {formatTime(event.departureTime)}
@@ -323,8 +323,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             )}
 
             {event.departureLocation && (
-              <div className="flex items-center gap-3 text-gray-300">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center gap-3 text-text-secondary">
+                <svg className="w-5 h-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -333,8 +333,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             )}
 
             {event.skillLevel && (
-              <div className="flex items-center gap-3 text-gray-300">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center gap-3 text-text-secondary">
+                <svg className="w-5 h-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 {event.skillLevel.charAt(0).toUpperCase() + event.skillLevel.slice(1)} level
@@ -352,21 +352,21 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {event.notes && (
-            <div className="mt-4 pt-4 border-t border-slate-700">
-              <p className="text-gray-300 whitespace-pre-wrap">{event.notes}</p>
+            <div className="mt-4 pt-4 border-t border-border-primary">
+              <p className="text-text-secondary whitespace-pre-wrap">{event.notes}</p>
             </div>
           )}
 
           {/* Organizer */}
-          <div className="mt-4 pt-4 border-t border-slate-700 flex items-center gap-3">
+          <div className="mt-4 pt-4 border-t border-border-primary flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-sky-500/20 flex items-center justify-center">
-              <span className="text-sky-400 font-medium">
+              <span className="text-accent font-medium">
                 {event.creator.display_name?.[0] || event.creator.username[0]}
               </span>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Organized by</p>
-              <p className="text-white font-medium">
+              <p className="text-sm text-text-tertiary">Organized by</p>
+              <p className="text-text-primary font-medium">
                 {event.creator.display_name || event.creator.username}
               </p>
             </div>
@@ -375,31 +375,31 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
         {/* Conditions Card */}
         {event.conditions && (
-          <div className="bg-slate-800 rounded-xl p-6 mt-4">
-            <h3 className="font-semibold text-white mb-3">Current Conditions</h3>
+          <div className="bg-surface-secondary rounded-xl p-6 mt-4">
+            <h3 className="font-semibold text-text-primary mb-3">Current Conditions</h3>
             <div className="grid grid-cols-2 gap-4">
               {event.conditions.powderScore !== undefined && (
                 <div>
-                  <p className="text-sm text-gray-400">Powder Score</p>
-                  <p className="text-2xl font-bold text-sky-400">{event.conditions.powderScore.toFixed(1)}</p>
+                  <p className="text-sm text-text-tertiary">Powder Score</p>
+                  <p className="text-2xl font-bold text-accent">{event.conditions.powderScore.toFixed(1)}</p>
                 </div>
               )}
               {event.conditions.snowfall24h !== undefined && (
                 <div>
-                  <p className="text-sm text-gray-400">24h Snowfall</p>
-                  <p className="text-2xl font-bold text-white">{event.conditions.snowfall24h}"</p>
+                  <p className="text-sm text-text-tertiary">24h Snowfall</p>
+                  <p className="text-2xl font-bold text-text-primary">{event.conditions.snowfall24h}"</p>
                 </div>
               )}
               {event.conditions.temperature !== undefined && (
                 <div>
-                  <p className="text-sm text-gray-400">Temperature</p>
-                  <p className="text-2xl font-bold text-white">{event.conditions.temperature}°F</p>
+                  <p className="text-sm text-text-tertiary">Temperature</p>
+                  <p className="text-2xl font-bold text-text-primary">{event.conditions.temperature}°F</p>
                 </div>
               )}
               {event.conditions.snowDepth !== undefined && (
                 <div>
-                  <p className="text-sm text-gray-400">Snow Depth</p>
-                  <p className="text-2xl font-bold text-white">{event.conditions.snowDepth}"</p>
+                  <p className="text-sm text-text-tertiary">Snow Depth</p>
+                  <p className="text-2xl font-bold text-text-primary">{event.conditions.snowDepth}"</p>
                 </div>
               )}
             </div>
@@ -407,8 +407,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         )}
 
         {/* Attendees */}
-        <div className="bg-slate-800 rounded-xl p-6 mt-4">
-          <h3 className="font-semibold text-white mb-3">
+        <div className="bg-surface-secondary rounded-xl p-6 mt-4">
+          <h3 className="font-semibold text-text-primary mb-3">
             Who's Going ({event.goingCount} going, {event.maybeCount} maybe)
           </h3>
           {event.attendees.length > 0 ? (
@@ -416,12 +416,12 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               {event.attendees.map((attendee) => (
                 <div key={attendee.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center">
-                      <span className="text-sm text-gray-300">
+                    <div className="w-8 h-8 rounded-full bg-surface-tertiary flex items-center justify-center">
+                      <span className="text-sm text-text-secondary">
                         {attendee.user.display_name?.[0] || attendee.user.username[0]}
                       </span>
                     </div>
-                    <span className="text-gray-300">
+                    <span className="text-text-secondary">
                       {attendee.user.display_name || attendee.user.username}
                     </span>
                   </div>
@@ -433,7 +433,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                     )}
                     <span className={`text-xs px-2 py-0.5 rounded ${
                       attendee.status === 'going'
-                        ? 'bg-sky-500/20 text-sky-400'
+                        ? 'bg-sky-500/20 text-accent'
                         : 'bg-yellow-500/20 text-yellow-400'
                     }`}>
                       {attendee.status}
@@ -443,20 +443,20 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               ))}
             </div>
           ) : (
-            <p className="text-gray-400">No attendees yet</p>
+            <p className="text-text-tertiary">No attendees yet</p>
           )}
         </div>
 
         {/* Discussion & Activity Section */}
-        <div className="bg-slate-800 rounded-xl p-6 mt-4">
+        <div className="bg-surface-secondary rounded-xl p-6 mt-4">
           {/* Tab Switcher */}
-          <div className="flex gap-1 mb-4 bg-slate-700/50 rounded-lg p-1">
+          <div className="flex gap-1 mb-4 bg-surface-tertiary/50 rounded-lg p-1">
             <button
               onClick={() => setActiveTab('discussion')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                 activeTab === 'discussion'
-                  ? 'bg-slate-600 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-surface-tertiary text-text-primary'
+                  : 'text-text-tertiary hover:text-text-primary'
               }`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -468,8 +468,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               onClick={() => setActiveTab('activity')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                 activeTab === 'activity'
-                  ? 'bg-slate-600 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-surface-tertiary text-text-primary'
+                  : 'text-text-tertiary hover:text-text-primary'
               }`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -487,8 +487,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               </div>
             ) : activities.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-400">No activity yet</p>
-                <p className="text-gray-500 text-sm mt-1">Activity will appear when people RSVP or comment</p>
+                <p className="text-text-tertiary">No activity yet</p>
+                <p className="text-text-quaternary text-sm mt-1">Activity will appear when people RSVP or comment</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -504,21 +504,21 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
           ) : isCommentsGated ? (
             // Gated view for non-RSVP'd users
             <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700/50 flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-surface-tertiary/50 flex items-center justify-center">
+                <svg className="w-8 h-8 text-text-quaternary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <p className="text-white font-medium">{commentCount} comments</p>
-              <p className="text-gray-400 text-sm mt-1">{gatedMessage || 'RSVP to join the conversation'}</p>
+              <p className="text-text-primary font-medium">{commentCount} comments</p>
+              <p className="text-text-tertiary text-sm mt-1">{gatedMessage || 'RSVP to join the conversation'}</p>
             </div>
           ) : (
             <>
               {/* Comments List */}
               {comments.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-400">No comments yet</p>
-                  <p className="text-gray-500 text-sm mt-1">Be the first to start the conversation!</p>
+                  <p className="text-text-tertiary">No comments yet</p>
+                  <p className="text-text-quaternary text-sm mt-1">Be the first to start the conversation!</p>
                 </div>
               ) : (
                 <div className="space-y-4 mb-4">
@@ -529,7 +529,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
                       {/* Replies */}
                       {comment.replies && comment.replies.length > 0 && (
-                        <div className="ml-8 mt-2 space-y-2 border-l-2 border-slate-700 pl-4">
+                        <div className="ml-8 mt-2 space-y-2 border-l-2 border-border-primary pl-4">
                           {comment.replies.map((reply) => (
                             <CommentRow key={reply.id} comment={reply} onReply={handleReply} isReply />
                           ))}
@@ -542,14 +542,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
               {/* Reply Indicator */}
               {replyingTo && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-slate-700/50 rounded-t-lg border-b border-slate-600">
-                  <svg className="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-2 px-3 py-2 bg-surface-tertiary/50 rounded-t-lg border-b border-border-primary">
+                  <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                   </svg>
-                  <span className="text-sm text-gray-300">
+                  <span className="text-sm text-text-secondary">
                     Replying to {replyingTo.user.display_name || replyingTo.user.username}
                   </span>
-                  <button onClick={cancelReply} className="ml-auto text-gray-400 hover:text-white">
+                  <button onClick={cancelReply} className="ml-auto text-text-tertiary hover:text-text-primary">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -558,14 +558,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               )}
 
               {/* Comment Input */}
-              <div className={`flex gap-2 ${replyingTo ? 'bg-slate-700/30 p-3 rounded-b-lg' : ''}`}>
+              <div className={`flex gap-2 ${replyingTo ? 'bg-surface-tertiary/30 p-3 rounded-b-lg' : ''}`}>
                 <textarea
                   ref={commentInputRef}
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
                   rows={1}
-                  className="flex-1 bg-slate-700 text-white rounded-lg px-4 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-sky-500 placeholder-gray-400"
+                  className="flex-1 bg-surface-tertiary text-text-primary rounded-lg px-4 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-accent placeholder-text-tertiary"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -576,7 +576,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 <button
                   onClick={handlePostComment}
                   disabled={!newComment.trim() || isPostingComment}
-                  className="px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                  className="px-4 py-2 bg-accent hover:bg-accent-hover disabled:bg-surface-tertiary disabled:cursor-not-allowed text-text-primary rounded-lg font-medium transition-colors"
                 >
                   {isPostingComment ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
@@ -596,7 +596,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
           <div
             className={`fixed bottom-24 right-6 px-4 py-3 rounded-xl shadow-lg z-50 animate-slide-up ${
               toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-            } text-white font-medium`}
+            } text-text-primary font-medium`}
           >
             {toast.message}
           </div>
@@ -608,7 +608,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
       {/* Sticky Footer with Action Buttons */}
       {(!event.isCreator || shareUrl) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 px-4 py-4 z-40">
+        <div className="fixed bottom-0 left-0 right-0 bg-surface-primary/95 backdrop-blur-sm border-t border-border-secondary px-4 py-4 z-40">
           <div className="max-w-2xl mx-auto">
             {/* RSVP Buttons */}
             {!event.isCreator && (
@@ -618,8 +618,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                   disabled={isRSVPing}
                   className={`flex-1 py-3 rounded-xl font-medium transition-colors ${
                     event.userRSVPStatus === 'going'
-                      ? 'bg-green-500 text-white'
-                      : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                      ? 'bg-green-500 text-text-primary'
+                      : 'bg-surface-secondary text-text-secondary hover:bg-surface-tertiary'
                   }`}
                 >
                   {isRSVPing ? '...' : "I'm In!"}
@@ -629,8 +629,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                   disabled={isRSVPing}
                   className={`flex-1 py-3 rounded-xl font-medium transition-colors ${
                     event.userRSVPStatus === 'maybe'
-                      ? 'bg-yellow-500 text-white'
-                      : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                      ? 'bg-yellow-500 text-text-primary'
+                      : 'bg-surface-secondary text-text-secondary hover:bg-surface-tertiary'
                   }`}
                 >
                   Maybe
@@ -642,7 +642,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             {shareUrl && (
               <button
                 onClick={handleShare}
-                className={`w-full py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${!event.isCreator ? 'mt-3' : ''}`}
+                className={`w-full py-3 bg-accent hover:bg-accent-hover text-text-primary rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${!event.isCreator ? 'mt-3' : ''}`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -688,7 +688,7 @@ function CommentRow({
       <div
         className={`${isReply ? 'w-7 h-7' : 'w-9 h-9'} rounded-full bg-gradient-to-br from-sky-500 to-purple-500 flex items-center justify-center flex-shrink-0`}
       >
-        <span className={`text-white font-medium ${isReply ? 'text-xs' : 'text-sm'}`}>
+        <span className={`text-text-primary font-medium ${isReply ? 'text-xs' : 'text-sm'}`}>
           {(comment.user.display_name || comment.user.username)[0].toUpperCase()}
         </span>
       </div>
@@ -696,16 +696,16 @@ function CommentRow({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`font-medium text-white ${isReply ? 'text-sm' : ''}`}>
+          <span className={`font-medium text-text-primary ${isReply ? 'text-sm' : ''}`}>
             {comment.user.display_name || comment.user.username}
           </span>
-          <span className="text-gray-500 text-xs">·</span>
-          <span className="text-gray-500 text-xs">{formatRelativeTime(comment.created_at)}</span>
+          <span className="text-text-quaternary text-xs">·</span>
+          <span className="text-text-quaternary text-xs">{formatRelativeTime(comment.created_at)}</span>
         </div>
-        <p className={`text-gray-300 mt-0.5 ${isReply ? 'text-sm' : ''}`}>{comment.content}</p>
+        <p className={`text-text-secondary mt-0.5 ${isReply ? 'text-sm' : ''}`}>{comment.content}</p>
         <button
           onClick={() => onReply(comment)}
-          className="text-gray-500 hover:text-sky-400 text-xs mt-1 flex items-center gap-1 transition-colors"
+          className="text-text-quaternary hover:text-accent text-xs mt-1 flex items-center gap-1 transition-colors"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -755,7 +755,7 @@ function ActivityRow({ activity }: { activity: EventActivity }) {
       case 'comment_posted':
         return (
           <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center">
-            <svg className="w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
@@ -770,8 +770,8 @@ function ActivityRow({ activity }: { activity: EventActivity }) {
         );
       default:
         return (
-          <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center">
-            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-8 h-8 rounded-full bg-surface-tertiary flex items-center justify-center">
+            <svg className="w-4 h-4 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -783,17 +783,17 @@ function ActivityRow({ activity }: { activity: EventActivity }) {
     const userName = activity.user?.displayName || activity.user?.username || 'Someone';
     switch (activity.activityType) {
       case 'rsvp_going':
-        return <><span className="font-medium text-white">{userName}</span> is going</>;
+        return <><span className="font-medium text-text-primary">{userName}</span> is going</>;
       case 'rsvp_maybe':
-        return <><span className="font-medium text-white">{userName}</span> marked as maybe</>;
+        return <><span className="font-medium text-text-primary">{userName}</span> marked as maybe</>;
       case 'rsvp_declined':
-        return <><span className="font-medium text-white">{userName}</span> can't make it</>;
+        return <><span className="font-medium text-text-primary">{userName}</span> can't make it</>;
       case 'comment_posted':
         return (
           <>
-            <span className="font-medium text-white">{userName}</span> commented
+            <span className="font-medium text-text-primary">{userName}</span> commented
             {activity.metadata.preview && (
-              <span className="text-gray-500 block text-sm truncate">"{activity.metadata.preview}"</span>
+              <span className="text-text-quaternary block text-sm truncate">"{activity.metadata.preview}"</span>
             )}
           </>
         );
@@ -804,11 +804,11 @@ function ActivityRow({ activity }: { activity: EventActivity }) {
           </span>
         );
       case 'event_created':
-        return <><span className="font-medium text-white">{userName}</span> created this event</>;
+        return <><span className="font-medium text-text-primary">{userName}</span> created this event</>;
       case 'event_updated':
-        return <><span className="font-medium text-white">{userName}</span> updated the event</>;
+        return <><span className="font-medium text-text-primary">{userName}</span> updated the event</>;
       default:
-        return <span className="text-gray-400">Activity</span>;
+        return <span className="text-text-tertiary">Activity</span>;
     }
   };
 
@@ -816,8 +816,8 @@ function ActivityRow({ activity }: { activity: EventActivity }) {
     <div className="flex gap-3 py-2">
       {getActivityIcon()}
       <div className="flex-1 min-w-0">
-        <p className="text-gray-300 text-sm">{getActivityText()}</p>
-        <p className="text-gray-500 text-xs mt-0.5">{formatRelativeTime(activity.createdAt)}</p>
+        <p className="text-text-secondary text-sm">{getActivityText()}</p>
+        <p className="text-text-quaternary text-xs mt-0.5">{formatRelativeTime(activity.createdAt)}</p>
       </div>
     </div>
   );

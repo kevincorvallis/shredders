@@ -107,7 +107,7 @@ export function LikeButton({
       className={`
         inline-flex items-center gap-1.5
         ${sizeClasses[size]}
-        ${liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}
+        ${liked ? 'text-red-500' : 'text-text-quaternary hover:text-red-500'}
         ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         transition-colors duration-200
         focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded

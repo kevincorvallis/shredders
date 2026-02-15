@@ -25,13 +25,13 @@ function ReviewSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+    <div className="bg-surface-secondary/50 border border-border-primary rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-300">{title}</h3>
+        <h3 className="text-sm font-medium text-text-secondary">{title}</h3>
         <button
           type="button"
           onClick={() => onEdit(stepIndex)}
-          className="text-xs text-sky-400 hover:text-sky-300 transition-colors"
+          className="text-xs text-accent hover:text-accent transition-colors"
         >
           Edit
         </button>
@@ -45,8 +45,8 @@ function ReviewRow({ label, value }: { label: string; value: string | null | und
   if (!value) return null;
   return (
     <div className="flex justify-between py-1">
-      <span className="text-sm text-gray-400">{label}</span>
-      <span className="text-sm text-white">{value}</span>
+      <span className="text-sm text-text-tertiary">{label}</span>
+      <span className="text-sm text-text-primary">{value}</span>
     </div>
   );
 }
@@ -75,8 +75,8 @@ export function EventFormStep4({ form, mountains, onEditStep }: EventFormStep4Pr
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-white mb-1">Review & Create</h2>
-        <p className="text-sm text-gray-400">Make sure everything looks good</p>
+        <h2 className="text-lg font-semibold text-text-primary mb-1">Review & Create</h2>
+        <p className="text-sm text-text-tertiary">Make sure everything looks good</p>
       </div>
 
       {/* Where & When */}
@@ -102,8 +102,8 @@ export function EventFormStep4({ form, mountains, onEditStep }: EventFormStep4Pr
         )}
         {values.notes && (
           <div className="mt-2">
-            <p className="text-xs text-gray-400 mb-1">Notes</p>
-            <p className="text-sm text-gray-300 whitespace-pre-wrap">{values.notes}</p>
+            <p className="text-xs text-text-tertiary mb-1">Notes</p>
+            <p className="text-sm text-text-secondary whitespace-pre-wrap">{values.notes}</p>
           </div>
         )}
       </ReviewSection>
@@ -121,7 +121,7 @@ export function EventFormStep4({ form, mountains, onEditStep }: EventFormStep4Pr
           }
         />
         {!formattedTime && !values.departureLocation && !values.carpoolAvailable && (
-          <p className="text-sm text-gray-500 italic">No logistics details set</p>
+          <p className="text-sm text-text-quaternary italic">No logistics details set</p>
         )}
       </ReviewSection>
     </div>

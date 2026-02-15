@@ -61,51 +61,43 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-background">
       {/* Main content */}
-      <div className="max-w-md w-full relative z-10">
+      <div className="max-w-md w-full">
         {/* Branded header */}
         <div className="text-center mb-6">
-          {/* Logo */}
           <div className="relative inline-block mb-4">
-            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+            <div className="w-16 h-16 mx-auto bg-accent rounded-2xl flex items-center justify-center shadow-lg">
               <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-1">Join Shredders</h1>
-          <p className="text-blue-200/80 text-sm">Your Powder Tracking Companion</p>
+          <h1 className="text-2xl font-bold text-text-primary tracking-tight mb-1">Join Shredders</h1>
+          <p className="text-text-secondary text-sm">Your Powder Tracking Companion</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-white/20">
-          <h2 className="text-xl font-semibold text-white mb-1">Create your account</h2>
-          <p className="text-blue-200/70 mb-5 text-sm">Start tracking powder days with the crew</p>
+        <div className="bg-surface-primary rounded-2xl p-6 shadow-lg border border-border-secondary">
+          <h2 className="text-xl font-semibold text-text-primary mb-1">Create your account</h2>
+          <p className="text-text-secondary mb-5 text-sm">Start tracking powder days with the crew</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3">
-                <p className="text-sm text-red-200">{error}</p>
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                <p className="text-sm text-danger">{error}</p>
               </div>
             )}
 
             {/* Email field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-blue-100 mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-1.5">
                 Email address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-blue-300/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-5 w-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                   </svg>
                 </div>
@@ -117,7 +109,7 @@ export default function SignupPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 bg-surface-secondary border border-border-primary rounded-xl text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all text-sm"
                   placeholder="you@example.com"
                 />
               </div>
@@ -125,12 +117,12 @@ export default function SignupPage() {
 
             {/* Username field */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-blue-100 mb-1.5">
+              <label htmlFor="username" className="block text-sm font-medium text-text-secondary mb-1.5">
                 Username
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-blue-300/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-5 w-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
@@ -142,7 +134,7 @@ export default function SignupPage() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 bg-surface-secondary border border-border-primary rounded-xl text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all text-sm"
                   placeholder="Choose a username"
                 />
               </div>
@@ -150,12 +142,12 @@ export default function SignupPage() {
 
             {/* Display Name field */}
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-blue-100 mb-1.5">
-                Display name <span className="text-blue-300/50">(optional)</span>
+              <label htmlFor="displayName" className="block text-sm font-medium text-text-secondary mb-1.5">
+                Display name <span className="text-text-tertiary">(optional)</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-blue-300/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-5 w-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -166,7 +158,7 @@ export default function SignupPage() {
                   autoComplete="name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 bg-surface-secondary border border-border-primary rounded-xl text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all text-sm"
                   placeholder="How should we call you?"
                 />
               </div>
@@ -174,12 +166,12 @@ export default function SignupPage() {
 
             {/* Password field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-blue-100 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1.5">
                 Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-blue-300/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-5 w-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
@@ -191,13 +183,13 @@ export default function SignupPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-sm"
+                  className="w-full pl-10 pr-12 py-2.5 bg-surface-secondary border border-border-primary rounded-xl text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all text-sm"
                   placeholder="Create a strong password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-300/50 hover:text-blue-200 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-tertiary hover:text-text-secondary transition-colors"
                 >
                   {showPassword ? (
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -227,7 +219,7 @@ export default function SignupPage() {
                       className={`text-xs flex items-center gap-1 ${
                         passwordChecks[key as keyof typeof passwordChecks]
                           ? 'text-green-400'
-                          : 'text-blue-300/50'
+                          : 'text-text-tertiary'
                       }`}
                     >
                       {passwordChecks[key as keyof typeof passwordChecks] ? (
@@ -248,12 +240,12 @@ export default function SignupPage() {
 
             {/* Confirm Password field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-blue-100 mb-1.5">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary mb-1.5">
                 Confirm password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-blue-300/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-5 w-5 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
@@ -265,12 +257,12 @@ export default function SignupPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full pl-10 pr-10 py-2.5 bg-white/10 border rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-sm ${
+                  className={`w-full pl-10 pr-10 py-2.5 bg-surface-secondary border rounded-xl text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all text-sm ${
                     confirmPassword && !passwordsMatch
                       ? 'border-red-500/50'
                       : confirmPassword && passwordsMatch
                       ? 'border-green-500/50'
-                      : 'border-white/20'
+                      : 'border-border-primary'
                   }`}
                   placeholder="Confirm your password"
                 />
@@ -294,7 +286,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading || !isPasswordValid || !passwordsMatch || username.length < 3}
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 mt-2"
+              className="w-full py-3 px-4 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 mt-2"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -313,24 +305,24 @@ export default function SignupPage() {
           {/* Divider */}
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/20" />
+              <div className="w-full border-t border-border-secondary" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-transparent text-blue-200/60">Already have an account?</span>
+              <span className="px-4 bg-surface-primary text-text-tertiary">Already have an account?</span>
             </div>
           </div>
 
           {/* Sign in link */}
           <Link
             href="/auth/login"
-            className="block w-full py-2.5 px-4 border border-white/20 text-white font-medium rounded-xl text-center hover:bg-white/10 transition-all duration-200 text-sm"
+            className="block w-full py-2.5 px-4 border border-border-primary text-text-primary font-medium rounded-xl text-center hover:bg-surface-secondary transition-all duration-200 text-sm"
           >
             Sign in instead
           </Link>
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-blue-200/50">
+        <p className="mt-6 text-center text-xs text-text-quaternary">
           Track powder days, find your crew, chase the storm.
         </p>
       </div>

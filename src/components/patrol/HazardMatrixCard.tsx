@@ -35,7 +35,7 @@ export function HazardMatrixCard({ matrix, loadedAspects = [] }: HazardMatrixCar
     <Card>
       <CardHeader className="pb-2">
         <CardTitle>Hazard Matrix</CardTitle>
-        <p className="text-xs text-slate-500">Risk by aspect and elevation</p>
+        <p className="text-xs text-text-quaternary">Risk by aspect and elevation</p>
       </CardHeader>
       <CardContent>
         <TooltipProvider>
@@ -43,12 +43,12 @@ export function HazardMatrixCard({ matrix, loadedAspects = [] }: HazardMatrixCar
             <table className="w-full text-xs">
               <thead>
                 <tr>
-                  <th className="p-1 text-left text-slate-500 font-medium" />
+                  <th className="p-1 text-left text-text-quaternary font-medium" />
                   {ASPECTS.map(aspect => (
                     <th
                       key={aspect}
                       className={`p-1 text-center font-medium ${
-                        loadedAspects.includes(aspect) ? 'text-amber-400' : 'text-slate-400'
+                        loadedAspects.includes(aspect) ? 'text-amber-400' : 'text-text-tertiary'
                       }`}
                     >
                       {aspect}
@@ -59,7 +59,7 @@ export function HazardMatrixCard({ matrix, loadedAspects = [] }: HazardMatrixCar
               <tbody>
                 {ELEVATION_BANDS.map(elevation => (
                   <tr key={elevation}>
-                    <td className="p-1 text-slate-500 font-medium whitespace-nowrap">
+                    <td className="p-1 text-text-quaternary font-medium whitespace-nowrap">
                       {elevation === 'Below Treeline' ? 'Below TL' : elevation}
                     </td>
                     {ASPECTS.map(aspect => {
@@ -85,7 +85,7 @@ export function HazardMatrixCard({ matrix, loadedAspects = [] }: HazardMatrixCar
                                   {riskLabels[risk]} Risk
                                 </div>
                                 {factors.length > 0 && (
-                                  <ul className="text-xs text-slate-400 list-disc list-inside">
+                                  <ul className="text-xs text-text-tertiary list-disc list-inside">
                                     {factors.map((f, i) => (
                                       <li key={i}>{f}</li>
                                     ))}
@@ -108,7 +108,7 @@ export function HazardMatrixCard({ matrix, loadedAspects = [] }: HazardMatrixCar
             {([1, 2, 3, 4, 5] as const).map(risk => (
               <div key={risk} className="flex items-center gap-1">
                 <div className={`w-3 h-3 rounded ${riskColors[risk]}`} />
-                <span className="text-slate-400">{riskLabels[risk]}</span>
+                <span className="text-text-tertiary">{riskLabels[risk]}</span>
               </div>
             ))}
           </div>

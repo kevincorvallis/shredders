@@ -135,8 +135,8 @@ function getSkillLevelBadge(level: string) {
   const styles: Record<string, string> = {
     beginner: 'bg-green-500/15 text-green-400',
     intermediate: 'bg-blue-500/15 text-blue-400',
-    advanced: 'bg-gray-500/15 text-gray-300',
-    expert: 'bg-gray-500/15 text-gray-300',
+    advanced: 'bg-gray-500/15 text-text-secondary',
+    expert: 'bg-gray-500/15 text-text-secondary',
     all: 'bg-purple-500/15 text-purple-400',
   };
   const labels: Record<string, string> = {
@@ -194,22 +194,22 @@ export default function EventsPage() {
   // Show sample events for non-authenticated users
   if (!authLoading && !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-900">
+      <div className="min-h-screen bg-background">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+        <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border-secondary">
           <div className="max-w-2xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/" className="text-text-secondary hover:text-text-primary transition-colors">
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </Link>
-                <h1 className="text-xl font-bold text-white">Ski Events</h1>
+                <h1 className="text-xl font-bold text-text-primary">Ski Events</h1>
               </div>
               <Link
                 href="/auth/login?redirect=/events"
-                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-accent hover:bg-accent-hover text-text-primary rounded-lg text-sm font-medium transition-colors"
               >
                 Sign in
               </Link>
@@ -219,28 +219,28 @@ export default function EventsPage() {
 
         {/* Hero Section */}
         <div className="max-w-2xl mx-auto px-4 py-8">
-          <div className="bg-gradient-to-br from-sky-500/20 to-purple-500/20 rounded-2xl p-6 border border-sky-500/30">
+          <div className="bg-accent-subtle rounded-2xl p-6 border border-accent/20">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-sky-500/20 rounded-lg">
-                <svg className="w-6 h-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-2 bg-accent/20 rounded-lg">
+                <svg className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <h2 className="text-lg font-semibold text-white">Plan ski trips with friends</h2>
+              <h2 className="text-lg font-semibold text-text-primary">Plan ski trips with friends</h2>
             </div>
-            <p className="text-gray-300 text-sm mb-4">
+            <p className="text-text-secondary text-sm mb-4">
               Create events, coordinate carpools, and never miss a powder day. Sign in to join upcoming trips or create your own.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/auth/login?redirect=/events"
-                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-accent hover:bg-accent-hover text-text-primary rounded-lg text-sm font-medium transition-colors"
               >
                 Sign in to join events
               </Link>
               <Link
                 href="/auth/signup?redirect=/events/create"
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-surface-secondary hover:bg-surface-tertiary text-text-primary rounded-lg text-sm font-medium transition-colors"
               >
                 Create an account
               </Link>
@@ -251,8 +251,8 @@ export default function EventsPage() {
         {/* Sample Events */}
         <div className="max-w-2xl mx-auto px-4 pb-8">
           <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-sm font-medium text-gray-400">Example Events</h3>
-            <span className="px-2 py-0.5 bg-slate-800 rounded text-xs text-gray-500">Preview</span>
+            <h3 className="text-sm font-medium text-text-secondary">Example Events</h3>
+            <span className="px-2 py-0.5 bg-surface-primary rounded text-xs text-text-tertiary">Preview</span>
           </div>
 
           <div className="space-y-3">
@@ -261,14 +261,14 @@ export default function EventsPage() {
               return (
                 <div
                   key={event.id}
-                  className="relative bg-slate-800/70 rounded-xl p-4 border border-slate-700/50"
+                  className="relative bg-surface-primary/70 rounded-xl p-4 border border-border-primary/50"
                 >
                   {/* Blur overlay with sign-in prompt on hover */}
-                  <div className="absolute inset-0 rounded-xl bg-slate-900/0 hover:bg-slate-900/60 transition-all group cursor-pointer z-10"
+                  <div className="absolute inset-0 rounded-xl bg-background/0 hover:bg-background/60 transition-all group cursor-pointer z-10"
                     onClick={() => router.push('/auth/login?redirect=/events')}
                   >
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="px-4 py-2 bg-sky-500 text-white rounded-lg text-sm font-medium shadow-lg">
+                      <span className="px-4 py-2 bg-accent text-text-primary rounded-lg text-sm font-medium shadow-lg">
                         Sign in to view & join
                       </span>
                     </div>
@@ -277,16 +277,16 @@ export default function EventsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-white">{event.title}</h3>
+                        <h3 className="font-semibold text-text-primary">{event.title}</h3>
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${skillBadge.style}`}>
                           <SkillLevelIcon level={event.skillLevel} />
                           {skillBadge.label}
                         </span>
                       </div>
-                      <p className="text-sm text-sky-400 mt-1">
+                      <p className="text-sm text-accent mt-1">
                         {event.mountainName} • {formatDate(event.eventDate)}
                       </p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
+                      <div className="flex items-center gap-4 mt-2 text-sm text-text-secondary">
                         <span className="flex items-center gap-1">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -313,22 +313,22 @@ export default function EventsPage() {
                       )}
                     </div>
                     <div className="text-right">
-                      <span className="inline-flex items-center gap-1 text-sm text-gray-400">
+                      <span className="inline-flex items-center gap-1 text-sm text-text-secondary">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                         {event.goingCount} going
                       </span>
                       {event.maybeCount > 0 && (
-                        <span className="block text-xs text-gray-500 mt-1">
+                        <span className="block text-xs text-text-tertiary mt-1">
                           +{event.maybeCount} maybe
                         </span>
                       )}
                       <div className="mt-2 flex items-center justify-end gap-1">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-sky-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium">
+                        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-text-primary text-xs font-medium">
                           {event.organizer.avatar}
                         </div>
-                        <span className="text-xs text-gray-400">{event.organizer.name}</span>
+                        <span className="text-xs text-text-secondary">{event.organizer.name}</span>
                       </div>
                     </div>
                   </div>
@@ -339,12 +339,12 @@ export default function EventsPage() {
 
           {/* Bottom CTA */}
           <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm mb-3">
+            <p className="text-text-secondary text-sm mb-3">
               Ready to hit the slopes with friends?
             </p>
             <Link
               href="/auth/signup?redirect=/events"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-sky-500/25"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-white rounded-xl text-sm font-medium transition-colors"
             >
               Get started free
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -358,22 +358,22 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border-secondary">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+              <Link href="/" className="text-text-secondary hover:text-text-primary transition-colors">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </Link>
-              <h1 className="text-xl font-bold text-white">Ski Events</h1>
+              <h1 className="text-xl font-bold text-text-primary">Ski Events</h1>
             </div>
             <Link
               href="/events/create"
-              className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-accent hover:bg-accent-hover text-text-primary rounded-lg text-sm font-medium transition-colors"
             >
               Create Event
             </Link>
@@ -390,8 +390,8 @@ export default function EventsPage() {
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === f
-                  ? 'bg-sky-500 text-white'
-                  : 'bg-slate-800 text-gray-400 hover:text-white'
+                  ? 'bg-accent text-text-primary'
+                  : 'bg-surface-primary text-text-secondary hover:text-text-primary'
               }`}
             >
               {f === 'all' ? 'All Events' : f === 'mine' ? 'My Events' : 'Attending'}
@@ -405,24 +405,24 @@ export default function EventsPage() {
         {isLoading || authLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-slate-800 rounded-xl p-4 animate-pulse">
-                <div className="h-5 bg-slate-700 rounded w-3/4 mb-2" />
-                <div className="h-4 bg-slate-700 rounded w-1/2" />
+              <div key={i} className="bg-surface-primary rounded-xl p-4 animate-pulse">
+                <div className="h-5 bg-surface-secondary rounded w-3/4 mb-2" />
+                <div className="h-4 bg-surface-secondary rounded w-1/2" />
               </div>
             ))}
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-surface-primary flex items-center justify-center">
+              <svg className="w-8 h-8 text-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <p className="text-gray-400 mb-1">No upcoming events found</p>
-            <p className="text-gray-500 text-sm mb-4">Be the first to plan a ski trip!</p>
+            <p className="text-text-secondary mb-1">No upcoming events found</p>
+            <p className="text-text-tertiary text-sm mb-4">Be the first to plan a ski trip!</p>
             <Link
               href="/events/create"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-text-primary rounded-lg text-sm font-medium transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -436,29 +436,29 @@ export default function EventsPage() {
               <button
                 key={event.id}
                 onClick={() => router.push(`/events/${event.id}`)}
-                className="w-full text-left bg-slate-800 hover:bg-slate-700 rounded-xl p-4 transition-colors"
+                className="w-full text-left bg-surface-primary hover:bg-surface-secondary rounded-xl p-4 transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-white">{event.title}</h3>
-                    <p className="text-sm text-sky-400 mt-1">
+                    <h3 className="font-semibold text-text-primary">{event.title}</h3>
+                    <p className="text-sm text-accent mt-1">
                       {event.mountainName || event.mountainId} • {formatDate(event.eventDate)}
                     </p>
                     {event.departureTime && (
-                      <p className="text-sm text-gray-400 mt-1">
+                      <p className="text-sm text-text-secondary mt-1">
                         Departure: {event.departureTime.slice(0, 5)}
                       </p>
                     )}
                   </div>
                   <div className="text-right">
-                    <span className="inline-flex items-center gap-1 text-sm text-gray-400">
+                    <span className="inline-flex items-center gap-1 text-sm text-text-secondary">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
                       {event.goingCount}
                     </span>
                     {event.isCreator && (
-                      <span className="block text-xs text-sky-400 mt-1">Organizer</span>
+                      <span className="block text-xs text-accent mt-1">Organizer</span>
                     )}
                   </div>
                 </div>
