@@ -292,11 +292,11 @@ struct SnowDepthChart: View {
 
     private struct CumulativeDataPoint {
         let date: Date
-        let cumulative: Int
+        let cumulative: Double
     }
 
     private func computeCumulativeData() -> [CumulativeDataPoint] {
-        var cumulative = 0
+        var cumulative: Double = 0
         let sorted = validHistory.sorted { ($0.formattedDate ?? .distantPast) < ($1.formattedDate ?? .distantPast) }
 
         return sorted.compactMap { point -> CumulativeDataPoint? in
