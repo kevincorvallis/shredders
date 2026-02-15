@@ -55,7 +55,7 @@ class ForecastCalibrator {
             guard let actual = historyByDate[day.date] else { continue }
             recordObservation(
                 mountainId: mountainId,
-                forecastSnowfall: day.snowfall,
+                forecastSnowfall: Double(day.snowfall),
                 actualSnowfall: actual.snowfall
             )
             added += 1

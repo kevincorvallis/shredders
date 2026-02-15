@@ -232,10 +232,10 @@ struct StormAnnotation: ChartAnnotation {
 /// Utility to detect annotations from data
 struct AnnotationDetector {
     /// Minimum snowfall to qualify as a powder day (inches)
-    static let powderDayThreshold = 6
+    static let powderDayThreshold: Double = 6
 
     /// Minimum snowfall to qualify as an epic powder day (inches)
-    static let epicPowderDayThreshold = 12
+    static let epicPowderDayThreshold: Double = 12
 
     /// Milestones to track (cumulative inches)
     static let milestoneLevels = [50, 100, 150, 200, 250, 300, 400, 500]
@@ -272,7 +272,7 @@ struct AnnotationDetector {
             cumulative += point.snowfall
 
             for milestone in milestoneLevels {
-                if cumulative >= milestone && !hitMilestones.contains(milestone) {
+                if cumulative >= Double(milestone) && !hitMilestones.contains(milestone) {
                     hitMilestones.insert(milestone)
                     if let date = point.formattedDate {
                         annotations.append(MilestoneAnnotation(date: date, milestone: milestone))
@@ -326,7 +326,7 @@ struct AnnotationSet {
     }
 
     /// Get snowfall for a powder day
-    func snowfallForPowderDay(_ date: Date) -> Int? {
+    func snowfallForPowderDay(_ date: Date) -> Double? {
         let dayStart = Calendar.current.startOfDay(for: date)
         return powderDays.first {
             Calendar.current.startOfDay(for: $0.date) == dayStart
@@ -338,10 +338,10 @@ struct AnnotationSet {
 
 /// Standalone badge for marking powder days on charts
 struct PowderDayBadge: View {
-    let snowfall: Int
+    let snowfall: Double
     let isCompact: Bool
 
-    init(snowfall: Int, compact: Bool = false) {
+    init(snowfall: Double, compact: Bool = false) {
         self.snowfall = snowfall
         self.isCompact = compact
     }
@@ -382,12 +382,12 @@ struct PowderDayBadge: View {
 
 /// Animated badge for powder days with subtle pulse effect
 struct AnimatedPowderDayBadge: View {
-    let snowfall: Int
+    let snowfall: Double
     let isEpic: Bool
 
     @State private var isPulsing = false
 
-    init(snowfall: Int, isEpic: Bool = false) {
+    init(snowfall: Double, isEpic: Bool = false) {
         self.snowfall = snowfall
         self.isEpic = isEpic || snowfall >= 12
     }

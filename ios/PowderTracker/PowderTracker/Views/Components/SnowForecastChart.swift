@@ -849,7 +849,7 @@ struct SnowForecastChart: View {
                         .annotation(position: .top, spacing: isPowderDay ? 2 : 4) {
                             if isPowderDay {
                                 // Show powder badge for 6"+ days
-                                AnimatedPowderDayBadge(snowfall: day.snowfall, isEpic: day.snowfall >= epicPowderThreshold)
+                                AnimatedPowderDayBadge(snowfall: Double(day.snowfall), isEpic: day.snowfall >= epicPowderThreshold)
                             } else if day.snowfall >= 2 {
                                 // Show value label for 2-5" days
                                 Text("\(day.snowfall)\"")
