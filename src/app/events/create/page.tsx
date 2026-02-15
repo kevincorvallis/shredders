@@ -1,65 +1,133 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getAllMountains, type MountainConfig } from '@shredders/shared';
-import type { CreateEventRequest, CreateEventResponse, SkillLevel } from '@/types/event';
+import { useForm } from 'react-hook-form';
+import { getAllMountains } from '@shredders/shared';
+import { createEventSchema, stepSchemas, type CreateEventFormData } from '@/lib/schemas/event';
+import type { CreateEventRequest, CreateEventResponse } from '@/types/event';
+import { StepIndicator } from '@/components/events/StepIndicator';
+import { EventFormStep1 } from '@/components/events/EventFormStep1';
+import { EventFormStep2 } from '@/components/events/EventFormStep2';
+import { EventFormStep3 } from '@/components/events/EventFormStep3';
+import { EventFormStep4 } from '@/components/events/EventFormStep4';
+import { DraftBanner } from '@/components/events/DraftBanner';
+import { QuickPresets } from '@/components/events/QuickPresets';
+import { useFormDraft } from '@/hooks/useFormDraft';
+import { PostCreateModal } from '@/components/events/PostCreateModal';
+
+const TOTAL_STEPS = 4;
 
 export default function CreateEventPage() {
   const router = useRouter();
   const mountains = getAllMountains();
+  const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [showDraft, setShowDraft] = useState(true);
+  const [createdEvent, setCreatedEvent] = useState<CreateEventResponse | null>(null);
 
-  // Form state
-  const [mountainId, setMountainId] = useState('');
-  const [title, setTitle] = useState('');
-  const [notes, setNotes] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  const [departureTime, setDepartureTime] = useState('');
-  const [departureLocation, setDepartureLocation] = useState('');
-  const [skillLevel, setSkillLevel] = useState<SkillLevel | ''>('');
-  const [carpoolAvailable, setCarpoolAvailable] = useState(false);
-  const [carpoolSeats, setCarpoolSeats] = useState(0);
+  const form = useForm<CreateEventFormData>({
+    defaultValues: {
+      mountainId: '',
+      eventDate: '',
+      title: '',
+      skillLevel: '',
+      notes: '',
+      maxAttendees: null,
+      departureTime: '',
+      departureLocation: '',
+      carpoolAvailable: false,
+      carpoolSeats: 0,
+    },
+    mode: 'onTouched',
+  });
 
-  const today = new Date().toISOString().split('T')[0];
+  const { hasDraft, getDraft, restoreDraft, discardDraft, clearDraft } = useFormDraft(form);
+  const draft = hasDraft && showDraft ? getDraft() : null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateCurrentStep = useCallback(async (): Promise<boolean> => {
+    if (currentStep >= 3) return true; // Review step - no validation needed
+
+    const schema = stepSchemas[currentStep];
+    const values = form.getValues();
+
+    // Pick only the fields for this step
+    const stepFields = Object.keys(schema.shape) as (keyof CreateEventFormData)[];
+    const stepValues: Record<string, unknown> = {};
+    for (const field of stepFields) {
+      stepValues[field] = values[field];
+    }
+
+    const result = schema.safeParse(stepValues);
+    if (result.success) {
+      // Clear errors for this step's fields
+      for (const field of stepFields) {
+        form.clearErrors(field);
+      }
+      return true;
+    }
+
+    // Set errors for failed fields
+    for (const issue of result.error.issues) {
+      const fieldName = issue.path[0] as keyof CreateEventFormData;
+      form.setError(fieldName, { type: 'validation', message: issue.message });
+    }
+    return false;
+  }, [currentStep, form]);
+
+  const goToStep = useCallback((step: number) => {
+    setError(null);
+    setCurrentStep(step);
+  }, []);
+
+  const handleNext = useCallback(async () => {
+    const valid = await validateCurrentStep();
+    if (!valid) return;
+
+    setCompletedSteps((prev) => new Set([...prev, currentStep]));
+    setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS - 1));
+    setError(null);
+  }, [currentStep, validateCurrentStep]);
+
+  const handleBack = useCallback(() => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    setError(null);
+  }, []);
+
+  const handleSubmit = async () => {
     setError(null);
 
-    if (!mountainId) {
-      setError('Please select a mountain');
-      return;
-    }
-
-    if (!title.trim() || title.trim().length < 3) {
-      setError('Title must be at least 3 characters');
-      return;
-    }
-
-    if (!eventDate) {
-      setError('Please select a date');
+    // Final validation against full schema
+    const values = form.getValues();
+    const result = createEventSchema.safeParse(values);
+    if (!result.success) {
+      setError(result.error.issues[0]?.message || 'Please fix form errors');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      const data = result.data;
       const body: CreateEventRequest = {
-        mountainId,
-        title: title.trim(),
-        eventDate,
+        mountainId: data.mountainId,
+        title: data.title.trim(),
+        eventDate: data.eventDate,
       };
 
-      if (notes.trim()) body.notes = notes.trim();
-      if (departureTime) body.departureTime = departureTime;
-      if (departureLocation.trim()) body.departureLocation = departureLocation.trim();
-      if (skillLevel) body.skillLevel = skillLevel;
-      if (carpoolAvailable) {
+      if (data.notes?.trim()) body.notes = data.notes.trim();
+      if (data.departureTime) body.departureTime = data.departureTime;
+      if (data.departureLocation?.trim()) body.departureLocation = data.departureLocation.trim();
+      if (data.skillLevel && data.skillLevel !== '') body.skillLevel = data.skillLevel as CreateEventRequest['skillLevel'];
+      if (data.carpoolAvailable) {
         body.carpoolAvailable = true;
-        body.carpoolSeats = carpoolSeats;
+        body.carpoolSeats = data.carpoolSeats || 0;
+      }
+      if (data.maxAttendees) {
+        body.maxAttendees = data.maxAttendees;
       }
 
       const res = await fetch('/api/events', {
@@ -69,18 +137,21 @@ export default function CreateEventPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to create event');
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to create event');
       }
 
-      const data: CreateEventResponse = await res.json();
-      router.push(`/events/${data.event.id}`);
+      const responseData: CreateEventResponse = await res.json();
+      clearDraft();
+      setCreatedEvent(responseData);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isLastStep = currentStep === TOTAL_STEPS - 1;
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -98,150 +169,92 @@ export default function CreateEventPage() {
         </div>
       </header>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      {/* Step Indicator */}
+      <div className="max-w-2xl mx-auto px-4 pt-6 pb-2">
+        <StepIndicator
+          currentStep={currentStep}
+          onStepClick={goToStep}
+          completedSteps={completedSteps}
+        />
+      </div>
+
+      {/* Form Content */}
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* Draft Banner */}
+        {draft && (
+          <div className="mb-4">
+            <DraftBanner
+              savedAt={draft.savedAt}
+              onResume={() => {
+                restoreDraft();
+                setShowDraft(false);
+              }}
+              onDiscard={() => {
+                discardDraft();
+                setShowDraft(false);
+              }}
+            />
+          </div>
+        )}
+
+        {/* Quick Presets (only on step 0 when form is mostly empty) */}
+        {currentStep === 0 && !form.getValues().title && (
+          <div className="mb-5">
+            <p className="text-xs text-gray-500 mb-2">Quick start</p>
+            <QuickPresets form={form} />
+          </div>
+        )}
+
         {error && (
-          <div className="bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl">
+          <div className="bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-6">
             {error}
           </div>
         )}
 
-        {/* Mountain Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Mountain *</label>
-          <select
-            value={mountainId}
-            onChange={(e) => setMountainId(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500"
-            required
-          >
-            <option value="">Select a mountain</option>
-            {mountains.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {currentStep === 0 && <EventFormStep1 form={form} mountains={mountains} />}
+        {currentStep === 1 && <EventFormStep2 form={form} />}
+        {currentStep === 2 && <EventFormStep3 form={form} />}
+        {currentStep === 3 && <EventFormStep4 form={form} mountains={mountains} onEditStep={goToStep} />}
 
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Event Title *</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Powder Day at Stevens!"
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-sky-500"
-            maxLength={100}
-            required
-          />
-        </div>
-
-        {/* Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Date *</label>
-          <input
-            type="date"
-            value={eventDate}
-            onChange={(e) => setEventDate(e.target.value)}
-            min={today}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500"
-            required
-          />
-        </div>
-
-        {/* Departure Time */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Departure Time</label>
-          <input
-            type="time"
-            value={departureTime}
-            onChange={(e) => setDepartureTime(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500"
-          />
-        </div>
-
-        {/* Departure Location */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Meeting Point</label>
-          <input
-            type="text"
-            value={departureLocation}
-            onChange={(e) => setDepartureLocation(e.target.value)}
-            placeholder="e.g., Northgate Park & Ride"
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-sky-500"
-            maxLength={255}
-          />
-        </div>
-
-        {/* Skill Level */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Skill Level</label>
-          <select
-            value={skillLevel}
-            onChange={(e) => setSkillLevel(e.target.value as SkillLevel | '')}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500"
-          >
-            <option value="">All levels welcome</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
-            <option value="expert">Expert</option>
-            <option value="all">All Levels</option>
-          </select>
-        </div>
-
-        {/* Carpool */}
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={carpoolAvailable}
-              onChange={(e) => setCarpoolAvailable(e.target.checked)}
-              className="w-5 h-5 rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-sky-500"
-            />
-            <span className="text-gray-300">I can give rides</span>
-          </label>
-
-          {carpoolAvailable && (
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Available Seats</label>
-              <input
-                type="number"
-                value={carpoolSeats}
-                onChange={(e) => setCarpoolSeats(Math.min(8, Math.max(0, parseInt(e.target.value) || 0)))}
-                min={0}
-                max={8}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500"
-              />
-            </div>
+        {/* Navigation */}
+        <div className="flex gap-3 mt-8">
+          {currentStep > 0 && (
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex-1 py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors border border-slate-700"
+            >
+              Back
+            </button>
+          )}
+          {isLastStep ? (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="flex-1 py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-colors"
+            >
+              {isSubmitting ? 'Creating...' : 'Create Event'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="flex-1 py-3.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors"
+            >
+              Next
+            </button>
           )}
         </div>
+      </div>
 
-        {/* Notes */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Additional Notes</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Any other details for your group..."
-            rows={4}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-sky-500 resize-none"
-            maxLength={2000}
-          />
-          <p className="text-xs text-gray-500 mt-1">{notes.length}/2000</p>
-        </div>
-
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full py-4 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-colors"
-        >
-          {isSubmitting ? 'Creating...' : 'Create Event'}
-        </button>
-      </form>
+      {/* Post-creation modal */}
+      {createdEvent && (
+        <PostCreateModal
+          response={createdEvent}
+          onClose={() => router.push(`/events/${createdEvent.event.id}`)}
+        />
+      )}
     </div>
   );
 }
