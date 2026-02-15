@@ -146,7 +146,7 @@ struct SnowfallTableView: View {
 
         return VStack {
             if let inches = snowfall {
-                Text("\(inches)\"")
+                Text("\(Int(inches))\"")
                     .font(.caption)
                     .fontWeight(isForecast ? .regular : .semibold)
                     .foregroundColor(isForecast ? .secondary : .primary)
@@ -168,10 +168,11 @@ struct SnowfallTableView: View {
         )
     }
 
-    private func snowfallColor(for inches: Int?) -> Color {
+    private func snowfallColor(for inches: Double?) -> Color {
         guard let inches = inches else { return .gray.opacity(0.1) }
+        let rounded = Int(inches)
 
-        switch inches {
+        switch rounded {
         case 0: return .gray.opacity(0.3)
         case 1...3: return .blue.opacity(0.3)
         case 4...8: return .blue.opacity(0.6)
@@ -186,7 +187,7 @@ struct SnowfallTableView: View {
 @Observable
 class SnowfallTableViewModel {
     var mountains: [Mountain] = []
-    var snowfallData: [String: [Date: Int]] = [:] // mountainId -> date -> inches
+    var snowfallData: [String: [Date: Double]] = [:] // mountainId -> date -> inches
     var dateRange: [Date] = []
     var isLoading = false
     var error: String?
@@ -222,7 +223,7 @@ class SnowfallTableViewModel {
             for: mountainId,
             days: daysBack + 1
         ) {
-            var mountainData: [Date: Int] = [:]
+            var mountainData: [Date: Double] = [:]
 
             for dataPoint in historyResponse.history {
                 if let date = ISO8601DateFormatter().date(from: dataPoint.date) {
@@ -243,7 +244,7 @@ class SnowfallTableViewModel {
             for day in forecastResponse.forecast {
                 if let date = ISO8601DateFormatter().date(from: day.date) {
                     let startOfDay = Calendar.current.startOfDay(for: date)
-                    mountainData[startOfDay] = day.snowfall
+                    mountainData[startOfDay] = Double(day.snowfall)
                 }
             }
 
@@ -251,7 +252,7 @@ class SnowfallTableViewModel {
         }
     }
 
-    func getSnowfall(for mountainId: String, date: Date) -> Int? {
+    func getSnowfall(for mountainId: String, date: Date) -> Double? {
         let startOfDay = Calendar.current.startOfDay(for: date)
         return snowfallData[mountainId]?[startOfDay]
     }
