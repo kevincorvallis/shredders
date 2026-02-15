@@ -225,34 +225,34 @@ struct PowderTrackerApp: App {
     private func loadInitialData() async {
         // Start timing
         let startTime = Date()
-        let launchSpan = PerformanceLogger.begin(.appLaunch)
+        let launchSpan = PerformanceLogger.beginAppLaunch()
         let isAuthenticated = authService.isAuthenticated
 
         // Step 1: Fetch mountains list
         loadingProgress = 0.1
 
         let dataTask = Task {
-            let mtnsSpan = PerformanceLogger.begin(.mountainsLoad)
+            let mtnsSpan = PerformanceLogger.beginMountainsLoad()
             await MountainService.shared.fetchMountains()
             mtnsSpan.end()
             await MainActor.run { loadingProgress = 0.25 }
 
             // Step 2: Fetch favorites list (if authenticated)
             if isAuthenticated {
-                let favsSpan = PerformanceLogger.begin(.favoritesLoad)
+                let favsSpan = PerformanceLogger.beginFavoritesLoad()
                 await FavoritesService.shared.fetchFromBackend()
                 favsSpan.end()
                 await MainActor.run { loadingProgress = 0.4 }
             }
 
             // Step 3: Pre-fetch mountain data (forecasts, conditions, graphs)
-            let homeSpan = PerformanceLogger.begin(.homeRefresh)
+            let homeSpan = PerformanceLogger.beginHomeRefresh()
             await homeViewModel.loadData()
             homeSpan.end()
             await MainActor.run { loadingProgress = 0.7 }
 
             // Step 4: Pre-fetch enhanced data (arrival times, parking)
-            let enhancedSpan = PerformanceLogger.begin(.enhancedDataLoad)
+            let enhancedSpan = PerformanceLogger.beginEnhancedDataLoad()
             await homeViewModel.loadEnhancedData()
             enhancedSpan.end()
             await MainActor.run { loadingProgress = 0.95 }

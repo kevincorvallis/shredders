@@ -441,3 +441,18 @@ struct PassBadge: View {
         }
     }
 }
+
+// MARK: - Equatable
+
+extension EnhancedMountainCard: Equatable {
+    nonisolated static func == (lhs: EnhancedMountainCard, rhs: EnhancedMountainCard) -> Bool {
+        lhs.mountain.id == rhs.mountain.id
+            && lhs.conditions?.snowfall24h == rhs.conditions?.snowfall24h
+            && lhs.conditions?.temperature == rhs.conditions?.temperature
+            && lhs.conditions?.snowDepth == rhs.conditions?.snowDepth
+            && lhs.powderScore?.score == rhs.powderScore?.score
+            && lhs.isFavorite == rhs.isFavorite
+            && lhs.arrivalTime?.recommendedArrivalTime == rhs.arrivalTime?.recommendedArrivalTime
+            && lhs.alerts?.count == rhs.alerts?.count
+    }
+}

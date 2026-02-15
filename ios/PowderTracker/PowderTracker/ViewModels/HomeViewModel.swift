@@ -140,7 +140,7 @@ class HomeViewModel {
 
     /// Refresh all data (mountains list + favorites data) in parallel
     func refresh() async {
-        let span = PerformanceLogger.begin(.homeRefresh)
+        let span = PerformanceLogger.beginHomeRefresh()
         async let m: Void = loadMountains()
         async let f: Void = loadFavoritesData()
         async let c: Void = loadRecentCheckIns()

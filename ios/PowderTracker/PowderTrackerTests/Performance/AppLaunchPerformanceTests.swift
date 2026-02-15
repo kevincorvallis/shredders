@@ -113,4 +113,61 @@ final class AppLaunchPerformanceTests: XCTestCase {
             _ = eventsList.waitForExistence(timeout: 5)
         }
     }
+
+    // MARK: - Tab Switch Performance
+
+    func testTabSwitchPerformance() throws {
+        // Measures CPU + clock time for rapid tab switching
+        // Regression here indicates view body re-evaluation is too expensive
+        let app = XCUIApplication()
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        guard tabBar.waitForExistence(timeout: 10) else {
+            throw XCTSkip("Tab bar not visible")
+        }
+
+        let metrics: [XCTMetric] = [
+            XCTCPUMetric(application: app),
+            XCTClockMetric()
+        ]
+
+        measure(metrics: metrics) {
+            for tabName in ["Mountains", "Events", "Map", "Profile", "Today"] {
+                let tab = tabBar.buttons[tabName]
+                if tab.exists {
+                    tab.tap()
+                }
+            }
+        }
+    }
+
+    // MARK: - Pull-to-Refresh Performance
+
+    func testPullToRefreshPerformance() throws {
+        // Measures memory + CPU cost of a full data refresh
+        let app = XCUIApplication()
+        app.launch()
+
+        let list = app.collectionViews.firstMatch
+        guard list.waitForExistence(timeout: 10) else {
+            throw XCTSkip("Main list not visible")
+        }
+
+        let metrics: [XCTMetric] = [
+            XCTMemoryMetric(application: app),
+            XCTCPUMetric(application: app),
+            XCTClockMetric()
+        ]
+
+        measure(metrics: metrics) {
+            // Pull-to-refresh gesture
+            let start = list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+            let end = list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+            start.press(forDuration: 0.1, thenDragTo: end)
+
+            // Wait for refresh to complete
+            _ = list.waitForExistence(timeout: 10)
+        }
+    }
 }

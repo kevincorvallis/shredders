@@ -223,7 +223,7 @@ struct TodaysPickCard: View {
 // MARK: - Equatable
 
 extension TodaysPickCard: Equatable {
-    static func == (lhs: TodaysPickCard, rhs: TodaysPickCard) -> Bool {
+    nonisolated static func == (lhs: TodaysPickCard, rhs: TodaysPickCard) -> Bool {
         lhs.mountain.id == rhs.mountain.id
             && lhs.powderScore.score == rhs.powderScore.score
             && lhs.data.conditions.snowfall24h == rhs.data.conditions.snowfall24h

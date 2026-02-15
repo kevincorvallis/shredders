@@ -321,7 +321,7 @@ struct ComparisonGridCard: View {
 // MARK: - Equatable
 
 extension ComparisonGridCard: Equatable {
-    static func == (lhs: ComparisonGridCard, rhs: ComparisonGridCard) -> Bool {
+    nonisolated static func == (lhs: ComparisonGridCard, rhs: ComparisonGridCard) -> Bool {
         lhs.mountain.id == rhs.mountain.id
             && lhs.conditions?.snowfall24h == rhs.conditions?.snowfall24h
             && lhs.conditions?.snowfall48h == rhs.conditions?.snowfall48h
