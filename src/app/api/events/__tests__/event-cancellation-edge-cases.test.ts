@@ -171,6 +171,23 @@ function createMockAdminClient(overrides: Record<string, any> = {}) {
           }),
         };
       }
+      if (table === 'event_attendees') {
+        return {
+          insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          }),
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+      }
       if (table === 'event_invite_tokens') {
         return {
           insert: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -767,6 +784,11 @@ describe('POST /api/events/[id]/clone - Edge Cases', () => {
         }
         if (table === 'events') {
           return { insert: insertMock };
+        }
+        if (table === 'event_attendees') {
+          return {
+            insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+          };
         }
         if (table === 'event_invite_tokens') {
           return {

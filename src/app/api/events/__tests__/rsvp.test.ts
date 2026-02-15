@@ -573,7 +573,7 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
       }),
     });
 
-    let adminCallCount = 0;
+    let attendeeCallCount = 0;
     mockAdminClient.from = vi.fn().mockImplementation((table: string) => {
       if (table === 'events') {
         return {
@@ -588,6 +588,9 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
                   title: 'Powder Day',
                   max_attendees: 2,
                   going_count: 2,
+                  maybe_count: 0,
+                  attendee_count: 2,
+                  waitlist_count: 1,
                 },
                 error: null,
               }),
@@ -596,9 +599,9 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
         };
       }
       if (table === 'event_attendees') {
-        adminCallCount++;
-        if (adminCallCount === 1) {
-          // First call: check existing RSVP
+        attendeeCallCount++;
+        if (attendeeCallCount === 1) {
+          // First call: check existing RSVP (select → eq → eq → single)
           return {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
@@ -611,17 +614,22 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
               }),
             }),
           };
-        } else if (adminCallCount === 2) {
-          // Second call: get max waitlist position
+        } else if (attendeeCallCount === 2) {
+          // Second call: INSERT new RSVP
+          return { insert: insertMock };
+        } else if (attendeeCallCount === 3) {
+          // Third call: SELECT max waitlist position
           return {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockReturnValue({
-                  order: vi.fn().mockReturnValue({
-                    limit: vi.fn().mockReturnValue({
-                      single: vi.fn().mockResolvedValue({
-                        data: null, // No existing waitlisted users
-                        error: null,
+                  neq: vi.fn().mockReturnValue({
+                    order: vi.fn().mockReturnValue({
+                      limit: vi.fn().mockReturnValue({
+                        single: vi.fn().mockResolvedValue({
+                          data: null, // No existing waitlisted users
+                          error: null,
+                        }),
                       }),
                     }),
                   }),
@@ -630,8 +638,12 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
             }),
           };
         } else {
-          // Third call: insert
-          return { insert: insertMock };
+          // Fourth call: UPDATE waitlist position
+          return {
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          };
         }
       }
       return {};
@@ -713,7 +725,28 @@ describe('DELETE /api/events/[id]/rsvp', () => {
           };
         }
         if (table === 'event_attendees') {
+          const singleResult = vi.fn().mockResolvedValue({
+            data: { status: 'going' },
+            error: null,
+          });
+          // Handles both: select→eq→eq→single (existing RSVP check)
+          // AND: select→eq→eq→order→limit→single (promoteFromWaitlist)
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  single: singleResult,
+                  order: vi.fn().mockReturnValue({
+                    limit: vi.fn().mockReturnValue({
+                      single: vi.fn().mockResolvedValue({
+                        data: null, // No one on waitlist
+                        error: null,
+                      }),
+                    }),
+                  }),
+                }),
+              }),
+            }),
             delete: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 eq: vi.fn().mockResolvedValue({
