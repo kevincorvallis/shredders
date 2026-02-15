@@ -9,6 +9,7 @@ struct PowderTrackerApp: App {
     @State private var deepLinkMountainId: String? = nil
     @State private var deepLinkEventId: String? = nil
     @State private var deepLinkInviteToken: String? = nil
+    @State private var deepLinkCreateEventMountainId: String? = nil
     /// Initialize showOnboarding directly from launch argument for reliable UI testing
     @State private var showOnboarding = ProcessInfo.processInfo.arguments.contains("SHOW_ONBOARDING")
 
@@ -138,8 +139,29 @@ struct PowderTrackerApp: App {
                     deepLinkInviteToken = token
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DeepLinkToCreateEvent"))) { notification in
+                if let mountainId = notification.userInfo?["mountainId"] as? String {
+                    deepLinkCreateEventMountainId = mountainId
+                }
+            }
+            .sheet(item: Binding(
+                get: { deepLinkCreateEventMountainId.map { CreateEventDeepLink(mountainId: $0) } },
+                set: { deepLinkCreateEventMountainId = $0?.mountainId }
+            )) { link in
+                EventCreateView(suggestedMountainId: link.mountainId)
+                    .environment(authService)
+            }
             .onOpenURL { url in
                 handleDeepLink(url)
+            }
+            .onAppear {
+                // Support deep links via launch environment for UI testing
+                if isUITesting, let deepLink = ProcessInfo.processInfo.environment["UI_TEST_DEEP_LINK"],
+                   let url = URL(string: deepLink) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        handleDeepLink(url)
+                    }
+                }
             }
         }
     }
@@ -151,6 +173,15 @@ struct PowderTrackerApp: App {
         }
 
         let path = components.path
+
+        // Handle /events/create?mountainId=X
+        if path.hasPrefix("/events/create") {
+            let mountainId = components.queryItems?.first(where: { $0.name == "mountainId" })?.value
+            if let mountainId, !mountainId.isEmpty {
+                deepLinkCreateEventMountainId = mountainId
+            }
+            return
+        }
 
         // Handle /events/invite/[token]
         if path.hasPrefix("/events/invite/") {

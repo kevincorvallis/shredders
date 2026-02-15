@@ -104,4 +104,29 @@ final class NavigationUITests: XCTestCase {
 
         XCTAssertTrue(signInButton.waitForExistence(timeout: 5), "Should return to profile after sheet dismissal")
     }
+
+    // MARK: - Deep Link
+
+    @MainActor
+    func testDeepLinkOpensMountainDetail() throws {
+        app = XCUIApplication()
+        app.launchArguments = ["UI_TESTING"]
+        app.launchEnvironment["UI_TEST_DEEP_LINK"] = "powdertracker://mountains/stevens"
+        app.launch()
+
+        // Wait for app to process the deep link and present the mountain detail sheet
+        // The detail sheet shows tabs like Overview, Forecast, Conditions
+        let detailTab = app.buttons.matching(NSPredicate(
+            format: "label CONTAINS[c] 'Overview' OR label CONTAINS[c] 'Forecast' OR label CONTAINS[c] 'Conditions'"
+        )).firstMatch
+
+        // Also check for the mountain name in the detail view
+        let mountainName = app.staticTexts.matching(NSPredicate(
+            format: "label CONTAINS[c] 'Stevens'"
+        )).firstMatch
+
+        let detailLoaded = detailTab.waitForExistence(timeout: 15) || mountainName.waitForExistence(timeout: 5)
+        XCTAssertTrue(detailLoaded,
+                      "Deep link should open Stevens Pass mountain detail")
+    }
 }
