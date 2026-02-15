@@ -331,6 +331,11 @@ struct MountainDetailView: View {
                 )
             }
 
+            // Lift line predictor
+            if viewModel.locationData != nil {
+                LiftLinePredictorCard(viewModel: viewModel)
+            }
+
             // 7-day forecast chart + day-by-day breakdown
             if let forecast = viewModel.locationData?.forecast {
                 SnowForecastChart(
