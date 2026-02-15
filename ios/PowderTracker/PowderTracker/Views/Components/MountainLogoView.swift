@@ -54,7 +54,7 @@ struct MountainLogoView: View {
     // MARK: - Logo Display
 
     @ViewBuilder
-    private func logoImageView(_ image: some View) -> some View {
+    private func logoImageView(_ image: Image) -> some View {
         switch style {
         case .circle:
             circleLogoView(image)
@@ -67,8 +67,9 @@ struct MountainLogoView: View {
 
     // MARK: - Circle Style (Original)
 
-    private func circleLogoView(_ image: some View) -> some View {
+    private func circleLogoView(_ image: Image) -> some View {
         image
+            .resizable()
             .scaledToFit()
             .frame(width: size, height: size)
             .clipShape(Circle())
@@ -80,8 +81,9 @@ struct MountainLogoView: View {
 
     // MARK: - Rounded Style
 
-    private func roundedLogoView(_ image: some View) -> some View {
+    private func roundedLogoView(_ image: Image) -> some View {
         image
+            .resizable()
             .scaledToFit()
             .padding(size * 0.15)
             .frame(width: size, height: size)
@@ -95,7 +97,7 @@ struct MountainLogoView: View {
 
     // MARK: - Adaptive Style (Recommended for Dark Mode)
 
-    private func adaptiveLogoView(_ image: some View) -> some View {
+    private func adaptiveLogoView(_ image: Image) -> some View {
         ZStack {
             // Adaptive background for contrast
             RoundedRectangle(cornerRadius: size * 0.2)
@@ -103,6 +105,7 @@ struct MountainLogoView: View {
 
             // Logo image with proper padding
             image
+                .resizable()
                 .scaledToFit()
                 .padding(size * 0.15)
                 .frame(width: size * 0.85, height: size * 0.85)
