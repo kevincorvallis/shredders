@@ -143,7 +143,7 @@ struct ForecastTabView: View {
             if !ranked.favorites.isEmpty {
                 ComparisonGrid(
                     favorites: ranked.favorites,
-                    bestMountainId: viewModel.getBestPowderToday()?.mountain.id,
+                    bestMountainId: viewModel.cachedBestPowder?.mountain.id,
                     viewModel: viewModel,
                     recommendationReasons: ranked.reasons,
                     topRecommendationId: ranked.topId

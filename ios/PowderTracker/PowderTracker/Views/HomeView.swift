@@ -16,7 +16,7 @@ struct HomeView: View {
 
                 // Smart Alerts Banner (if any)
                 SmartAlertsBanner(
-                    leaveNowMountains: viewModel.getLeaveNowMountains(),
+                    leaveNowMountains: viewModel.cachedLeaveNowMountains,
                     weatherAlerts: viewModel.getActiveAlerts()
                 )
 
@@ -33,7 +33,7 @@ struct HomeView: View {
 
                 // Tab Content with floating Leave Now banner
                 FloatingLeaveNowContainer(
-                    leaveNowMountain: viewModel.getLeaveNowMountains().first
+                    leaveNowMountain: viewModel.cachedLeaveNowMountains.first
                 ) {
                     ScrollView {
                         if viewModel.isLoading && viewModel.mountainData.isEmpty {

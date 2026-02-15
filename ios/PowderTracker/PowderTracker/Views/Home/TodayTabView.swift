@@ -63,7 +63,7 @@ struct TodayTabView: View {
 
             ComparisonGrid(
                 favorites: favoritesWithData,
-                bestMountainId: viewModel.getBestPowderToday()?.mountain.id,
+                bestMountainId: viewModel.cachedBestPowder?.mountain.id,
                 viewModel: viewModel
             )
         }

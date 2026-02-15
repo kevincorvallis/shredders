@@ -14,7 +14,9 @@ final class EventActivityViewModel {
 
     // MARK: - State
 
-    var activities: [EventActivity] = []
+    var activities: [EventActivity] = [] {
+        didSet { rebuildGroupedActivities() }
+    }
     var activityCount: Int = 0
     var isGated: Bool = true
     var gatedMessage: String?
@@ -133,8 +135,10 @@ final class EventActivityViewModel {
         activities.isEmpty && !isLoading
     }
 
-    /// Group activities by date for section headers
-    var groupedActivities: [(String, [EventActivity])] {
+    /// Cached grouped activities — rebuilt when `activities` changes via didSet
+    private(set) var groupedActivities: [(String, [EventActivity])] = []
+
+    private func rebuildGroupedActivities() {
         let grouped = Dictionary(grouping: activities) { activity -> String in
             guard let date = Self.isoFormatterWithFractional.date(from: activity.createdAt)
                     ?? Self.isoFormatterBasic.date(from: activity.createdAt) else {
@@ -142,8 +146,7 @@ final class EventActivityViewModel {
             }
             return self.dateGroupKey(for: date)
         }
-
-        return grouped.sorted { $0.key > $1.key }
+        groupedActivities = grouped.sorted { $0.key > $1.key }
     }
 
     private func dateGroupKey(for date: Date) -> String {

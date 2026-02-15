@@ -22,7 +22,7 @@ struct NowTabView: View {
                 }
 
                 // Section 1: Leave Now Cards (if any)
-                if !viewModel.getLeaveNowMountains().isEmpty {
+                if !viewModel.cachedLeaveNowMountains.isEmpty {
                     leaveNowSection
                 }
 
@@ -37,7 +37,7 @@ struct NowTabView: View {
 
                 // Empty state if no urgent content
                 if viewModel.getMostSignificantStorm() == nil &&
-                   viewModel.getLeaveNowMountains().isEmpty &&
+                   viewModel.cachedLeaveNowMountains.isEmpty &&
                    viewModel.getActiveAlerts().isEmpty {
                     noUrgentUpdates
                 }
@@ -52,7 +52,7 @@ struct NowTabView: View {
                 .font(.headline)
                 .padding(.horizontal, 4)
 
-            ForEach(viewModel.getLeaveNowMountains(), id: \.mountain.id) { item in
+            ForEach(viewModel.cachedLeaveNowMountains, id: \.mountain.id) { item in
                 LeaveNowCard(
                     mountain: item.mountain,
                     arrivalTime: item.arrivalTime

@@ -4,7 +4,9 @@ import SwiftUI
 @MainActor
 @Observable
 class HomeViewModel {
-    var mountainData: [String: MountainBatchedResponse] = [:]
+    var mountainData: [String: MountainBatchedResponse] = [:] {
+        didSet { rebuildCachedHelpers() }
+    }
     var mountains: [Mountain] = [] {
         didSet {
             // Rebuild lookup dictionary when mountains change
@@ -16,8 +18,17 @@ class HomeViewModel {
     var lastRefreshDate: Date?
 
     // Enhanced data for homepage redesign
-    var arrivalTimes: [String: ArrivalTimeRecommendation] = [:]
-    var parkingPredictions: [String: ParkingPredictionResponse] = [:]
+    var arrivalTimes: [String: ArrivalTimeRecommendation] = [:] {
+        didSet { rebuildCachedHelpers() }
+    }
+    var parkingPredictions: [String: ParkingPredictionResponse] = [:] {
+        didSet { rebuildCachedHelpers() }
+    }
+
+    // Cached computed helpers — rebuilt when data changes
+    private(set) var cachedBestPowder: (mountain: Mountain, score: MountainPowderScore, data: MountainBatchedResponse)?
+    private(set) var cachedSmartSuggestion: String?
+    private(set) var cachedLeaveNowMountains: [(mountain: Mountain, arrivalTime: ArrivalTimeRecommendation)] = []
 
     // Check-in feed for Today tab
     var recentCheckIns: [CheckIn] = []
@@ -268,6 +279,14 @@ class HomeViewModel {
                 #endif
             }
         }
+    }
+
+    // MARK: - Cached Helper Rebuild
+
+    private func rebuildCachedHelpers() {
+        cachedBestPowder = getBestPowderToday()
+        cachedSmartSuggestion = generateSmartSuggestion()
+        cachedLeaveNowMountains = getLeaveNowMountains()
     }
 
     // MARK: - Smart Helpers

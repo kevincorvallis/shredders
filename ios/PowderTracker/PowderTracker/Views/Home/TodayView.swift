@@ -178,7 +178,7 @@ struct TodayView: View {
                     selectedMountain = topRanking.mountain
                 }
             )
-        } else if let bestPick = viewModel.getBestPowderToday() {
+        } else if let bestPick = viewModel.cachedBestPowder {
             let reasons = viewModel.getWhyBestReasons(for: bestPick.mountain.id)
 
             TodaysPickCard(
@@ -246,7 +246,7 @@ struct TodayView: View {
             if !favoritesWithData.isEmpty {
                 ComparisonGrid(
                     favorites: favoritesWithData,
-                    bestMountainId: viewModel.getBestPowderToday()?.mountain.id,
+                    bestMountainId: viewModel.cachedBestPowder?.mountain.id,
                     viewModel: viewModel,
                     onWebcamTap: { mountain in
                         selectedMountain = mountain
