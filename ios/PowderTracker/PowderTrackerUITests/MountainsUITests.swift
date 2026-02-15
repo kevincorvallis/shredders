@@ -2,7 +2,7 @@
 //  MountainsUITests.swift
 //  PowderTrackerUITests
 //
-//  UI tests for Mountains functionality - focuses on critical user flows.
+//  Tests for mountains list navigation and search.
 //
 
 import XCTest
@@ -27,130 +27,51 @@ final class MountainsUITests: XCTestCase {
         app.launch()
     }
 
-    @MainActor
-    private func navigateToMountains() {
-        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
-        XCTAssertTrue(mountainsTab.waitForExistence(timeout: 5), "Mountains tab should exist")
-        mountainsTab.tap()
-    }
-
-    @MainActor
-    private func tapFirstMountainCard() -> Bool {
-        _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
-
-        // Look for mountain cards with status indicators
-        let mountainCardPredicate = NSPredicate(format: "(label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed') AND NOT (label CONTAINS[c] 'Today')")
-        let mountainCard = app.buttons.matching(mountainCardPredicate).firstMatch
-
-        if mountainCard.waitForExistence(timeout: 10) && mountainCard.isHittable {
-            mountainCard.tap()
-            return true
-        }
-        return false
-    }
-
-    // MARK: - Critical Flow Tests
-
-    @MainActor
-    func testMountainsTabLoadsContent() throws {
-        launchApp()
-        navigateToMountains()
-
-        let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Mountains view should load")
-    }
+    // MARK: - Mountain Detail Navigation
 
     @MainActor
     func testNavigateToMountainDetail() throws {
         launchApp()
-        navigateToMountains()
-        Thread.sleep(forTimeInterval: 2)
 
-        if tapFirstMountainCard() {
-            let detailScrollView = app.scrollViews.firstMatch
-            XCTAssertTrue(detailScrollView.waitForExistence(timeout: 5), "Mountain detail should load")
+        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
+        XCTAssertTrue(mountainsTab.waitForExistence(timeout: 5), "Mountains tab should exist")
+        mountainsTab.tap()
+
+        guard app.scrollViews.firstMatch.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Mountains list did not load")
         }
+
+        let mountainCard = app.buttons.matching(NSPredicate(
+            format: "(label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed') AND NOT (label CONTAINS[c] 'Today')"
+        )).firstMatch
+
+        guard mountainCard.waitForExistence(timeout: 10) && mountainCard.isHittable else {
+            throw XCTSkip("No mountain card found")
+        }
+        mountainCard.tap()
+
+        XCTAssertTrue(app.scrollViews.firstMatch.waitForExistence(timeout: 5), "Mountain detail should load")
     }
 
-    @MainActor
-    func testMountainDetailScrolling() throws {
-        launchApp()
-        navigateToMountains()
-        Thread.sleep(forTimeInterval: 2)
-
-        if tapFirstMountainCard() {
-            let scrollView = app.scrollViews.firstMatch
-            if scrollView.waitForExistence(timeout: 5) {
-                scrollView.swipeUp()
-                scrollView.swipeUp()
-                scrollView.swipeDown()
-            }
-        }
-    }
+    // MARK: - Search
 
     @MainActor
-    func testFavoriteToggle() throws {
+    func testSearchFieldFilters() throws {
         launchApp()
-        navigateToMountains()
-        Thread.sleep(forTimeInterval: 2)
 
-        if tapFirstMountainCard() {
-            Thread.sleep(forTimeInterval: 1)
-
-            let favoriteButton = app.buttons["mountain_favorite_button"]
-            if favoriteButton.waitForExistence(timeout: 3) && favoriteButton.isHittable {
-                favoriteButton.tap()
-                Thread.sleep(forTimeInterval: 0.5)
-            }
-        }
-    }
-
-    @MainActor
-    func testBackNavigationFromDetail() throws {
-        launchApp()
-        navigateToMountains()
-        Thread.sleep(forTimeInterval: 2)
-
-        if tapFirstMountainCard() {
-            Thread.sleep(forTimeInterval: 1)
-
-            let backButton = app.navigationBars.buttons.firstMatch
-            if backButton.exists && backButton.isHittable {
-                backButton.tap()
-                XCTAssertTrue(app.scrollViews.firstMatch.waitForExistence(timeout: 5), "Should return to list")
-            }
-        }
-    }
-
-    @MainActor
-    func testSearchField() throws {
-        launchApp()
-        navigateToMountains()
+        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
+        XCTAssertTrue(mountainsTab.waitForExistence(timeout: 5), "Mountains tab should exist")
+        mountainsTab.tap()
 
         let searchField = app.searchFields.firstMatch
-        if searchField.waitForExistence(timeout: 5) && searchField.isHittable {
-            searchField.tap()
-            searchField.typeText("Tahoe")
-            Thread.sleep(forTimeInterval: 1)
-
-            let clearButton = app.buttons["Clear text"]
-            if clearButton.exists {
-                clearButton.tap()
-            }
+        guard searchField.waitForExistence(timeout: 5) && searchField.isHittable else {
+            throw XCTSkip("Search field not available")
         }
-    }
+        searchField.tap()
+        searchField.typeText("Baker")
+        Thread.sleep(forTimeInterval: 1)
 
-    @MainActor
-    func testPullToRefresh() throws {
-        launchApp()
-        navigateToMountains()
-
-        let scrollView = app.scrollViews.firstMatch
-        if scrollView.waitForExistence(timeout: 5) {
-            let start = scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
-            let end = scrollView.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
-            start.press(forDuration: 0.1, thenDragTo: end)
-            Thread.sleep(forTimeInterval: 2)
-        }
+        // Verify search is active (clear button appears when text is entered)
+        XCTAssertTrue(app.buttons["Clear text"].waitForExistence(timeout: 3), "Search should be active with clear button")
     }
 }

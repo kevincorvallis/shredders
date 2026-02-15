@@ -221,57 +221,6 @@ final class EventSocialFlowUITests: XCTestCase {
         }
     }
 
-    // MARK: - Individual Feature Tests
-
-    /// Tests that unauthenticated users see gated content
-    @MainActor
-    func testGatedContentForUnauthenticatedUser() throws {
-        // Launch without logging in
-        launchApp()
-
-        navigateToEvents()
-
-        // Try to navigate to event detail without logging in
-        let scrollView = app.scrollViews.firstMatch
-        if scrollView.waitForExistence(timeout: 5) {
-            let eventCard = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'going' OR label CONTAINS[c] 'Mountain'")).firstMatch
-            if eventCard.waitForExistence(timeout: 3) && eventCard.isHittable {
-                eventCard.tap()
-                Thread.sleep(forTimeInterval: 2)
-
-                // Scroll to social section
-                scrollView.swipeUp()
-                Thread.sleep(forTimeInterval: 0.5)
-
-                // Check that gated message is shown
-                _ = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'RSVP'")).firstMatch
-                addScreenshot(named: "Gated_Content_Unauthenticated")
-            }
-        }
-    }
-
-    /// Tests the RSVP buttons appear correctly for non-host users
-    @MainActor
-    func testRSVPButtonsVisibility() throws {
-        launchApp()
-        try ensureLoggedIn()
-        navigateToEvents()
-        try navigateToEventDetail()
-
-        // Look for either RSVP buttons or status indicator
-        let goingButton = app.buttons["event_detail_going_button"]
-        let maybeButton = app.buttons["event_detail_maybe_button"]
-        let rsvpStatus = app.otherElements["event_detail_rsvp_status"]
-
-        // At least one of these should exist (unless user is host)
-        _ = goingButton.waitForExistence(timeout: 3) || maybeButton.exists
-        _ = rsvpStatus.waitForExistence(timeout: 3)
-
-        // For non-host users, one of these should be true
-        // (Host users won't see RSVP buttons)
-        addScreenshot(named: "RSVP_Buttons_Check")
-    }
-
     // MARK: - Helper Methods
 
     @MainActor

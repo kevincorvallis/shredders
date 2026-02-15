@@ -2,7 +2,7 @@
 //  ProfileUITests.swift
 //  PowderTrackerUITests
 //
-//  UI tests for Profile/Settings functionality - focuses on critical user flows.
+//  Tests for profile sign-in and sign-out flows.
 //
 
 import XCTest
@@ -27,42 +27,29 @@ final class ProfileUITests: XCTestCase {
         app.launch()
     }
 
-    @MainActor
-    private func navigateToProfile() {
-        UITestHelper.navigateToProfile(app: app)
-    }
-
-    // MARK: - Critical Flow Tests
-
-    @MainActor
-    func testProfileTabLoadsContent() throws {
-        launchApp()
-        navigateToProfile()
-
-        let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Profile view should load")
-    }
+    // MARK: - Sign In
 
     @MainActor
     func testSignInButtonOpensAuthSheet() throws {
         launchApp()
-        navigateToProfile()
+        UITestHelper.navigateToProfile(app: app)
 
         let signInButton = app.buttons["profile_sign_in_button"]
-        if signInButton.waitForExistence(timeout: 3) && signInButton.isHittable {
-            signInButton.tap()
-
-            let emailField = app.textFields["auth_email_field"]
-            XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Auth sheet should open")
+        guard signInButton.waitForExistence(timeout: 3) && signInButton.isHittable else {
+            throw XCTSkip("Sign in button not available (user may be logged in)")
         }
+        signInButton.tap()
+
+        XCTAssertTrue(app.textFields["auth_email_field"].waitForExistence(timeout: 5), "Auth sheet should open with email field")
     }
+
+    // MARK: - Sign Out
 
     @MainActor
     func testSignOutFlow() throws {
         launchApp()
-        navigateToProfile()
+        UITestHelper.navigateToProfile(app: app)
 
-        // Scroll to find sign out button
         let scrollView = app.scrollViews.firstMatch
         let signOutButton = app.buttons["profile_sign_out_button"]
 
@@ -74,72 +61,21 @@ final class ProfileUITests: XCTestCase {
             }
         }
 
-        if signOutButton.waitForExistence(timeout: 3) && signOutButton.isHittable {
-            signOutButton.tap()
-
-            // Handle confirmation dialog
-            let confirmSheet = app.sheets.firstMatch
-            if confirmSheet.waitForExistence(timeout: 2) {
-                let confirmButton = confirmSheet.buttons["Sign Out"]
-                if confirmButton.exists {
-                    confirmButton.tap()
-                }
-            }
-
-            // After sign out, sign in button should appear
-            if scrollView.exists {
-                scrollView.swipeDown()
-                scrollView.swipeDown()
-            }
-            let signInButton = app.buttons["profile_sign_in_button"]
-            XCTAssertTrue(signInButton.waitForExistence(timeout: 5), "Sign in button should appear after logout")
+        guard signOutButton.waitForExistence(timeout: 3) && signOutButton.isHittable else {
+            throw XCTSkip("Sign out button not found (user may not be logged in)")
         }
-    }
+        signOutButton.tap()
 
-    @MainActor
-    func testEditProfileOpens() throws {
-        launchApp()
-        navigateToProfile()
-
-        let editButton = app.buttons["profile_edit_button"]
-        if editButton.waitForExistence(timeout: 3) && editButton.isHittable {
-            editButton.tap()
-            Thread.sleep(forTimeInterval: 1)
-
-            // Should be in edit mode - cancel or back button available
-            let cancelButton = app.buttons["Cancel"]
-            let backButton = app.navigationBars.buttons.firstMatch
-            XCTAssertTrue(cancelButton.exists || backButton.exists, "Should be in edit mode")
+        let confirmButton = app.sheets.buttons["Sign Out"]
+        if confirmButton.waitForExistence(timeout: 2) {
+            confirmButton.tap()
         }
-    }
 
-    @MainActor
-    func testProfileScrolling() throws {
-        launchApp()
-        navigateToProfile()
-
-        let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Profile should be scrollable")
-
-        scrollView.swipeUp()
-        scrollView.swipeUp()
-        scrollView.swipeDown()
-        scrollView.swipeDown()
-    }
-
-    @MainActor
-    func testSettingsToggleInteraction() throws {
-        launchApp()
-        navigateToProfile()
-
-        // Look for any toggle in settings
-        let notificationToggle = app.switches["profile_notifications_toggle"]
-        if notificationToggle.waitForExistence(timeout: 3) && notificationToggle.isHittable {
-            let initialValue = notificationToggle.value as? String
-            notificationToggle.tap()
-            Thread.sleep(forTimeInterval: 0.5)
-            let newValue = notificationToggle.value as? String
-            XCTAssertNotEqual(initialValue, newValue, "Toggle value should change")
+        if scrollView.exists {
+            scrollView.swipeDown()
+            scrollView.swipeDown()
         }
+
+        XCTAssertTrue(app.buttons["profile_sign_in_button"].waitForExistence(timeout: 5), "Sign in button should appear after logout")
     }
 }

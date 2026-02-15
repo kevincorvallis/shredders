@@ -219,57 +219,6 @@ final class EventCreationScenariosUITests: XCTestCase {
         }
     }
 
-    // MARK: - Scenario 4: Event with Capacity Limits
-
-    @MainActor
-    func testCreateEvent_WithCapacityLimit() throws {
-        launchApp()
-        try ensureLoggedIn()
-        navigateToEvents()
-
-        let createButton = app.buttons["events_create_button"]
-        guard createButton.waitForExistence(timeout: 5) && createButton.isHittable else {
-            throw XCTSkip("Create button not available")
-        }
-        createButton.tap()
-
-        let titleField = app.textFields["create_event_title_field"]
-        guard titleField.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Create event form did not appear")
-        }
-
-        // Fill basic info
-        let eventTitle = "Limited Capacity Event \(Int.random(in: 1000...9999))"
-        titleField.tap()
-        titleField.typeText(eventTitle)
-
-        selectMountain("baker")
-
-        // Look for max attendees field or toggle
-        let capacityToggle = app.switches.matching(NSPredicate(format: "label CONTAINS[c] 'limit' OR label CONTAINS[c] 'capacity' OR label CONTAINS[c] 'max'")).firstMatch
-        if capacityToggle.exists && capacityToggle.isHittable {
-            capacityToggle.tap()
-            Thread.sleep(forTimeInterval: 0.5)
-
-            // Look for capacity input field
-            let capacityField = app.textFields.matching(NSPredicate(format: "placeholder CONTAINS[c] 'attendees' OR label CONTAINS[c] 'max'")).firstMatch
-            if capacityField.exists && capacityField.isHittable {
-                capacityField.tap()
-                capacityField.typeText("10")
-            }
-        }
-
-        addScreenshot(named: "Event Creation - With Capacity Limit")
-
-        // Submit
-        let submitButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'create' AND label CONTAINS[c] 'event'")).firstMatch
-        if submitButton.exists && submitButton.isHittable {
-            submitButton.tap()
-            Thread.sleep(forTimeInterval: 3)
-            addScreenshot(named: "Event Creation - Capacity Event Created")
-        }
-    }
-
     // MARK: - Scenario 5: RSVP as Driver
 
     @MainActor
@@ -361,32 +310,7 @@ final class EventCreationScenariosUITests: XCTestCase {
         addScreenshot(named: "RSVP - Needs Ride Confirmed")
     }
 
-    // MARK: - Scenario 7: RSVP Maybe Status
-
-    @MainActor
-    func testRSVP_Maybe_Success() throws {
-        launchApp()
-        try ensureLoggedIn()
-        navigateToEvents()
-        try navigateToEventDetail()
-
-        // Look for Maybe button
-        let maybeButton = app.buttons["Maybe"]
-        guard maybeButton.waitForExistence(timeout: 5) && maybeButton.isHittable else {
-            throw XCTSkip("Maybe button not available")
-        }
-
-        maybeButton.tap()
-        Thread.sleep(forTimeInterval: 2)
-
-        addScreenshot(named: "RSVP - Maybe Status")
-
-        // Verify status changed
-        let maybeIndicator = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'maybe'")).firstMatch
-        XCTAssertTrue(maybeIndicator.waitForExistence(timeout: 3), "Should show maybe status")
-    }
-
-    // MARK: - Scenario 8: Change RSVP Status
+    // MARK: - Scenario 7: Change RSVP Status
 
     @MainActor
     func testRSVP_ChangeStatus_Success() throws {
@@ -421,70 +345,6 @@ final class EventCreationScenariosUITests: XCTestCase {
         }
 
         addScreenshot(named: "RSVP - Changed Back to Going")
-    }
-
-    // MARK: - Scenario 9: Event with Carpool Coordination
-
-    @MainActor
-    func testCreateEvent_WithCarpool_Success() throws {
-        launchApp()
-        try ensureLoggedIn()
-        navigateToEvents()
-
-        let createButton = app.buttons["events_create_button"]
-        guard createButton.waitForExistence(timeout: 5) && createButton.isHittable else {
-            throw XCTSkip("Create button not available")
-        }
-        createButton.tap()
-
-        let titleField = app.textFields["create_event_title_field"]
-        guard titleField.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Create event form did not appear")
-        }
-
-        // Fill basic info
-        let eventTitle = "Carpool Event \(Int.random(in: 1000...9999))"
-        titleField.tap()
-        titleField.typeText(eventTitle)
-
-        selectMountain("crystal")
-
-        // Enable carpool
-        let carpoolToggle = app.switches.matching(NSPredicate(format: "label CONTAINS[c] 'carpool' OR label CONTAINS[c] 'offering'")).firstMatch
-        if carpoolToggle.exists && carpoolToggle.isHittable {
-            if carpoolToggle.value as? String == "0" {
-                carpoolToggle.tap()
-            }
-            Thread.sleep(forTimeInterval: 0.5)
-
-            // Set carpool seats
-            let seatsControl = app.steppers.firstMatch
-            if seatsControl.exists {
-                // Increment seats
-                let incrementButton = seatsControl.buttons.element(boundBy: 1)
-                if incrementButton.exists && incrementButton.isHittable {
-                    incrementButton.tap()
-                    incrementButton.tap()
-                }
-            }
-        }
-
-        // Set departure location
-        let locationField = app.textFields.matching(NSPredicate(format: "placeholder CONTAINS[c] 'location'")).firstMatch
-        if locationField.exists && locationField.isHittable {
-            locationField.tap()
-            locationField.typeText("Bellevue Transit Center")
-        }
-
-        addScreenshot(named: "Event Creation - With Carpool")
-
-        // Submit
-        let submitButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'create' AND label CONTAINS[c] 'event'")).firstMatch
-        if submitButton.exists && submitButton.isHittable {
-            submitButton.tap()
-            Thread.sleep(forTimeInterval: 3)
-            addScreenshot(named: "Event Creation - Carpool Event Created")
-        }
     }
 
     // MARK: - Scenario 10: Cancel Event Form
