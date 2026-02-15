@@ -38,7 +38,7 @@ const fetcher = async (url: string) => {
 
 export function useMountainData(mountainId: string) {
   const { data, error, isLoading, mutate } = useSWR<MountainData>(
-    `/api/mountains/${mountainId}/all`,
+    mountainId ? `/api/mountains/${mountainId}/all` : null,
     fetcher,
     {
       // Don't revalidate on focus (user switching tabs)

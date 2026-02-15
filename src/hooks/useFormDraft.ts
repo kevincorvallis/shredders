@@ -34,12 +34,14 @@ export function useFormDraft(form: UseFormReturn<any>) {
   }, []);
 
   // Auto-save on form changes (debounced)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const subscription = form.watch((values) => {
       // Don't save empty forms
       if (!values.mountainId && !values.title && !values.eventDate) return;
 
-      const timeout = setTimeout(() => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
         try {
           const draft: DraftData = {
             values,
@@ -50,11 +52,12 @@ export function useFormDraft(form: UseFormReturn<any>) {
           // localStorage full or unavailable
         }
       }, 500);
-
-      return () => clearTimeout(timeout);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [form]);
 
   const getDraft = useCallback((): DraftData | null => {

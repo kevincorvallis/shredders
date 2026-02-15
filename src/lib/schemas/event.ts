@@ -14,7 +14,9 @@ export const step1Schema = z.object({
 
 // Step 2: Details
 export const step2Schema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be under 100 characters'),
+  title: z.string().transform(s => s.trim()).pipe(
+    z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be under 100 characters')
+  ),
   skillLevel: z.string().optional(),
   notes: z.string().max(2000, 'Notes must be under 2000 characters').optional(),
   maxAttendees: z.number().min(2, 'Minimum 2 attendees').max(1000, 'Maximum 1000 attendees').nullable().optional(),

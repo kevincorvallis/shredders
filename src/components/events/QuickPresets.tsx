@@ -32,47 +32,51 @@ function getNextWeekday(): string {
   return next.toISOString().split('T')[0];
 }
 
-const presets: Preset[] = [
-  {
-    label: 'Weekend powder day',
-    icon: '❄️',
-    values: {
-      eventDate: getNextSaturday(),
-      departureTime: '07:00',
-      skillLevel: 'all',
-      carpoolAvailable: true,
-      carpoolSeats: 3,
+function getPresets(): Preset[] {
+  return [
+    {
+      label: 'Weekend powder day',
+      icon: '❄️',
+      values: {
+        eventDate: getNextSaturday(),
+        departureTime: '07:00',
+        skillLevel: 'all',
+        carpoolAvailable: true,
+        carpoolSeats: 3,
+      },
     },
-  },
-  {
-    label: 'Weekday morning',
-    icon: '🌅',
-    values: {
-      eventDate: getNextWeekday(),
-      departureTime: '06:30',
-      skillLevel: 'intermediate',
+    {
+      label: 'Weekday morning',
+      icon: '🌅',
+      values: {
+        eventDate: getNextWeekday(),
+        departureTime: '06:30',
+        skillLevel: 'intermediate',
+      },
     },
-  },
-  {
-    label: 'Night skiing',
-    icon: '🌙',
-    values: {
-      departureTime: '16:00',
-      skillLevel: 'all',
+    {
+      label: 'Night skiing',
+      icon: '🌙',
+      values: {
+        departureTime: '16:00',
+        skillLevel: 'all',
+      },
     },
-  },
-  {
-    label: 'Beginners trip',
-    icon: '🎿',
-    values: {
-      skillLevel: 'beginner',
-      departureTime: '08:00',
-      maxAttendees: 6,
+    {
+      label: 'Beginners trip',
+      icon: '🎿',
+      values: {
+        skillLevel: 'beginner',
+        departureTime: '08:00',
+        maxAttendees: 6,
+      },
     },
-  },
-];
+  ];
+}
 
 export function QuickPresets({ form }: QuickPresetsProps) {
+  const presets = getPresets();
+
   const applyPreset = (preset: Preset) => {
     const current = form.getValues();
     form.reset({ ...current, ...preset.values });

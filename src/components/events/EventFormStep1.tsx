@@ -99,6 +99,13 @@ export function EventFormStep1({ form, mountains }: EventFormStep1Props) {
           <ForecastPreview forecast={forecast} />
         </div>
       )}
+
+      {/* No forecast available (date beyond 7-day window) */}
+      {mountainId && eventDate && !forecastLoading && !forecast && (
+        <p className="text-sm text-gray-500">
+          No forecast available for this date (forecasts cover the next 7 days)
+        </p>
+      )}
     </div>
   );
 }

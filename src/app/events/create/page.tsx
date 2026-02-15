@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -28,6 +28,7 @@ export default function CreateEventPage() {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [showDraft, setShowDraft] = useState(true);
   const [createdEvent, setCreatedEvent] = useState<CreateEventResponse | null>(null);
+  const isNavigating = useRef(false);
 
   const form = useForm<CreateEventFormData>({
     defaultValues: {
@@ -84,12 +85,19 @@ export default function CreateEventPage() {
   }, []);
 
   const handleNext = useCallback(async () => {
-    const valid = await validateCurrentStep();
-    if (!valid) return;
+    if (isNavigating.current) return;
+    isNavigating.current = true;
 
-    setCompletedSteps((prev) => new Set([...prev, currentStep]));
-    setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS - 1));
-    setError(null);
+    try {
+      const valid = await validateCurrentStep();
+      if (!valid) return;
+
+      setCompletedSteps((prev) => new Set([...prev, currentStep]));
+      setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS - 1));
+      setError(null);
+    } finally {
+      isNavigating.current = false;
+    }
   }, [currentStep, validateCurrentStep]);
 
   const handleBack = useCallback(() => {
@@ -137,8 +145,15 @@ export default function CreateEventPage() {
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Failed to create event');
+        let message = 'Failed to create event';
+        try {
+          const errData = await res.json();
+          message = errData.error || message;
+        } catch {
+          // Non-JSON response (e.g., 502 HTML page)
+          message = `Server error (${res.status}). Please try again.`;
+        }
+        throw new Error(message);
       }
 
       const responseData: CreateEventResponse = await res.json();

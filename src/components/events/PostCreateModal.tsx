@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CreateEventResponse } from '@/types/event';
 
 interface PostCreateModalProps {
@@ -11,6 +11,15 @@ interface PostCreateModalProps {
 export function PostCreateModal({ response, onClose }: PostCreateModalProps) {
   const { event, inviteUrl } = response;
   const [copied, setCopied] = useState(false);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleCopy = async () => {
     try {
@@ -33,7 +42,10 @@ export function PostCreateModal({ response, onClose }: PostCreateModalProps) {
   const calendarBaseUrl = `/api/events/${event.id}/calendar`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="p-6 text-center">
