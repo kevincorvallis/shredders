@@ -372,6 +372,33 @@ struct WebcamFullScreen: View {
     }
 }
 
+// MARK: - Error Card
+
+private struct ErrorCard: View {
+    let message: String
+    let retryAction: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.largeTitle)
+                .foregroundColor(.orange)
+            Text("Failed to load data")
+                .font(.headline)
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            Button("Try Again", action: retryAction)
+                .buttonStyle(.borderedProminent)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, minHeight: 200)
+        .background(Color(.systemBackground))
+        .cornerRadius(.cornerRadiusHero)
+    }
+}
+
 #Preview {
     WebcamsView()
 }

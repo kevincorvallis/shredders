@@ -4,7 +4,7 @@ struct QuickArrivalTimeBanner: View {
     let mountain: Mountain
     @State private var arrivalTime: ArrivalTimeRecommendation?
     @State private var isLoading = false
-    @Binding var selectedTab: TabbedLocationView.Tab
+    @Binding var selectedTab: MountainDetailView.DetailTab
 
     var body: some View {
         Group {
@@ -24,7 +24,7 @@ struct QuickArrivalTimeBanner: View {
     private func arrivalTimeBanner(_ recommendation: ArrivalTimeRecommendation) -> some View {
         Button(action: {
             withAnimation {
-                selectedTab = .travel
+                selectedTab = .conditions
             }
         }) {
             HStack(spacing: 12) {

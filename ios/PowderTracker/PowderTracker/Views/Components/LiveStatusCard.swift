@@ -28,7 +28,7 @@ struct LiveStatusCard: View {
 
     var body: some View {
         NavigationLink {
-            LocationView(mountain: mountain)
+            MountainDetailView(mountain: mountain)
         } label: {
             VStack(spacing: .spacingM) {
                 // Mountain logo

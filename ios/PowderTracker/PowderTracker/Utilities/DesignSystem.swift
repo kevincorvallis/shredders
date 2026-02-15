@@ -2191,8 +2191,6 @@ final class ShareAnalyticsTracker {
             defaults.set(encoded, forKey: shareHistoryKey)
         }
 
-        // Notify achievement service
-        AchievementService.shared.trackShare()
     }
 
     /// Get share history

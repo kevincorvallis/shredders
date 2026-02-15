@@ -2,7 +2,7 @@
 //  MountainDetailSnapshotTests.swift
 //  PowderTrackerTests
 //
-//  Snapshot tests for mountain detail views.
+//  Snapshot tests for MountainDetailView (4-tab layout).
 //
 
 import SnapshotTesting
@@ -16,51 +16,43 @@ final class MountainDetailSnapshotTests: XCTestCase {
         super.setUp()
     }
 
-    // MARK: - Tabbed Location View Tests
+    // MARK: - MountainDetailView Tab Tests
 
-    func testTabbedLocationView_overviewTab() {
+    func testMountainDetailView_overviewTab() {
         let mountain = Mountain.mock()
-        let view = TabbedLocationView(mountain: mountain, selectedTab: 0)
+        let view = MountainDetailView(mountain: mountain)
             .snapshotContainer()
 
         assertViewSnapshot(view)
     }
 
-    func testTabbedLocationView_conditionsTab() {
+    func testMountainDetailView_conditionsTab() {
         let mountain = Mountain.mock()
-        let view = TabbedLocationView(mountain: mountain, selectedTab: 1)
+        let view = MountainDetailView(mountain: mountain)
             .snapshotContainer()
 
         assertViewSnapshot(view)
     }
 
-    func testTabbedLocationView_forecastTab() {
+    func testMountainDetailView_liftsTab() {
         let mountain = Mountain.mock()
-        let view = TabbedLocationView(mountain: mountain, selectedTab: 2)
+        let view = MountainDetailView(mountain: mountain)
             .snapshotContainer()
 
         assertViewSnapshot(view)
     }
 
-    func testTabbedLocationView_liftsTab() {
+    func testMountainDetailView_socialTab() {
         let mountain = Mountain.mock()
-        let view = TabbedLocationView(mountain: mountain, selectedTab: 3)
+        let view = MountainDetailView(mountain: mountain)
             .snapshotContainer()
 
         assertViewSnapshot(view)
     }
 
-    func testTabbedLocationView_safetyTab() {
+    func testMountainDetailView_darkMode() {
         let mountain = Mountain.mock()
-        let view = TabbedLocationView(mountain: mountain, selectedTab: 4)
-            .snapshotContainer()
-
-        assertViewSnapshot(view)
-    }
-
-    func testTabbedLocationView_darkMode() {
-        let mountain = Mountain.mock()
-        let view = TabbedLocationView(mountain: mountain, selectedTab: 0)
+        let view = MountainDetailView(mountain: mountain)
             .snapshotContainer()
 
         assertDarkModeSnapshot(view)

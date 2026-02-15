@@ -25,9 +25,7 @@ struct MountainDetailView: View {
 
     enum DetailTab: String, CaseIterable, Identifiable {
         case overview = "Overview"
-        case forecast = "Forecast"
         case conditions = "Conditions"
-        case travel = "Travel"
         case lifts = "Lifts"
         case social = "Social"
 
@@ -36,9 +34,7 @@ struct MountainDetailView: View {
         var icon: String {
             switch self {
             case .overview: return "gauge.with.dots.needle.bottom.50percent"
-            case .forecast: return "calendar"
             case .conditions: return "cloud.snow.fill"
-            case .travel: return "car.fill"
             case .lifts: return "cablecar.fill"
             case .social: return "person.3.fill"
             }
@@ -298,12 +294,8 @@ struct MountainDetailView: View {
             switch selectedTab {
             case .overview:
                 overviewTab
-            case .forecast:
-                forecastTab
             case .conditions:
                 conditionsTab
-            case .travel:
-                travelTab
             case .lifts:
                 liftsTab
             case .social:
@@ -339,14 +331,19 @@ struct MountainDetailView: View {
                 )
             }
 
-            // Lift line predictor
-            if viewModel.locationData != nil {
-                LiftLinePredictorCard(viewModel: viewModel)
-            }
+            // 7-day forecast chart + day-by-day breakdown
+            if let forecast = viewModel.locationData?.forecast {
+                SnowForecastChart(
+                    favorites: [(mountain, forecast)],
+                    showHeader: true
+                )
+                .padding(.spacingM)
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(.cornerRadiusCard)
 
-            // Quick forecast preview
-            if let forecast = viewModel.locationData?.forecast.prefix(3), !forecast.isEmpty {
-                quickForecastPreview(Array(forecast))
+                ForEach(forecast.prefix(7)) { day in
+                    ForecastDayRow(day: day)
+                }
             }
 
             // Webcams preview
@@ -354,53 +351,6 @@ struct MountainDetailView: View {
                 webcamPreview
             }
         }
-    }
-
-    private func quickForecastPreview(_ forecast: [ForecastDay]) -> some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            HStack {
-                Text("3-Day Forecast")
-                    .font(.headline)
-                Spacer()
-                Button("See All") { selectedTab = .forecast }
-                    .font(.subheadline)
-            }
-
-            HStack(spacing: .spacingM) {
-                ForEach(forecast) { day in
-                    VStack(spacing: .spacingXS) {
-                        Text(day.dayOfWeek)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Text(day.iconEmoji)
-                            .font(.title2)
-
-                        if day.snowfall > 0 {
-                            Text("\(day.snowfall)\"")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.blue)
-                        } else {
-                            Text("—")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Text("\(day.high)°")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, .spacingM)
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(.cornerRadiusCard)
-                }
-            }
-        }
-        .padding(.spacingM)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(.cornerRadiusCard)
     }
 
     private var webcamPreview: some View {
@@ -415,52 +365,19 @@ struct MountainDetailView: View {
         }
     }
 
-    // MARK: - Forecast Tab
-
-    private var forecastTab: some View {
-        LazyVStack(spacing: .spacingL) {
-            if let forecast = viewModel.locationData?.forecast {
-                // 7-day chart
-                SnowForecastChart(
-                    favorites: [(mountain, forecast)],
-                    showHeader: true
-                )
-                .padding(.spacingM)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(.cornerRadiusCard)
-
-                // Day-by-day breakdown
-                ForEach(forecast.prefix(7)) { day in
-                    ForecastDayRow(day: day)
-                }
-            }
-        }
-    }
-
     // MARK: - Conditions Tab
 
     private var conditionsTab: some View {
         LazyVStack(spacing: .spacingL) {
             SnowDepthSection(viewModel: viewModel, onNavigateToHistory: {})
-            WeatherConditionsSection(viewModel: viewModel, onNavigateToForecast: { selectedTab = .forecast })
-        }
-    }
+            WeatherConditionsSection(viewModel: viewModel, onNavigateToForecast: {})
 
-    // MARK: - Travel Tab
-
-    private var travelTab: some View {
-        LazyVStack(spacing: .spacingL) {
+            // Road conditions
             if viewModel.hasRoadData {
                 RoadConditionsSection(viewModel: viewModel, onNavigateToTravel: {})
-            } else {
-                emptyStateCard(
-                    icon: "car.fill",
-                    title: "No Road Data",
-                    message: "Road conditions not available for this mountain"
-                )
             }
 
-            // Trip advice if available
+            // Trip advice
             if let tripAdvice = viewModel.locationData?.tripAdvice {
                 tripAdviceCard(tripAdvice)
             }

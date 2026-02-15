@@ -19,7 +19,7 @@ struct ProfileView: View {
     private enum ProfileSheet: Identifiable {
         case settings, login, manageFavorites, alertPreferences
         case regionPicker, passPicker, unitsSettings, about
-        case chat, snowHistory, patrolReports, weatherAlerts
+        case snowHistory, weatherAlerts
 
         var id: String { String(describing: self) }
     }
@@ -98,10 +98,6 @@ struct ProfileView: View {
                     UnitsSettingsView()
                 case .about:
                     AboutView()
-                case .chat:
-                    NavigationStack {
-                        ChatView()
-                    }
                 case .snowHistory:
                     NavigationStack {
                         HistoryChartContainer()
@@ -114,10 +110,6 @@ struct ProfileView: View {
                                     }
                                 }
                             }
-                    }
-                case .patrolReports:
-                    NavigationStack {
-                        PatrolView(mountainId: selectedMountainId)
                     }
                 case .weatherAlerts:
                     WeatherAlertsSettingsView()
@@ -237,8 +229,6 @@ struct ProfileView: View {
 
                 // Quick stats in glass pills
                 HStack(spacing: .spacingM) {
-                    ProfileStatPill(value: "0", label: "Photos", icon: "photo.fill")
-                    ProfileStatPill(value: "0", label: "Check-ins", icon: "mappin.circle.fill")
                     ProfileStatPill(value: "\(favoritesManager.favoriteIds.count)", label: "Mountains", icon: "mountain.2.fill")
                 }
             }
@@ -434,34 +424,12 @@ struct ProfileView: View {
         ProfileGlassSection(title: "Tools", icon: "wrench.and.screwdriver.fill") {
             VStack(spacing: 0) {
                 ProfileGlassRow(
-                    icon: "bubble.left.and.bubble.right.fill",
-                    iconColor: .green,
-                    title: "Powder Chat",
-                    subtitle: "Get AI-powered recommendations"
-                ) {
-                    activeSheet = .chat
-                }
-
-                Divider().padding(.leading, 52)
-
-                ProfileGlassRow(
                     icon: "chart.line.uptrend.xyaxis",
                     iconColor: .cyan,
                     title: "Snow History",
                     subtitle: "View historical snowfall data"
                 ) {
                     activeSheet = .snowHistory
-                }
-
-                Divider().padding(.leading, 52)
-
-                ProfileGlassRow(
-                    icon: "cross.fill",
-                    iconColor: .red,
-                    title: "Ski Patrol Reports",
-                    subtitle: "View incident and safety reports"
-                ) {
-                    activeSheet = .patrolReports
                 }
             }
         }

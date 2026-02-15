@@ -120,7 +120,7 @@ struct MountainDetailRow: View {
 
                         // View Full Details button
                         NavigationLink {
-                            LocationView(mountain: mountain)
+                            MountainDetailView(mountain: mountain)
                         } label: {
                             HStack {
                                 Image(systemName: "info.circle.fill")

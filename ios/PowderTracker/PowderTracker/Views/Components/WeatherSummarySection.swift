@@ -113,6 +113,31 @@ struct WeatherSummarySection: View {
     }
 }
 
+// MARK: - Weather Metric View
+
+private struct WeatherMetricView: View {
+    let icon: String
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(value)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 // MARK: - Temperature Gradient Bar (UNIQUE!)
 
 struct TempGradientBar: View {

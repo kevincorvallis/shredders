@@ -85,7 +85,7 @@ struct MapSectionView: View {
                let mountain = mountains.first(where: { $0.id == selectedId }),
                isExpanded {
                 NavigationLink {
-                    LocationView(mountain: mountain)
+                    MountainDetailView(mountain: mountain)
                 } label: {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
