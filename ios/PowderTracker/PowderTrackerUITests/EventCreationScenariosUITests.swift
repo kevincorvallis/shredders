@@ -11,14 +11,6 @@ import XCTest
 final class EventCreationScenariosUITests: XCTestCase {
     var app: XCUIApplication!
 
-    // Test credentials from environment or defaults
-    private var testEmail: String {
-        ProcessInfo.processInfo.environment["UI_TEST_EMAIL"] ?? "e2etest@example.com"
-    }
-    private var testPassword: String {
-        ProcessInfo.processInfo.environment["UI_TEST_PASSWORD"] ?? "TestPassword123!"
-    }
-
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
@@ -285,7 +277,7 @@ final class EventCreationScenariosUITests: XCTestCase {
         launchApp()
         try ensureLoggedIn()
         navigateToEvents()
-        navigateToEventDetail()
+        try navigateToEventDetail()
 
         // Look for RSVP button
         let rsvpButton = app.buttons["I'm In!"]
@@ -334,7 +326,7 @@ final class EventCreationScenariosUITests: XCTestCase {
         launchApp()
         try ensureLoggedIn()
         navigateToEvents()
-        navigateToEventDetail()
+        try navigateToEventDetail()
 
         let rsvpButton = app.buttons["I'm In!"]
         guard rsvpButton.waitForExistence(timeout: 5) && rsvpButton.isHittable else {
@@ -376,7 +368,7 @@ final class EventCreationScenariosUITests: XCTestCase {
         launchApp()
         try ensureLoggedIn()
         navigateToEvents()
-        navigateToEventDetail()
+        try navigateToEventDetail()
 
         // Look for Maybe button
         let maybeButton = app.buttons["Maybe"]
@@ -401,7 +393,7 @@ final class EventCreationScenariosUITests: XCTestCase {
         launchApp()
         try ensureLoggedIn()
         navigateToEvents()
-        navigateToEventDetail()
+        try navigateToEventDetail()
 
         // First RSVP as going
         let rsvpButton = app.buttons["I'm In!"]
@@ -542,87 +534,17 @@ final class EventCreationScenariosUITests: XCTestCase {
 
     @MainActor
     private func ensureLoggedIn() throws {
-        let profileTab = app.tabBars.buttons["Profile"].firstMatch
-        guard profileTab.waitForExistence(timeout: 5) else { return }
-        profileTab.tap()
-        Thread.sleep(forTimeInterval: 1)
-
-        let scrollView = app.scrollViews.firstMatch
-
-        // Check if already logged in
-        if scrollView.waitForExistence(timeout: 3) {
-            for _ in 0..<10 {
-                if app.buttons["profile_sign_out_button"].exists { break }
-                scrollView.swipeUp()
-                Thread.sleep(forTimeInterval: 0.3)
-            }
-        }
-
-        if app.buttons["profile_sign_out_button"].waitForExistence(timeout: 2) {
-            // Already logged in - scroll back up
-            if scrollView.exists {
-                scrollView.swipeDown()
-                scrollView.swipeDown()
-                scrollView.swipeDown()
-            }
-            return
-        }
-
-        // Need to log in
-        if scrollView.exists {
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-
-        let signInButton = app.buttons["profile_sign_in_button"]
-        guard signInButton.waitForExistence(timeout: 5) && signInButton.isHittable else {
-            throw XCTSkip("Sign in button not available")
-        }
-        signInButton.tap()
-
-        let emailField = app.textFields["auth_email_field"]
-        guard emailField.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Auth form not available")
-        }
-        emailField.tap()
-        emailField.typeText(testEmail)
-
-        let passwordField = app.secureTextFields["auth_password_field"]
-        passwordField.tap()
-        passwordField.typeText(testPassword)
-
-        app.buttons["auth_sign_in_button"].tap()
-        Thread.sleep(forTimeInterval: 3)
-
-        if scrollView.exists {
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-        }
+        try UITestHelper.ensureLoggedIn(app: app)
     }
 
     @MainActor
     private func navigateToEvents() {
-        let eventsTab = app.tabBars.buttons["Events"].firstMatch
-        if eventsTab.waitForExistence(timeout: 5) {
-            eventsTab.tap()
-        }
-        Thread.sleep(forTimeInterval: 2)
+        UITestHelper.navigateToEvents(app: app)
     }
 
     @MainActor
-    private func navigateToEventDetail() {
-        let scrollView = app.scrollViews.firstMatch
-        if scrollView.waitForExistence(timeout: 5) {
-            // Find an event card to tap
-            let eventCard = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'going' OR label CONTAINS[c] 'Mountain' OR label CONTAINS[c] 'Event'")).firstMatch
-            if eventCard.waitForExistence(timeout: 5) && eventCard.isHittable {
-                eventCard.tap()
-                Thread.sleep(forTimeInterval: 2)
-            }
-        }
+    private func navigateToEventDetail() throws {
+        try UITestHelper.navigateToEventDetail(app: app)
     }
 
     @MainActor
@@ -661,10 +583,6 @@ final class EventCreationScenariosUITests: XCTestCase {
 
     @MainActor
     private func addScreenshot(named name: String) {
-        let screenshot = XCUIScreen.main.screenshot()
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        UITestHelper.addScreenshot(named: name, to: self)
     }
 }

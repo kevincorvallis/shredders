@@ -30,18 +30,17 @@ final class OnboardingUITests: XCTestCase {
 
     // MARK: - Button Helpers
 
-    /// Finds and taps any continue/next button on the current onboarding screen
+    /// Finds and taps any continue/next button on the current onboarding screen.
+    /// BrockStoryOnboardingView uses "Continue" for pages 0-3 and "Get Started" for the final page.
     private func tapContinueButton() -> Bool {
-        // Welcome screen
-        let letsGoButton = app.buttons["Let's Go Shred!"]
-        if letsGoButton.waitForExistence(timeout: 2) && letsGoButton.isHittable {
-            letsGoButton.tap()
+        let getStarted = app.buttons["Get Started"]
+        if getStarted.waitForExistence(timeout: 1) && getStarted.isHittable {
+            getStarted.tap()
             return true
         }
 
-        // Other screens - "Continue" button
         let continueButton = app.buttons["Continue"]
-        if continueButton.waitForExistence(timeout: 2) && continueButton.isHittable {
+        if continueButton.waitForExistence(timeout: 1) && continueButton.isHittable {
             continueButton.tap()
             return true
         }
@@ -77,8 +76,8 @@ final class OnboardingUITests: XCTestCase {
     func testCompleteOnboardingFlow() throws {
         launchAppForOnboarding()
 
-        // Complete all onboarding steps
-        for _ in 0..<5 {
+        // Complete all onboarding steps (5 story pages + profile + about you + preferences)
+        for _ in 0..<10 {
             Thread.sleep(forTimeInterval: 0.5)
 
             // Check for complete button first (final screen)
@@ -134,16 +133,14 @@ final class OnboardingUITests: XCTestCase {
     }
 
     /// Tests that onboarding buttons are visible and tappable.
-    /// Full flow progression is tested by testCompleteOnboardingFlow.
+    /// BrockStoryOnboardingView shows "Continue" on the welcome page.
     func testOnboardingButtonsAreAccessible() throws {
         launchAppForOnboarding()
 
-        // Wait for onboarding to appear
         Thread.sleep(forTimeInterval: 1)
 
-        // The "Let's Go Shred!" button should be accessible on the welcome screen
-        let welcomeButton = app.buttons["Let's Go Shred!"]
-        XCTAssertTrue(welcomeButton.waitForExistence(timeout: 5),
-                      "Welcome button should be visible in onboarding")
+        let continueButton = app.buttons["Continue"]
+        XCTAssertTrue(continueButton.waitForExistence(timeout: 5),
+                      "Continue button should be visible in onboarding")
     }
 }

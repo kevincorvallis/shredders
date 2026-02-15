@@ -12,14 +12,12 @@ import XCTest
 final class CheckInUITests: XCTestCase {
 
     var app: XCUIApplication!
-    private let testEmail = "test@example.com"
-    private let testPassword = "password123"
 
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["--uitesting"]
+        app.launchArguments = ["UI_TESTING"]
         app.launch()
     }
 
@@ -31,8 +29,8 @@ final class CheckInUITests: XCTestCase {
     // MARK: - Critical Flow Tests
 
     func testCheckInButtonOpensForm() throws {
-        ensureLoggedIn()
-        navigateToMountainDetail()
+        try ensureLoggedIn()
+        try navigateToMountainDetail()
 
         // Scroll to check-ins section
         let scrollView = app.scrollViews.firstMatch
@@ -54,8 +52,8 @@ final class CheckInUITests: XCTestCase {
     }
 
     func testSubmitCheckInWithRating() throws {
-        ensureLoggedIn()
-        openCheckInForm()
+        try ensureLoggedIn()
+        try openCheckInForm()
 
         // Select a rating
         let ratingButton = app.buttons["5"]
@@ -76,8 +74,8 @@ final class CheckInUITests: XCTestCase {
     }
 
     func testFormCancelDismissesWithoutSubmitting() throws {
-        ensureLoggedIn()
-        openCheckInForm()
+        try ensureLoggedIn()
+        try openCheckInForm()
 
         // Tap cancel
         let cancelButton = app.buttons["Cancel"]
@@ -92,8 +90,8 @@ final class CheckInUITests: XCTestCase {
     }
 
     func testTripReportTextEntry() throws {
-        ensureLoggedIn()
-        openCheckInForm()
+        try ensureLoggedIn()
+        try openCheckInForm()
 
         // Scroll to trip report section
         let scrollView = app.scrollViews.firstMatch
@@ -109,7 +107,8 @@ final class CheckInUITests: XCTestCase {
             textEditor.typeText("Great day on the mountain!")
 
             // Verify text was entered
-            XCTAssertTrue(textEditor.value as? String == "Great day on the mountain!" || true)
+            // Text may not round-trip through XCTest value, just verify editor accepted input
+            XCTAssertTrue(textEditor.exists, "Text editor should still exist after typing")
         }
     }
 
@@ -144,85 +143,16 @@ final class CheckInUITests: XCTestCase {
 
     // MARK: - Helper Methods
 
-    private func ensureLoggedIn() {
-        let profileTab = app.tabBars.buttons["Profile"].firstMatch
-        guard profileTab.waitForExistence(timeout: 5) else { return }
-        profileTab.tap()
-        Thread.sleep(forTimeInterval: 1)
-
-        let scrollView = app.scrollViews.firstMatch
-
-        // Scroll down to check for sign-out button
-        if scrollView.waitForExistence(timeout: 3) {
-            for _ in 0..<10 {
-                if app.buttons["profile_sign_out_button"].exists { break }
-                scrollView.swipeUp()
-                Thread.sleep(forTimeInterval: 0.3)
-            }
-        }
-
-        // Check if already logged in
-        if app.buttons["profile_sign_out_button"].waitForExistence(timeout: 2) {
-            // Scroll back to top
-            if scrollView.exists {
-                scrollView.swipeDown()
-                scrollView.swipeDown()
-                scrollView.swipeDown()
-            }
-            return // Already logged in
-        }
-
-        // Scroll back to top to find sign-in button
-        if scrollView.exists {
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-
-        // Need to log in
-        let signInButton = app.buttons["profile_sign_in_button"]
-        guard signInButton.waitForExistence(timeout: 5) && signInButton.isHittable else { return }
-        signInButton.tap()
-
-        let emailField = app.textFields["auth_email_field"]
-        guard emailField.waitForExistence(timeout: 5) else { return }
-        emailField.tap()
-        emailField.typeText(testEmail)
-
-        let passwordField = app.secureTextFields["auth_password_field"]
-        passwordField.tap()
-        passwordField.typeText(testPassword)
-
-        app.buttons["auth_sign_in_button"].tap()
-
-        Thread.sleep(forTimeInterval: 3)
-
-        // Scroll back to top
-        if scrollView.exists {
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-        }
+    private func ensureLoggedIn() throws {
+        try UITestHelper.ensureLoggedIn(app: app)
     }
 
-    private func navigateToMountainDetail() {
-        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
-        if mountainsTab.waitForExistence(timeout: 5) {
-            mountainsTab.tap()
-            Thread.sleep(forTimeInterval: 2)
-
-            // Find first mountain in list
-            let mountainCard = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'score' OR label CONTAINS[c] 'Open' OR label CONTAINS[c] 'Closed'")).firstMatch
-            if mountainCard.waitForExistence(timeout: 5) && mountainCard.isHittable {
-                mountainCard.tap()
-                Thread.sleep(forTimeInterval: 2)
-            }
-        }
+    private func navigateToMountainDetail() throws {
+        try UITestHelper.navigateToMountainDetail(app: app)
     }
 
-    private func openCheckInForm() {
-        navigateToMountainDetail()
+    private func openCheckInForm() throws {
+        try navigateToMountainDetail()
 
         // Scroll to check-ins section
         let scrollView = app.scrollViews.firstMatch

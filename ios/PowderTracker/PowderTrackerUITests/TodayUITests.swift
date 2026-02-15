@@ -135,10 +135,6 @@ final class TodayUITests: XCTestCase {
 
     @MainActor
     private func addScreenshot(named name: String) {
-        let screenshot = XCUIScreen.main.screenshot()
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        UITestHelper.addScreenshot(named: name, to: self)
     }
 }

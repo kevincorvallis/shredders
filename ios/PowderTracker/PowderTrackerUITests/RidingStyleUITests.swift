@@ -365,105 +365,26 @@ final class RidingStyleUITests: XCTestCase {
 
     @MainActor
     private func ensureLoggedIn() throws {
-        let profileTab = app.tabBars.buttons["Profile"].firstMatch
-        guard profileTab.waitForExistence(timeout: 5) else { return }
-        profileTab.tap()
-        Thread.sleep(forTimeInterval: 1)
-
-        let scrollView = app.scrollViews.firstMatch
-
-        // Check for sign-out button (already logged in)
-        if scrollView.waitForExistence(timeout: 3) {
-            for _ in 0..<10 {
-                if app.buttons["profile_sign_out_button"].exists { break }
-                scrollView.swipeUp()
-                Thread.sleep(forTimeInterval: 0.3)
-            }
-        }
-
-        if app.buttons["profile_sign_out_button"].waitForExistence(timeout: 2) {
-            if scrollView.exists {
-                scrollView.swipeDown()
-                scrollView.swipeDown()
-                scrollView.swipeDown()
-            }
-            return // Already logged in
-        }
-
-        // Scroll to top for sign-in button
-        if scrollView.exists {
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-
-        // Need to log in
-        let signInButton = app.buttons["profile_sign_in_button"]
-        guard signInButton.waitForExistence(timeout: 5) && signInButton.isHittable else {
-            throw XCTSkip("Sign in button not available")
-        }
-        signInButton.tap()
-
-        let emailField = app.textFields["auth_email_field"]
-        guard emailField.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Auth form not available")
-        }
-        emailField.tap()
-        emailField.typeText(testEmail)
-
-        let passwordField = app.secureTextFields["auth_password_field"]
-        passwordField.tap()
-        passwordField.typeText(testPassword)
-
-        app.buttons["auth_sign_in_button"].tap()
-        Thread.sleep(forTimeInterval: 3)
-
-        if scrollView.exists {
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-            scrollView.swipeDown()
-        }
+        try UITestHelper.ensureLoggedIn(app: app)
     }
 
     @MainActor
     private func navigateToProfile() {
-        let profileTab = app.tabBars.buttons["Profile"].firstMatch
-        if profileTab.waitForExistence(timeout: 5) {
-            profileTab.tap()
-        }
-        Thread.sleep(forTimeInterval: 1)
+        UITestHelper.navigateToProfile(app: app)
     }
 
     @MainActor
     private func navigateToEvents() {
-        let eventsTab = app.tabBars.buttons["Events"].firstMatch
-        if eventsTab.waitForExistence(timeout: 5) {
-            eventsTab.tap()
-        }
-        Thread.sleep(forTimeInterval: 2)
+        UITestHelper.navigateToEvents(app: app)
     }
 
     @MainActor
-    private func navigateToEventDetail() {
-        let scrollView = app.scrollViews.firstMatch
-        if scrollView.waitForExistence(timeout: 5) {
-            let eventCard = app.buttons.matching(
-                NSPredicate(format: "label CONTAINS[c] 'going' OR label CONTAINS[c] 'Mountain' OR label CONTAINS[c] 'Event'")
-            ).firstMatch
-            if eventCard.waitForExistence(timeout: 5) && eventCard.isHittable {
-                eventCard.tap()
-                Thread.sleep(forTimeInterval: 2)
-            }
-        }
+    private func navigateToEventDetail() throws {
+        try UITestHelper.navigateToEventDetail(app: app)
     }
 
     @MainActor
     private func addScreenshot(named name: String) {
-        let screenshot = XCUIScreen.main.screenshot()
-        let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        UITestHelper.addScreenshot(named: name, to: self)
     }
 }
