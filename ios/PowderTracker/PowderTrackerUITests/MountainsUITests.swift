@@ -29,7 +29,7 @@ final class MountainsUITests: XCTestCase {
 
     @MainActor
     private func navigateToMountains() {
-        let mountainsTab = app.tabBars.buttons["Mountains"]
+        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
         XCTAssertTrue(mountainsTab.waitForExistence(timeout: 5), "Mountains tab should exist")
         mountainsTab.tap()
     }

@@ -70,7 +70,7 @@ final class AuthenticationUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 3)
 
         // Navigate to profile and verify logged in
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         if profileTab.exists {
             profileTab.tap()
             Thread.sleep(forTimeInterval: 1)
@@ -134,7 +134,7 @@ final class AuthenticationUITests: XCTestCase {
         launchApp()
         try ensureLoggedIn()
 
-        app.tabBars.buttons["Profile"].tap()
+        app.tabBars.buttons["Profile"].firstMatch.tap()
         Thread.sleep(forTimeInterval: 1)
 
         let scrollView = app.scrollViews.firstMatch
@@ -179,7 +179,7 @@ final class AuthenticationUITests: XCTestCase {
         app.terminate()
         launchApp(resetState: false)
 
-        app.tabBars.buttons["Profile"].tap()
+        app.tabBars.buttons["Profile"].firstMatch.tap()
 
         let scrollView = app.scrollViews.firstMatch
         if scrollView.exists {
@@ -208,7 +208,7 @@ final class AuthenticationUITests: XCTestCase {
 
     @MainActor
     private func navigateToSignIn() {
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
         profileTab.tap()
         Thread.sleep(forTimeInterval: 2)
@@ -253,7 +253,7 @@ final class AuthenticationUITests: XCTestCase {
 
     @MainActor
     private func ensureLoggedIn() throws {
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         profileTab.tap()
         Thread.sleep(forTimeInterval: 1)
 

@@ -72,7 +72,7 @@ final class AppStoreScreenshots: XCTestCase {
         sleep(3)
 
         // 1. Today Dashboard
-        let todayTab = app.tabBars.buttons["Today"]
+        let todayTab = app.tabBars.buttons["Today"].firstMatch
         if todayTab.waitForExistence(timeout: 5) {
             todayTab.tap()
             sleep(2)
@@ -80,7 +80,7 @@ final class AppStoreScreenshots: XCTestCase {
         }
 
         // 2. Mountains List
-        let mountainsTab = app.tabBars.buttons["Mountains"]
+        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
         if mountainsTab.waitForExistence(timeout: 5) {
             mountainsTab.tap()
             sleep(2)
@@ -111,7 +111,7 @@ final class AppStoreScreenshots: XCTestCase {
 
         // 4. Map View - ensure we can find the tab bar
         sleep(1)
-        let mapTab = app.tabBars.buttons["Map"]
+        let mapTab = app.tabBars.buttons["Map"].firstMatch
         print("Map tab exists: \(mapTab.exists), hittable: \(mapTab.isHittable)")
         if mapTab.waitForExistence(timeout: 5) {
             mapTab.tap()
@@ -122,7 +122,7 @@ final class AppStoreScreenshots: XCTestCase {
         }
 
         // 5. Events List
-        let eventsTab = app.tabBars.buttons["Events"]
+        let eventsTab = app.tabBars.buttons["Events"].firstMatch
         print("Events tab exists: \(eventsTab.exists), hittable: \(eventsTab.isHittable)")
         if eventsTab.waitForExistence(timeout: 5) {
             eventsTab.tap()
@@ -133,7 +133,7 @@ final class AppStoreScreenshots: XCTestCase {
         }
 
         // 6. Profile
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         print("Profile tab exists: \(profileTab.exists), hittable: \(profileTab.isHittable)")
         if profileTab.waitForExistence(timeout: 5) {
             profileTab.tap()

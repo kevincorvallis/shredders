@@ -32,7 +32,7 @@ final class LogoutFlowTest: XCTestCase {
         saveScreenshot("01_initial_today")
 
         // Navigate to Profile tab
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
         profileTab.tap()
 
@@ -110,7 +110,7 @@ final class LogoutFlowTest: XCTestCase {
             browseButton.tap()
 
             // Verify navigation to main content
-            let todayTab = app.tabBars.buttons["Today"]
+            let todayTab = app.tabBars.buttons["Today"].firstMatch
             XCTAssertTrue(todayTab.waitForExistence(timeout: 5),
                          "Should navigate to Today tab after browsing")
 

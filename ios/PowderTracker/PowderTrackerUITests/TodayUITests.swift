@@ -29,7 +29,7 @@ final class TodayUITests: XCTestCase {
 
     @MainActor
     private func navigateToToday() {
-        let todayTab = app.tabBars.buttons["Today"]
+        let todayTab = app.tabBars.buttons["Today"].firstMatch
         if todayTab.waitForExistence(timeout: 5) {
             todayTab.tap()
         }
@@ -87,7 +87,7 @@ final class TodayUITests: XCTestCase {
         let seeAllButton = app.buttons["today_see_all_events"]
         if seeAllButton.waitForExistence(timeout: 3) && seeAllButton.isHittable {
             seeAllButton.tap()
-            let eventsTab = app.tabBars.buttons["Events"]
+            let eventsTab = app.tabBars.buttons["Events"].firstMatch
             XCTAssertTrue(eventsTab.waitForExistence(timeout: 3) && eventsTab.isSelected, "Events tab should be selected")
         }
     }

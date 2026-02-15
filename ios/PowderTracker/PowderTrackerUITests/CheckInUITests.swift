@@ -205,7 +205,7 @@ final class CheckInUITests: XCTestCase {
     }
 
     private func navigateToMountainDetail() {
-        let mountainsTab = app.tabBars.buttons["Mountains"]
+        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
         if mountainsTab.waitForExistence(timeout: 5) {
             mountainsTab.tap()
             Thread.sleep(forTimeInterval: 2)

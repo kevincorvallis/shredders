@@ -54,7 +54,7 @@ final class AccessibilityUITests: XCTestCase {
         launchApp()
 
         // Navigate to Today tab
-        let todayTab = app.tabBars.buttons["Today"]
+        let todayTab = app.tabBars.buttons["Today"].firstMatch
         if todayTab.waitForExistence(timeout: 5) {
             todayTab.tap()
         }
@@ -79,7 +79,7 @@ final class AccessibilityUITests: XCTestCase {
         launchApp()
 
         // Navigate to Mountains tab
-        let mountainsTab = app.tabBars.buttons["Mountains"]
+        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
         XCTAssertTrue(mountainsTab.waitForExistence(timeout: 5), "Mountains tab should exist")
         mountainsTab.tap()
 
@@ -123,7 +123,7 @@ final class AccessibilityUITests: XCTestCase {
         launchApp()
 
         // Navigate to Events tab
-        let eventsTab = app.tabBars.buttons["Events"]
+        let eventsTab = app.tabBars.buttons["Events"].firstMatch
         XCTAssertTrue(eventsTab.waitForExistence(timeout: 5), "Events tab should exist")
         eventsTab.tap()
 
@@ -147,7 +147,7 @@ final class AccessibilityUITests: XCTestCase {
         launchApp()
 
         // Navigate to Profile tab
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
         profileTab.tap()
 
@@ -176,7 +176,7 @@ final class AccessibilityUITests: XCTestCase {
         launchApp()
 
         // Navigate to Today
-        let todayTab = app.tabBars.buttons["Today"]
+        let todayTab = app.tabBars.buttons["Today"].firstMatch
         if todayTab.waitForExistence(timeout: 5) {
             todayTab.tap()
         }

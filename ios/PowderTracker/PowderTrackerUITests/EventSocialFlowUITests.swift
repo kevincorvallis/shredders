@@ -276,7 +276,7 @@ final class EventSocialFlowUITests: XCTestCase {
 
     @MainActor
     private func ensureLoggedIn() throws {
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         guard profileTab.waitForExistence(timeout: 5) else { return }
         profileTab.tap()
         Thread.sleep(forTimeInterval: 1)
@@ -339,7 +339,7 @@ final class EventSocialFlowUITests: XCTestCase {
 
     @MainActor
     private func navigateToEvents() {
-        let eventsTab = app.tabBars.buttons["Events"]
+        let eventsTab = app.tabBars.buttons["Events"].firstMatch
         if eventsTab.waitForExistence(timeout: 5) {
             eventsTab.tap()
         }

@@ -195,7 +195,7 @@ final class EventSocialFeaturesUITests: XCTestCase {
     }
 
     private func navigateToEventDetail() {
-        let eventsTab = app.tabBars.buttons["Events"]
+        let eventsTab = app.tabBars.buttons["Events"].firstMatch
         if eventsTab.waitForExistence(timeout: 5) {
             eventsTab.tap()
         }

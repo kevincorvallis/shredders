@@ -30,9 +30,9 @@ struct HistoryDataPoint: Codable, Identifiable {
     var id: String { date }
 
     let date: String
-    let snowDepth: Int
-    let snowfall: Int
-    let temperature: Int
+    let snowDepth: Double
+    let snowfall: Double
+    let temperature: Double
 
     var formattedDate: Date? {
         let formatter = DateFormatter()
@@ -47,20 +47,20 @@ extension HistoryDataPoint {
         let calendar = Calendar.current
         let today = Date()
         var history: [HistoryDataPoint] = []
-        var currentDepth = 142
+        var currentDepth = 142.0
 
         for i in (0..<days).reversed() {
             let date = calendar.date(byAdding: .day, value: -i, to: today)!
 
-            let snowfall = Int.random(in: 0...12)
-            let melt = Int.random(in: 0...2)
+            let snowfall = Double.random(in: 0...12)
+            let melt = Double.random(in: 0...2)
             currentDepth = max(80, currentDepth - snowfall + melt)
 
             history.append(HistoryDataPoint(
                 date: DateFormatters.dateParser.string(from: date),
                 snowDepth: currentDepth + snowfall,
                 snowfall: snowfall,
-                temperature: Int.random(in: 20...40)
+                temperature: Double.random(in: 20...40)
             ))
 
             currentDepth += snowfall - melt

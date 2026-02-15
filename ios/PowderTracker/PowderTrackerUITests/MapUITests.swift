@@ -29,7 +29,7 @@ final class MapUITests: XCTestCase {
 
     @MainActor
     private func navigateToMap() {
-        let mapTab = app.tabBars.buttons["Map"]
+        let mapTab = app.tabBars.buttons["Map"].firstMatch
         XCTAssertTrue(mapTab.waitForExistence(timeout: 5), "Map tab should exist")
         mapTab.tap()
     }

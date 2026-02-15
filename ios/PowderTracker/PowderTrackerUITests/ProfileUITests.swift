@@ -29,7 +29,7 @@ final class ProfileUITests: XCTestCase {
 
     @MainActor
     private func navigateToProfile() {
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
         profileTab.tap()
     }

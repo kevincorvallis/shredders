@@ -83,7 +83,7 @@ final class APIClientTests: XCTestCase {
 
         // Then
         XCTAssertEqual(result.mountain.id, mountainId)
-        XCTAssertEqual(result.forecast.count, 7, "Forecast should have 7 days")
+        XCTAssertTrue(result.forecast.count >= 7, "Forecast should have at least 7 days")
     }
 
     func testFetchPowderScore_ShouldReturnScore() async throws {

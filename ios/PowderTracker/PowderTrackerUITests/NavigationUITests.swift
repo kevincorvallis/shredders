@@ -37,11 +37,11 @@ final class NavigationUITests: XCTestCase {
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should exist")
 
         // Verify all expected tabs
-        XCTAssertTrue(app.tabBars.buttons["Today"].exists || app.tabBars.buttons.count >= 4, "Today tab should exist")
-        XCTAssertTrue(app.tabBars.buttons["Mountains"].exists, "Mountains tab should exist")
-        XCTAssertTrue(app.tabBars.buttons["Events"].exists, "Events tab should exist")
-        XCTAssertTrue(app.tabBars.buttons["Map"].exists, "Map tab should exist")
-        XCTAssertTrue(app.tabBars.buttons["Profile"].exists, "Profile tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Today"].firstMatch.exists || app.tabBars.buttons.count >= 4, "Today tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Mountains"].firstMatch.exists, "Mountains tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Events"].firstMatch.exists, "Events tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Map"].firstMatch.exists, "Map tab should exist")
+        XCTAssertTrue(app.tabBars.buttons["Profile"].firstMatch.exists, "Profile tab should exist")
 
         addScreenshot(named: "Tab Bar")
     }
@@ -50,7 +50,7 @@ final class NavigationUITests: XCTestCase {
     func testNavigateToTodayTab() throws {
         launchApp()
 
-        let todayTab = app.tabBars.buttons["Today"]
+        let todayTab = app.tabBars.buttons["Today"].firstMatch
         if todayTab.exists {
             todayTab.tap()
 
@@ -64,7 +64,7 @@ final class NavigationUITests: XCTestCase {
     func testNavigateToMountainsTab() throws {
         launchApp()
 
-        let mountainsTab = app.tabBars.buttons["Mountains"]
+        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
         XCTAssertTrue(mountainsTab.waitForExistence(timeout: 5), "Mountains tab should exist")
         mountainsTab.tap()
 
@@ -79,7 +79,7 @@ final class NavigationUITests: XCTestCase {
     func testNavigateToEventsTab() throws {
         launchApp()
 
-        let eventsTab = app.tabBars.buttons["Events"]
+        let eventsTab = app.tabBars.buttons["Events"].firstMatch
         XCTAssertTrue(eventsTab.waitForExistence(timeout: 5), "Events tab should exist")
         eventsTab.tap()
 
@@ -94,7 +94,7 @@ final class NavigationUITests: XCTestCase {
     func testNavigateToMapTab() throws {
         launchApp()
 
-        let mapTab = app.tabBars.buttons["Map"]
+        let mapTab = app.tabBars.buttons["Map"].firstMatch
         XCTAssertTrue(mapTab.waitForExistence(timeout: 5), "Map tab should exist")
         mapTab.tap()
 
@@ -108,7 +108,7 @@ final class NavigationUITests: XCTestCase {
     func testNavigateToProfileTab() throws {
         launchApp()
 
-        let profileTab = app.tabBars.buttons["Profile"]
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
         XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
         profileTab.tap()
 
@@ -127,7 +127,7 @@ final class NavigationUITests: XCTestCase {
         let tabs = ["Mountains", "Events", "Map", "Profile", "Today"]
 
         for tabName in tabs {
-            let tab = app.tabBars.buttons[tabName]
+            let tab = app.tabBars.buttons[tabName].firstMatch
             if tab.exists {
                 tab.tap()
                 Thread.sleep(forTimeInterval: 0.5)
@@ -140,16 +140,16 @@ final class NavigationUITests: XCTestCase {
         launchApp()
 
         // Navigate to Mountains and scroll down
-        app.tabBars.buttons["Mountains"].tap()
+        app.tabBars.buttons["Mountains"].firstMatch.tap()
         _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
         app.swipeUp()
 
         // Switch to another tab
-        app.tabBars.buttons["Events"].tap()
+        app.tabBars.buttons["Events"].firstMatch.tap()
         _ = app.scrollViews.firstMatch.waitForExistence(timeout: 3)
 
         // Switch back to Mountains
-        app.tabBars.buttons["Mountains"].tap()
+        app.tabBars.buttons["Mountains"].firstMatch.tap()
 
         // State may or may not be preserved (depends on implementation)
     }
@@ -161,7 +161,7 @@ final class NavigationUITests: XCTestCase {
         launchApp()
 
         // Navigate to Mountains
-        app.tabBars.buttons["Mountains"].tap()
+        app.tabBars.buttons["Mountains"].firstMatch.tap()
         _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
 
         // Tap on a mountain card - Mountains view uses LazyVStack, not List cells
@@ -193,7 +193,7 @@ final class NavigationUITests: XCTestCase {
         launchApp()
 
         // Navigate to Mountains detail
-        app.tabBars.buttons["Mountains"].tap()
+        app.tabBars.buttons["Mountains"].firstMatch.tap()
         _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
 
         // Look for a tappable element that looks like a mountain card
@@ -223,7 +223,7 @@ final class NavigationUITests: XCTestCase {
         launchApp()
 
         // Navigate to Profile and trigger a sheet (login form)
-        app.tabBars.buttons["Profile"].tap()
+        app.tabBars.buttons["Profile"].firstMatch.tap()
 
         let signInButton = app.buttons["profile_sign_in_button"]
         if signInButton.waitForExistence(timeout: 3) {
@@ -252,7 +252,7 @@ final class NavigationUITests: XCTestCase {
     func testScrollToTop() throws {
         launchApp()
 
-        app.tabBars.buttons["Mountains"].tap()
+        app.tabBars.buttons["Mountains"].firstMatch.tap()
         _ = app.scrollViews.firstMatch.waitForExistence(timeout: 5)
 
         // Scroll down
@@ -263,14 +263,14 @@ final class NavigationUITests: XCTestCase {
         // This is tricky in UI tests as status bar isn't directly accessible
 
         // Alternative: tap the tab again to scroll to top
-        app.tabBars.buttons["Mountains"].tap()
+        app.tabBars.buttons["Mountains"].firstMatch.tap()
     }
 
     @MainActor
     func testScrollBehavior() throws {
         launchApp()
 
-        app.tabBars.buttons["Mountains"].tap()
+        app.tabBars.buttons["Mountains"].firstMatch.tap()
         let scrollView = app.scrollViews.firstMatch
         XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Scroll view should exist")
 
@@ -296,7 +296,7 @@ final class NavigationUITests: XCTestCase {
         launchApp()
 
         // First tab should be selected (Today)
-        let todayTab = app.tabBars.buttons["Today"]
+        let todayTab = app.tabBars.buttons["Today"].firstMatch
         if todayTab.exists {
             XCTAssertTrue(todayTab.isSelected, "Today tab should be initially selected")
         }
