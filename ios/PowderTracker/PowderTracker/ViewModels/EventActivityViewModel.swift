@@ -107,6 +107,26 @@ final class EventActivityViewModel {
         await loadActivity()
     }
 
+    // MARK: - Static Formatters (avoid recreating on every call)
+
+    private static let isoFormatterWithFractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    private static let isoFormatterBasic: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    private static let dateGroupFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEEE, MMM d"
+        return f
+    }()
+
     // MARK: - Computed Properties
 
     var isEmpty: Bool {
@@ -116,17 +136,11 @@ final class EventActivityViewModel {
     /// Group activities by date for section headers
     var groupedActivities: [(String, [EventActivity])] {
         let grouped = Dictionary(grouping: activities) { activity -> String in
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-            guard let date = formatter.date(from: activity.createdAt) else {
-                formatter.formatOptions = [.withInternetDateTime]
-                guard let date = formatter.date(from: activity.createdAt) else {
-                    return "Unknown"
-                }
-                return dateGroupKey(for: date)
+            guard let date = Self.isoFormatterWithFractional.date(from: activity.createdAt)
+                    ?? Self.isoFormatterBasic.date(from: activity.createdAt) else {
+                return "Unknown"
             }
-            return dateGroupKey(for: date)
+            return self.dateGroupKey(for: date)
         }
 
         return grouped.sorted { $0.key > $1.key }
@@ -140,9 +154,7 @@ final class EventActivityViewModel {
         } else if calendar.isDateInYesterday(date) {
             return "Yesterday"
         } else {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "EEEE, MMM d"
-            return formatter.string(from: date)
+            return Self.dateGroupFormatter.string(from: date)
         }
     }
 }

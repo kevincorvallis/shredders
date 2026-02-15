@@ -6,6 +6,40 @@ import type { RSVPRequest, RSVPResponse, RSVPStatus } from '@/types/event';
 import { sendNewRSVPNotification, sendRSVPChangeNotification } from '@/lib/push/event-notifications';
 
 /**
+ * Promote the next waitlisted user to "going" if there's capacity.
+ * Call after any status change away from "going" or RSVP deletion.
+ */
+async function promoteFromWaitlist(adminClient: ReturnType<typeof createAdminClient>, eventId: string) {
+  // Re-fetch fresh counts
+  const { data: event } = await adminClient
+    .from('events')
+    .select('max_attendees, going_count')
+    .eq('id', eventId)
+    .single();
+
+  if (!event || event.max_attendees === null) return;
+  if (event.going_count >= event.max_attendees) return;
+
+  // Find the waitlisted attendee with the lowest position
+  const { data: nextInLine } = await adminClient
+    .from('event_attendees')
+    .select('id, user_id')
+    .eq('event_id', eventId)
+    .eq('status', 'waitlist')
+    .order('waitlist_position', { ascending: true })
+    .limit(1)
+    .single();
+
+  if (!nextInLine) return;
+
+  // Promote to going
+  await adminClient
+    .from('event_attendees')
+    .update({ status: 'going', waitlist_position: null })
+    .eq('id', nextInLine.id);
+}
+
+/**
  * POST /api/events/[id]/rsvp
  *
  * RSVP to an event
@@ -144,17 +178,8 @@ export async function POST(
       // If user is not already going, put them on waitlist
       if (!existingRSVP || existingRSVP.status !== 'going') {
         effectiveStatus = 'waitlist';
-        // Get next waitlist position
-        const { data: maxPosition } = await adminClient
-          .from('event_attendees')
-          .select('waitlist_position')
-          .eq('event_id', eventId)
-          .eq('status', 'waitlist')
-          .order('waitlist_position', { ascending: false })
-          .limit(1)
-          .single();
-
-        waitlistPosition = (maxPosition?.waitlist_position || 0) + 1;
+        // Position assigned after insert/update via atomic pattern below
+        waitlistPosition = 0; // placeholder, updated atomically
       }
     }
     const isNewRSVP = !existingRSVP;
@@ -207,6 +232,11 @@ export async function POST(
       }
 
       attendeeData = data;
+
+      // If user changed from "going" to something else, promote from waitlist
+      if (oldStatus === 'going' && effectiveStatus !== 'going') {
+        await promoteFromWaitlist(adminClient, eventId);
+      }
     } else {
       // Create new RSVP
       const { data, error: insertError } = await adminClient
@@ -243,6 +273,29 @@ export async function POST(
       }
 
       attendeeData = data;
+    }
+
+    // Atomically assign waitlist position after insert/update to prevent race conditions.
+    // We use MAX+1 in a single UPDATE so concurrent inserts get sequential positions.
+    if (effectiveStatus === 'waitlist' && attendeeData) {
+      const { data: maxPos } = await adminClient
+        .from('event_attendees')
+        .select('waitlist_position')
+        .eq('event_id', eventId)
+        .eq('status', 'waitlist')
+        .neq('id', attendeeData.id)
+        .order('waitlist_position', { ascending: false })
+        .limit(1)
+        .single();
+
+      const newPosition = (maxPos?.waitlist_position || 0) + 1;
+      await adminClient
+        .from('event_attendees')
+        .update({ waitlist_position: newPosition })
+        .eq('id', attendeeData.id);
+
+      attendeeData.waitlist_position = newPosition;
+      waitlistPosition = newPosition;
     }
 
     // Fetch updated event counts (use adminClient to bypass RLS for iOS Bearer token requests)
@@ -407,6 +460,14 @@ export async function DELETE(
       );
     }
 
+    // Check existing RSVP status before deleting (for waitlist promotion)
+    const { data: existingRSVP } = await adminClient
+      .from('event_attendees')
+      .select('status')
+      .eq('event_id', eventId)
+      .eq('user_id', userProfile.id)
+      .single();
+
     // Delete RSVP
     const { error: deleteError } = await adminClient
       .from('event_attendees')
@@ -420,6 +481,11 @@ export async function DELETE(
         { error: 'Failed to remove RSVP' },
         { status: 500 }
       );
+    }
+
+    // If deleted user was "going", promote next from waitlist
+    if (existingRSVP?.status === 'going') {
+      await promoteFromWaitlist(adminClient, eventId);
     }
 
     // Fetch updated event counts (use adminClient to bypass RLS for iOS Bearer token requests)

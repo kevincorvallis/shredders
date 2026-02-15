@@ -225,27 +225,36 @@ struct PowderTrackerApp: App {
     private func loadInitialData() async {
         // Start timing
         let startTime = Date()
+        let launchSpan = PerformanceLogger.begin(.appLaunch)
         let isAuthenticated = authService.isAuthenticated
 
         // Step 1: Fetch mountains list
         loadingProgress = 0.1
 
         let dataTask = Task {
+            let mtnsSpan = PerformanceLogger.begin(.mountainsLoad)
             await MountainService.shared.fetchMountains()
+            mtnsSpan.end()
             await MainActor.run { loadingProgress = 0.25 }
 
             // Step 2: Fetch favorites list (if authenticated)
             if isAuthenticated {
+                let favsSpan = PerformanceLogger.begin(.favoritesLoad)
                 await FavoritesService.shared.fetchFromBackend()
+                favsSpan.end()
                 await MainActor.run { loadingProgress = 0.4 }
             }
 
             // Step 3: Pre-fetch mountain data (forecasts, conditions, graphs)
+            let homeSpan = PerformanceLogger.begin(.homeRefresh)
             await homeViewModel.loadData()
+            homeSpan.end()
             await MainActor.run { loadingProgress = 0.7 }
 
             // Step 4: Pre-fetch enhanced data (arrival times, parking)
+            let enhancedSpan = PerformanceLogger.begin(.enhancedDataLoad)
             await homeViewModel.loadEnhancedData()
+            enhancedSpan.end()
             await MainActor.run { loadingProgress = 0.95 }
         }
 
@@ -269,10 +278,18 @@ struct PowderTrackerApp: App {
         }
 
         // Dismiss loading screen
+        launchSpan.end()
+        PerformanceLogger.event("Loading Screen Dismissed")
         withAnimation(.smooth(duration: 0.5)) {
             isLoadingInitialData = false
         }
     }
+}
+
+/// Identifiable wrapper for create-event deep link sheet binding
+struct CreateEventDeepLink: Identifiable {
+    let id = UUID()
+    let mountainId: String
 }
 
 // AppDelegate for handling push notifications
@@ -288,6 +305,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Set notification delegate
         UNUserNotificationCenter.current().delegate = self
 
+        // Register actionable notification categories
+        registerNotificationCategories()
+
         // DEFERRED - Non-critical services after launch
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.initializeNonCriticalServices()
@@ -296,10 +316,31 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         return true
     }
 
+    /// Register notification categories with action buttons
+    private func registerNotificationCategories() {
+        let rallyAction = UNNotificationAction(
+            identifier: "RALLY_CREW",
+            title: "Rally Your Crew",
+            options: [.foreground]
+        )
+        let powderAlertCategory = UNNotificationCategory(
+            identifier: "powder-alert-actionable",
+            actions: [rallyAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        UNUserNotificationCenter.current().setNotificationCategories([powderAlertCategory])
+    }
+
     /// Initialize services that are not needed for first frame
     private func initializeNonCriticalServices() {
         Task { @MainActor in
             await PushNotificationService.shared.checkAuthorizationStatus()
+        }
+
+        // Prune expired event cache entries in the background
+        Task { @MainActor in
+            EventCacheService.shared.pruneExpiredCache()
         }
 
         // MountainService.shared.fetchMountains() in loadInitialData() handles pre-warming
@@ -349,22 +390,28 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let notification = response.notification
+        let actionIdentifier = response.actionIdentifier
 
         Task { @MainActor in
             PushNotificationService.shared.didReceiveNotification(notification)
 
-            // Handle deep linking based on notification type
             let userInfo = notification.request.content.userInfo
 
-            if let eventId = userInfo["eventId"] as? String {
-                // Post notification to trigger event deep link
+            // Handle RALLY_CREW action button tap
+            if actionIdentifier == "RALLY_CREW",
+               let mountainId = userInfo["mountainId"] as? String {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("DeepLinkToCreateEvent"),
+                    object: nil,
+                    userInfo: ["mountainId": mountainId]
+                )
+            } else if let eventId = userInfo["eventId"] as? String {
                 NotificationCenter.default.post(
                     name: NSNotification.Name("DeepLinkToEvent"),
                     object: nil,
                     userInfo: ["eventId": eventId]
                 )
             } else if let mountainId = userInfo["mountainId"] as? String {
-                // Post notification to trigger mountain deep link
                 NotificationCenter.default.post(
                     name: NSNotification.Name("DeepLinkToMountain"),
                     object: nil,

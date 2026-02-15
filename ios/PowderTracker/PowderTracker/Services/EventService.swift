@@ -21,6 +21,18 @@ class EventService {
     // Single-flight token refresh: prevents concurrent refresh attempts
     private var tokenRefreshTask: Task<String, Error>?
 
+    /// Configured session with connection pooling, cache policy, and timeouts
+    /// matching APIClient's configuration (instead of self.session defaults)
+    private let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 60
+        config.timeoutIntervalForResource = 120
+        config.waitsForConnectivity = true
+        config.requestCachePolicy = .useProtocolCachePolicy
+        config.httpMaximumConnectionsPerHost = 4
+        return URLSession(configuration: config)
+    }()
+
     private init() {
         self.baseURL = AppConfig.apiBaseURL
         self.decoder = JSONDecoder()
@@ -93,7 +105,7 @@ class EventService {
         do {
             // Use retry logic for network resilience
             let result = try await fetchWithRetry {
-                let (data, response) = try await URLSession.shared.data(for: request)
+                let (data, response) = try await self.session.data(for: request)
 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     throw EventServiceError.networkError
@@ -158,7 +170,7 @@ class EventService {
         do {
             // Use retry logic for network resilience
             let event = try await fetchWithRetry {
-                let (data, response) = try await URLSession.shared.data(for: request)
+                let (data, response) = try await self.session.data(for: request)
 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     throw EventServiceError.networkError
@@ -257,6 +269,11 @@ class EventService {
             throw EventServiceError.validationError("Carpool seats must be between 0 and 8")
         }
 
+        // Validate max attendees
+        if let max = maxAttendees, (max < 1 || max > 1000) {
+            throw EventServiceError.validationError("Max attendees must be between 1 and 1000")
+        }
+
         guard let url = URL(string: "\(baseURL)/events") else {
             throw EventServiceError.invalidURL
         }
@@ -284,7 +301,7 @@ class EventService {
         request.httpBody = try JSONEncoder().encode(requestBody)
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -322,7 +339,9 @@ class EventService {
         departureLocation: String? = nil,
         skillLevel: SkillLevel? = nil,
         carpoolAvailable: Bool? = nil,
-        carpoolSeats: Int? = nil
+        carpoolSeats: Int? = nil,
+        maxAttendees: Int? = nil,
+        clearMaxAttendees: Bool = false
     ) async throws -> Event {
         guard let url = URL(string: "\(baseURL)/events/\(id)") else {
             throw EventServiceError.invalidURL
@@ -340,6 +359,11 @@ class EventService {
         if let skillLevel = skillLevel { body["skillLevel"] = skillLevel.rawValue }
         if let carpoolAvailable = carpoolAvailable { body["carpoolAvailable"] = carpoolAvailable }
         if let carpoolSeats = carpoolSeats { body["carpoolSeats"] = carpoolSeats }
+        if clearMaxAttendees {
+            body["maxAttendees"] = NSNull()
+        } else if let maxAttendees = maxAttendees {
+            body["maxAttendees"] = maxAttendees
+        }
 
         var request = URLRequest(url: url)
         request.httpMethod = "PATCH"
@@ -347,7 +371,7 @@ class EventService {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -388,7 +412,7 @@ class EventService {
         request.httpMethod = "DELETE"
         try await addAuthHeader(to: &request)
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (_, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -419,11 +443,18 @@ class EventService {
     /// RSVP to an event
     func rsvp(
         eventId: String,
+        eventDate: String,
         status: RSVPStatus,
         isDriver: Bool = false,
         needsRide: Bool = false,
         pickupLocation: String? = nil
     ) async throws -> RSVPResponse {
+        // Client-side past-event check for better UX
+        if let date = DateFormatters.dateParser.date(from: eventDate),
+           date < Calendar.current.startOfDay(for: Date()) {
+            throw EventServiceError.validationError("Cannot RSVP to past events")
+        }
+
         guard let url = URL(string: "\(baseURL)/events/\(eventId)/rsvp") else {
             throw EventServiceError.invalidURL
         }
@@ -441,7 +472,7 @@ class EventService {
         request.httpBody = try JSONEncoder().encode(requestBody)
         try await addAuthHeader(to: &request)
 
-        let (data, urlResponse) = try await URLSession.shared.data(for: request)
+        let (data, urlResponse) = try await self.session.data(for: request)
 
         guard let httpResponse = urlResponse as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -481,7 +512,7 @@ class EventService {
         request.httpMethod = "DELETE"
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -523,7 +554,7 @@ class EventService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -551,7 +582,7 @@ class EventService {
         request.httpMethod = "POST"
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -595,7 +626,7 @@ class EventService {
         request.httpMethod = "GET"
         try? await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -645,7 +676,7 @@ class EventService {
         request.httpBody = body
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -685,7 +716,7 @@ class EventService {
         request.httpMethod = "DELETE"
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -731,7 +762,7 @@ class EventService {
         request.httpMethod = "GET"
         try? await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -767,7 +798,7 @@ class EventService {
         request.httpMethod = "GET"
         try? await addAuthHeader(to: &request) // Optional - non-auth users get gated response
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -798,7 +829,7 @@ class EventService {
         request.httpBody = try JSONEncoder().encode(requestBody)
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -838,7 +869,7 @@ class EventService {
         request.httpMethod = "DELETE"
         try await addAuthHeader(to: &request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await self.session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw EventServiceError.networkError
@@ -1000,6 +1031,142 @@ class EventService {
 
         tokenRefreshTask = task
         return try await task.value
+    }
+
+    // MARK: - Date Polling
+
+    /// Fetch date poll for an event
+    func fetchPoll(eventId: String) async throws -> DatePollResponse {
+        guard let url = URL(string: "\(baseURL)/events/\(eventId)/poll") else {
+            throw EventServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        try? await addAuthHeader(to: &request)
+
+        let (data, response) = try await self.session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 404 {
+            throw EventServiceError.notFound
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+
+        return try decoder.decode(DatePollResponse.self, from: data)
+    }
+
+    /// Create a date poll for an event
+    func createPoll(eventId: String, dates: [String]) async throws -> DatePollResponse {
+        guard let url = URL(string: "\(baseURL)/events/\(eventId)/poll") else {
+            throw EventServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuthHeader(to: &request)
+
+        let body: [String: Any] = ["dates": dates]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await self.session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 401 {
+            throw EventServiceError.notAuthenticated
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
+               let errorMessage = errorData["error"] {
+                throw EventServiceError.validationError(errorMessage)
+            }
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+
+        return try decoder.decode(DatePollResponse.self, from: data)
+    }
+
+    /// Cast a vote on a date option
+    func castVote(eventId: String, optionId: String, vote: String) async throws -> DateVoteResponse {
+        guard let url = URL(string: "\(baseURL)/events/\(eventId)/poll/vote") else {
+            throw EventServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuthHeader(to: &request)
+
+        let body: [String: Any] = ["optionId": optionId, "vote": vote]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await self.session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 401 {
+            throw EventServiceError.notAuthenticated
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
+               let errorMessage = errorData["error"] {
+                throw EventServiceError.validationError(errorMessage)
+            }
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
+
+        return try decoder.decode(DateVoteResponse.self, from: data)
+    }
+
+    /// Resolve a date poll (pick winning date)
+    func resolvePoll(eventId: String, optionId: String) async throws {
+        guard let url = URL(string: "\(baseURL)/events/\(eventId)/poll/resolve") else {
+            throw EventServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuthHeader(to: &request)
+
+        let body: [String: Any] = ["optionId": optionId]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await self.session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw EventServiceError.networkError
+        }
+
+        if httpResponse.statusCode == 401 {
+            throw EventServiceError.notAuthenticated
+        }
+
+        if httpResponse.statusCode == 403 {
+            throw EventServiceError.notOwner
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if let errorData = try? JSONDecoder().decode([String: String].self, from: data),
+               let errorMessage = errorData["error"] {
+                throw EventServiceError.validationError(errorMessage)
+            }
+            throw EventServiceError.serverError(httpResponse.statusCode)
+        }
     }
 }
 

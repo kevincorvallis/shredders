@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
+import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 
 /**
  * GET /api/comments
@@ -71,7 +72,11 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json({ comments: comments || [] });
+    return NextResponse.json({ comments: comments || [] }, {
+      headers: {
+        'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     console.error('Error in GET /api/comments:', error);
     return NextResponse.json(
@@ -105,6 +110,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
+      );
+    }
+
+    // Rate limit comment creation
+    const rateLimitResult = await rateLimitEnhanced(
+      createRateLimitKey('comment', authUser.userId),
+      'postComment'
+    );
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Too many comments. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': String(rateLimitResult.retryAfter ?? 60) } }
       );
     }
 

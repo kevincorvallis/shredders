@@ -263,14 +263,15 @@ export async function sendPowderAlert(
 ): Promise<{ success: boolean; error?: string }> {
   return sendPushNotification(deviceToken, {
     title: `Powder Alert: ${options.mountainName}`,
-    body: `${options.snowfallInches}" of fresh snow! Time to shred! 🎿`,
-    category: 'powder-alert',
+    body: `${options.snowfallInches}" of fresh snow! Rally your crew!`,
+    category: 'powder-alert-actionable',
     sound: 'default',
     badge: 1,
     data: {
       type: 'powder-alert',
       mountainId: options.mountainId,
       snowfallInches: options.snowfallInches,
+      action: 'create-event',
     },
     threadId: `powder-${options.mountainId}`,
   });

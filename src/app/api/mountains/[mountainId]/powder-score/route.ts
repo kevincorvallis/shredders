@@ -12,6 +12,7 @@ import {
   type StormInfo
 } from '@/lib/apis/noaa';
 import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';
+import { withCache } from '@/lib/cache';
 
 interface ScoreFactor {
   name: string;
@@ -291,6 +292,7 @@ export async function GET(
   }
 
   try {
+    const result = await withCache(`powder-score:${mountainId}`, async () => {
     // Get SNOTEL data
     let snotelData = null;
     if (mountain.snotel) {
@@ -408,7 +410,7 @@ export async function GET(
       verdict = 'Consider waiting for better conditions.';
     }
 
-    return NextResponse.json({
+    return {
       mountain: {
         id: mountain.id,
         name: mountain.name,
@@ -423,7 +425,6 @@ export async function GET(
         temperature,
         windSpeed,
         upcomingSnow: bestUpcomingSnow,
-        // Enhanced weather.gov data
         windGust: extendedWeatherData?.windGust ?? null,
         humidity: extendedWeatherData?.humidity ?? null,
         visibility: extendedWeatherData?.visibility ?? null,
@@ -431,7 +432,6 @@ export async function GET(
         skyCover: extendedWeatherData?.skyCover ?? null,
         precipProbability: extendedWeatherData?.precipProbability ?? null,
       },
-      // Freezing level from Open-Meteo
       freezingLevel,
       rainRisk: rainRisk
         ? {
@@ -440,7 +440,6 @@ export async function GET(
             level: rainRisk.score >= 7 ? 'low' : rainRisk.score >= 4 ? 'moderate' : 'high',
           }
         : null,
-      // Storm info for active winter storm warnings
       stormInfo: stormInfo?.isActive ? {
         isActive: stormInfo.isActive,
         isPowderBoost: stormInfo.isPowderBoost,
@@ -458,7 +457,10 @@ export async function GET(
         openMeteo: !!freezingLevel,
         alerts: stormInfo !== null,
       },
-    });
+    };
+    }, 600); // 10min cache
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error calculating powder score:', error);
     return NextResponse.json(

@@ -224,10 +224,11 @@ describe('APNs Service', () => {
 
       expect(payload.aps.alert.title).toContain('Mt. Baker');
       expect(payload.aps.alert.body).toContain('12"');
-      expect(payload.aps.category).toBe('powder-alert');
+      expect(payload.aps.category).toBe('powder-alert-actionable');
       expect(payload.aps.badge).toBe(1);
       expect(payload.type).toBe('powder-alert');
       expect(payload.snowfallInches).toBe(12);
+      expect(payload.action).toBe('create-event');
     });
 
     it('should use thread-id for powder alerts', async () => {

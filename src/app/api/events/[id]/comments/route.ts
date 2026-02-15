@@ -334,6 +334,7 @@ export async function POST(
         .select('id, event_id, parent_id')
         .eq('id', parentId)
         .eq('event_id', eventId)
+        .eq('is_deleted', false)
         .single();
 
       if (parentError || !parentComment) {

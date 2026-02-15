@@ -19,6 +19,9 @@ class HomeViewModel {
     var arrivalTimes: [String: ArrivalTimeRecommendation] = [:]
     var parkingPredictions: [String: ParkingPredictionResponse] = [:]
 
+    // Check-in feed for Today tab
+    var recentCheckIns: [CheckIn] = []
+
     // Track failed enhanced data loads for potential retry
     var failedArrivalTimeLoads: Set<String> = []
     var failedParkingLoads: Set<String> = []
@@ -113,10 +116,36 @@ class HomeViewModel {
         #endif
     }
 
-    /// Refresh all data (mountains list + favorites data)
+    /// Load recent check-ins for favorited mountains
+    func loadRecentCheckIns() async {
+        let favoriteIds = favoritesService.favoriteIds
+        guard !favoriteIds.isEmpty else {
+            recentCheckIns = []
+            return
+        }
+
+        do {
+            recentCheckIns = try await CheckInService.shared.fetchRecentCheckIns(for: favoriteIds)
+        } catch {
+            #if DEBUG
+            print("❌ [HomeVM] Failed to load recent check-ins: \(error.localizedDescription)")
+            #endif
+        }
+    }
+
+    /// Get the mountain name for a given mountain ID
+    func mountainName(for id: String) -> String {
+        mountainsById[id]?.shortName ?? mountainsById[id]?.name ?? id
+    }
+
+    /// Refresh all data (mountains list + favorites data) in parallel
     func refresh() async {
-        await loadMountains()
-        await loadFavoritesData()
+        let span = PerformanceLogger.begin(.homeRefresh)
+        async let m: Void = loadMountains()
+        async let f: Void = loadFavoritesData()
+        async let c: Void = loadRecentCheckIns()
+        _ = await (m, f, c)
+        span.end()
     }
 
     /// Initial load on view appear

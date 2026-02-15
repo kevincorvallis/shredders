@@ -4,6 +4,7 @@ import { getCurrentConditions } from '@/lib/apis/snotel';
 import { getCurrentWeather, type NOAAGridConfig } from '@/lib/apis/noaa';
 import { getCurrentFreezingLevelFeet, calculateRainRiskScore } from '@/lib/apis/open-meteo';
 import { calculateMountainTemperatures, estimateReferenceElevation } from '@/lib/calculations/temperature-lapse';
+import { withCache } from '@/lib/cache';
 
 export async function GET(
   request: Request,
@@ -20,6 +21,7 @@ export async function GET(
   }
 
   try {
+    const conditions = await withCache(`conditions:${mountainId}`, async () => {
     // Fetch SNOTEL data if available
     let snotelData = null;
     if (mountain.snotel) {
@@ -81,7 +83,7 @@ export async function GET(
     }
 
     // Combine data
-    const conditions = {
+    return {
       mountain: {
         id: mountain.id,
         name: mountain.name,
@@ -133,6 +135,7 @@ export async function GET(
         },
       },
     };
+    }, 600); // 10min cache
 
     return NextResponse.json(conditions);
   } catch (error) {

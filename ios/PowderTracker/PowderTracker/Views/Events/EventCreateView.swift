@@ -19,6 +19,10 @@ struct EventCreateView: View {
     @State private var hasMaxAttendees = false
     @State private var maxAttendees = 20
 
+    // Date polling
+    @State private var suggestDates = false
+    @State private var additionalDates: [Date] = []
+
     @State private var isSubmitting = false
     @State private var error: String?
     @State private var showingLocationPicker = false
@@ -27,10 +31,14 @@ struct EventCreateView: View {
     @State private var forecastPreview: ForecastDay?
     @State private var allForecasts: [ForecastDay] = []
     @State private var isLoadingForecast = false
+    @State private var forecastError: String?
     @State private var bestPowderDay: ForecastDay?
     @State private var hasAppliedPowderSuggestion = false
     @State private var autoFilledMountainId: String?
     @State private var autoFilledDate: Date?
+    @State private var showingDraftAlert = false
+
+    private static let draftKey = "shredders-event-draft-ios"
 
     // All mountains from the app config (IDs must match backend)
     private let mountains: [(id: String, name: String)] = [
@@ -113,8 +121,46 @@ struct EventCreateView: View {
                     }
 
                     // Auto-fill best powder day button
-                    if !selectedMountainId.isEmpty && !hasAppliedPowderSuggestion {
+                    if !selectedMountainId.isEmpty && !hasAppliedPowderSuggestion && !suggestDates {
                         autoFillBestDayButton
+                    }
+
+                    // Date polling toggle
+                    Toggle("Suggest multiple dates", isOn: $suggestDates)
+                        .accessibilityIdentifier("create_event_suggest_dates_toggle")
+
+                    if suggestDates {
+                        Text("Let your crew vote on the best date")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        ForEach(additionalDates.indices, id: \.self) { index in
+                            HStack {
+                                DatePicker(
+                                    "Date \(index + 2)",
+                                    selection: $additionalDates[index],
+                                    in: Date()...,
+                                    displayedComponents: .date
+                                )
+
+                                Button(role: .destructive) {
+                                    additionalDates.remove(at: index)
+                                } label: {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundStyle(.red)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+
+                        if additionalDates.count < 4 {
+                            Button {
+                                additionalDates.append(Date().addingTimeInterval(86400 * Double(additionalDates.count + 1)))
+                            } label: {
+                                Label("Add another date", systemImage: "plus.circle")
+                                    .font(.subheadline)
+                            }
+                        }
                     }
                 }
 
@@ -189,7 +235,7 @@ struct EventCreateView: View {
                         .accessibilityIdentifier("create_event_max_attendees_toggle")
 
                     if hasMaxAttendees {
-                        Stepper("Max attendees: \(maxAttendees)", value: $maxAttendees, in: 2...100)
+                        Stepper("Max attendees: \(maxAttendees)", value: $maxAttendees, in: 2...200)
                             .accessibilityIdentifier("create_event_max_attendees_stepper")
 
                         if maxAttendees <= 6 {
@@ -267,7 +313,23 @@ struct EventCreateView: View {
                     selectedMountainId = suggested
                     autoFilledMountainId = suggested
                 }
+                // Check for saved draft
+                if hasSavedDraft() && selectedMountainId.isEmpty && title.isEmpty {
+                    showingDraftAlert = true
+                }
             }
+            .alert("Resume Draft?", isPresented: $showingDraftAlert) {
+                Button("Resume") { restoreDraft() }
+                Button("Discard", role: .destructive) { clearDraft() }
+            } message: {
+                Text("You have an unfinished event. Would you like to continue where you left off?")
+            }
+            .onChange(of: selectedMountainId) { _, _ in saveDraft() }
+            .onChange(of: title) { _, _ in saveDraft() }
+            .onChange(of: notes) { _, _ in saveDraft() }
+            .onChange(of: eventDate) { _, _ in saveDraft() }
+            .onChange(of: hasMaxAttendees) { _, _ in saveDraft() }
+            .onChange(of: maxAttendees) { _, _ in saveDraft() }
         }
     }
 
@@ -369,6 +431,22 @@ struct EventCreateView: View {
                     .padding()
                 Spacer()
             }
+        } else if forecastError != nil {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+                Text("Couldn't load forecast")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Retry") {
+                    Task { await loadForecast() }
+                }
+                .font(.subheadline)
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+            .padding(.vertical, 4)
         } else {
             HStack {
                 Image(systemName: "cloud.sun")
@@ -474,6 +552,7 @@ struct EventCreateView: View {
         }
 
         isLoadingForecast = true
+        forecastError = nil
 
         do {
             // Fetch forecast for selected mountain
@@ -525,10 +604,10 @@ struct EventCreateView: View {
             }
 
         } catch {
-            // Silently fail - forecast is optional
             forecastPreview = nil
             allForecasts = []
             bestPowderDay = nil
+            forecastError = error.localizedDescription
         }
 
         isLoadingForecast = false
@@ -600,6 +679,59 @@ struct EventCreateView: View {
         return parts.joined(separator: " - ")
     }
 
+    // MARK: - Draft Persistence
+
+    private func hasSavedDraft() -> Bool {
+        UserDefaults.standard.dictionary(forKey: Self.draftKey) != nil
+    }
+
+    private func saveDraft() {
+        // Only save if user has entered meaningful data
+        guard !selectedMountainId.isEmpty || !title.isEmpty || !notes.isEmpty else { return }
+
+        let draft: [String: Any] = [
+            "mountainId": selectedMountainId,
+            "title": title,
+            "notes": notes,
+            "eventDate": eventDate.timeIntervalSince1970,
+            "hasMaxAttendees": hasMaxAttendees,
+            "maxAttendees": maxAttendees,
+            "hasDepartureTime": hasDepartureTime,
+            "departureLocation": departureLocation,
+            "carpoolAvailable": carpoolAvailable,
+            "carpoolSeats": carpoolSeats,
+            "savedAt": Date().timeIntervalSince1970,
+        ]
+        UserDefaults.standard.set(draft, forKey: Self.draftKey)
+    }
+
+    private func restoreDraft() {
+        guard let draft = UserDefaults.standard.dictionary(forKey: Self.draftKey) else { return }
+
+        if let mountainId = draft["mountainId"] as? String, !mountainId.isEmpty {
+            selectedMountainId = mountainId
+        }
+        if let t = draft["title"] as? String { title = t }
+        if let n = draft["notes"] as? String { notes = n }
+        if let dateInterval = draft["eventDate"] as? TimeInterval {
+            let date = Date(timeIntervalSince1970: dateInterval)
+            // Only restore future dates
+            if date >= Calendar.current.startOfDay(for: Date()) {
+                eventDate = date
+            }
+        }
+        if let hasMax = draft["hasMaxAttendees"] as? Bool { hasMaxAttendees = hasMax }
+        if let max = draft["maxAttendees"] as? Int { maxAttendees = max }
+        if let hasDep = draft["hasDepartureTime"] as? Bool { hasDepartureTime = hasDep }
+        if let loc = draft["departureLocation"] as? String { departureLocation = loc }
+        if let carpool = draft["carpoolAvailable"] as? Bool { carpoolAvailable = carpool }
+        if let seats = draft["carpoolSeats"] as? Int { carpoolSeats = seats }
+    }
+
+    private func clearDraft() {
+        UserDefaults.standard.removeObject(forKey: Self.draftKey)
+    }
+
     // MARK: - Actions
 
     private func createEvent() async {
@@ -628,6 +760,23 @@ struct EventCreateView: View {
                 maxAttendees: hasMaxAttendees ? maxAttendees : nil
             )
 
+            // Create date poll if multiple dates were suggested
+            if suggestDates, !additionalDates.isEmpty {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                var allDates = [formatter.string(from: eventDate)]
+                allDates.append(contentsOf: additionalDates.map { formatter.string(from: $0) })
+                // Deduplicate
+                let uniqueDates = Array(Set(allDates)).sorted()
+                if uniqueDates.count >= 2 {
+                    _ = try? await EventService.shared.createPoll(
+                        eventId: response.event.id,
+                        dates: uniqueDates
+                    )
+                }
+            }
+
+            clearDraft()
             HapticFeedback.success.trigger()
             onEventCreated?(response.event)
             dismiss()

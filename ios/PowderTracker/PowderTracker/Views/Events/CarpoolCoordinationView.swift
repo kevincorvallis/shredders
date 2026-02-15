@@ -363,6 +363,7 @@ struct CarpoolCoordinationView: View {
 
 struct RSVPCarpoolSheet: View {
     let eventId: String
+    let eventDate: String
     let currentStatus: RSVPStatus?
     /// Callback with the new RSVP status after successful update
     let onComplete: (RSVPStatus) -> Void
@@ -480,6 +481,7 @@ struct RSVPCarpoolSheet: View {
         do {
             let response = try await EventService.shared.rsvp(
                 eventId: eventId,
+                eventDate: eventDate,
                 status: selectedStatus,
                 isDriver: isDriver,
                 needsRide: needsRide,
@@ -555,6 +557,7 @@ struct RSVPCarpoolSheet: View {
 #Preview("RSVP Sheet") {
     RSVPCarpoolSheet(
         eventId: "test",
+        eventDate: "2026-03-15",
         currentStatus: nil,
         onComplete: { _ in }
     )

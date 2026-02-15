@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { getAllMountains, type MountainConfig } from '@shredders/shared';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -27,13 +27,12 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const mountains = getAllMountains();
 
-  // Generate date range
-  const generateDateRange = () => {
+  // Generate date range (memoized to avoid recalculation on every render)
+  const dateRange = useMemo(() => {
     const dates = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Past dates
     for (let i = daysBack; i > 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
@@ -44,14 +43,12 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
       });
     }
 
-    // Today
     dates.push({
       date: today.toISOString().split('T')[0],
       isForecast: false,
       isToday: true,
     });
 
-    // Future dates
     for (let i = 1; i <= daysForward; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
@@ -63,9 +60,7 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
     }
 
     return dates;
-  };
-
-  const dateRange = generateDateRange();
+  }, [daysBack, daysForward]);
 
   useEffect(() => {
     async function fetchSnowfallData() {

@@ -134,6 +134,7 @@ struct EventDetailView: View {
             if event != nil {
                 RSVPCarpoolSheet(
                     eventId: eventId,
+                    eventDate: event?.eventDate ?? "",
                     currentStatus: currentUserRSVPStatus
                 ) { newStatus in
                     // Update status immediately from RSVP response
@@ -204,6 +205,12 @@ struct EventDetailView: View {
             VStack(spacing: 20) {
                 // Event Info Card
                 eventInfoCard(event: event)
+
+                // Date Poll (if event has one)
+                DatePollView(
+                    eventId: event.id,
+                    isCreator: event.isCreator ?? false
+                )
 
                 // Forecast Card (for event day)
                 if let forecast = event.conditions?.forecast {
@@ -1117,7 +1124,7 @@ extension EventDetailView {
         HapticFeedback.light.trigger()
 
         do {
-            let response = try await EventService.shared.rsvp(eventId: eventId, status: status)
+            let response = try await EventService.shared.rsvp(eventId: eventId, eventDate: event?.eventDate ?? "", status: status)
             currentUserRSVPStatus = response.attendee.status
             HapticFeedback.success.trigger()
             // Notify EventsView so it can refresh attendee counts

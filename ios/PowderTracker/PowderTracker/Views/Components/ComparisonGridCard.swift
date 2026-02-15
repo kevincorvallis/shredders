@@ -318,6 +318,24 @@ struct ComparisonGridCard: View {
     }
 }
 
+// MARK: - Equatable
+
+extension ComparisonGridCard: Equatable {
+    static func == (lhs: ComparisonGridCard, rhs: ComparisonGridCard) -> Bool {
+        lhs.mountain.id == rhs.mountain.id
+            && lhs.conditions?.snowfall24h == rhs.conditions?.snowfall24h
+            && lhs.conditions?.snowfall48h == rhs.conditions?.snowfall48h
+            && lhs.conditions?.snowDepth == rhs.conditions?.snowDepth
+            && lhs.conditions?.temperature == rhs.conditions?.temperature
+            && lhs.powderScore?.score == rhs.powderScore?.score
+            && lhs.trend == rhs.trend
+            && lhs.isBest == rhs.isBest
+            && lhs.webcamCount == rhs.webcamCount
+            && lhs.alertCount == rhs.alertCount
+            && lhs.crowdLevel == rhs.crowdLevel
+    }
+}
+
 // MARK: - Supporting Types
 
 enum TrendIndicator {

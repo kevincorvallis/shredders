@@ -871,6 +871,7 @@ class AuthService {
             let display_name: String?
             let bio: String?
             let avatar_url: String?
+            let riding_style: String?
             let experience_level: String?
             let preferred_terrain: [String]
             let season_pass_type: String?
@@ -882,6 +883,7 @@ class AuthService {
             display_name: profile.displayName,
             bio: profile.bio,
             avatar_url: profile.avatarUrl,
+            riding_style: profile.ridingStyle?.rawValue,
             experience_level: profile.experienceLevel?.rawValue,
             preferred_terrain: profile.preferredTerrain.map { $0.rawValue },
             season_pass_type: profile.seasonPassType?.rawValue,

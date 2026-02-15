@@ -227,6 +227,42 @@ class CheckInService {
         return response
     }
 
+    /// Fetch recent public check-ins across multiple mountains (last 24h)
+    func fetchRecentCheckIns(for mountainIds: [String], limit: Int = 10) async throws -> [CheckIn] {
+        guard !mountainIds.isEmpty else { return [] }
+
+        let twentyFourHoursAgo = DateFormatters.iso8601.string(
+            from: Date().addingTimeInterval(-24 * 60 * 60)
+        )
+
+        let response: [CheckIn] = try await supabase.from("check_ins")
+            .select("""
+                id,
+                check_in_time,
+                rating,
+                crowd_level,
+                conditions_rating,
+                trip_report,
+                snow_quality,
+                is_public,
+                mountain_id,
+                user:user_id (
+                    id,
+                    display_name,
+                    avatar_url
+                )
+            """)
+            .in("mountain_id", values: mountainIds)
+            .eq("is_public", value: true)
+            .gte("check_in_time", value: twentyFourHoursAgo)
+            .order("check_in_time", ascending: false)
+            .limit(limit)
+            .execute()
+            .value
+
+        return response
+    }
+
     /// Delete a check-in (owner only)
     func deleteCheckIn(id: String) async throws {
         // Use cached user (Phase 2 optimization)

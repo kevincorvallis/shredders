@@ -245,21 +245,30 @@ class PushNotificationService: NSObject {
 
     /// Handle powder alert notification
     private func handlePowderAlert(_ userInfo: [AnyHashable: Any]) {
-        guard let mountainId = userInfo["mountainId"] as? String,
-              let snowfallInches = userInfo["snowfallInches"] as? Double else {
+        guard let mountainId = userInfo["mountainId"] as? String else {
             return
         }
 
+        let snowfallInches = userInfo["snowfallInches"] as? Double ?? 0
+        let action = userInfo["action"] as? String
+
         #if DEBUG
-        print("Powder alert for mountain \(mountainId): \(snowfallInches)\"")
+        print("Powder alert for mountain \(mountainId): \(snowfallInches)\" action=\(action ?? "none")")
         #endif
 
-        // TODO: Navigate to mountain conditions or show powder details
-        NotificationCenter.default.post(
-            name: NSNotification.Name("PowderAlertReceived"),
-            object: nil,
-            userInfo: ["mountainId": mountainId, "snowfallInches": snowfallInches]
-        )
+        if action == "create-event" {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("DeepLinkToCreateEvent"),
+                object: nil,
+                userInfo: ["mountainId": mountainId]
+            )
+        } else {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("PowderAlertReceived"),
+                object: nil,
+                userInfo: ["mountainId": mountainId, "snowfallInches": snowfallInches]
+            )
+        }
     }
 
     // MARK: - Event Notification Handlers

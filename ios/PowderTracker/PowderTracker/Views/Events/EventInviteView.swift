@@ -259,7 +259,7 @@ struct EventInviteView: View {
             let eventId = try await EventService.shared.useInvite(token: token)
 
             // RSVP to the event
-            _ = try await EventService.shared.rsvp(eventId: eventId, status: status)
+            _ = try await EventService.shared.rsvp(eventId: eventId, eventDate: "", status: status)
 
             // Navigate to event detail
             onEventJoined?(eventId)

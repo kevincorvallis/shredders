@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getMountain } from '@shredders/shared';
 import { getHourlyForecast, type NOAAGridConfig } from '@/lib/apis/noaa';
+import { withCache } from '@/lib/cache';
 
 export async function GET(
   request: Request,
@@ -35,20 +36,23 @@ export async function GET(
       });
     }
 
-    const hourly = await getHourlyForecast(mountain.noaa);
+    const data = await withCache(`hourly:${mountainId}`, async () => {
+      const hourly = await getHourlyForecast(mountain.noaa!);
+      return {
+        mountain: {
+          id: mountain.id,
+          name: mountain.name,
+          shortName: mountain.shortName,
+        },
+        hourly,
+        source: {
+          provider: 'NOAA Weather.gov',
+          gridOffice: mountain.noaa!.gridOffice,
+        },
+      };
+    }, 300); // 5min cache for hourly data
 
-    return NextResponse.json({
-      mountain: {
-        id: mountain.id,
-        name: mountain.name,
-        shortName: mountain.shortName,
-      },
-      hourly,
-      source: {
-        provider: 'NOAA Weather.gov',
-        gridOffice: mountain.noaa.gridOffice,
-      },
-    });
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching hourly forecast:', error);
     return NextResponse.json(

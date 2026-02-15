@@ -153,17 +153,17 @@ export async function GET(request: NextRequest) {
             .eq('user_id', userProfileId)
         : Promise.resolve({ data: [] }),
 
-      // Comment counts for all events
+      // Comment event_ids for per-event counting
       supabase
         .from('event_comments')
-        .select('event_id', { count: 'exact' })
+        .select('event_id')
         .in('event_id', eventIds)
         .eq('is_deleted', false),
 
-      // Photo counts for all events
+      // Photo event_ids for per-event counting
       supabase
         .from('event_photos')
-        .select('event_id', { count: 'exact' })
+        .select('event_id')
         .in('event_id', eventIds),
     ]);
 
@@ -189,6 +189,23 @@ export async function GET(request: NextRequest) {
     const userRSVPByEvent = new Map<string, string>();
     for (const rsvp of userRSVPs) {
       userRSVPByEvent.set(rsvp.event_id, rsvp.status);
+    }
+
+    // Build per-event comment and photo count maps
+    const commentCountByEvent = new Map<string, number>();
+    const allComments = commentCountsResult.status === 'fulfilled'
+      ? (commentCountsResult.value.data || [])
+      : [];
+    for (const row of allComments) {
+      commentCountByEvent.set(row.event_id, (commentCountByEvent.get(row.event_id) || 0) + 1);
+    }
+
+    const photoCountByEvent = new Map<string, number>();
+    const allPhotos = photoCountsResult.status === 'fulfilled'
+      ? (photoCountsResult.value.data || [])
+      : [];
+    for (const row of allPhotos) {
+      photoCountByEvent.set(row.event_id, (photoCountByEvent.get(row.event_id) || 0) + 1);
     }
 
     // Transform events to response format
@@ -229,8 +246,8 @@ export async function GET(request: NextRequest) {
         goingCount: event.going_count,
         maybeCount: event.maybe_count,
         waitlistCount: event.waitlist_count ?? 0,
-        commentCount: 0, // Would need separate aggregation
-        photoCount: 0,   // Would need separate aggregation
+        commentCount: commentCountByEvent.get(event.id) || 0,
+        photoCount: photoCountByEvent.get(event.id) || 0,
         creator: event.creator,
         userRSVPStatus: (userRSVPByEvent.get(event.id) as RSVPStatus | undefined) || null,
         isCreator: userProfileId ? event.user_id === userProfileId : false,

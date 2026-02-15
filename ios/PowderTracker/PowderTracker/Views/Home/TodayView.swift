@@ -30,6 +30,9 @@ struct TodayView: View {
                         // Your Mountains grid
                         yourMountainsSection
 
+                        // Check-in feed
+                        onTheMountainSection
+
                         // Webcam strip
                         webcamSection
                     }
@@ -58,8 +61,9 @@ struct TodayView: View {
             .task {
                 // Skip if data was already pre-fetched during the loading screen
                 if viewModel.mountainData.isEmpty {
-                    await viewModel.loadData()
-                    await viewModel.loadEnhancedData()
+                    async let d: Void = viewModel.loadData()
+                    async let e: Void = viewModel.loadEnhancedData()
+                    _ = await (d, e)
                 }
             }
             .sheet(isPresented: $showingManageFavorites) {
@@ -155,7 +159,26 @@ struct TodayView: View {
 
     @ViewBuilder
     private var todaysPickSection: some View {
-        if let bestPick = viewModel.getBestPowderToday() {
+        let userProfile = AuthService.shared.userProfile
+        let rankings = viewModel.getPersonalizedRanking(userProfile: userProfile)
+
+        if let topRanking = rankings.first,
+           let data = viewModel.data(for: topRanking.mountain.id) {
+            let powderScore = data.powderScore
+            let reasons = topRanking.reasons.isEmpty
+                ? viewModel.getWhyBestReasons(for: topRanking.mountain.id)
+                : topRanking.reasons
+
+            TodaysPickCard(
+                mountain: topRanking.mountain,
+                powderScore: powderScore,
+                data: data,
+                reasons: reasons,
+                onTap: {
+                    selectedMountain = topRanking.mountain
+                }
+            )
+        } else if let bestPick = viewModel.getBestPowderToday() {
             let reasons = viewModel.getWhyBestReasons(for: bestPick.mountain.id)
 
             TodaysPickCard(
@@ -241,6 +264,28 @@ struct TodayView: View {
             title: "No Mountains Added",
             message: "Add mountains to see conditions"
         )
+    }
+
+    // MARK: - On the Mountain Section
+
+    @ViewBuilder
+    private var onTheMountainSection: some View {
+        if !viewModel.recentCheckIns.isEmpty {
+            VStack(alignment: .leading, spacing: .spacingS) {
+                SectionHeaderView(title: "On the Mountain")
+
+                ForEach(viewModel.recentCheckIns.prefix(5)) { checkIn in
+                    VStack(alignment: .leading, spacing: .spacingXS) {
+                        Text(viewModel.mountainName(for: checkIn.mountainId))
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+
+                        CheckInCardView(checkIn: checkIn)
+                    }
+                }
+            }
+        }
     }
 
     // MARK: - Webcam Section

@@ -299,6 +299,56 @@ export interface EventReminderPayload {
 }
 
 // ============================================
+// Date Polling Types
+// ============================================
+
+export type DateVoteChoice = 'available' | 'maybe' | 'unavailable';
+
+export type DatePollStatus = 'open' | 'closed';
+
+export interface DatePollOption {
+  id: string;
+  proposedDate: string; // YYYY-MM-DD
+  proposedBy: string;
+  votes: DatePollVote[];
+  availableCount: number;
+  maybeCount: number;
+  unavailableCount: number;
+}
+
+export interface DatePollVote {
+  userId: string;
+  vote: DateVoteChoice;
+  user?: EventUser;
+}
+
+export interface DatePoll {
+  id: string;
+  eventId: string;
+  status: DatePollStatus;
+  createdAt: string;
+  closedAt: string | null;
+  options: DatePollOption[];
+}
+
+export interface DatePollResponse {
+  poll: DatePoll;
+}
+
+export interface CreateDatePollRequest {
+  dates: string[]; // Array of YYYY-MM-DD strings (2-5 dates)
+}
+
+export interface CastDateVoteRequest {
+  optionId: string;
+  vote: DateVoteChoice;
+}
+
+export interface ResolveDatePollRequest {
+  optionId: string; // The winning date option
+}
+
+// ============================================
 // Query Parameters Types
 // ============================================
 

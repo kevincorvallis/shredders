@@ -15,6 +15,8 @@ struct EventEditView: View {
     @State private var skillLevel: SkillLevel?
     @State private var carpoolAvailable: Bool
     @State private var carpoolSeats: Int
+    @State private var hasMaxAttendees: Bool
+    @State private var maxAttendees: Int
 
     @State private var isSubmitting = false
     @State private var error: String?
@@ -31,6 +33,8 @@ struct EventEditView: View {
         _skillLevel = State(initialValue: event.skillLevel)
         _carpoolAvailable = State(initialValue: event.carpoolAvailable)
         _carpoolSeats = State(initialValue: event.carpoolSeats ?? 3)
+        _hasMaxAttendees = State(initialValue: event.maxAttendees != nil)
+        _maxAttendees = State(initialValue: event.maxAttendees ?? 20)
         _hasDepartureTime = State(initialValue: event.departureTime != nil)
 
         // Parse event date
@@ -128,13 +132,21 @@ struct EventEditView: View {
                     .buttonStyle(.plain)
                 }
 
-                // Skill level
+                // Skill level and capacity
                 Section("Group Info") {
                     Picker("Skill Level", selection: $skillLevel) {
                         Text("All levels welcome").tag(nil as SkillLevel?)
                         ForEach(SkillLevel.allCases, id: \.self) { level in
                             Text(level.displayName).tag(level as SkillLevel?)
                         }
+                    }
+
+                    Toggle("Limit group size", isOn: $hasMaxAttendees)
+                        .accessibilityIdentifier("edit_event_max_attendees_toggle")
+
+                    if hasMaxAttendees {
+                        Stepper("Max attendees: \(maxAttendees)", value: $maxAttendees, in: 2...200)
+                            .accessibilityIdentifier("edit_event_max_attendees_stepper")
                     }
                 }
 
@@ -225,7 +237,9 @@ struct EventEditView: View {
                 departureLocation: departureLocation.isEmpty ? nil : departureLocation.trimmingCharacters(in: .whitespacesAndNewlines),
                 skillLevel: skillLevel,
                 carpoolAvailable: carpoolAvailable,
-                carpoolSeats: carpoolAvailable ? carpoolSeats : nil
+                carpoolSeats: carpoolAvailable ? carpoolSeats : nil,
+                maxAttendees: hasMaxAttendees ? maxAttendees : nil,
+                clearMaxAttendees: !hasMaxAttendees && event.maxAttendees != nil
             )
 
             HapticFeedback.success.trigger()

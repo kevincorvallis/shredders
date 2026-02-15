@@ -55,6 +55,11 @@ struct EventsView: View {
     @State private var toast: ToastMessage?
     @State private var searchText = ""
 
+    // Pagination
+    @State private var hasMore = false
+    @State private var isLoadingMore = false
+    private let pageSize = 20
+
     // Powder day suggestion state
     @State private var powderDayMountain: (mountain: Mountain, score: Int)?
     @State private var showPowderDayHint = false
@@ -219,6 +224,24 @@ struct EventsView: View {
                 .listRowInsets(EdgeInsets(top: .spacingS, leading: .spacingL, bottom: .spacingS, trailing: .spacingL))
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
+                .onAppear {
+                    // Trigger pagination when nearing the end of the list
+                    if event.id == filteredEvents.last?.id && hasMore {
+                        Task { await loadMoreEvents() }
+                    }
+                }
+            }
+
+            // Loading indicator at bottom
+            if isLoadingMore {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .padding(.vertical, 8)
+                    Spacer()
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             }
         }
     }
@@ -345,9 +368,12 @@ struct EventsView: View {
                 upcoming: true,
                 createdByMe: filter == .mine,
                 attendingOnly: filter == .attending,
+                limit: pageSize,
+                offset: 0,
                 bustCache: bustCache
             )
             events = response.events
+            hasMore = response.pagination.hasMore
         } catch let err as EventServiceError {
             error = err.localizedDescription
         } catch {
@@ -357,9 +383,30 @@ struct EventsView: View {
         isLoading = false
     }
 
+    private func loadMoreEvents() async {
+        guard hasMore, !isLoadingMore else { return }
+        isLoadingMore = true
+
+        do {
+            let response = try await EventService.shared.fetchEvents(
+                upcoming: true,
+                createdByMe: filter == .mine,
+                attendingOnly: filter == .attending,
+                limit: pageSize,
+                offset: events.count
+            )
+            events.append(contentsOf: response.events)
+            hasMore = response.pagination.hasMore
+        } catch {
+            // Silently fail for pagination — user can scroll up and try again
+        }
+
+        isLoadingMore = false
+    }
+
     private func quickJoinEvent(_ event: Event) async {
         do {
-            _ = try await EventService.shared.rsvp(eventId: event.id, status: .going)
+            _ = try await EventService.shared.rsvp(eventId: event.id, eventDate: event.eventDate, status: .going)
             HapticFeedback.success.trigger()
             await loadEvents()
             toast = ToastMessage(

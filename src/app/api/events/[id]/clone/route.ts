@@ -133,6 +133,18 @@ export async function POST(
       );
     }
 
+    // Auto-RSVP creator as "going" (matches create flow)
+    await adminClient
+      .from('event_attendees')
+      .insert({
+        event_id: clonedEvent.id,
+        user_id: userProfile.id,
+        status: 'going',
+        is_driver: false,
+        needs_ride: false,
+        responded_at: new Date().toISOString(),
+      });
+
     // Generate new invite token
     const token = randomBytes(16).toString('hex');
     await adminClient
@@ -164,8 +176,8 @@ export async function POST(
       status: clonedEvent.status,
       createdAt: clonedEvent.created_at,
       updatedAt: clonedEvent.updated_at,
-      attendeeCount: 0,
-      goingCount: 0,
+      attendeeCount: 1,
+      goingCount: 1,
       maybeCount: 0,
       waitlistCount: 0,
       creator: clonedEvent.creator,

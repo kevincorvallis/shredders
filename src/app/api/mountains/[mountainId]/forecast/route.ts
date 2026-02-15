@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getMountain } from '@shredders/shared';
 import { getForecast, type NOAAGridConfig } from '@/lib/apis/noaa';
+import { withCache } from '@/lib/cache';
 
 export async function GET(
   request: Request,
@@ -33,20 +34,23 @@ export async function GET(
       });
     }
 
-    const forecast = await getForecast(mountain.noaa);
+    const data = await withCache(`forecast:${mountainId}`, async () => {
+      const forecast = await getForecast(mountain.noaa!);
+      return {
+        mountain: {
+          id: mountain.id,
+          name: mountain.name,
+          shortName: mountain.shortName,
+        },
+        forecast,
+        source: {
+          provider: 'NOAA Weather.gov',
+          gridOffice: mountain.noaa!.gridOffice,
+        },
+      };
+    }, 600);
 
-    return NextResponse.json({
-      mountain: {
-        id: mountain.id,
-        name: mountain.name,
-        shortName: mountain.shortName,
-      },
-      forecast,
-      source: {
-        provider: 'NOAA Weather.gov',
-        gridOffice: mountain.noaa.gridOffice,
-      },
-    });
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching forecast:', error);
     return NextResponse.json(
