@@ -216,8 +216,8 @@ final class ForecastCalibratorTests: XCTestCase {
         for i in 1...10 {
             calibrator.recordObservation(
                 mountainId: "calibrate-test",
-                forecastSnowfall: i * 2,
-                actualSnowfall: i * 2 - 2
+                forecastSnowfall: Double(i * 2),
+                actualSnowfall: Double(i * 2 - 2)
             )
         }
 
@@ -307,11 +307,11 @@ final class ForecastCalibratorTests: XCTestCase {
         let calibrator = ForecastCalibrator.shared
         calibrator.clearAll()
 
-        let history = (1...7).map { i in
+        let history = (1...7).map { i -> HistoryDataPoint in
             HistoryDataPoint(
                 date: "2025-01-0\(i)",
-                snowDepth: 100 + i * 5,
-                snowfall: i + 1,
+                snowDepth: Double(100 + i * 5),
+                snowfall: Double(i + 1),
                 temperature: 28
             )
         }
@@ -399,8 +399,8 @@ final class ForecastCalibratorTests: XCTestCase {
         for i in 1...100 {
             calibrator.recordObservation(
                 mountainId: "limit-test",
-                forecastSnowfall: i,
-                actualSnowfall: i
+                forecastSnowfall: Double(i),
+                actualSnowfall: Double(i)
             )
         }
 
