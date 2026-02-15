@@ -16,8 +16,9 @@ final class EventDiscussionViewModel {
 
     var comments: [EventComment] = []
     var commentCount: Int = 0
-    var isGated: Bool = true
+    var isGated: Bool = false
     var gatedMessage: String?
+    var hasLoaded: Bool = false
 
     var isLoading: Bool = false
     var isPostingComment: Bool = false
@@ -53,9 +54,12 @@ final class EventDiscussionViewModel {
             isGated = response.gated
             gatedMessage = response.message
         } catch {
+            // Don't leave isGated = true on error — show the error, not gated view
+            isGated = false
             errorMessage = error.localizedDescription
         }
 
+        hasLoaded = true
         isLoading = false
     }
 

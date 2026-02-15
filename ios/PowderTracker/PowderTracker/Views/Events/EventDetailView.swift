@@ -405,7 +405,7 @@ struct EventDetailView: View {
     private func recentActivitySummary(event: EventWithDetails) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if event.attendees.isEmpty {
-                Text("No one has joined yet. Be the first!")
+                Text(event.isCreator == true ? "No one has joined yet. Share the event to invite friends!" : "No one has joined yet. Be the first!")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
@@ -470,7 +470,7 @@ struct EventDetailView: View {
     private func discussionContent(event: EventWithDetails, canView: Bool) -> some View {
         Group {
             if canView {
-                EventDiscussionView(eventId: eventId)
+                EventDiscussionView(eventId: eventId, isHost: event.isCreator ?? false)
                     .frame(minHeight: 200)
             } else {
                 VStack(spacing: 16) {
@@ -796,7 +796,7 @@ extension EventDetailView {
             }
 
             if event.attendees.isEmpty {
-                Text("No attendees yet")
+                Text(event.isCreator == true ? "No attendees yet — share the invite!" : "No attendees yet")
                     .foregroundStyle(.secondary)
                     .padding(.vertical, 8)
             } else {

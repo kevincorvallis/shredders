@@ -9,18 +9,28 @@ import SwiftUI
 
 struct EventDiscussionView: View {
     let eventId: String
+    let isHost: Bool
     @State private var viewModel: EventDiscussionViewModel
 
-    init(eventId: String) {
+    init(eventId: String, isHost: Bool = false) {
         self.eventId = eventId
+        self.isHost = isHost
         self._viewModel = State(initialValue: EventDiscussionViewModel(eventId: eventId))
+    }
+
+    /// Host overrides API gating — the host should never be locked out of their own discussion
+    private var effectivelyGated: Bool {
+        if isHost { return false }
+        return viewModel.isGated
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            if viewModel.isLoading && viewModel.comments.isEmpty {
+            if viewModel.isLoading && !viewModel.hasLoaded {
                 loadingView
-            } else if viewModel.isGated {
+            } else if let error = viewModel.errorMessage {
+                errorView(message: error)
+            } else if effectivelyGated {
                 gatedView
             } else if viewModel.isEmpty {
                 emptyView
@@ -29,7 +39,7 @@ struct EventDiscussionView: View {
             }
 
             // Comment input (only if not gated)
-            if !viewModel.isGated {
+            if !effectivelyGated && viewModel.hasLoaded {
                 commentInputBar
             }
         }
@@ -46,6 +56,35 @@ struct EventDiscussionView: View {
             Text("Loading discussion...")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+
+    // MARK: - Error View
+
+    private func errorView(message: String) -> some View {
+        VStack(spacing: .spacingM) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 36))
+                .foregroundStyle(.secondary.opacity(0.5))
+
+            Text("Couldn't load discussion")
+                .font(.headline)
+                .foregroundStyle(.primary)
+
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            Button {
+                Task { await viewModel.loadComments() }
+            } label: {
+                Text("Try Again")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
@@ -92,7 +131,7 @@ struct EventDiscussionView: View {
                     .font(.headline)
                     .foregroundStyle(.primary)
 
-                Text("Be the first to start the conversation!")
+                Text(isHost ? "Kick off the conversation as the host!" : "Be the first to start the conversation!")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -325,7 +364,7 @@ private struct EventCommentRowView: View {
 
 #Preview {
     NavigationStack {
-        EventDiscussionView(eventId: "preview-event-id")
+        EventDiscussionView(eventId: "preview-event-id", isHost: true)
             .navigationTitle("Discussion")
     }
 }
