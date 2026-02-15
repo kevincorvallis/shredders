@@ -103,6 +103,9 @@ class AvatarService: ObservableObject {
     private func uploadData(_ data: Data, userId: String) async throws -> String {
         uploadProgress = 0.3
 
+        // Clean up old avatars before uploading new one
+        try? await deleteAvatar(userId: userId)
+
         // Generate unique filename with timestamp
         let timestamp = Int(Date().timeIntervalSince1970)
         let fileName = "avatar_\(timestamp).jpg"

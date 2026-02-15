@@ -73,9 +73,22 @@ struct AccountSettingsView: View {
 
                 // User ID (for support)
                 LabeledContent("User ID") {
-                    Text(user.id.uuidString)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    Button {
+                        UIPasteboard.general.string = user.id.uuidString
+                        HapticFeedback.light.trigger()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(String(user.id.uuidString.prefix(8)) + "...")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "doc.on.doc")
+                                .font(.caption2)
+                                .foregroundStyle(.blue)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Copy User ID")
+                    .accessibilityHint("Double tap to copy your user ID for support")
                 }
             }
         } header: {
@@ -110,6 +123,7 @@ struct AccountSettingsView: View {
     private var dangerZoneSection: some View {
         Section {
             Button(role: .destructive) {
+                HapticFeedback.warning.trigger()
                 showDeleteAccountConfirmation = true
             } label: {
                 HStack {

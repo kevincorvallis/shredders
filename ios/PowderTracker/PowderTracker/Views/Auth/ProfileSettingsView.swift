@@ -27,6 +27,9 @@ struct ProfileSettingsView: View {
     @State private var rawImageForCropping: UIImage?
     @State private var showCropper = false
     @State private var isUploadingAvatar = false
+    @State private var showingAvatarOptions = false
+    @State private var showingDiscardAlert = false
+    @State private var triggerPhotoPicker = false
 
     // Animation states
     @State private var headerScale: CGFloat = 0.9
@@ -77,7 +80,11 @@ struct ProfileSettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
-                        dismiss()
+                        if hasChanges {
+                            showingDiscardAlert = true
+                        } else {
+                            dismiss()
+                        }
                     }
                     .fontWeight(.medium)
                 }
@@ -124,6 +131,33 @@ struct ProfileSettingsView: View {
                         }
                     )
                 }
+            }
+            .confirmationDialog(
+                "Unsaved Changes",
+                isPresented: $showingDiscardAlert,
+                titleVisibility: .visible
+            ) {
+                Button("Discard Changes", role: .destructive) {
+                    dismiss()
+                }
+                Button("Keep Editing", role: .cancel) {}
+            } message: {
+                Text("You have unsaved changes. Are you sure you want to leave?")
+            }
+            .confirmationDialog(
+                "Profile Photo",
+                isPresented: $showingAvatarOptions,
+                titleVisibility: .visible
+            ) {
+                Button("Choose Photo") {
+                    triggerPhotoPicker = true
+                }
+                if authService.userProfile?.avatarUrl != nil || selectedImage != nil {
+                    Button("Remove Photo", role: .destructive) {
+                        Task { await removeAvatar() }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
             }
         }
     }
@@ -222,7 +256,10 @@ struct ProfileSettingsView: View {
         let avatarUrl = authService.userProfile?.avatarUrl
         let uploading = isUploadingAvatar
 
-        return PhotosPicker(selection: $selectedItem, matching: .images) {
+        return Button {
+            HapticFeedback.selection.trigger()
+            showingAvatarOptions = true
+        } label: {
             ZStack {
                 // Avatar image or placeholder
                 Group {
@@ -292,6 +329,9 @@ struct ProfileSettingsView: View {
         }
         .disabled(uploading)
         .buttonStyle(.plain)
+        .accessibilityLabel("Profile photo")
+        .accessibilityHint(avatarUrl != nil || currentImage != nil ? "Double tap to change or remove photo" : "Double tap to add a photo")
+        .photosPicker(isPresented: $triggerPhotoPicker, selection: $selectedItem, matching: .images)
     }
 
     // MARK: - Profile Info Card
@@ -306,6 +346,7 @@ struct ProfileSettingsView: View {
                     text: $displayName,
                     icon: "textformat"
                 )
+                .accessibilityIdentifier("profile_display_name_field")
 
                 Divider()
                     .background(Color.white.opacity(0.1))
@@ -333,11 +374,18 @@ struct ProfileSettingsView: View {
                                 RoundedRectangle(cornerRadius: .cornerRadiusSmall)
                                     .fill(Color(.systemBackground).opacity(0.5))
                             )
+                            .onChange(of: bio) { _, newValue in
+                                if newValue.count > 200 {
+                                    bio = String(newValue.prefix(200))
+                                }
+                            }
+                            .accessibilityLabel("Bio")
+                            .accessibilityHint("Tell others about yourself, up to 200 characters")
                     }
 
                     Text("\(bio.count)/200 characters")
                         .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(bio.count >= 200 ? Color.red : bio.count >= 180 ? Color.orange : Color.secondary)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
@@ -502,7 +550,7 @@ struct ProfileSettingsView: View {
             HapticFeedback.success.trigger()
 
             // Auto-dismiss message
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 withAnimation { saveMessage = nil }
             }
         } catch {
@@ -511,6 +559,44 @@ struct ProfileSettingsView: View {
         }
 
         isSaving = false
+    }
+
+    // MARK: - Remove Avatar
+
+    private func removeAvatar() async {
+        isUploadingAvatar = true
+        errorMessage = nil
+
+        do {
+            guard let userId = authService.userProfile?.authUserId ?? authService.currentUser?.id.uuidString else {
+                throw NSError(domain: "ProfileSettings", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
+            }
+
+            // Delete from storage
+            try await AvatarService.shared.deleteAvatar(userId: userId)
+
+            // Update profile to clear avatar URL
+            try await authService.updateProfile(
+                displayName: nil,
+                bio: nil,
+                homeMountainId: nil,
+                avatarUrl: ""
+            )
+
+            selectedImage = nil
+            selectedItem = nil
+            withAnimation { saveMessage = "Photo removed" }
+            HapticFeedback.success.trigger()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                withAnimation { saveMessage = nil }
+            }
+        } catch {
+            withAnimation { errorMessage = "Failed to remove photo" }
+            HapticFeedback.error.trigger()
+        }
+
+        isUploadingAvatar = false
     }
 }
 

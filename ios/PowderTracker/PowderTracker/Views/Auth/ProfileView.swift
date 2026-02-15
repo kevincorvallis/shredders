@@ -280,7 +280,7 @@ struct ProfileView: View {
                         .font(.title3)
                         .fontWeight(.semibold)
 
-                    Text("Track your photos, check-ins, and activity")
+                    Text("Save favorites, set alerts, and plan trips")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
