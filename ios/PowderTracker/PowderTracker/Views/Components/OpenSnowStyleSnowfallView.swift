@@ -262,7 +262,7 @@ class OpenSnowSnowfallViewModel {
             }
 
             // Load historical data
-            var snowfallByDate: [Date: Int] = [:]
+            var snowfallByDate: [Date: Double] = [:]
             if let historyResponse = try? await APIClient.shared.fetchHistory(
                 for: mountainId,
                 days: daysBack + 1
@@ -280,7 +280,7 @@ class OpenSnowSnowfallViewModel {
                 for day in forecastResponse.forecast {
                     if let date = ISO8601DateFormatter().date(from: day.date) {
                         let startOfDay = calendar.startOfDay(for: date)
-                        snowfallByDate[startOfDay] = day.snowfall
+                        snowfallByDate[startOfDay] = Double(day.snowfall)
                     }
                 }
             }
@@ -298,7 +298,7 @@ class OpenSnowSnowfallViewModel {
                 }
 
                 let dateLabel = date.formatted(.dateTime.month().day())
-                let snowfall = snowfallByDate[date] ?? 0
+                let snowfall = Int(snowfallByDate[date] ?? 0)
 
                 return TimelineDay(
                     date: date,
