@@ -174,36 +174,55 @@ struct ContentView: View {
                     Label("Today", systemImage: "sun.snow.fill")
                 }
                 .tag(0)
-                .accessibilityIdentifier("tab_today")
 
             MountainsTabView()
                 .tabItem {
                     Label("Mountains", systemImage: "mountain.2.fill")
                 }
                 .tag(1)
-                .accessibilityIdentifier("tab_mountains")
 
             EventsView()
                 .tabItem {
                     Label("Events", systemImage: "calendar")
                 }
                 .tag(2)
-                .accessibilityIdentifier("tab_events")
 
             MountainMapView()
                 .tabItem {
                     Label("Map", systemImage: "map.fill")
                 }
                 .tag(3)
-                .accessibilityIdentifier("tab_map")
 
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.circle.fill")
                 }
                 .tag(4)
-                .accessibilityIdentifier("tab_profile")
         }
+        .onAppear {
+            setTabBarAccessibilityIdentifiers()
+        }
+    }
+
+    private func setTabBarAccessibilityIdentifiers() {
+        let identifiers = ["tab_today", "tab_mountains", "tab_events", "tab_map", "tab_profile"]
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = scene.windows.first else { return }
+            if let tabBar = findTabBar(in: window) {
+                for (index, item) in (tabBar.items ?? []).enumerated() where index < identifiers.count {
+                    item.accessibilityIdentifier = identifiers[index]
+                }
+            }
+        }
+    }
+
+    private func findTabBar(in view: UIView) -> UITabBar? {
+        if let tabBar = view as? UITabBar { return tabBar }
+        for subview in view.subviews {
+            if let found = findTabBar(in: subview) { return found }
+        }
+        return nil
     }
 }
 
