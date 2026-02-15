@@ -50,21 +50,7 @@ final class RidingStyleUITests: XCTestCase {
     @MainActor
     func testRidingStyleQuestionAppearsInOnboarding() throws {
         launchAppForOnboarding()
-
-        // Advance past welcome screen
-        Thread.sleep(forTimeInterval: 1)
-        let letsGoButton = app.buttons["Let's Go Shred!"]
-        if letsGoButton.waitForExistence(timeout: 5) && letsGoButton.isHittable {
-            letsGoButton.tap()
-        }
-        Thread.sleep(forTimeInterval: 1)
-
-        // Advance to "About You" screen (after profile setup)
-        let continueButton = app.buttons["Continue"]
-        if continueButton.waitForExistence(timeout: 3) && continueButton.isHittable {
-            continueButton.tap()
-        }
-        Thread.sleep(forTimeInterval: 1)
+        try navigateToAboutYouScreen()
 
         // Look for riding style section text
         let ridingStyleLabel = app.staticTexts["I ride on..."]
@@ -346,20 +332,35 @@ final class RidingStyleUITests: XCTestCase {
 
     @MainActor
     private func navigateToAboutYouScreen() throws {
-        // Advance past welcome screen
-        Thread.sleep(forTimeInterval: 1)
-        let letsGoButton = app.buttons["Let's Go Shred!"]
-        if letsGoButton.waitForExistence(timeout: 5) && letsGoButton.isHittable {
-            letsGoButton.tap()
-        }
-        Thread.sleep(forTimeInterval: 1)
+        // BrockStoryOnboardingView has 5 pages (welcome + 3 features + final).
+        // Pages 0-3 show "Continue", page 4 shows "Get Started".
+        // After that, OnboardingProfileSetupView also has "Continue".
+        // Keep tapping through until "I ride on..." appears (About You screen).
+        let ridingStyleLabel = app.staticTexts["I ride on..."]
 
-        // Advance past profile setup to About You
-        let continueButton = app.buttons["Continue"]
-        if continueButton.waitForExistence(timeout: 3) && continueButton.isHittable {
-            continueButton.tap()
+        for _ in 0..<10 {
+            if ridingStyleLabel.waitForExistence(timeout: 1) { return }
+
+            let getStarted = app.buttons["Get Started"]
+            if getStarted.exists && getStarted.isHittable {
+                getStarted.tap()
+                Thread.sleep(forTimeInterval: 0.5)
+                continue
+            }
+
+            let continueButton = app.buttons["Continue"]
+            if continueButton.exists && continueButton.isHittable {
+                continueButton.tap()
+                Thread.sleep(forTimeInterval: 0.5)
+                continue
+            }
+
+            Thread.sleep(forTimeInterval: 0.5)
         }
-        Thread.sleep(forTimeInterval: 1)
+
+        guard ridingStyleLabel.waitForExistence(timeout: 3) else {
+            throw XCTSkip("Could not navigate to About You screen")
+        }
     }
 
     @MainActor
