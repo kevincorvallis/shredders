@@ -5,404 +5,432 @@ struct MountainMapView: View {
     @State private var viewModel = MountainSelectionViewModel()
     @ObservedObject private var locationManager = LocationManager.shared
     @ObservedObject private var favoritesManager = FavoritesService.shared
-    @StateObject private var overlayState = MapOverlayState()
-    @AppStorage("selectedMountainId") private var persistedMountainId = "baker"
-    @State private var mapRegion = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 46.5, longitude: -121.5),
-        span: MKCoordinateSpan(latitudeDelta: 5, longitudeDelta: 5)
-    )
-    @State private var selectedMountainId: String?
-    @State private var showingOverlaySheet = false
-    @State private var navigateToMountain: Mountain?
 
-    // Filter state — persisted across navigation via @AppStorage
-    @AppStorage("mapSearchText") private var searchText = ""
-    @AppStorage("mapSortBy") private var sortBy: SortOption = .distance
-    @AppStorage("mapFilterPass") private var filterPass: PassFilter = .all
+    @State private var cameraPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 46.5, longitude: -121.5),
+            span: MKCoordinateSpan(latitudeDelta: 5, longitudeDelta: 5)
+        )
+    )
+    @State private var selectedMountain: Mountain?
+    @State private var showFavoritesOnly = false
+    @State private var hasSetInitialPosition = false
+
+    // Search state
+    @State private var isSearchExpanded = false
+    @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
+
+    private var displayedMountains: [Mountain] {
+        if showFavoritesOnly {
+            return viewModel.mountains.filter { favoritesManager.isFavorite($0.id) }
+        }
+        return viewModel.mountains
+    }
+
+    private var searchResults: [Mountain] {
+        guard !searchText.isEmpty else { return [] }
+        let query = searchText
+        return viewModel.mountains.filter { mountain in
+            mountain.name.localizedCaseInsensitiveContains(query) ||
+            mountain.shortName.localizedCaseInsensitiveContains(query) ||
+            mountain.region.localizedCaseInsensitiveContains(query)
+        }
+    }
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Map with weather overlay support
-                ZStack(alignment: .bottomLeading) {
-                    WeatherMapView(
-                        overlayState: overlayState,
-                        mountains: viewModel.mountains,
-                        selectedMountainId: selectedMountainId,
-                        onMountainSelected: { mountain in
-                            selectMountain(mountain)
-                        },
-                        region: $mapRegion
-                    )
-                    // Note: Don't use .id() here - it destroys and recreates the map view.
-                    // UIViewRepresentable already calls updateUIView when @ObservedObject changes.
+            ZStack(alignment: .topLeading) {
+                Map(position: $cameraPosition) {
+                    UserAnnotation()
 
-                    // Legend overlay (when overlay is active)
-                    if let overlay = overlayState.activeOverlay {
-                        MapLegendView(overlay: overlay)
-                            .padding(.spacingM)
-                    }
-
-                    // Overlay availability indicator
-                    if let overlay = overlayState.activeOverlay,
-                       !WeatherTileOverlay.isAvailable(overlay) {
-                        VStack {
-                            Spacer()
-                            HStack {
-                                Image(systemName: overlay.isComingSoon || overlay == .avalanche ? "clock.fill" : "exclamationmark.triangle.fill")
-                                    .foregroundColor(overlay.isComingSoon || overlay == .avalanche ? .blue : .orange)
-                                Text(overlayUnavailableMessage(for: overlay))
-                                    .font(.caption)
+                    ForEach(displayedMountains) { mountain in
+                        Annotation(
+                            mountain.shortName,
+                            coordinate: mountain.location.coordinate,
+                            anchor: .bottom
+                        ) {
+                            MountainMapPin(
+                                mountain: mountain,
+                                score: viewModel.getScore(for: mountain),
+                                isSelected: selectedMountain?.id == mountain.id
+                            )
+                            .onTapGesture {
+                                withAnimation(.snappy) {
+                                    selectedMountain = mountain
+                                    cameraPosition = .region(
+                                        MKCoordinateRegion(
+                                            center: mountain.location.coordinate,
+                                            span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+                                        )
+                                    )
+                                }
                             }
-                            .padding(8)
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(.cornerRadiusButton)
-                            .padding()
                         }
                     }
                 }
-                .frame(height: UIScreen.main.bounds.height * 0.40)
-
-                // Overlay picker bar
-                OverlayPickerBar(
-                    overlayState: overlayState,
-                    onMoreTap: { showingOverlaySheet = true }
-                )
-
-                // Time scrubber (for time-based overlays)
-                if let overlay = overlayState.activeOverlay, overlay.isTimeBased {
-                    MapTimeScrubber(overlayState: overlayState)
-                        .padding(.horizontal, .spacingM)
-                        .padding(.vertical, .spacingS)
+                .mapStyle(.standard(elevation: .realistic))
+                .mapControls { MapCompass() }
+                .onTapGesture {
+                    selectedMountain = nil
+                    dismissSearch()
                 }
 
-                // Search and filter section
+                // Search overlay (top-leading)
+                searchOverlay
+                    .padding(.spacingM)
+                    .padding(.top, 4)
+
+                // Floating controls (top-trailing)
                 VStack(spacing: .spacingS) {
-                    // Search bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        TextField("Search mountains...", text: $searchText)
-                            .textFieldStyle(.plain)
-                        if !searchText.isEmpty {
-                            Button {
-                                searchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .padding(.spacingS)
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(.cornerRadiusButton)
-
-                    // Filter chips row
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: .spacingS) {
-                            // Sort menu
-                            Menu {
-                                ForEach(SortOption.allCases, id: \.self) { option in
-                                    Button {
-                                        sortBy = option
-                                    } label: {
-                                        Label(option.rawValue, systemImage: sortBy == option ? "checkmark" : "")
-                                    }
-                                }
-                            } label: {
-                                FilterChipView(icon: "arrow.up.arrow.down", label: sortBy.rawValue, isActive: true)
-                            }
-
-                            // Pass filters
-                            ForEach([PassFilter.all, .epic, .ikon, .favorites, .freshPowder], id: \.self) { passFilter in
-                                Button {
-                                    filterPass = passFilter
-                                } label: {
-                                    FilterChipView(
-                                        icon: passFilter.icon,
-                                        label: passFilter.rawValue,
-                                        isActive: filterPass == passFilter
+                    Button {
+                        if let loc = locationManager.location {
+                            withAnimation {
+                                cameraPosition = .region(
+                                    MKCoordinateRegion(
+                                        center: loc.coordinate,
+                                        span: MKCoordinateSpan(latitudeDelta: 2, longitudeDelta: 2)
                                     )
-                                }
+                                )
                             }
-                        }
-                    }
-                }
-                .padding(.horizontal, .spacingM)
-                .padding(.vertical, .spacingS)
-                .background(Color(.systemBackground))
-
-                Divider()
-
-                // Mountain list (filtered)
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        if filteredMountains.isEmpty {
-                            // Empty state
-                            VStack(spacing: 12) {
-                                Image(systemName: emptyStateIcon)
-                                    .font(.system(size: 40))
-                                    .foregroundColor(.secondary)
-                                Text(emptyStateMessage)
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 40)
                         } else {
-                            ForEach(filteredMountains) { mountain in
-                                NavigationLink {
-                                    MountainDetailView(mountain: mountain)
-                                } label: {
-                                    MountainRow(
-                                        mountain: mountain,
-                                        score: viewModel.getScore(for: mountain),
-                                        distance: viewModel.getDistance(to: mountain),
-                                        isSelected: selectedMountainId == mountain.id
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                                .simultaneousGesture(TapGesture().onEnded {
-                                    selectMountain(mountain)
-                                })
-                            }
+                            locationManager.requestPermission()
                         }
+                    } label: {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(width: 40, height: 40)
+                            .background(.ultraThinMaterial, in: Circle())
                     }
-                    .padding()
+
+                    Button {
+                        showFavoritesOnly.toggle()
+                    } label: {
+                        Image(systemName: showFavoritesOnly ? "star.fill" : "star")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(showFavoritesOnly ? .yellow : .primary)
+                            .frame(width: 40, height: 40)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
                 }
-                .background(Color(.systemGroupedBackground))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.spacingM)
+                .padding(.top, 4)
+
+                // Bottom card
+                if let mountain = selectedMountain {
+                    VStack {
+                        Spacer()
+                        NavigationLink {
+                            MountainDetailView(mountain: mountain)
+                        } label: {
+                            MountainMapCard(
+                                mountain: mountain,
+                                score: viewModel.getScore(for: mountain),
+                                conditions: viewModel.getConditions(for: mountain),
+                                distance: viewModel.getDistance(to: mountain)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, .spacingM)
+                        .padding(.bottom, .spacingM)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
             }
-            .navigationTitle("Mountains")
+            .navigationTitle("Map")
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await viewModel.loadMountains()
                 locationManager.requestPermission()
+                setInitialPosition()
             }
-            .onChange(of: selectedMountainId) { _, newId in
-                if let id = newId, let mountain = viewModel.mountains.first(where: { $0.id == id }) {
-                    viewModel.selectMountain(mountain)
+            .onChange(of: locationManager.location) { _, newLocation in
+                guard !hasSetInitialPosition, newLocation != nil else { return }
+                setInitialPosition()
+            }
+            .onChange(of: viewModel.mountains) { _, _ in
+                if !hasSetInitialPosition {
+                    setInitialPosition()
                 }
             }
-            .sheet(isPresented: $showingOverlaySheet) {
-                OverlayPickerSheet(overlayState: overlayState)
-                    .presentationDetents([.medium, .large])
+        }
+    }
+
+    // MARK: - Smart Initial Position
+
+    private func setInitialPosition() {
+        guard !hasSetInitialPosition else { return }
+
+        // Option 1: User location available
+        if let loc = locationManager.location {
+            hasSetInitialPosition = true
+            withAnimation {
+                cameraPosition = .region(
+                    MKCoordinateRegion(
+                        center: loc.coordinate,
+                        span: MKCoordinateSpan(latitudeDelta: 2, longitudeDelta: 2)
+                    )
+                )
+            }
+            return
+        }
+
+        // Option 2: Zoom to first favorite mountain
+        guard !viewModel.mountains.isEmpty else { return }
+        let targetId = favoritesManager.favoriteIds.first ?? "baker"
+        if let mountain = viewModel.mountains.first(where: { $0.id == targetId }) {
+            hasSetInitialPosition = true
+            withAnimation {
+                cameraPosition = .region(
+                    MKCoordinateRegion(
+                        center: mountain.location.coordinate,
+                        span: MKCoordinateSpan(latitudeDelta: 1.5, longitudeDelta: 1.5)
+                    )
+                )
             }
         }
     }
 
-    private func overlayUnavailableMessage(for overlay: MapOverlayType) -> String {
-        switch overlay {
-        case .avalanche:
-            return "Avalanche Advisory - Coming Soon"
-        case .landOwnership, .offlineMaps:
-            return "\(overlay.fullName) - Coming Soon"
-        case .temperature, .wind:
-            return "\(overlay.fullName) requires API key"
-        default:
-            return "\(overlay.fullName) unavailable"
+    // MARK: - Search
+
+    @ViewBuilder
+    private var searchOverlay: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if isSearchExpanded {
+                // Expanded search bar
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search mountains...", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .focused($isSearchFocused)
+                        .submitLabel(.search)
+                    Button {
+                        dismissSearch()
+                    } label: {
+                        Text("Cancel")
+                            .font(.subheadline)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+
+                // Search results
+                if !searchResults.isEmpty {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(searchResults.prefix(6)) { mountain in
+                                Button {
+                                    selectFromSearch(mountain)
+                                } label: {
+                                    HStack(spacing: 10) {
+                                        Image(systemName: "mountain.2.fill")
+                                            .foregroundStyle(.secondary)
+                                            .frame(width: 20)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(mountain.name)
+                                                .font(.subheadline.weight(.medium))
+                                                .foregroundStyle(.primary)
+                                            Text(mountain.region)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        Spacer()
+                                        if let score = viewModel.getScore(for: mountain) {
+                                            Text(String(format: "%.0f", score))
+                                                .font(.caption.bold())
+                                                .foregroundStyle(.white)
+                                                .frame(width: 28, height: 28)
+                                                .background(scoreColor(score), in: Circle())
+                                        }
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                }
+                                if mountain.id != searchResults.prefix(6).last?.id {
+                                    Divider().padding(.leading, 42)
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 240)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .padding(.top, 4)
+                }
+            } else {
+                // Collapsed: magnifying glass button
+                Button {
+                    withAnimation(.snappy) {
+                        isSearchExpanded = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        isSearchFocused = true
+                    }
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(width: 40, height: 40)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+            }
         }
     }
 
-    private func selectMountain(_ mountain: Mountain) {
-        selectedMountainId = mountain.id
-        persistedMountainId = mountain.id
-        withAnimation {
-            mapRegion = MKCoordinateRegion(
-                center: mountain.location.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+    private func selectFromSearch(_ mountain: Mountain) {
+        dismissSearch()
+        withAnimation(.snappy) {
+            selectedMountain = mountain
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: mountain.location.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
+                )
             )
         }
     }
 
-    // MARK: - Filtering
-
-    private var filteredMountains: [Mountain] {
-        var mountains = viewModel.mountains
-
-        // Apply pass filter
-        if filterPass != .all {
-            if let passType = filterPass.passTypeKey {
-                mountains = mountains.filter { $0.passType == passType }
-            } else if filterPass == .favorites {
-                mountains = mountains.filter { favoritesManager.isFavorite($0.id) }
-            } else if filterPass == .freshPowder {
-                mountains = mountains.filter { mountain in
-                    guard let conditions = viewModel.getConditions(for: mountain) else { return false }
-                    return conditions.snowfall24h >= 6
-                }
-            }
-        }
-
-        // Apply search
-        if !searchText.isEmpty {
-            mountains = mountains.filter {
-                $0.name.localizedCaseInsensitiveContains(searchText) ||
-                $0.shortName.localizedCaseInsensitiveContains(searchText) ||
-                $0.region.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-
-        // Apply sort
-        mountains = mountains.sorted { m1, m2 in
-            switch sortBy {
-            case .name:
-                return m1.name < m2.name
-            case .distance:
-                // Fall back to name sort if location not available
-                let hasLocation = locationManager.authorizationStatus == .authorizedWhenInUse ||
-                                  locationManager.authorizationStatus == .authorizedAlways
-                if !hasLocation {
-                    return m1.name < m2.name
-                }
-                let d1 = viewModel.getDistance(to: m1) ?? Double.infinity
-                let d2 = viewModel.getDistance(to: m2) ?? Double.infinity
-                return d1 < d2
-            case .powderScore:
-                let s1 = viewModel.getScore(for: m1) ?? 0
-                let s2 = viewModel.getScore(for: m2) ?? 0
-                return s1 > s2
-            case .snowfall:
-                let c1 = viewModel.getConditions(for: m1)?.snowfall24h ?? 0
-                let c2 = viewModel.getConditions(for: m2)?.snowfall24h ?? 0
-                return c1 > c2
-            case .favorites:
-                let f1 = favoritesManager.isFavorite(m1.id)
-                let f2 = favoritesManager.isFavorite(m2.id)
-                if f1 != f2 { return f1 }
-                // Preserve user's saved favorites order; non-favorites by powder score
-                if f1 && f2 {
-                    let idx1 = favoritesManager.favoriteIds.firstIndex(of: m1.id) ?? .max
-                    let idx2 = favoritesManager.favoriteIds.firstIndex(of: m2.id) ?? .max
-                    return idx1 < idx2
-                }
-                let s1 = viewModel.getScore(for: m1) ?? 0
-                let s2 = viewModel.getScore(for: m2) ?? 0
-                return s1 > s2
-            }
-        }
-
-        return mountains
-    }
-
-    private var emptyStateIcon: String {
-        switch filterPass {
-        case .favorites: return "star"
-        case .freshPowder: return "snowflake"
-        case .epic: return "ticket"
-        case .ikon: return "star.square"
-        default: return "mountain.2"
+    private func dismissSearch() {
+        withAnimation(.snappy) {
+            isSearchExpanded = false
+            searchText = ""
+            isSearchFocused = false
         }
     }
 
-    private var emptyStateMessage: String {
-        switch filterPass {
-        case .favorites: return "No favorites yet"
-        case .freshPowder: return "No fresh powder today"
-        case .epic: return "No Epic Pass mountains found"
-        case .ikon: return "No Ikon Pass mountains found"
-        default:
-            if !searchText.isEmpty {
-                return "No mountains match '\(searchText)'"
-            }
-            return "No mountains found"
-        }
-    }
-}
-
-// MARK: - Mountain Row
-// Note: MountainMarker and Triangle components are now shared
-// See Views/Components/MountainMarker.swift
-struct MountainRow: View {
-    let mountain: Mountain
-    let score: Double?
-    let distance: Double?
-    let isSelected: Bool
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // Score circle
-            ZStack {
-                Circle()
-                    .fill(scoreColor)
-                    .frame(width: 44, height: 44)
-
-                Text(score != nil ? String(format: "%.0f", score!) : "?")
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-            }
-
-            // Info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(mountain.name)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-
-                HStack(spacing: 8) {
-                    Text("\(mountain.elevation.summit.formatted())ft")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    if let distance = distance {
-                        Text("•")
-                            .foregroundColor(.secondary)
-                        Text("\(Int(distance)) mi")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    if !mountain.hasSnotel {
-                        Text("•")
-                            .foregroundColor(.secondary)
-                        Text("Limited")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                    }
-                }
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .foregroundColor(.secondary)
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.secondarySystemGroupedBackground))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
-                )
-        )
-    }
-
-    var scoreColor: Color {
-        guard let score = score else { return .gray }
+    private func scoreColor(_ score: Double) -> Color {
         if score >= 7 { return .green }
         if score >= 5 { return .yellow }
         return .red
     }
 }
 
-// MARK: - Section Header
-struct MapSectionHeader: View {
-    let title: String
+// MARK: - Map Pin
+
+private struct MountainMapPin: View {
+    let mountain: Mountain
+    let score: Double?
+    let isSelected: Bool
 
     var body: some View {
-        HStack {
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
-            Spacer()
+        VStack(spacing: 0) {
+            MountainMarker(mountain: mountain, score: score, isSelected: isSelected)
         }
-        .padding(.top, 8)
+        .scaleEffect(isSelected ? 1.15 : 1.0)
+        .animation(.snappy, value: isSelected)
     }
 }
 
-// MARK: - Color Extension
+// MARK: - Bottom Card
+
+private struct MountainMapCard: View {
+    let mountain: Mountain
+    let score: Double?
+    let conditions: MountainConditions?
+    let distance: Double?
+
+    var body: some View {
+        HStack(spacing: .spacingM) {
+            // Score circle
+            ZStack {
+                Circle()
+                    .fill(scoreColor)
+                    .frame(width: 48, height: 48)
+                Text(score != nil ? String(format: "%.0f", score!) : "?")
+                    .font(.title3.bold())
+                    .foregroundColor(.white)
+            }
+
+            // Info
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(mountain.name)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    // Open/Closed badge
+                    if let status = mountain.status {
+                        Text(status.isOpen ? "Open" : "Closed")
+                            .font(.caption2.bold())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(status.isOpen ? Color.green : Color.red, in: Capsule())
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                // Row 1: Snowfall stats
+                HStack(spacing: 8) {
+                    if let c = conditions {
+                        if c.snowfall24h > 0 {
+                            Label("\(c.snowfall24h)\" 24h", systemImage: "snowflake")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        if c.snowfall48h > 0 {
+                            Label("\(c.snowfall48h)\" 48h", systemImage: "snowflake")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                        if c.snowfall7d > 0 {
+                            Label("\(c.snowfall7d)\" 7d", systemImage: "snowflake.circle")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
+                // Row 2: Temp, wind, depth, lifts, distance
+                HStack(spacing: 8) {
+                    if let temp = conditions?.temperature {
+                        Label("\(temp)\u{00B0}F", systemImage: "thermometer.medium")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let wind = conditions?.wind {
+                        Label("\(wind.speed) mph \(wind.direction)", systemImage: "wind")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let depth = conditions?.snowDepth, depth > 0 {
+                        Label("\(depth)\" base", systemImage: "ruler")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let ls = conditions?.liftStatus {
+                        Label("\(ls.liftsOpen)/\(ls.liftsTotal) lifts", systemImage: "cablecar.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let distance {
+                        Label("\(Int(distance)) mi", systemImage: "location.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .padding(.spacingM)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: .cornerRadiusCard))
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+    }
+
+    private var scoreColor: Color {
+        guard let score else { return .gray }
+        if score >= 7 { return .green }
+        if score >= 5 { return .yellow }
+        return .red
+    }
+}
+
 #Preview {
     MountainMapView()
 }
