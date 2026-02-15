@@ -169,6 +169,50 @@ final class AccessibilityUITests: XCTestCase {
         }
     }
 
+    // MARK: - Automated Accessibility Audit
+
+    @MainActor
+    func testAccessibilityAuditTodayTab() throws {
+        launchApp()
+        try app.performAccessibilityAudit()
+    }
+
+    @MainActor
+    func testAccessibilityAuditMountainsTab() throws {
+        launchApp()
+        let mountainsTab = app.tabBars.buttons["Mountains"].firstMatch
+        guard mountainsTab.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Mountains tab not found")
+        }
+        mountainsTab.tap()
+        Thread.sleep(forTimeInterval: 1)
+        try app.performAccessibilityAudit()
+    }
+
+    @MainActor
+    func testAccessibilityAuditEventsTab() throws {
+        launchApp()
+        let eventsTab = app.tabBars.buttons["Events"].firstMatch
+        guard eventsTab.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Events tab not found")
+        }
+        eventsTab.tap()
+        Thread.sleep(forTimeInterval: 1)
+        try app.performAccessibilityAudit()
+    }
+
+    @MainActor
+    func testAccessibilityAuditProfileTab() throws {
+        launchApp()
+        let profileTab = app.tabBars.buttons["Profile"].firstMatch
+        guard profileTab.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Profile tab not found")
+        }
+        profileTab.tap()
+        Thread.sleep(forTimeInterval: 1)
+        try app.performAccessibilityAudit()
+    }
+
     // MARK: - VoiceOver Label Tests
 
     @MainActor
