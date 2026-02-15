@@ -375,9 +375,16 @@ export async function POST(
       .single();
 
     if (insertError) {
-      console.error('Error creating event comment:', insertError);
+      console.error('Error creating event comment:', {
+        code: insertError.code,
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        eventId,
+        userId: userProfile.id,
+      });
       return NextResponse.json(
-        { error: 'Failed to create comment' },
+        { error: `Failed to create comment: ${insertError.message}` },
         { status: 500 }
       );
     }
@@ -431,9 +438,12 @@ export async function POST(
       },
     }, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/comments:', error);
+    console.error('Error in POST /api/events/[id]/comments:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: `Internal server error: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     );
   }
