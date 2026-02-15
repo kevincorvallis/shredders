@@ -13,7 +13,7 @@ import Charts
 struct InteractiveBarChart<Data: Identifiable>: View {
     let data: [Data]
     let xValue: KeyPath<Data, Date>
-    let yValue: KeyPath<Data, Int>
+    let yValue: KeyPath<Data, Double>
 
     var dataType: ChartDataType
     var referenceValue: Double?
@@ -32,7 +32,7 @@ struct InteractiveBarChart<Data: Identifiable>: View {
     init(
         data: [Data],
         xValue: KeyPath<Data, Date>,
-        yValue: KeyPath<Data, Int>,
+        yValue: KeyPath<Data, Double>,
         dataType: ChartDataType = .snowfall,
         referenceValue: Double? = nil,
         referenceLabel: String = "Avg",
@@ -134,10 +134,10 @@ struct InteractiveBarChart<Data: Identifiable>: View {
         }
         .chartYAxis {
             AxisMarks(position: .leading) { value in
-                if let intValue = value.as(Int.self) {
+                if let doubleValue = value.as(Double.self) {
                     AxisGridLine()
                     AxisValueLabel {
-                        Text(SnowYAxisFormat.formatInches(intValue))
+                        Text(SnowYAxisFormat.formatInches(Int(doubleValue)))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }

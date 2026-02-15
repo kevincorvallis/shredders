@@ -166,8 +166,8 @@ struct SnowDepthChart: View {
             AxisMarks(position: .leading) { value in
                 AxisGridLine()
                 AxisValueLabel {
-                    if let depth = value.as(Int.self) {
-                        Text(SnowYAxisFormat.formatInches(depth))
+                    if let depth = value.as(Double.self) {
+                        Text(SnowYAxisFormat.formatInches(Int(depth)))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -246,8 +246,8 @@ struct SnowDepthChart: View {
             AxisMarks(position: .leading) { value in
                 AxisGridLine()
                 AxisValueLabel {
-                    if let total = value.as(Int.self) {
-                        Text(SnowYAxisFormat.formatInches(total))
+                    if let total = value.as(Double.self) {
+                        Text(SnowYAxisFormat.formatInches(Int(total)))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -324,7 +324,7 @@ struct SnowDepthChart: View {
                         .font(.caption2)
                         .foregroundStyle(.cyan)
                 }
-                Text("\(point.snowDepth)\"")
+                Text("\(Int(point.snowDepth))\"")
                     .font(.headline.bold())
                     .foregroundStyle(Color.chartPrimary(for: .snowDepth))
 
@@ -336,7 +336,7 @@ struct SnowDepthChart: View {
             // Fresh snow if any
             if point.snowfall > 0 {
                 HStack(spacing: 4) {
-                    Text("+\(point.snowfall)\"")
+                    Text("+\(Int(point.snowfall))\"")
                         .font(.caption.bold())
                         .foregroundStyle(.cyan)
                     Text("fresh")

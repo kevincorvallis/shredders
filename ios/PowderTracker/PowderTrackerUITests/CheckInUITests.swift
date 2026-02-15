@@ -15,15 +15,17 @@ final class CheckInUITests: XCTestCase {
     private let testEmail = "test@example.com"
     private let testPassword = "password123"
 
-    override func setUp() async throws {
+    override func setUp() {
+        super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
         app.launch()
     }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         app = nil
+        super.tearDown()
     }
 
     // MARK: - Critical Flow Tests

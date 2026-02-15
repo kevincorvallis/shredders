@@ -42,9 +42,9 @@ struct ComparisonSeries: Identifiable {
 struct ComparisonDataPoint: Identifiable {
     let id: String
     let date: Date
-    let value: Int
+    let value: Double
 
-    init(date: Date, value: Int) {
+    init(date: Date, value: Double) {
         self.id = "\(date.timeIntervalSince1970)"
         self.date = date
         self.value = value
@@ -149,10 +149,10 @@ struct ComparisonChart: View {
         }
         .chartYAxis {
             AxisMarks(position: .leading) { value in
-                if let intValue = value.as(Int.self) {
+                if let doubleValue = value.as(Double.self) {
                     AxisGridLine()
                     AxisValueLabel {
-                        Text(SnowYAxisFormat.formatInches(intValue))
+                        Text(SnowYAxisFormat.formatInches(Int(doubleValue)))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -281,7 +281,7 @@ extension ComparisonChart {
     static func currentVsHistorical(
         current: [HistoryDataPoint],
         historicalAverage: [HistoryDataPoint],
-        metric: KeyPath<HistoryDataPoint, Int> = \.snowDepth
+        metric: KeyPath<HistoryDataPoint, Double> = \.snowDepth
     ) -> ComparisonChart {
         let currentSeries = ComparisonSeries(
             name: "This Season",
@@ -313,7 +313,7 @@ extension ComparisonChart {
     static func yearOverYear(
         thisYear: [HistoryDataPoint],
         lastYear: [HistoryDataPoint],
-        metric: KeyPath<HistoryDataPoint, Int> = \.snowDepth
+        metric: KeyPath<HistoryDataPoint, Double> = \.snowDepth
     ) -> ComparisonChart {
         let calendar = Calendar.current
 
@@ -416,7 +416,7 @@ struct PercentOfNormalBadge: View {
                             data: (0..<14).map { i in
                                 ComparisonDataPoint(
                                     date: Calendar.current.date(byAdding: .day, value: -13 + i, to: Date())!,
-                                    value: Int.random(in: 100...160)
+                                    value: Double.random(in: 100...160)
                                 )
                             }
                         ),
@@ -426,7 +426,7 @@ struct PercentOfNormalBadge: View {
                             data: (0..<14).map { i in
                                 ComparisonDataPoint(
                                     date: Calendar.current.date(byAdding: .day, value: -13 + i, to: Date())!,
-                                    value: Int.random(in: 80...140)
+                                    value: Double.random(in: 80...140)
                                 )
                             }
                         ),
@@ -436,7 +436,7 @@ struct PercentOfNormalBadge: View {
                             data: (0..<14).map { i in
                                 ComparisonDataPoint(
                                     date: Calendar.current.date(byAdding: .day, value: -13 + i, to: Date())!,
-                                    value: Int.random(in: 120...180)
+                                    value: Double.random(in: 120...180)
                                 )
                             }
                         )

@@ -12,7 +12,8 @@ import XCTest
 final class AppStoreScreenshots: XCTestCase {
     var app: XCUIApplication!
 
-    override func setUp() async throws {
+    override func setUp() {
+        super.setUp()
         continueAfterFailure = true
         app = XCUIApplication()
         app.launchArguments = ["UI_TESTING", "SCREENSHOTS"]
@@ -20,8 +21,9 @@ final class AppStoreScreenshots: XCTestCase {
         app.launch()
     }
 
-    override func tearDown() async throws {
+    override func tearDown() {
         app = nil
+        super.tearDown()
     }
 
 	

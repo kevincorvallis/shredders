@@ -25,10 +25,10 @@ class ForecastCalibrator {
     // MARK: - Public API
 
     /// Record a forecast vs actual observation for a mountain.
-    func recordObservation(mountainId: String, forecastSnowfall: Int, actualSnowfall: Int) {
+    func recordObservation(mountainId: String, forecastSnowfall: Double, actualSnowfall: Double) {
         var model = models[mountainId] ?? CalibrationModel()
         model.observations.append(
-            CalibrationObservation(forecast: Double(forecastSnowfall), actual: Double(actualSnowfall))
+            CalibrationObservation(forecast: forecastSnowfall, actual: actualSnowfall)
         )
 
         // Trim to keep bounded storage

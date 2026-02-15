@@ -101,9 +101,9 @@ final class AccessibilityUITests: XCTestCase {
 
         // Check filter chips have identifiers
         let freshPowderFilter = app.buttons["mountains_filter_fresh_powder"]
-        _ = app.buttons["mountains_filter_open_only"]
-        _ = app.buttons["mountains_filter_favorites"]
-        _ = app.buttons["mountains_filter_nearby"]
+        let _ = app.buttons["mountains_filter_open_only"]
+        let _ = app.buttons["mountains_filter_favorites"]
+        let _ = app.buttons["mountains_filter_nearby"]
 
         // Scroll down to find filters if needed
         let scrollView = app.scrollViews.firstMatch

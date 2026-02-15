@@ -27,7 +27,7 @@ enum ChartDisplayMode: String, CaseIterable {
 struct TrendLineChart<Data: Identifiable>: View {
     let data: [Data]
     let xValue: KeyPath<Data, Date>
-    let yValue: KeyPath<Data, Int>
+    let yValue: KeyPath<Data, Double>
 
     var dataType: ChartDataType
     var displayMode: ChartDisplayMode
@@ -48,7 +48,7 @@ struct TrendLineChart<Data: Identifiable>: View {
     init(
         data: [Data],
         xValue: KeyPath<Data, Date>,
-        yValue: KeyPath<Data, Int>,
+        yValue: KeyPath<Data, Double>,
         dataType: ChartDataType = .snowDepth,
         displayMode: ChartDisplayMode = .daily,
         annotations: AnnotationSet? = nil,
@@ -167,10 +167,10 @@ struct TrendLineChart<Data: Identifiable>: View {
         }
         .chartYAxis {
             AxisMarks(position: .leading) { value in
-                if let intValue = value.as(Int.self) {
+                if let doubleValue = value.as(Double.self) {
                     AxisGridLine()
                     AxisValueLabel {
-                        Text(SnowYAxisFormat.formatInches(intValue))
+                        Text(SnowYAxisFormat.formatInches(Int(doubleValue)))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -200,7 +200,7 @@ struct TrendLineChart<Data: Identifiable>: View {
     private struct ProcessedDataPoint: Identifiable {
         let id: String
         let date: Date
-        let value: Int
+        let value: Double
     }
 
     private var processedData: [ProcessedDataPoint] {
@@ -216,7 +216,7 @@ struct TrendLineChart<Data: Identifiable>: View {
             }
 
         case .cumulative:
-            var cumulative = 0
+            var cumulative: Double = 0
             let sorted = data.sorted { $0[keyPath: xValue] < $1[keyPath: xValue] }
             return sorted.compactMap { item -> ProcessedDataPoint? in
                 let date = item[keyPath: xValue]
@@ -313,7 +313,7 @@ extension TrendLineChart where Data == HistoryDataPoint {
             return point
         }
 
-        let yPath: KeyPath<HistoryDataPoint, Int> = displayMode == .depth ? \.snowDepth : \.snowfall
+        let yPath: KeyPath<HistoryDataPoint, Double> = displayMode == .depth ? \.snowDepth : \.snowfall
 
         self.init(
             data: wrappedData,

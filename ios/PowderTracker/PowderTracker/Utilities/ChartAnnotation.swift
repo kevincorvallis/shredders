@@ -41,7 +41,7 @@ enum ChartAnnotationType {
 struct PowderDayAnnotation: ChartAnnotation {
     let id: String
     let date: Date
-    let snowfall: Int
+    let snowfall: Double
 
     var xValue: Date { date }
 
@@ -59,7 +59,7 @@ struct PowderDayAnnotation: ChartAnnotation {
         return "Powder!"
     }
 
-    init(date: Date, snowfall: Int) {
+    init(date: Date, snowfall: Double) {
         self.id = "powder-\(date.timeIntervalSince1970)"
         self.date = date
         self.snowfall = snowfall
@@ -74,7 +74,7 @@ struct PowderDayAnnotation: ChartAnnotation {
                     .font(.system(size: 12))
                     .foregroundStyle(.yellow)
             }
-            Text("\(snowfall)\"")
+            Text("\(Int(snowfall))\"")
                 .font(.caption2.bold())
                 .foregroundStyle(.white)
         }
@@ -94,14 +94,14 @@ struct PowderDayAnnotation: ChartAnnotation {
 struct BestDayAnnotation: ChartAnnotation {
     let id: String
     let date: Date
-    let value: Int
+    let value: Double
     let metric: String // "snowfall", "depth", etc.
 
     var xValue: Date { date }
     var type: ChartAnnotationType { .bestDay }
     var label: String { "Best \(metric.capitalized)" }
 
-    init(date: Date, value: Int, metric: String = "snowfall") {
+    init(date: Date, value: Double, metric: String = "snowfall") {
         self.id = "best-\(metric)-\(date.timeIntervalSince1970)"
         self.date = date
         self.value = value
@@ -114,7 +114,7 @@ struct BestDayAnnotation: ChartAnnotation {
             Image(systemName: "trophy.fill")
                 .font(.system(size: 10))
                 .foregroundStyle(.yellow)
-            Text("\(value)\"")
+            Text("\(Int(value))\"")
                 .font(.caption2.bold())
                 .foregroundStyle(.white)
         }
@@ -265,7 +265,7 @@ struct AnnotationDetector {
     /// Detect milestone annotations from cumulative data
     static func detectMilestones(from history: [HistoryDataPoint]) -> [MilestoneAnnotation] {
         var annotations: [MilestoneAnnotation] = []
-        var cumulative = 0
+        var cumulative: Double = 0
         var hitMilestones: Set<Int> = []
 
         for point in history.sorted(by: { ($0.formattedDate ?? .distantPast) < ($1.formattedDate ?? .distantPast) }) {

@@ -10,9 +10,9 @@ import SwiftUI
 /// Detail card for showing expanded information about a selected data point
 struct ChartDetailCard: View {
     let date: Date
-    let snowfall: Int
-    let snowDepth: Int
-    let temperature: Int?
+    let snowfall: Double
+    let snowDepth: Double
+    let temperature: Double?
     let conditions: String?
     var isPowderDay: Bool = false
     var onDismiss: (() -> Void)? = nil
@@ -101,7 +101,7 @@ struct ChartDetailCard: View {
             StatItem(
                 icon: "snowflake",
                 iconColor: .cyan,
-                value: "\(snowfall)\"",
+                value: "\(Int(snowfall))\"",
                 label: "Fresh Snow"
             )
 
@@ -112,7 +112,7 @@ struct ChartDetailCard: View {
             StatItem(
                 icon: "ruler",
                 iconColor: Color.chartPrimary(for: .snowDepth),
-                value: "\(snowDepth)\"",
+                value: "\(Int(snowDepth))\"",
                 label: "Total Depth"
             )
 
@@ -124,7 +124,7 @@ struct ChartDetailCard: View {
                 StatItem(
                     icon: "thermometer.medium",
                     iconColor: .orange,
-                    value: "\(temp)°F",
+                    value: "\(Int(temp))°F",
                     label: "Temperature"
                 )
             }
