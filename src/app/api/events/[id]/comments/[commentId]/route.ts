@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 
 /**
  * DELETE /api/events/[id]/comments/[commentId]
@@ -9,23 +10,15 @@ import { getDualAuthUser } from '@/lib/auth';
  * Users can only delete their own comments.
  * Event creators can delete any comment on their event.
  */
-export async function DELETE(
-  request: NextRequest,
+export const DELETE = withDualAuth(async (
+  request,
+  authUser,
   { params }: { params: Promise<{ id: string; commentId: string }> }
-) {
+) => {
   try {
     const { id: eventId, commentId } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Look up user's internal profile ID
     const { data: userProfile } = await adminClient
@@ -35,10 +28,7 @@ export async function DELETE(
       .single();
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     // Check if comment exists and belongs to this event
@@ -51,10 +41,7 @@ export async function DELETE(
       .single();
 
     if (commentError || !comment) {
-      return NextResponse.json(
-        { error: 'Comment not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Comment'));
     }
 
     // Check if user is the event creator
@@ -69,10 +56,7 @@ export async function DELETE(
 
     // User must be comment author or event creator to delete
     if (!isCommentAuthor && !isEventCreator) {
-      return NextResponse.json(
-        { error: 'You can only delete your own comments' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('You can only delete your own comments'));
     }
 
     // Soft delete the comment
@@ -83,18 +67,11 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('Error deleting comment:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete comment' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ message: 'Comment deleted successfully' });
   } catch (error) {
-    console.error('Error in DELETE /api/events/[id]/comments/[commentId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/events/[id]/comments/[commentId]' });
   }
-}
+});

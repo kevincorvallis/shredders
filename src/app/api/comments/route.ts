@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 
 /**
@@ -66,10 +67,7 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Error fetching comments:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch comments' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ comments: comments || [] }, {
@@ -78,11 +76,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/comments:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/comments' });
   }
 }
 
@@ -100,18 +94,9 @@ export async function GET(request: Request) {
  *   - checkInId: Check-in ID (optional)
  *   - parentCommentId: Parent comment ID for nested replies (optional)
  */
-export async function POST(request: NextRequest) {
+export const POST = withDualAuth(async (request, authUser) => {
   try {
     const supabase = await createClient();
-
-    // Check authentication (supports both JWT and Supabase session)
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Rate limit comment creation
     const rateLimitResult = await rateLimitEnhanced(
@@ -119,10 +104,7 @@ export async function POST(request: NextRequest) {
       'postComment'
     );
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        { error: 'Too many comments. Please try again later.' },
-        { status: 429, headers: { 'Retry-After': String(rateLimitResult.retryAfter ?? 60) } }
-      );
+      return handleError(Errors.rateLimitExceeded(rateLimitResult.retryAfter ?? 60, 'comment'));
     }
 
     const body = await request.json();
@@ -130,25 +112,16 @@ export async function POST(request: NextRequest) {
 
     // Validate content
     if (!content || typeof content !== 'string') {
-      return NextResponse.json(
-        { error: 'Content is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.missingField('content'));
     }
 
     if (content.length > 2000) {
-      return NextResponse.json(
-        { error: 'Content must be less than 2000 characters' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Content must be less than 2000 characters']));
     }
 
     // At least one target must be specified
     if (!mountainId && !webcamId && !photoId && !checkInId) {
-      return NextResponse.json(
-        { error: 'At least one target (mountainId, webcamId, photoId, or checkInId) is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['At least one target (mountainId, webcamId, photoId, or checkInId) is required']));
     }
 
     // If parent comment specified, verify it exists
@@ -160,10 +133,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (parentError || !parentComment) {
-        return NextResponse.json(
-          { error: 'Parent comment not found' },
-          { status: 404 }
-        );
+        return handleError(Errors.resourceNotFound('Parent comment'));
       }
     }
 
@@ -192,18 +162,11 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error creating comment:', insertError);
-      return NextResponse.json(
-        { error: 'Failed to create comment' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/comments:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/comments' });
   }
-}
+});

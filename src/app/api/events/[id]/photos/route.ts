@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth, getDualAuthUser } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 
 const STORAGE_BUCKET = 'event-photos';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -87,10 +88,7 @@ export async function GET(
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     const photoCount = event.photo_count || 0;
@@ -159,10 +157,7 @@ export async function GET(
 
     if (photosError) {
       console.error('Error fetching event photos:', photosError);
-      return NextResponse.json(
-        { error: 'Failed to fetch photos' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Fetch user info for photos
@@ -213,11 +208,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/photos:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events/[id]/photos' });
   }
 }
 
@@ -231,23 +222,15 @@ export async function GET(
  *   - photo: File (required, max 5MB, jpeg/png/heif/webp)
  *   - caption: string (optional, max 500 chars)
  */
-export async function POST(
-  request: NextRequest,
+export const POST = withDualAuth(async (
+  request,
+  authUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: eventId } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Check if event exists
     const { data: event, error: eventError } = await supabase
@@ -257,10 +240,7 @@ export async function POST(
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     // Block uploads on cancelled or completed events
@@ -279,10 +259,7 @@ export async function POST(
       .single();
 
     if (!profile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
     const userProfileId = profile.id;
 
@@ -293,10 +270,7 @@ export async function POST(
     const { isCreator, hasRSVP } = await checkUserEventAccess(adminClient, eventId, userProfile.id);
 
     if (!isCreator && !hasRSVP) {
-      return NextResponse.json(
-        { error: 'You must RSVP to upload photos to this event' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('You must RSVP to upload photos to this event'));
     }
 
     // Parse multipart form data
@@ -352,10 +326,7 @@ export async function POST(
 
     if (uploadError) {
       console.error('Error uploading photo:', uploadError);
-      return NextResponse.json(
-        { error: 'Failed to upload photo' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Get public URL
@@ -394,10 +365,7 @@ export async function POST(
       console.error('Error creating photo record:', insertError);
       // Try to clean up uploaded file
       await adminClient.storage.from(STORAGE_BUCKET).remove([storagePath]);
-      return NextResponse.json(
-        { error: 'Failed to create photo record' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Fetch user info for response
@@ -427,10 +395,6 @@ export async function POST(
       },
     }, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/photos:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events/[id]/photos' });
   }
-}
+});

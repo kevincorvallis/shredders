@@ -8,6 +8,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { Errors, handleError } from '@/lib/errors';
 
 export async function GET(
   request: Request,
@@ -34,16 +35,12 @@ export async function GET(
 
     if (error) {
       console.error('Error fetching photo:', error);
-      return NextResponse.json({ error: 'Photo not found' }, { status: 404 });
+      return handleError(Errors.resourceNotFound('Photo'));
     }
 
     return NextResponse.json({ photo });
-  } catch (error: any) {
-    console.error('Get photo error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleError(error, { endpoint: 'GET /api/photos/[photoId]' });
   }
 }
 
@@ -61,7 +58,7 @@ export async function DELETE(
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return handleError(Errors.unauthorized('Not authenticated'));
     }
 
     // Get photo to verify ownership and get storage path
@@ -72,15 +69,12 @@ export async function DELETE(
       .single();
 
     if (fetchError || !photo) {
-      return NextResponse.json({ error: 'Photo not found' }, { status: 404 });
+      return handleError(Errors.resourceNotFound('Photo'));
     }
 
     // Verify ownership
     if (photo.user_id !== user.id) {
-      return NextResponse.json(
-        { error: 'You can only delete your own photos' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('You can only delete your own photos'));
     }
 
     // Delete from storage
@@ -101,15 +95,11 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('Database delete error:', deleteError);
-      return NextResponse.json({ error: deleteError.message }, { status: 500 });
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ message: 'Photo deleted successfully' });
-  } catch (error: any) {
-    console.error('Delete photo error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleError(error, { endpoint: 'DELETE /api/photos/[photoId]' });
   }
 }

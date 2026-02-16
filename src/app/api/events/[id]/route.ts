@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { getDualAuthUser, withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import { getMountain } from '@shredders/shared';
 import type {
   UpdateEventRequest,
@@ -45,10 +46,7 @@ export async function GET(
       .single();
 
     if (error || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     const mountain = getMountain(event.mountain_id);
@@ -257,11 +255,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events/[id]' });
   }
 }
 
@@ -270,23 +264,13 @@ export async function GET(
  *
  * Update an event (creator only)
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withDualAuth(async (
+  request, authUser, { params }: { params: Promise<{ id: string }> }
+) => {
   try {
     const { id } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Check if event exists and user is the creator
     // Fetch additional fields needed for change detection and validation
@@ -297,10 +281,7 @@ export async function PATCH(
       .single();
 
     if (fetchError || !existingEvent) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     // Block editing cancelled or completed events
@@ -326,17 +307,11 @@ export async function PATCH(
       .single();
 
     if (userError || !userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     if (existingEvent.user_id !== userProfile.id) {
-      return NextResponse.json(
-        { error: 'You can only edit your own events' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('You can only edit your own events'));
     }
 
     const body: UpdateEventRequest = await request.json();
@@ -463,10 +438,7 @@ export async function PATCH(
 
     if (updateError) {
       console.error('Error updating event:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update event' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     const mountain = getMountain(updatedEvent.mountain_id);
@@ -531,13 +503,9 @@ export async function PATCH(
       },
     });
   } catch (error) {
-    console.error('Error in PATCH /api/events/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'PATCH /api/events/[id]' });
   }
-}
+});
 
 /**
  * DELETE /api/events/[id]
@@ -545,23 +513,13 @@ export async function PATCH(
  * Cancel an event (creator only)
  * Note: Uses soft delete by setting status to 'cancelled'
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withDualAuth(async (
+  request, authUser, { params }: { params: Promise<{ id: string }> }
+) => {
   try {
     const { id } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Check if event exists and user is the creator
     const { data: existingEvent, error: fetchError } = await supabase
@@ -571,10 +529,7 @@ export async function DELETE(
       .single();
 
     if (fetchError || !existingEvent) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     // Prevent double-cancellation (would send duplicate notifications)
@@ -610,17 +565,11 @@ export async function DELETE(
       .single();
 
     if (userError || !userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     if (existingEvent.user_id !== userProfile.id) {
-      return NextResponse.json(
-        { error: 'You can only cancel your own events' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('You can only cancel your own events'));
     }
 
     // Soft delete by setting status to cancelled
@@ -631,10 +580,7 @@ export async function DELETE(
 
     if (updateError) {
       console.error('Error cancelling event:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to cancel event' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Send cancellation notifications to attendees (async, don't block response)
@@ -649,10 +595,6 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Event cancelled successfully' });
   } catch (error) {
-    console.error('Error in DELETE /api/events/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/events/[id]' });
   }
-}
+});

@@ -18,8 +18,22 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 // Mock auth
+const { mockGetDualAuthUser } = vi.hoisted(() => ({
+  mockGetDualAuthUser: vi.fn(),
+}));
 vi.mock('@/lib/auth', () => ({
-  getDualAuthUser: vi.fn(),
+  getDualAuthUser: mockGetDualAuthUser,
+  withDualAuth: (handler: any) => async (req: any, context: any) => {
+    const authUser = await mockGetDualAuthUser(req);
+    if (!authUser) {
+      const { NextResponse } = await import('next/server');
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Not authenticated', timestamp: new Date().toISOString() } },
+        { status: 401 },
+      );
+    }
+    return handler(req, authUser, context);
+  },
 }));
 
 // Mock shared
@@ -452,7 +466,7 @@ describe('POST /api/events - Edge Cases', () => {
     (createClient as any).mockResolvedValue(createMockSupabase());
     (createAdminClient as any).mockReturnValue(createMockAdminClient());
 
-    const response = await POST(makePostRequest({ ...validEvent, title: '   ' }) as any);
+    const response = await POST(makePostRequest({ ...validEvent, title: '   ' }) as any, {} as any);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -464,7 +478,7 @@ describe('POST /api/events - Edge Cases', () => {
     (createAdminClient as any).mockReturnValue(createMockAdminClient());
 
     const response = await POST(
-      makePostRequest({ ...validEvent, notes: 'X'.repeat(2001) }) as any,
+      makePostRequest({ ...validEvent, notes: 'X'.repeat(2001) }) as any, {} as any,
     );
     const data = await response.json();
 
@@ -477,19 +491,19 @@ describe('POST /api/events - Edge Cases', () => {
     (createAdminClient as any).mockReturnValue(createMockAdminClient());
 
     const response = await POST(
-      makePostRequest({ ...validEvent, mountainId: 'nonexistent-mountain' }) as any,
+      makePostRequest({ ...validEvent, mountainId: 'nonexistent-mountain' }) as any, {} as any,
     );
     const data = await response.json();
 
     expect(response.status).toBe(404);
-    expect(data.error).toContain('not found');
+    expect(data.error.message).toContain('not found');
   });
 
   it('should accept title at exactly 3 characters', async () => {
     (createClient as any).mockResolvedValue(createMockSupabase());
     (createAdminClient as any).mockReturnValue(createMockAdminClient({ title: 'Ski' }));
 
-    const response = await POST(makePostRequest({ ...validEvent, title: 'Ski' }) as any);
+    const response = await POST(makePostRequest({ ...validEvent, title: 'Ski' }) as any, {} as any);
 
     expect(response.status).toBe(201);
   });
@@ -498,7 +512,7 @@ describe('POST /api/events - Edge Cases', () => {
     (createClient as any).mockResolvedValue(createMockSupabase());
     (createAdminClient as any).mockReturnValue(createMockAdminClient({ max_attendees: 1 }));
 
-    const res1 = await POST(makePostRequest({ ...validEvent, maxAttendees: 1 }) as any);
+    const res1 = await POST(makePostRequest({ ...validEvent, maxAttendees: 1 }) as any, {} as any);
     expect(res1.status).toBe(201);
 
     vi.clearAllMocks();
@@ -506,7 +520,7 @@ describe('POST /api/events - Edge Cases', () => {
     (createClient as any).mockResolvedValue(createMockSupabase());
     (createAdminClient as any).mockReturnValue(createMockAdminClient({ max_attendees: 1000 }));
 
-    const res2 = await POST(makePostRequest({ ...validEvent, maxAttendees: 1000 }) as any);
+    const res2 = await POST(makePostRequest({ ...validEvent, maxAttendees: 1000 }) as any, {} as any);
     expect(res2.status).toBe(201);
   });
 });

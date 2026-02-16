@@ -8,20 +8,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { headers } from 'next/headers';
+import type { AuditEventType } from './types';
 
-export type AuditEventType =
-  | 'login'
-  | 'login_failed'
-  | 'signup'
-  | 'signup_failed'
-  | 'refresh'
-  | 'refresh_failed'
-  | 'logout'
-  | 'update_profile'
-  | 'password_change'
-  | 'token_revoked'
-  | 'unauthorized_access'
-  | 'rate_limit_exceeded';
+export type { AuditEventType };
 
 export interface AuditLogParams {
   userId?: string; // Null for failed events without user

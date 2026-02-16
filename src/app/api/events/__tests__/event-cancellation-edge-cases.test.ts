@@ -32,8 +32,22 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 // Mock auth
+const { mockGetDualAuthUser: cancelMockAuth } = vi.hoisted(() => ({
+  mockGetDualAuthUser: vi.fn(),
+}));
 vi.mock('@/lib/auth', () => ({
-  getDualAuthUser: vi.fn(),
+  getDualAuthUser: cancelMockAuth,
+  withDualAuth: (handler: any) => async (req: any, context: any) => {
+    const authUser = await cancelMockAuth(req);
+    if (!authUser) {
+      const { NextResponse } = await import('next/server');
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Not authenticated', timestamp: new Date().toISOString() } },
+        { status: 401 },
+      );
+    }
+    return handler(req, authUser, context);
+  },
 }));
 
 // Mock shared
@@ -674,7 +688,7 @@ describe('RSVP on Cancelled Events', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('cancelled');
+    expect(data.error.details[0]).toContain('cancelled');
   });
 
   it('should reject RSVP DELETE on cancelled event', async () => {
@@ -721,7 +735,7 @@ describe('RSVP on Cancelled Events', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('inactive');
+    expect(data.error.details[0]).toContain('inactive');
   });
 });
 
@@ -979,7 +993,7 @@ describe('POST /api/events/[id]/reactivate - Edge Cases', () => {
     const data = await response.json();
 
     expect(response.status).toBe(403);
-    expect(data.error).toContain('creator');
+    expect(data.error.message).toContain('creator');
   });
 
   it('should successfully reactivate a future cancelled event', async () => {

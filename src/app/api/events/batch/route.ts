@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
 import { getMountain } from '@shredders/shared';
+import { Errors, handleError } from '@/lib/errors';
 import type { EventWithDetails, EventAttendee, EventConditions, RSVPStatus } from '@/types/event';
 
 /**
@@ -98,10 +99,7 @@ export async function GET(request: NextRequest) {
 
     if (eventsError) {
       console.error('Error fetching batch events:', eventsError);
-      return NextResponse.json(
-        { error: 'Failed to fetch events' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     if (!events || events.length === 0) {
@@ -265,10 +263,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/events/batch:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events/batch' });
   }
 }

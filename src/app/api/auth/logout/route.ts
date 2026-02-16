@@ -13,6 +13,7 @@ import {
   addToBlacklist,
   logLogout,
 } from '@/lib/auth';
+import { handleError } from '@/lib/errors';
 
 export async function POST(request: Request) {
   const startTime = Date.now();
@@ -68,24 +69,19 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ message: 'Logged out successfully' });
-  } catch (error: any) {
-    console.error('Logout error:', error);
-
+  } catch (error) {
     // Still try to log the failed logout attempt if we have userId
     if (userId) {
       try {
         await logLogout(userId, {
           logoutDuration: Date.now() - startTime,
-          errorMessage: error.message,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
         });
       } catch (logError) {
         console.error('Error logging failed logout:', logError);
       }
     }
 
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/auth/logout' });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import { getMountain } from '@shredders/shared';
 import type { Event } from '@/types/event';
 import { sendEventUpdateNotification, sendEventReactivationNotification } from '@/lib/push/event-notifications';
@@ -11,23 +12,13 @@ import { sendEventUpdateNotification, sendEventReactivationNotification } from '
  * Reactivate a cancelled event (creator only)
  * Only allowed if event date is in the future
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withDualAuth(async (
+  request, authUser, { params }: { params: Promise<{ id: string }> }
+) => {
   try {
     const { id: eventId } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Look up user profile
     const { data: userProfile, error: userError } = await adminClient
@@ -37,10 +28,7 @@ export async function POST(
       .single();
 
     if (userError || !userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     // Fetch event
@@ -51,18 +39,12 @@ export async function POST(
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     // Check if user is the creator
     if (event.user_id !== userProfile.id) {
-      return NextResponse.json(
-        { error: 'Only the event creator can reactivate it' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('Only the event creator can reactivate it'));
     }
 
     // Check if event is cancelled
@@ -100,10 +82,7 @@ export async function POST(
 
     if (updateError) {
       console.error('Error reactivating event:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to reactivate event' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     const mountain = getMountain(updatedEvent.mountain_id);
@@ -146,10 +125,6 @@ export async function POST(
       event: transformedEvent,
     });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/reactivate:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events/[id]/reactivate' });
   }
-}
+});

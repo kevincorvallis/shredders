@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getDualAuthUser } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 
 /**
  * Helper: Check if user has RSVP'd to an event (going or maybe)
@@ -106,10 +107,7 @@ export async function GET(
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     // Return empty activity for cancelled events
@@ -195,10 +193,7 @@ export async function GET(
 
     if (activitiesError) {
       console.error('Error fetching event activities:', activitiesError);
-      return NextResponse.json(
-        { error: 'Failed to fetch activities' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Fetch user info for activities that have user_id
@@ -249,10 +244,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/activity:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events/[id]/activity' });
   }
 }

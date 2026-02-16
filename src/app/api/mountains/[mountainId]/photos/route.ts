@@ -6,6 +6,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { handleError } from '@/lib/errors';
 
 export async function GET(
   request: Request,
@@ -46,18 +47,14 @@ export async function GET(
 
     if (error) {
       console.error('Error fetching photos:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleError(error, { endpoint: 'GET /api/mountains/[mountainId]/photos' });
     }
 
     return NextResponse.json({
       photos: photos || [],
       total: photos?.length || 0,
     });
-  } catch (error: any) {
-    console.error('Get photos error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleError(error, { endpoint: 'GET /api/mountains/[mountainId]/photos' });
   }
 }

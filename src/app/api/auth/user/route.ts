@@ -8,6 +8,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { Errors, handleError } from '@/lib/errors';
 
 export async function GET(request: Request) {
   try {
@@ -37,12 +38,8 @@ export async function GET(request: Request) {
       user,
       profile,
     });
-  } catch (error: any) {
-    console.error('Get user error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleError(error, { endpoint: 'GET /api/auth/user' });
   }
 }
 
@@ -84,11 +81,7 @@ export async function PUT(request: Request) {
       profile: data,
       message: 'Profile updated successfully',
     });
-  } catch (error: any) {
-    console.error('Update user error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleError(error, { endpoint: 'PUT /api/auth/user' });
   }
 }

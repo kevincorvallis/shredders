@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import { getMountain } from '@shredders/shared';
 import { randomBytes } from 'crypto';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
@@ -15,23 +16,13 @@ import type { Event, CreateEventResponse } from '@/types/event';
  *   - eventDate: New event date (required, YYYY-MM-DD, must be future)
  *   - title: Override title (optional, defaults to original)
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withDualAuth(async (
+  request, authUser, { params }: { params: Promise<{ id: string }> }
+) => {
   try {
     const { id: eventId } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Rate limiting: 10 events per hour (same as create)
     const rateLimitKey = createRateLimitKey(authUser.userId, 'createEvent');
@@ -58,10 +49,7 @@ export async function POST(
       .single();
 
     if (userError || !userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     // Fetch original event
@@ -72,10 +60,7 @@ export async function POST(
       .single();
 
     if (eventError || !originalEvent) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     // Parse request body
@@ -127,10 +112,7 @@ export async function POST(
 
     if (cloneError) {
       console.error('Error cloning event:', cloneError);
-      return NextResponse.json(
-        { error: 'Failed to clone event' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Auto-RSVP creator as "going" (matches create flow)
@@ -195,10 +177,6 @@ export async function POST(
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/clone:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events/[id]/clone' });
   }
-}
+});

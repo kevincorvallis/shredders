@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth, getDualAuthUser } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 import {
   sendNewCommentNotification,
@@ -70,10 +71,7 @@ export async function GET(
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     // Get comment count (always returned)
@@ -166,10 +164,7 @@ export async function GET(
 
     if (commentsError) {
       console.error('Error fetching event comments:', commentsError);
-      return NextResponse.json(
-        { error: 'Failed to fetch comments' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Organize into threads (top-level and replies)
@@ -188,11 +183,7 @@ export async function GET(
       gated: false,
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/comments:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events/[id]/comments' });
   }
 }
 
@@ -206,23 +197,15 @@ export async function GET(
  *   - content: Comment text (required, max 2000 chars)
  *   - parentId: Parent comment ID for replies (optional)
  */
-export async function POST(
-  request: NextRequest,
+export const POST = withDualAuth(async (
+  request,
+  authUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: eventId } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Rate limiting: 30 comments per hour per user
     const rateLimitKey = createRateLimitKey(authUser.userId, 'postComment');
@@ -249,10 +232,7 @@ export async function POST(
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     // Block comments on cancelled or completed events
@@ -286,20 +266,14 @@ export async function POST(
     }
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     // OPTIMIZATION: Check creator + RSVP in parallel (combined query)
     const { isCreator, hasRSVP } = await checkUserEventAccess(adminClient, eventId, userProfile.id);
 
     if (!isCreator && !hasRSVP) {
-      return NextResponse.json(
-        { error: 'You must RSVP to comment on this event' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('You must RSVP to comment on this event'));
     }
 
     const body = await request.json();
@@ -338,10 +312,7 @@ export async function POST(
         .single();
 
       if (parentError || !parentComment) {
-        return NextResponse.json(
-          { error: 'Parent comment not found' },
-          { status: 404 }
-        );
+        return handleError(Errors.resourceNotFound('Parent comment'));
       }
 
       // Limit nesting depth to 2 levels (top-level and one reply level)
@@ -383,10 +354,7 @@ export async function POST(
         eventId,
         userId: userProfile.id,
       });
-      return NextResponse.json(
-        { error: `Failed to create comment: ${insertError.message}` },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Fetch user info for the response
@@ -438,13 +406,6 @@ export async function POST(
       },
     }, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/comments:', {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return NextResponse.json(
-      { error: `Internal server error: ${error instanceof Error ? error.message : String(error)}` },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events/[id]/comments' });
   }
-}
+});

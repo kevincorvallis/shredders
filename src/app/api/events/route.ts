@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { getDualAuthUser, withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import { getMountain } from '@shredders/shared';
 import { randomBytes } from 'crypto';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
@@ -71,10 +72,7 @@ export async function GET(request: NextRequest) {
     const authUser = await getDualAuthUser(request);
 
     if ((createdByMe || attendingOnly) && !authUser) {
-      return NextResponse.json(
-        { error: 'Authentication required for this filter' },
-        { status: 401 }
-      );
+      return handleError(Errors.unauthorized('Authentication required for this filter'));
     }
 
     // OPTIMIZATION: Use cached profileId from auth when available
@@ -96,10 +94,7 @@ export async function GET(request: NextRequest) {
 
       // Only require profile for filters that need it
       if (!userProfileId && (createdByMe || attendingOnly)) {
-        return NextResponse.json(
-          { error: 'User profile not found' },
-          { status: 404 }
-        );
+        return handleError(Errors.resourceNotFound('User profile'));
       }
     }
 
@@ -226,10 +221,7 @@ export async function GET(request: NextRequest) {
 
       if (attendeeError) {
         console.error('Error fetching attending events:', attendeeError);
-        return NextResponse.json(
-          { error: 'Failed to fetch attending events' },
-          { status: 500 }
-        );
+        return handleError(Errors.databaseError());
       }
 
       filteredEvents = (attendeeEvents || [])
@@ -328,10 +320,7 @@ export async function GET(request: NextRequest) {
 
       if (error) {
         console.error('Error fetching events:', error);
-        return NextResponse.json(
-          { error: 'Failed to fetch events' },
-          { status: 500 }
-        );
+        return handleError(Errors.databaseError());
       }
 
       filteredEvents = events || [];
@@ -386,11 +375,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/events:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events' });
   }
 }
 
@@ -411,19 +396,10 @@ export async function GET(request: NextRequest) {
  *   - carpoolSeats: Number of available seats (optional, 0-8)
  *   - maxAttendees: Maximum capacity for the event (optional, 1-1000)
  */
-export async function POST(request: NextRequest) {
+export const POST = withDualAuth(async (request, authUser) => {
   try {
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Rate limiting: 10 events per hour per user
     const rateLimitKey = createRateLimitKey(authUser.userId, 'createEvent');
@@ -467,10 +443,7 @@ export async function POST(request: NextRequest) {
     // Validate mountain exists
     const mountain = getMountain(mountainId);
     if (!mountain) {
-      return NextResponse.json(
-        { error: `Mountain '${mountainId}' not found` },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Mountain'));
     }
 
     if (!title || title.trim().length < 3) {
@@ -553,10 +526,7 @@ export async function POST(request: NextRequest) {
 
     if (userError || !userProfile) {
       console.error('Error finding user profile:', userError);
-      return NextResponse.json(
-        { error: 'User profile not found. Please try signing out and back in.' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     // Create event using admin client to bypass RLS for initial insert
@@ -595,10 +565,7 @@ export async function POST(request: NextRequest) {
         title: title.trim(),
         event_date: eventDate,
       }));
-      return NextResponse.json(
-        { error: 'Failed to create event' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Generate invite token
@@ -682,10 +649,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events' });
   }
-}
+});

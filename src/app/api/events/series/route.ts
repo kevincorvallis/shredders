@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import type { AuthenticatedUser } from '@/lib/auth';
 import { getMountain } from '@shredders/shared';
+import { Errors, handleError } from '@/lib/errors';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 import type { SkillLevel } from '@/types/event';
 
@@ -58,18 +60,10 @@ export interface EventSeries {
  *
  * List event series created by the current user
  */
-export async function GET(request: NextRequest) {
+export const GET = withDualAuth(async (request: NextRequest, authUser: AuthenticatedUser) => {
   try {
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     const { data: userProfile } = await adminClient
       .from('users')
@@ -78,10 +72,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     const { data: series, error } = await supabase
@@ -92,10 +83,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching series:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch series' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     const transformedSeries: EventSeries[] = (series || []).map((s: any) => {
@@ -127,30 +115,18 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ series: transformedSeries });
   } catch (error) {
-    console.error('Error in GET /api/events/series:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events/series' });
   }
-}
+});
 
 /**
  * POST /api/events/series
  *
  * Create a new recurring event series
  */
-export async function POST(request: NextRequest) {
+export const POST = withDualAuth(async (request: NextRequest, authUser: AuthenticatedUser) => {
   try {
     const adminClient = createAdminClient();
-
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Rate limiting
     const rateLimitKey = createRateLimitKey(authUser.userId, 'createEvent');
@@ -176,10 +152,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     const body: CreateSeriesRequest = await request.json();
@@ -211,10 +184,7 @@ export async function POST(request: NextRequest) {
 
     const mountain = getMountain(mountainId);
     if (!mountain) {
-      return NextResponse.json(
-        { error: `Mountain '${mountainId}' not found` },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound(`Mountain '${mountainId}'`));
     }
 
     if (!title || title.trim().length < 3) {
@@ -310,10 +280,7 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error creating series:', insertError);
-      return NextResponse.json(
-        { error: 'Failed to create series' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Generate initial event instances (next 3 months)
@@ -357,10 +324,6 @@ export async function POST(request: NextRequest) {
       generatedEvents: generatedCount || 0,
     }, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events/series:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events/series' });
   }
-}
+});

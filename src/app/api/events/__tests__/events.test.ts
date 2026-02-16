@@ -10,8 +10,22 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 // Mock auth
+const { mockGetDualAuthUser } = vi.hoisted(() => ({
+  mockGetDualAuthUser: vi.fn(),
+}));
 vi.mock('@/lib/auth', () => ({
-  getDualAuthUser: vi.fn(),
+  getDualAuthUser: mockGetDualAuthUser,
+  withDualAuth: (handler: any) => async (req: any, context: any) => {
+    const authUser = await mockGetDualAuthUser(req);
+    if (!authUser) {
+      const { NextResponse } = await import('next/server');
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Not authenticated', timestamp: new Date().toISOString() } },
+        { status: 401 },
+      );
+    }
+    return handler(req, authUser, context);
+  },
 }));
 
 // Mock shared
@@ -146,7 +160,7 @@ describe('GET /api/events', () => {
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toContain('Authentication');
+    expect(data.error.message).toContain('Authentication');
   });
 
   it('should return events created by user when authenticated', async () => {
@@ -278,7 +292,7 @@ describe('POST /api/events', () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const response = await POST(mockRequest as any);
+    const response = await POST(mockRequest as any, {} as any);
     const data = await response.json();
 
     expect(response.status).toBe(201);
@@ -303,11 +317,11 @@ describe('POST /api/events', () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const response = await POST(mockRequest as any);
+    const response = await POST(mockRequest as any, {} as any);
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toBe('Not authenticated');
+    expect(data.error.message).toBe('Not authenticated');
   });
 
   it('should require mountainId', async () => {
@@ -322,7 +336,7 @@ describe('POST /api/events', () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const response = await POST(mockRequest as any);
+    const response = await POST(mockRequest as any, {} as any);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -342,7 +356,7 @@ describe('POST /api/events', () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const response = await POST(mockRequest as any);
+    const response = await POST(mockRequest as any, {} as any);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -362,7 +376,7 @@ describe('POST /api/events', () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const response = await POST(mockRequest as any);
+    const response = await POST(mockRequest as any, {} as any);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -384,7 +398,7 @@ describe('POST /api/events', () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const response = await POST(mockRequest as any);
+    const response = await POST(mockRequest as any, {} as any);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -405,7 +419,7 @@ describe('POST /api/events', () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const response = await POST(mockRequest as any);
+    const response = await POST(mockRequest as any, {} as any);
     const data = await response.json();
 
     expect(response.status).toBe(400);

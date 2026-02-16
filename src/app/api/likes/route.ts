@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 
 /**
  * GET /api/likes
@@ -14,19 +15,10 @@ import { getDualAuthUser } from '@/lib/auth';
  *   - checkInId: Check-in ID
  *   - webcamId: Webcam ID
  */
-export async function GET(request: NextRequest) {
+export const GET = withDualAuth(async (request, authUser) => {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
-
-    // Check authentication (supports both JWT and Supabase session)
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     const photoId = searchParams.get('photoId');
     const commentId = searchParams.get('commentId');
@@ -35,10 +27,7 @@ export async function GET(request: NextRequest) {
 
     // At least one target must be specified
     if (!photoId && !commentId && !checkInId && !webcamId) {
-      return NextResponse.json(
-        { error: 'At least one target (photoId, commentId, checkInId, or webcamId) is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['At least one target (photoId, commentId, checkInId, or webcamId) is required']));
     }
 
     // Build query
@@ -56,21 +45,14 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error checking like:', error);
-      return NextResponse.json(
-        { error: 'Failed to check like status' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ liked: !!like });
   } catch (error) {
-    console.error('Error in GET /api/likes:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/likes' });
   }
-}
+});
 
 /**
  * POST /api/likes
@@ -85,28 +67,16 @@ export async function GET(request: NextRequest) {
  *   - checkInId: Check-in ID (optional)
  *   - webcamId: Webcam ID (optional)
  */
-export async function POST(request: NextRequest) {
+export const POST = withDualAuth(async (request, authUser) => {
   try {
     const supabase = await createClient();
-
-    // Check authentication (supports both JWT and Supabase session)
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     const body = await request.json();
     const { photoId, commentId, checkInId, webcamId } = body;
 
     // At least one target must be specified
     if (!photoId && !commentId && !checkInId && !webcamId) {
-      return NextResponse.json(
-        { error: 'At least one target (photoId, commentId, checkInId, or webcamId) is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['At least one target (photoId, commentId, checkInId, or webcamId) is required']));
     }
 
     // Build query to check existing like
@@ -124,10 +94,7 @@ export async function POST(request: NextRequest) {
 
     if (checkError) {
       console.error('Error checking existing like:', checkError);
-      return NextResponse.json(
-        { error: 'Failed to check like status' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // If like exists, remove it (unlike)
@@ -139,10 +106,7 @@ export async function POST(request: NextRequest) {
 
       if (deleteError) {
         console.error('Error removing like:', deleteError);
-        return NextResponse.json(
-          { error: 'Failed to remove like' },
-          { status: 500 }
-        );
+        return handleError(Errors.databaseError());
       }
 
       return NextResponse.json({
@@ -166,10 +130,7 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error creating like:', insertError);
-      return NextResponse.json(
-        { error: 'Failed to create like' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({
@@ -178,13 +139,9 @@ export async function POST(request: NextRequest) {
       like: newLike,
     }, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/likes:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/likes' });
   }
-}
+});
 
 /**
  * DELETE /api/likes
@@ -198,19 +155,10 @@ export async function POST(request: NextRequest) {
  *   - checkInId: Check-in ID
  *   - webcamId: Webcam ID
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withDualAuth(async (request, authUser) => {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
-
-    // Check authentication (supports both JWT and Supabase session)
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     const photoId = searchParams.get('photoId');
     const commentId = searchParams.get('commentId');
@@ -219,10 +167,7 @@ export async function DELETE(request: NextRequest) {
 
     // At least one target must be specified
     if (!photoId && !commentId && !checkInId && !webcamId) {
-      return NextResponse.json(
-        { error: 'At least one target (photoId, commentId, checkInId, or webcamId) is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['At least one target (photoId, commentId, checkInId, or webcamId) is required']));
     }
 
     // Build delete query
@@ -240,18 +185,11 @@ export async function DELETE(request: NextRequest) {
 
     if (error) {
       console.error('Error deleting like:', error);
-      return NextResponse.json(
-        { error: 'Failed to delete like' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/likes:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/likes' });
   }
-}
+});

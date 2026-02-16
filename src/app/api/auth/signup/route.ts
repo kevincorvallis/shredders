@@ -18,6 +18,7 @@ import {
   logRateLimitExceeded,
 } from '@/lib/auth';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
+import { handleError } from '@/lib/errors';
 
 export async function POST(request: Request) {
   const startTime = Date.now();
@@ -301,20 +302,15 @@ export async function POST(request: Request) {
       refreshToken: tokens.refreshToken,
       message: 'Account created successfully',
     });
-  } catch (error: any) {
-    console.error('Signup error:', error);
-
+  } catch (error) {
     // Log failed signup attempt
     if (email) {
-      await logSignupFailure(email, error.message || 'Internal server error', {
-        errorType: error.constructor.name,
+      await logSignupFailure(email, error instanceof Error ? error.message : 'Internal server error', {
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
         signupDuration: Date.now() - startTime,
       });
     }
 
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/auth/signup' });
   }
 }

@@ -6,6 +6,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { Errors, handleError } from '@/lib/errors';
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return handleError(Errors.unauthorized('Not authenticated'));
     }
 
     // Parse multipart form data
@@ -29,11 +30,11 @@ export async function POST(request: Request) {
     const takenAt = formData.get('takenAt') as string | null;
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      return handleError(Errors.missingField('file'));
     }
 
     if (!mountainId) {
-      return NextResponse.json({ error: 'Mountain ID required' }, { status: 400 });
+      return handleError(Errors.missingField('mountainId'));
     }
 
     // Validate file type
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
 
     if (uploadError) {
       console.error('Storage upload error:', uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return handleError(Errors.internalError('Failed to upload photo'));
     }
 
     // Get public URL
@@ -101,18 +102,14 @@ export async function POST(request: Request) {
       console.error('Database insert error:', dbError);
       // Clean up uploaded file
       await supabase.storage.from('user-photos').remove([fileName]);
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({
       photo: photoRecord,
       message: 'Photo uploaded successfully',
     });
-  } catch (error: any) {
-    console.error('Photo upload error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleError(error, { endpoint: 'POST /api/photos/upload' });
   }
 }

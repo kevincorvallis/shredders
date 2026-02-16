@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import type {
   CreateDatePollRequest,
   DatePoll,
@@ -30,10 +31,7 @@ export async function GET(
       .single();
 
     if (pollError || !poll) {
-      return NextResponse.json(
-        { error: 'No date poll found for this event' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Date poll'));
     }
 
     // Fetch options
@@ -94,11 +92,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/poll:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events/[id]/poll' });
   }
 }
 
@@ -110,22 +104,14 @@ export async function GET(
  * Body:
  *   - dates: string[] (2-5 date strings in YYYY-MM-DD format)
  */
-export async function POST(
+export const POST = withDualAuth(async (
   request: NextRequest,
+  authUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: eventId } = await params;
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Look up user profile
     let userProfileId = authUser.profileId;
@@ -137,10 +123,7 @@ export async function POST(
         .single();
 
       if (!userProfile) {
-        return NextResponse.json(
-          { error: 'User profile not found' },
-          { status: 404 }
-        );
+        return handleError(Errors.resourceNotFound('User profile'));
       }
       userProfileId = userProfile.id;
     }
@@ -153,24 +136,15 @@ export async function POST(
       .single();
 
     if (!event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     if (event.user_id !== userProfileId) {
-      return NextResponse.json(
-        { error: 'Only the event creator can create a date poll' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('Only the event creator can create a date poll'));
     }
 
     if (event.status !== 'active') {
-      return NextResponse.json(
-        { error: 'Cannot create poll for inactive event' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Cannot create poll for inactive event']));
     }
 
     // Check if poll already exists
@@ -181,10 +155,7 @@ export async function POST(
       .single();
 
     if (existingPoll) {
-      return NextResponse.json(
-        { error: 'A date poll already exists for this event' },
-        { status: 409 }
-      );
+      return handleError(Errors.validationFailed(['A date poll already exists for this event']));
     }
 
     // Validate request body
@@ -192,20 +163,14 @@ export async function POST(
     const { dates } = body;
 
     if (!dates || !Array.isArray(dates) || dates.length < 2 || dates.length > 5) {
-      return NextResponse.json(
-        { error: 'Must provide 2-5 dates' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Must provide 2-5 dates']));
     }
 
     // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     for (const d of dates) {
       if (!dateRegex.test(d)) {
-        return NextResponse.json(
-          { error: `Invalid date format: ${d}. Use YYYY-MM-DD` },
-          { status: 400 }
-        );
+        return handleError(Errors.validationFailed([`Invalid date format: ${d}. Use YYYY-MM-DD`]));
       }
     }
 
@@ -217,11 +182,7 @@ export async function POST(
       .single();
 
     if (pollError || !poll) {
-      console.error('Error creating poll:', pollError);
-      return NextResponse.json(
-        { error: 'Failed to create date poll' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Create date options
@@ -237,11 +198,7 @@ export async function POST(
       .select('id, proposed_date, proposed_by');
 
     if (optionsError) {
-      console.error('Error creating date options:', optionsError);
-      return NextResponse.json(
-        { error: 'Failed to create date options' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     const pollOptions: DatePollOption[] = (options || []).map((opt) => ({
@@ -267,10 +224,6 @@ export async function POST(
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/poll:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events/[id]/poll' });
   }
-}
+});

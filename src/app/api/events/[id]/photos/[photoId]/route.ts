@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 
 const STORAGE_BUCKET = 'event-photos';
 
@@ -11,23 +12,15 @@ const STORAGE_BUCKET = 'event-photos';
  * Users can only delete their own photos.
  * Event creators can delete any photo on their event.
  */
-export async function DELETE(
-  request: NextRequest,
+export const DELETE = withDualAuth(async (
+  request,
+  authUser,
   { params }: { params: Promise<{ id: string; photoId: string }> }
-) {
+) => {
   try {
     const { id: eventId, photoId } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Look up user's internal profile ID
     const { data: userProfile } = await adminClient
@@ -37,10 +30,7 @@ export async function DELETE(
       .single();
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     // Check if photo exists and belongs to this event
@@ -53,10 +43,7 @@ export async function DELETE(
       .single();
 
     if (photoError || !photo) {
-      return NextResponse.json(
-        { error: 'Photo not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Photo'));
     }
 
     // Check if user is the event creator
@@ -71,10 +58,7 @@ export async function DELETE(
 
     // User must be photo owner or event creator to delete
     if (!isPhotoOwner && !isEventCreator) {
-      return NextResponse.json(
-        { error: 'You can only delete your own photos' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('You can only delete your own photos'));
     }
 
     // Soft delete the photo
@@ -85,10 +69,7 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('Error deleting photo:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete photo' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Optionally: Delete from storage (hard delete)
@@ -97,13 +78,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Photo deleted successfully' });
   } catch (error) {
-    console.error('Error in DELETE /api/events/[id]/photos/[photoId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/events/[id]/photos/[photoId]' });
   }
-}
+});
 
 /**
  * GET /api/events/[id]/photos/[photoId]
@@ -111,10 +88,11 @@ export async function DELETE(
  * Get a single photo by ID.
  * Requires RSVP.
  */
-export async function GET(
-  request: NextRequest,
+export const GET = withDualAuth(async (
+  request,
+  authUser,
   { params }: { params: Promise<{ id: string; photoId: string }> }
-) {
+) => {
   try {
     const { id: eventId, photoId } = await params;
     const supabase = await createClient();
@@ -128,19 +106,7 @@ export async function GET(
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     // Look up user's internal profile ID
@@ -151,10 +117,7 @@ export async function GET(
       .single();
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     // Check if user is creator or has RSVP'd
@@ -173,10 +136,7 @@ export async function GET(
     }
 
     if (!isCreator && !hasRSVP) {
-      return NextResponse.json(
-        { error: 'RSVP required to view photos' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('RSVP required to view photos'));
     }
 
     // Fetch photo
@@ -199,10 +159,7 @@ export async function GET(
       .single();
 
     if (photoError || !photo) {
-      return NextResponse.json(
-        { error: 'Photo not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Photo'));
     }
 
     // Fetch user info
@@ -232,10 +189,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/events/[id]/photos/[photoId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events/[id]/photos/[photoId]' });
   }
-}
+});

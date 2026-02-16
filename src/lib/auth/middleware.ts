@@ -12,6 +12,8 @@ import {
   type TokenPayload,
 } from './jwt';
 import { isBlacklisted } from './token-blacklist';
+import { getDualAuthUser, type AuthenticatedUser } from './dual-auth';
+import { Errors, handleError } from '../errors';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: TokenPayload;
@@ -41,28 +43,19 @@ export function withAuth(
     const token = extractTokenFromHeader(authHeader);
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Missing authentication token' },
-        { status: 401 }
-      );
+      return handleError(Errors.tokenMissing());
     }
 
     const payload = verifyAccessToken(token);
 
     if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 403 }
-      );
+      return handleError(Errors.tokenInvalid());
     }
 
     // Check if token is blacklisted (revoked)
     const blacklisted = await isBlacklisted(payload.jti);
     if (blacklisted) {
-      return NextResponse.json(
-        { error: 'Token has been revoked' },
-        { status: 401 }
-      );
+      return handleError(Errors.tokenRevoked());
     }
 
     // Attach user info to request
@@ -116,6 +109,37 @@ export function withOptionalAuth(
 }
 
 /**
+ * Middleware to verify dual auth (JWT or Supabase) and pass authenticated user to handler.
+ * Returns 401 if not authenticated. Forwards route context (params) for dynamic routes.
+ *
+ * Usage:
+ * ```typescript
+ * import { withDualAuth } from '@/lib/auth';
+ *
+ * // Static route
+ * export const POST = withDualAuth(async (req, authUser) => {
+ *   // authUser is guaranteed to exist
+ * });
+ *
+ * // Dynamic route
+ * export const POST = withDualAuth(async (req, authUser, { params }) => {
+ *   const { id } = await params;
+ * });
+ * ```
+ */
+export function withDualAuth<C = unknown>(
+  handler: (req: NextRequest, authUser: AuthenticatedUser, context: C) => Promise<NextResponse>
+) {
+  return async (req: NextRequest, context: C): Promise<NextResponse> => {
+    const authUser = await getDualAuthUser(req);
+    if (!authUser) {
+      return handleError(Errors.unauthorized('Not authenticated'));
+    }
+    return handler(req, authUser, context);
+  };
+}
+
+/**
  * Helper to get authenticated user from request
  * Returns null if no valid token present or if token is blacklisted
  */
@@ -139,22 +163,6 @@ export async function getAuthUserAsync(req: NextRequest): Promise<TokenPayload |
   }
 
   return payload;
-}
-
-/**
- * @deprecated SECURITY: This sync version does NOT check the token blacklist.
- * Use getAuthUserAsync() instead, which properly checks for revoked tokens.
- * This function will be removed in a future release.
- */
-export function getAuthUser(req: NextRequest): TokenPayload | null {
-  const authHeader = req.headers.get('authorization');
-  const token = extractTokenFromHeader(authHeader);
-
-  if (!token) {
-    return null;
-  }
-
-  return verifyAccessToken(token);
 }
 
 /**

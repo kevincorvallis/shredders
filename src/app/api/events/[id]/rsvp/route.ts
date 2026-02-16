@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 import type { RSVPRequest, RSVPResponse, RSVPStatus } from '@/types/event';
 import { sendNewRSVPNotification, sendRSVPChangeNotification } from '@/lib/push/event-notifications';
@@ -50,38 +51,21 @@ async function promoteFromWaitlist(adminClient: ReturnType<typeof createAdminCli
  *   - needsRide: Whether user needs a ride (optional)
  *   - pickupLocation: Pickup location if needs ride (optional)
  */
-export async function POST(
+export const POST = withDualAuth(async (
   request: NextRequest,
+  authUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: eventId } = await params;
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Rate limiting: 20 RSVPs per hour per user
     const rateLimitKey = createRateLimitKey(authUser.userId, 'rsvpEvent');
     const rateLimit = await rateLimitEnhanced(rateLimitKey, 'rsvpEvent');
 
     if (!rateLimit.success) {
-      return NextResponse.json(
-        {
-          error: 'Rate limit exceeded. Please try again later.',
-          retryAfter: rateLimit.retryAfter,
-        },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(rateLimit.retryAfter || 3600) },
-        }
-      );
+      return handleError(Errors.rateLimitExceeded(rateLimit.retryAfter || 3600, 'rsvp'));
     }
 
     // Verify event exists and is active (use adminClient to bypass RLS for iOS Bearer token requests)
@@ -92,26 +76,17 @@ export async function POST(
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     if (event.status !== 'active') {
-      return NextResponse.json(
-        { error: 'Cannot RSVP to a cancelled or completed event' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Cannot RSVP to a cancelled or completed event']));
     }
 
     // Check if event date has passed (use Pacific time for US ski mountains)
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     if (event.event_date < today) {
-      return NextResponse.json(
-        { error: 'Cannot RSVP to a past event' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Cannot RSVP to a past event']));
     }
 
     // OPTIMIZATION: Use cached profileId from auth when available
@@ -126,11 +101,7 @@ export async function POST(
         .single();
 
       if (userError || !userProfile) {
-        console.error('Error finding user profile:', userError);
-        return NextResponse.json(
-          { error: 'User profile not found. Please try signing out and back in.' },
-          { status: 404 }
-        );
+        return handleError(Errors.resourceNotFound('User profile'));
       }
       userProfileId = userProfile.id;
     }
@@ -140,10 +111,7 @@ export async function POST(
 
     // Event creator cannot change their RSVP (they're always "going")
     if (event.user_id === userProfile.id) {
-      return NextResponse.json(
-        { error: 'Event creator cannot change their RSVP status' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Event creator cannot change their RSVP status']));
     }
 
     const body: RSVPRequest = await request.json();
@@ -152,10 +120,7 @@ export async function POST(
     // Validate status
     const validStatuses: RSVPStatus[] = ['going', 'maybe', 'declined'];
     if (!status || !validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: 'Invalid RSVP status. Must be: going, maybe, or declined' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Invalid RSVP status. Must be: going, maybe, or declined']));
     }
 
     // OPTIMIZATION: Fetch existing RSVP once and reuse throughout the function
@@ -224,11 +189,7 @@ export async function POST(
         .single();
 
       if (updateError) {
-        console.error('Error updating RSVP:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to update RSVP' },
-          { status: 500 }
-        );
+        return handleError(Errors.databaseError());
       }
 
       attendeeData = data;
@@ -264,12 +225,7 @@ export async function POST(
         .single();
 
       if (insertError) {
-        console.error('Error creating RSVP:', insertError);
-        console.error('Insert details - eventId:', eventId, 'userId:', userProfile.id, 'status:', effectiveStatus);
-        return NextResponse.json(
-          { error: 'Failed to create RSVP' },
-          { status: 500 }
-        );
+        return handleError(Errors.databaseError());
       }
 
       attendeeData = data;
@@ -370,35 +326,23 @@ export async function POST(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/rsvp:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events/[id]/rsvp' });
   }
-}
+});
 
 /**
  * DELETE /api/events/[id]/rsvp
  *
  * Remove RSVP from an event
  */
-export async function DELETE(
+export const DELETE = withDualAuth(async (
   request: NextRequest,
+  authUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: eventId } = await params;
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Verify event exists and is active (use adminClient to bypass RLS for iOS Bearer token requests)
     const { data: event, error: eventError } = await adminClient
@@ -408,26 +352,17 @@ export async function DELETE(
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     if (event.status !== 'active') {
-      return NextResponse.json(
-        { error: 'Cannot modify RSVP for inactive events' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Cannot modify RSVP for inactive events']));
     }
 
     // Use Pacific time for date comparison (US ski mountains)
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     if (event.event_date < today) {
-      return NextResponse.json(
-        { error: 'Cannot modify RSVP for past events' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Cannot modify RSVP for past events']));
     }
 
     // OPTIMIZATION: Use cached profileId from auth when available
@@ -441,11 +376,7 @@ export async function DELETE(
         .single();
 
       if (userError || !profile) {
-        console.error('Error finding user profile:', userError);
-        return NextResponse.json(
-          { error: 'User profile not found' },
-          { status: 404 }
-        );
+        return handleError(Errors.resourceNotFound('User profile'));
       }
       userProfileId = profile.id;
     }
@@ -454,10 +385,7 @@ export async function DELETE(
 
     // Event creator cannot remove their RSVP
     if (event.user_id === userProfile.id) {
-      return NextResponse.json(
-        { error: 'Event creator cannot remove their RSVP' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Event creator cannot remove their RSVP']));
     }
 
     // Check existing RSVP status before deleting (for waitlist promotion)
@@ -476,11 +404,7 @@ export async function DELETE(
       .eq('user_id', userProfile.id);
 
     if (deleteError) {
-      console.error('Error deleting RSVP:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to remove RSVP' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // If deleted user was "going", promote next from waitlist
@@ -505,10 +429,6 @@ export async function DELETE(
       },
     });
   } catch (error) {
-    console.error('Error in DELETE /api/events/[id]/rsvp:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/events/[id]/rsvp' });
   }
-}
+});

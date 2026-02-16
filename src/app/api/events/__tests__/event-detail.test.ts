@@ -16,8 +16,22 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 // Mock auth
+const { mockGetDualAuthUser: detailMockAuth } = vi.hoisted(() => ({
+  mockGetDualAuthUser: vi.fn(),
+}));
 vi.mock('@/lib/auth', () => ({
-  getDualAuthUser: vi.fn(),
+  getDualAuthUser: detailMockAuth,
+  withDualAuth: (handler: any) => async (req: any, context: any) => {
+    const authUser = await detailMockAuth(req);
+    if (!authUser) {
+      const { NextResponse } = await import('next/server');
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Not authenticated', timestamp: new Date().toISOString() } },
+        { status: 401 },
+      );
+    }
+    return handler(req, authUser, context);
+  },
 }));
 
 // Mock shared
@@ -151,7 +165,7 @@ describe('PATCH /api/events/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toBe('Not authenticated');
+    expect(data.error.message).toBe('Not authenticated');
   });
 
   it('should reject non-owner updates', async () => {
@@ -184,7 +198,7 @@ describe('PATCH /api/events/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(403);
-    expect(data.error).toContain('own events');
+    expect(data.error.message).toContain('own events');
   });
 
   it('should return 404 for non-existent event', async () => {
@@ -211,7 +225,7 @@ describe('PATCH /api/events/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(404);
-    expect(data.error).toBe('Event not found');
+    expect(data.error.message).toBe('Event not found');
   });
 });
 
@@ -304,7 +318,7 @@ describe('DELETE /api/events/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toBe('Not authenticated');
+    expect(data.error.message).toBe('Not authenticated');
   });
 
   it('should reject non-owner cancellation', async () => {
@@ -334,7 +348,7 @@ describe('DELETE /api/events/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(403);
-    expect(data.error).toContain('own events');
+    expect(data.error.message).toContain('own events');
   });
 
   it('should return 404 for non-existent event', async () => {
@@ -359,6 +373,6 @@ describe('DELETE /api/events/[id]', () => {
     const data = await response.json();
 
     expect(response.status).toBe(404);
-    expect(data.error).toBe('Event not found');
+    expect(data.error.message).toBe('Event not found');
   });
 });

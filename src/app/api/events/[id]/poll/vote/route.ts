@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import type { CastDateVoteRequest, DateVoteChoice } from '@/types/event';
 
 /**
@@ -12,22 +13,14 @@ import type { CastDateVoteRequest, DateVoteChoice } from '@/types/event';
  *   - optionId: string (required)
  *   - vote: 'available' | 'maybe' | 'unavailable' (required)
  */
-export async function POST(
+export const POST = withDualAuth(async (
   request: NextRequest,
+  authUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: eventId } = await params;
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Look up user profile
     let userProfileId = authUser.profileId;
@@ -39,10 +32,7 @@ export async function POST(
         .single();
 
       if (!userProfile) {
-        return NextResponse.json(
-          { error: 'User profile not found' },
-          { status: 404 }
-        );
+        return handleError(Errors.resourceNotFound('User profile'));
       }
       userProfileId = userProfile.id;
     }
@@ -53,10 +43,7 @@ export async function POST(
 
     const validVotes: DateVoteChoice[] = ['available', 'maybe', 'unavailable'];
     if (!optionId || !vote || !validVotes.includes(vote)) {
-      return NextResponse.json(
-        { error: 'Invalid vote. Must provide optionId and vote (available/maybe/unavailable)' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Invalid vote. Must provide optionId and vote (available/maybe/unavailable)']));
     }
 
     // Verify the option belongs to a poll for this event
@@ -74,26 +61,17 @@ export async function POST(
       .single();
 
     if (!option || !option.poll) {
-      return NextResponse.json(
-        { error: 'Date option not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Date option'));
     }
 
     const poll = Array.isArray(option.poll) ? option.poll[0] : option.poll;
 
     if (poll.event_id !== eventId) {
-      return NextResponse.json(
-        { error: 'Option does not belong to this event' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Option does not belong to this event']));
     }
 
     if (poll.status !== 'open') {
-      return NextResponse.json(
-        { error: 'Poll is closed' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Poll is closed']));
     }
 
     // Upsert the vote
@@ -112,11 +90,7 @@ export async function POST(
       .single();
 
     if (voteError) {
-      console.error('Error casting vote:', voteError);
-      return NextResponse.json(
-        { error: 'Failed to cast vote' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({
@@ -128,10 +102,6 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/poll/vote:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events/[id]/poll/vote' });
   }
-}
+});

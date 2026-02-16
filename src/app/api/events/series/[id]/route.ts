@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import type { AuthenticatedUser } from '@/lib/auth';
 import { getMountain } from '@shredders/shared';
+import { Errors, handleError } from '@/lib/errors';
 import { sendEventCancellationNotification } from '@/lib/push/event-notifications';
 import type { EventSeries, RecurrencePattern } from '../route';
 
@@ -25,10 +27,7 @@ export async function GET(
       .single();
 
     if (error || !series) {
-      return NextResponse.json(
-        { error: 'Series not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Series'));
     }
 
     // Fetch upcoming events for this series
@@ -80,11 +79,7 @@ export async function GET(
       upcomingEvents: events || [],
     });
   } catch (error) {
-    console.error('Error in GET /api/events/series/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/events/series/[id]' });
   }
 }
 
@@ -94,22 +89,15 @@ export async function GET(
  * Update a series. Updates apply to future events only.
  * Set updateFutureEvents=true to update all future non-exception events.
  */
-export async function PATCH(
+export const PATCH = withDualAuth(async (
   request: NextRequest,
+  authUser: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: seriesId } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     const { data: userProfile } = await adminClient
       .from('users')
@@ -118,10 +106,7 @@ export async function PATCH(
       .single();
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     // Verify series exists and user owns it
@@ -132,17 +117,11 @@ export async function PATCH(
       .single();
 
     if (seriesError || !series) {
-      return NextResponse.json(
-        { error: 'Series not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Series'));
     }
 
     if (series.user_id !== userProfile.id) {
-      return NextResponse.json(
-        { error: 'Only the series creator can update it' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('Only the series creator can update it'));
     }
 
     const body = await request.json();
@@ -200,10 +179,7 @@ export async function PATCH(
 
     if (updateError) {
       console.error('Error updating series:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update series' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Optionally update future events
@@ -271,35 +247,24 @@ export async function PATCH(
       updatedEventsCount,
     });
   } catch (error) {
-    console.error('Error in PATCH /api/events/series/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'PATCH /api/events/series/[id]' });
   }
-}
+});
 
 /**
  * DELETE /api/events/series/[id]
  *
  * Cancel/end a series. Cancels all future events.
  */
-export async function DELETE(
+export const DELETE = withDualAuth(async (
   request: NextRequest,
+  authUser: AuthenticatedUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: seriesId } = await params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
-
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     const { data: userProfile } = await adminClient
       .from('users')
@@ -308,10 +273,7 @@ export async function DELETE(
       .single();
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User profile'));
     }
 
     // Verify series exists and user owns it
@@ -322,17 +284,11 @@ export async function DELETE(
       .single();
 
     if (seriesError || !series) {
-      return NextResponse.json(
-        { error: 'Series not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Series'));
     }
 
     if (series.user_id !== userProfile.id) {
-      return NextResponse.json(
-        { error: 'Only the series creator can cancel it' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('Only the series creator can cancel it'));
     }
 
     // Prevent cancelling an already-cancelled series
@@ -360,10 +316,7 @@ export async function DELETE(
 
     if (cancelError) {
       console.error('Error cancelling series:', cancelError);
-      return NextResponse.json(
-        { error: 'Failed to cancel series' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Send cancellation notifications for each affected event (async, don't block response)
@@ -385,10 +338,6 @@ export async function DELETE(
       cancelledEventsCount: cancelledCount || 0,
     });
   } catch (error) {
-    console.error('Error in DELETE /api/events/series/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/events/series/[id]' });
   }
-}
+});

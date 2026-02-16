@@ -22,7 +22,7 @@ export {
 export {
   withAuth,
   withOptionalAuth,
-  getAuthUser,
+  withDualAuth,
   getAuthUserAsync,
   requireAuth,
   type AuthenticatedRequest,

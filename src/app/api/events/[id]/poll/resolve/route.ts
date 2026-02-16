@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 import type { ResolveDatePollRequest } from '@/types/event';
 
 /**
@@ -13,22 +14,14 @@ import type { ResolveDatePollRequest } from '@/types/event';
  * Body:
  *   - optionId: string (the winning date option ID)
  */
-export async function POST(
+export const POST = withDualAuth(async (
   request: NextRequest,
+  authUser,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: eventId } = await params;
     const adminClient = createAdminClient();
-
-    // Check authentication
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     // Look up user profile
     let userProfileId = authUser.profileId;
@@ -40,10 +33,7 @@ export async function POST(
         .single();
 
       if (!userProfile) {
-        return NextResponse.json(
-          { error: 'User profile not found' },
-          { status: 404 }
-        );
+        return handleError(Errors.resourceNotFound('User profile'));
       }
       userProfileId = userProfile.id;
     }
@@ -56,17 +46,11 @@ export async function POST(
       .single();
 
     if (!event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Event'));
     }
 
     if (event.user_id !== userProfileId) {
-      return NextResponse.json(
-        { error: 'Only the event creator can resolve the poll' },
-        { status: 403 }
-      );
+      return handleError(Errors.forbidden('Only the event creator can resolve the poll'));
     }
 
     // Validate request body
@@ -74,10 +58,7 @@ export async function POST(
     const { optionId } = body;
 
     if (!optionId) {
-      return NextResponse.json(
-        { error: 'Must provide optionId' },
-        { status: 400 }
-      );
+      return handleError(Errors.missingField('optionId'));
     }
 
     // Verify the option belongs to a poll for this event and poll is open
@@ -96,26 +77,17 @@ export async function POST(
       .single();
 
     if (!option || !option.poll) {
-      return NextResponse.json(
-        { error: 'Date option not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Date option'));
     }
 
     const poll = Array.isArray(option.poll) ? option.poll[0] : option.poll;
 
     if (poll.event_id !== eventId) {
-      return NextResponse.json(
-        { error: 'Option does not belong to this event' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Option does not belong to this event']));
     }
 
     if (poll.status !== 'open') {
-      return NextResponse.json(
-        { error: 'Poll is already closed' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Poll is already closed']));
     }
 
     // Update event date to winning date
@@ -128,11 +100,7 @@ export async function POST(
       .eq('id', eventId);
 
     if (eventUpdateError) {
-      console.error('Error updating event date:', eventUpdateError);
-      return NextResponse.json(
-        { error: 'Failed to update event date' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     // Close the poll
@@ -145,11 +113,7 @@ export async function POST(
       .eq('id', poll.id);
 
     if (pollUpdateError) {
-      console.error('Error closing poll:', pollUpdateError);
-      return NextResponse.json(
-        { error: 'Failed to close poll' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({
@@ -158,10 +122,6 @@ export async function POST(
       eventId,
     });
   } catch (error) {
-    console.error('Error in POST /api/events/[id]/poll/resolve:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/events/[id]/poll/resolve' });
   }
-}
+});

@@ -10,8 +10,22 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 // Mock auth
+const { mockGetDualAuthUser: rsvpMockAuth } = vi.hoisted(() => ({
+  mockGetDualAuthUser: vi.fn(),
+}));
 vi.mock('@/lib/auth', () => ({
-  getDualAuthUser: vi.fn(),
+  getDualAuthUser: rsvpMockAuth,
+  withDualAuth: (handler: any) => async (req: any, context: any) => {
+    const authUser = await rsvpMockAuth(req);
+    if (!authUser) {
+      const { NextResponse } = await import('next/server');
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Not authenticated', timestamp: new Date().toISOString() } },
+        { status: 401 },
+      );
+    }
+    return handler(req, authUser, context);
+  },
 }));
 
 // Mock rate limiting to always allow
@@ -250,7 +264,7 @@ describe('POST /api/events/[id]/rsvp', () => {
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toBe('Not authenticated');
+    expect(data.error.message).toBe('Not authenticated');
   });
 
   it('should validate RSVP status', async () => {
@@ -270,7 +284,7 @@ describe('POST /api/events/[id]/rsvp', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('Invalid RSVP status');
+    expect(data.error.details[0]).toContain('Invalid RSVP status');
   });
 
   it('should reject RSVP for cancelled event', async () => {
@@ -307,7 +321,7 @@ describe('POST /api/events/[id]/rsvp', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('cancelled');
+    expect(data.error.details[0]).toContain('cancelled');
   });
 
   it('should return 404 for non-existent event', async () => {
@@ -339,7 +353,7 @@ describe('POST /api/events/[id]/rsvp', () => {
     const data = await response.json();
 
     expect(response.status).toBe(404);
-    expect(data.error).toBe('Event not found');
+    expect(data.error.message).toBe('Event not found');
   });
 
   it('should accept driver info in RSVP', async () => {
@@ -505,7 +519,7 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('creator');
+    expect(data.error.details[0]).toContain('creator');
   });
 
   it('should reject RSVP for past event', async () => {
@@ -541,7 +555,7 @@ describe('POST /api/events/[id]/rsvp - edge cases', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('past');
+    expect(data.error.details[0]).toContain('past');
   });
 
   it('should auto-waitlist when event is at capacity', async () => {
@@ -817,7 +831,7 @@ describe('DELETE /api/events/[id]/rsvp', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('creator');
+    expect(data.error.details[0]).toContain('creator');
   });
 
   it('should require authentication', async () => {
@@ -833,7 +847,7 @@ describe('DELETE /api/events/[id]/rsvp', () => {
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toBe('Not authenticated');
+    expect(data.error.message).toBe('Not authenticated');
   });
 
   it('should reject DELETE for cancelled event', async () => {
@@ -869,7 +883,7 @@ describe('DELETE /api/events/[id]/rsvp', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('inactive');
+    expect(data.error.details[0]).toContain('inactive');
   });
 
   it('should reject DELETE for past event', async () => {
@@ -905,6 +919,6 @@ describe('DELETE /api/events/[id]/rsvp', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('past');
+    expect(data.error.details[0]).toContain('past');
   });
 });

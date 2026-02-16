@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getDualAuthUser } from '@/lib/auth';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 
 /**
  * GET /api/check-ins
@@ -54,19 +55,12 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Error fetching check-ins:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch check-ins' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ checkIns: checkIns || [] });
   } catch (error) {
-    console.error('Error in GET /api/check-ins:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/check-ins' });
   }
 }
 
@@ -87,18 +81,9 @@ export async function GET(request: Request) {
  *   - weatherConditions: Weather object (optional)
  *   - isPublic: Make check-in public (default: true)
  */
-export async function POST(request: NextRequest) {
+export const POST = withDualAuth(async (request, authUser) => {
   try {
     const supabase = await createClient();
-
-    // Check authentication (supports both JWT and Supabase session)
-    const authUser = await getDualAuthUser(request);
-    if (!authUser) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
 
     const body = await request.json();
     const {
@@ -115,26 +100,17 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!mountainId) {
-      return NextResponse.json(
-        { error: 'Mountain ID is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.missingField('mountainId'));
     }
 
     // Validate trip report length
     if (tripReport && tripReport.length > 5000) {
-      return NextResponse.json(
-        { error: 'Trip report must be less than 5000 characters' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Trip report must be less than 5000 characters']));
     }
 
     // Validate rating
     if (rating !== undefined && (rating < 1 || rating > 5)) {
-      return NextResponse.json(
-        { error: 'Rating must be between 1 and 5' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Rating must be between 1 and 5']));
     }
 
     // Create check-in
@@ -165,18 +141,11 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error creating check-in:', insertError);
-      return NextResponse.json(
-        { error: 'Failed to create check-in' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ checkIn }, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/check-ins:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/check-ins' });
   }
-}
+});
