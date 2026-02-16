@@ -35,8 +35,13 @@ yarn-error.log*
 
 # database backups
 *.sql
+!supabase/migrations/*.sql
+!supabase/reference/*.sql
 *.backup
 project.pbxproj.backup
+
+# supabase temp files
+supabase/.temp/
 
 # vercel
 .vercel
