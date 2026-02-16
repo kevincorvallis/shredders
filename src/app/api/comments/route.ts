@@ -25,8 +25,8 @@ export async function GET(request: Request) {
     const webcamId = searchParams.get('webcamId');
     const photoId = searchParams.get('photoId');
     const parentCommentId = searchParams.get('parentCommentId');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = Math.max(1, Math.min(parseInt(searchParams.get('limit') || '50') || 50, 100));
+    const offset = Math.max(0, parseInt(searchParams.get('offset') || '0') || 0);
 
     // Build query with user join
     let query = supabase
@@ -117,11 +117,11 @@ export const POST = withDualAuth(async (request, authUser) => {
     const { content, mountainId, webcamId, photoId, parentCommentId } = body;
 
     // Validate content
-    if (!content || typeof content !== 'string') {
+    if (!content || typeof content !== 'string' || !content.trim()) {
       return handleError(Errors.missingField('content'));
     }
 
-    if (content.length > 2000) {
+    if (content.trim().length > 2000) {
       return handleError(Errors.validationFailed(['Content must be less than 2000 characters']));
     }
 

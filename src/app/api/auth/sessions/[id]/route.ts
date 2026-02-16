@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthUserAsync } from '@/lib/auth/middleware';
+import { getDualAuthUser } from '@/lib/auth/dual-auth';
 import { getSessionById, revokeSession } from '@/lib/auth/session-manager';
 import { Errors, handleError } from '@/lib/errors';
 import { addToBlacklist } from '@/lib/auth/token-blacklist';
@@ -15,7 +15,7 @@ export async function DELETE(
 ) {
   try {
     // Authenticate user
-    const user = await getAuthUserAsync(request);
+    const user = await getDualAuthUser(request);
     if (!user) {
       throw Errors.unauthorized();
     }

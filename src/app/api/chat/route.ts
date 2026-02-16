@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai';
-import { streamText } from 'ai';
+import { streamText, convertToModelMessages } from 'ai';
 import { chatTools } from '@/lib/chat/tools';
 
 export const maxDuration = 30;
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
   const result = streamText({
     model: openai('gpt-4o'),
     system: systemPrompt,
-    messages,
+    messages: convertToModelMessages(messages),
     tools: chatTools,
   });
 

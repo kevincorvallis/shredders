@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthUserAsync } from '@/lib/auth/middleware';
+import { getDualAuthUser } from '@/lib/auth/dual-auth';
 import {
   getUserSessions,
   revokeAllUserSessions,
@@ -22,8 +22,8 @@ import { decodeToken } from '@/lib/auth/jwt';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user
-    const user = await getAuthUserAsync(request);
+    // Authenticate user (supports both JWT and Supabase auth)
+    const user = await getDualAuthUser(request);
     if (!user) {
       throw Errors.unauthorized();
     }
@@ -86,8 +86,8 @@ export async function GET(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // Authenticate user
-    const user = await getAuthUserAsync(request);
+    // Authenticate user (supports both JWT and Supabase auth)
+    const user = await getDualAuthUser(request);
     if (!user) {
       throw Errors.unauthorized();
     }

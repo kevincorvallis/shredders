@@ -21,8 +21,8 @@ export async function GET(request: Request) {
 
     const mountainId = searchParams.get('mountainId');
     const userId = searchParams.get('userId');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = Math.max(1, Math.min(parseInt(searchParams.get('limit') || '20') || 20, 100));
+    const offset = Math.max(0, parseInt(searchParams.get('offset') || '0') || 0);
     const publicOnly = searchParams.get('publicOnly') !== 'false';
 
     // Build query with user join

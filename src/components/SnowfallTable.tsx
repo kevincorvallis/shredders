@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { getAllMountains, type MountainConfig } from '@shredders/shared';
-import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -27,7 +26,6 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const mountains = getAllMountains();
 
-  // Generate date range (memoized to avoid recalculation on every render)
   const dateRange = useMemo(() => {
     const dates = [];
     const today = new Date();
@@ -62,12 +60,19 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
     return dates;
   }, [daysBack, daysForward]);
 
+  // Index of the last actual day (the one right before forecast starts)
+  const dividerIndex = useMemo(() => {
+    for (let i = dateRange.length - 1; i >= 0; i--) {
+      if (!dateRange[i].isForecast) return i;
+    }
+    return -1;
+  }, [dateRange]);
+
   useEffect(() => {
     async function fetchSnowfallData() {
       setIsLoading(true);
 
       try {
-        // Use batch endpoint - 1 request instead of 30!
         const response = await fetch(
           `/api/mountains/batch/snowfall?daysBack=${daysBack}&daysForward=${daysForward}`
         );
@@ -78,7 +83,6 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
 
         const batchData = await response.json();
 
-        // Transform batch data to match expected format
         const data: SnowfallData[] = batchData.data.map((mountainData: any) => ({
           mountainId: mountainData.mountainId,
           dates: mountainData.dates,
@@ -87,7 +91,6 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
         setSnowfallData(data);
       } catch (error) {
         console.error('Error fetching snowfall data:', error);
-        // Fallback to empty data
         setSnowfallData(
           mountains.map((mountain) => ({
             mountainId: mountain.id,
@@ -103,11 +106,10 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
 
       setIsLoading(false);
 
-      // Scroll to today after loading
       setTimeout(() => {
         if (scrollContainerRef.current) {
           const todayIndex = daysBack;
-          const cellWidth = 80; // approximate
+          const cellWidth = 56;
           scrollContainerRef.current.scrollLeft = todayIndex * cellWidth - 200;
         }
       }, 100);
@@ -117,20 +119,19 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
   }, [daysBack, daysForward]);
 
   const getSnowfallColor = (snowfall: number, isForecast: boolean) => {
-    if (snowfall === 0) return isForecast ? 'bg-surface-secondary/30' : 'bg-surface-secondary/50';
-    if (snowfall < 2) return 'bg-snow-1 text-text-primary';
-    if (snowfall < 4) return 'bg-snow-2 text-text-primary';
-    if (snowfall < 6) return 'bg-snow-3 text-text-primary';
-    if (snowfall < 10) return 'bg-snow-4 text-text-primary';
-    return 'bg-snow-5 text-text-primary font-bold';
+    if (snowfall === 0) return isForecast ? 'bg-surface-secondary/20' : '';
+    if (snowfall < 2) return 'bg-snow-1';
+    if (snowfall < 4) return 'bg-snow-2';
+    if (snowfall < 6) return 'bg-snow-3';
+    if (snowfall < 10) return 'bg-snow-4';
+    return 'bg-snow-5';
   };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
     const day = date.getDate();
     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
-    return { month, day, dayOfWeek };
+    return { day, dayOfWeek };
   };
 
   const scrollLeft = () => {
@@ -166,27 +167,48 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
   }
 
   return (
-    <div className="bg-surface-primary rounded-2xl overflow-hidden">
-      {/* Header */}
-      <div className="p-4 border-b border-border-secondary flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-text-primary tracking-tight">Snowfall Tracker</h2>
-          <p className="text-sm text-text-secondary">Past {daysBack} days • Next {daysForward} days</p>
+    <div className="bg-surface-primary rounded-2xl overflow-hidden shadow-sm">
+      {/* Header with inline legend */}
+      <div className="px-4 py-3 border-b border-border-secondary flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h2 className="text-base font-semibold text-text-primary tracking-tight">Snowfall</h2>
+          <div className="flex items-center gap-3 text-[10px] text-text-tertiary">
+            <div className="flex items-center gap-1">
+              <div className="w-2.5 h-2.5 rounded-sm bg-snow-1" />
+              <span>1-2</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2.5 h-2.5 rounded-sm bg-snow-2" />
+              <span>2-4</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2.5 h-2.5 rounded-sm bg-snow-3" />
+              <span>4-6</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2.5 h-2.5 rounded-sm bg-snow-4" />
+              <span>6-10</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2.5 h-2.5 rounded-sm bg-snow-5" />
+              <span>10+</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={scrollLeft}
-            className="p-2 bg-surface-secondary hover:bg-surface-tertiary rounded-lg transition-colors"
+            className="p-1.5 hover:bg-surface-secondary rounded-lg transition-colors"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-5 h-5 text-text-primary" />
+            <ChevronLeft className="w-4 h-4 text-text-tertiary" />
           </button>
           <button
             onClick={scrollRight}
-            className="p-2 bg-surface-secondary hover:bg-surface-tertiary rounded-lg transition-colors"
+            className="p-1.5 hover:bg-surface-secondary rounded-lg transition-colors"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-5 h-5 text-text-primary" />
+            <ChevronRight className="w-4 h-4 text-text-tertiary" />
           </button>
         </div>
       </div>
@@ -194,41 +216,24 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
       {/* Table */}
       <div className="relative">
         {/* Fixed mountain names column */}
-        <div className="absolute left-0 top-0 bottom-0 w-48 bg-surface-primary z-10 border-r border-border-secondary">
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-surface-primary z-10 border-r border-border-secondary">
           {/* Header spacer */}
-          <div className="h-20 border-b border-border-secondary" />
+          <div className="h-12" />
 
           {/* Mountain names */}
           {mountains.map((mountain) => (
             <Link
               key={mountain.id}
               href={`/mountains/${mountain.id}`}
-              className="flex items-center gap-3 p-3 h-16 border-b border-border-secondary hover:bg-accent-subtle transition-colors"
+              className="flex items-center gap-2 px-3 h-10 hover:bg-accent-subtle transition-colors"
             >
-              {mountain.logo ? (
-                <Image
-                  src={mountain.logo}
-                  alt={mountain.name}
-                  width={32}
-                  height={32}
-                  className="rounded flex-shrink-0"
-                />
-              ) : (
-                <div
-                  className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: mountain.color + '40' }}
-                >
-                  <span className="text-sm">🏔️</span>
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-text-primary truncate">
-                  {mountain.shortName}
-                </div>
-                <div className="text-xs text-text-tertiary truncate capitalize">
-                  {mountain.region}
-                </div>
-              </div>
+              <div
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: mountain.color }}
+              />
+              <span className="text-xs font-medium text-text-primary truncate">
+                {mountain.shortName}
+              </span>
             </Link>
           ))}
         </div>
@@ -236,93 +241,67 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
         {/* Scrollable data area */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto pl-48 scrollbar-thin "
+          className="overflow-x-auto pl-32 scrollbar-thin"
         >
           <div className="inline-block min-w-full">
             {/* Date headers */}
-            <div className="flex border-b border-border-secondary bg-surface-primary/95 sticky top-0 z-5">
+            <div className="flex bg-surface-primary">
               {dateRange.map((dateInfo, index) => {
-                const { month, day, dayOfWeek } = formatDate(dateInfo.date);
+                const { day, dayOfWeek } = formatDate(dateInfo.date);
+                const isDivider = index === dividerIndex;
                 return (
                   <div
                     key={index}
-                    className={`w-20 p-2 text-center border-r border-border-secondary ${
-                      dateInfo.isToday ? 'bg-accent-subtle' : ''
+                    className={`w-14 h-12 flex flex-col items-center justify-center ${
+                      isDivider ? 'border-r border-dashed border-text-quaternary' : ''
                     }`}
                   >
-                    <div className="text-xs text-text-tertiary">{dayOfWeek}</div>
-                    <div className={`text-sm font-semibold ${dateInfo.isToday ? 'text-accent' : 'text-text-primary'}`}>
-                      {month} {day}
+                    <div className="text-[10px] text-text-quaternary leading-none">{dayOfWeek}</div>
+                    <div className={`text-sm font-semibold leading-tight ${
+                      dateInfo.isToday ? 'text-accent' : 'text-text-primary'
+                    }`}>
+                      {day}
                     </div>
-                    <div className="text-xs text-text-quaternary">
-                      {dateInfo.isForecast ? 'forecast' : 'actual'}
-                    </div>
+                    {dateInfo.isToday && (
+                      <div className="w-1 h-1 rounded-full bg-accent mt-0.5" />
+                    )}
                   </div>
                 );
               })}
             </div>
 
-            {/* Data rows */}
-            {snowfallData.map((mountainData) => {
-              const mountain = mountains.find((m) => m.id === mountainData.mountainId);
-              if (!mountain) return null;
+            {/* Data grid with hairline gaps */}
+            <div className="flex flex-col gap-px bg-border-secondary">
+              {snowfallData.map((mountainData) => {
+                const mountain = mountains.find((m) => m.id === mountainData.mountainId);
+                if (!mountain) return null;
 
-              return (
-                <div key={mountain.id} className="flex border-b border-border-secondary">
-                  {mountainData.dates.map((dateData, index) => (
-                    <div
-                      key={index}
-                      className={`w-20 h-16 p-2 flex items-center justify-center border-r border-border-secondary ${
-                        dateData.isToday ? 'bg-accent-subtle/50' : ''
-                      } ${getSnowfallColor(dateData.snowfall, dateData.isForecast)}`}
-                    >
-                      <div className="text-center">
-                        {dateData.snowfall > 0 ? (
-                          <>
-                            <div className="text-lg font-bold">{dateData.snowfall}"</div>
-                            {dateData.snowfall >= 6 && (
-                              <div className="text-xs">❄️</div>
-                            )}
-                          </>
-                        ) : (
-                          <div className="text-text-quaternary text-sm">—</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="p-4 border-t border-border-secondary bg-surface-primary/50">
-        <div className="flex items-center gap-6 text-xs text-text-secondary">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-snow-1" />
-            <span>1-2"</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-snow-2" />
-            <span>2-4"</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-snow-3" />
-            <span>4-6"</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-snow-4" />
-            <span>6-10"</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-snow-5" />
-            <span>10"+</span>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-accent" />
-            <span className="text-accent">Today</span>
+                return (
+                  <div key={mountain.id} className="flex gap-px">
+                    {mountainData.dates.map((dateData, index) => {
+                      const isDivider = index === dividerIndex;
+                      const colorClass = getSnowfallColor(dateData.snowfall, dateData.isForecast);
+                      return (
+                        <div
+                          key={index}
+                          className={`w-14 h-10 flex items-center justify-center ${
+                            colorClass || 'bg-surface-primary'
+                          } ${
+                            isDivider ? 'border-r border-dashed border-text-quaternary' : ''
+                          }`}
+                        >
+                          {dateData.snowfall > 0 && (
+                            <span className="text-xs font-semibold text-text-primary">
+                              {dateData.snowfall}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

@@ -55,7 +55,7 @@ export const PUT = withDualAuth(async (request, authUser) => {
 
     if (error) {
       console.error('Error updating user profile:', error);
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({

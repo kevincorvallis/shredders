@@ -6,81 +6,54 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { verifyAccessToken } from '@/lib/auth/jwt';
+import { createAdminClient } from '@/lib/supabase/server';
+import { withDualAuth } from '@/lib/auth';
 import { revokeAllUserTokens } from '@/lib/auth/token-blacklist';
 import { logAuthEvent } from '@/lib/auth/audit-log';
-import { headers } from 'next/headers';
+import { Errors, handleError } from '@/lib/errors';
 
-export async function DELETE(request: Request) {
+export const DELETE = withDualAuth(async (request, authUser) => {
   try {
-    // Get auth token from header
-    const headersList = await headers();
-    const authHeader = headersList.get('authorization');
+    const adminClient = createAdminClient();
 
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized - no token provided' },
-        { status: 401 }
-      );
+    // Look up internal user ID
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (!userProfile) {
+      return handleError(Errors.unauthorized('User profile not found'));
     }
-
-    const token = authHeader.slice(7);
-    const payload = verifyAccessToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Unauthorized - invalid token' },
-        { status: 401 }
-      );
-    }
-
-    const userId = payload.userId;
-    const supabase = await createClient();
 
     // 1. Revoke all user sessions and tokens
-    await revokeAllUserTokens(userId, 'Account deletion');
+    await revokeAllUserTokens(authUser.userId, 'Account deletion');
 
-    // 2. Delete user's data from all tables (cascade in order)
-    const tablesToDelete = [
-      'user_favorites',
-      'user_check_ins',
-      'user_photos',
-      'user_comments',
-      'user_likes',
-      'notifications',
-      'audit_logs',
-      'token_blacklist',
-      'token_rotations',
-      'user_sessions',
-      'users', // User profile last
-    ];
+    // 2. Delete user row — all social tables (check_ins, comments, likes,
+    //    user_photos, event_attendees, push_notification_tokens, etc.)
+    //    cascade automatically via ON DELETE CASCADE foreign keys
+    const { error: deleteError } = await adminClient
+      .from('users')
+      .delete()
+      .eq('id', userProfile.id);
 
-    for (const table of tablesToDelete) {
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq(table === 'users' ? 'auth_user_id' : 'user_id', userId);
-
-      if (error) {
-        console.error(`Error deleting from ${table}:`, error);
-        // Continue with other tables even if one fails
-      }
+    if (deleteError) {
+      console.error('Error deleting user:', deleteError);
+      return handleError(Errors.databaseError());
     }
 
     // 3. Delete the Supabase auth user
-    // Note: This requires the service role key in production
-    // Using admin API to delete auth user
-    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userId);
+    const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(authUser.userId);
 
     if (authDeleteError) {
       console.error('Error deleting auth user:', authDeleteError);
-      // Log but don't fail - user data is already deleted
+      // Log but don't fail — user data is already deleted
     }
 
     // 4. Log the account deletion event
     await logAuthEvent({
-      userId,
+      userId: authUser.userId,
       eventType: 'logout', // Using logout as closest event type
       success: true,
       eventData: { action: 'account_deleted' },
@@ -88,14 +61,8 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({
       message: 'Account deleted successfully',
-      deletedUserId: userId,
     });
-  } catch (error: any) {
-    console.error('Account deletion error:', error);
-
-    return NextResponse.json(
-      { error: error.message || 'Failed to delete account' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleError(error, { endpoint: 'DELETE /api/auth/delete-account' });
   }
-}
+});

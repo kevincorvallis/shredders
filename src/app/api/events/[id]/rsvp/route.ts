@@ -183,7 +183,7 @@ export const POST = withDualAuth(async (
             username,
             display_name,
             avatar_url,
-            riding_style
+            experience_level
           )
         `)
         .single();
@@ -219,7 +219,7 @@ export const POST = withDualAuth(async (
             username,
             display_name,
             avatar_url,
-            riding_style
+            experience_level
           )
         `)
         .single();

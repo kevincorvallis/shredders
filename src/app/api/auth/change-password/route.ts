@@ -6,12 +6,14 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
+import { withDualAuth } from '@/lib/auth';
 import { z } from 'zod';
-import { verifyAccessToken, decodeToken } from '@/lib/auth/jwt';
+import { decodeToken } from '@/lib/auth/jwt';
 import { revokeAllUserTokens } from '@/lib/auth/token-blacklist';
-import { revokeAllUserSessions, getSessionById } from '@/lib/auth/session-manager';
+import { revokeAllUserSessions } from '@/lib/auth/session-manager';
 import { logAuthEvent } from '@/lib/auth/audit-log';
+import { Errors, handleError } from '@/lib/errors';
 import { headers } from 'next/headers';
 
 const changePasswordSchema = z.object({
@@ -32,73 +34,44 @@ const changePasswordSchema = z.object({
     .optional(),
 });
 
-export async function POST(request: Request) {
+export const POST = withDualAuth(async (request, authUser) => {
   try {
-    // Get auth token from header
     const headersList = await headers();
-    const authHeader = headersList.get('authorization');
     const ipAddress =
       headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       headersList.get('x-real-ip') ||
       'unknown';
-
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized - no token provided' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.slice(7);
-    const payload = verifyAccessToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Unauthorized - invalid token' },
-        { status: 401 }
-      );
-    }
-
-    const userId = payload.userId;
-    const currentSessionJti = payload.jti;
 
     // Parse and validate request body
     const body = await request.json();
     const result = changePasswordSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
-        },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(
+        result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`)
+      ));
     }
 
     const { currentPassword, newPassword, revokeOtherSessions = true } = result.data;
 
-    const supabase = await createClient();
+    const adminClient = createAdminClient();
 
     // Get user's email to verify current password
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+    const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(authUser.userId);
 
     if (userError || !userData.user?.email) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('User'));
     }
 
     // Verify current password by attempting sign in
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { error: signInError } = await adminClient.auth.signInWithPassword({
       email: userData.user.email,
       password: currentPassword,
     });
 
     if (signInError) {
       await logAuthEvent({
-        userId,
+        userId: authUser.userId,
         eventType: 'password_change',
         success: false,
         ipAddress,
@@ -112,7 +85,7 @@ export async function POST(request: Request) {
     }
 
     // Update password
-    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+    const { error: updateError } = await adminClient.auth.admin.updateUserById(authUser.userId, {
       password: newPassword,
     });
 
@@ -120,34 +93,40 @@ export async function POST(request: Request) {
       console.error('Password update error:', updateError);
 
       await logAuthEvent({
-        userId,
+        userId: authUser.userId,
         eventType: 'password_change',
         success: false,
         ipAddress,
         errorMessage: updateError.message,
       });
 
-      return NextResponse.json(
-        { error: 'Failed to update password' },
-        { status: 500 }
-      );
+      return handleError(Errors.internalError('Failed to update password'));
     }
 
     // Revoke other sessions if requested (default: true)
     let revokedCount = 0;
     if (revokeOtherSessions) {
-      // Get current session ID to exclude
-      const { data: sessions } = await supabase
+      // Get current session JTI from the auth header
+      const authHeader = request.headers.get('authorization');
+      let currentJti: string | undefined;
+      if (authHeader) {
+        const token = authHeader.replace('Bearer ', '');
+        const payload = decodeToken(token);
+        currentJti = payload?.jti;
+      }
+
+      // Find current session by JTI
+      const { data: sessions } = await adminClient
         .from('user_sessions')
         .select('id')
-        .eq('user_id', userId)
-        .eq('refresh_token_jti', currentSessionJti)
+        .eq('user_id', authUser.userId)
+        .eq('refresh_token_jti', currentJti || '')
         .single();
 
       const currentSessionId = sessions?.id;
 
       revokedCount = await revokeAllUserSessions(
-        userId,
+        authUser.userId,
         'Password changed',
         currentSessionId
       );
@@ -155,7 +134,7 @@ export async function POST(request: Request) {
 
     // Log successful password change
     await logAuthEvent({
-      userId,
+      userId: authUser.userId,
       eventType: 'password_change',
       success: true,
       ipAddress,
@@ -169,12 +148,7 @@ export async function POST(request: Request) {
       message: 'Password changed successfully',
       revokedSessions: revokedCount,
     });
-  } catch (error: any) {
-    console.error('Change password error:', error);
-
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleError(error, { endpoint: 'POST /api/auth/change-password' });
   }
-}
+});

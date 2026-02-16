@@ -39,7 +39,7 @@ export async function GET(
           username,
           display_name,
           avatar_url,
-          riding_style
+          experience_level
         )
       `)
       .eq('id', id)
@@ -99,7 +99,7 @@ export async function GET(
             username,
             display_name,
             avatar_url,
-            riding_style
+            experience_level
           )
         `)
         .eq('event_id', id)
@@ -431,7 +431,7 @@ export const PATCH = withDualAuth(async (
           username,
           display_name,
           avatar_url,
-          riding_style
+          experience_level
         )
       `)
       .single();

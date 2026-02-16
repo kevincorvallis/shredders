@@ -210,43 +210,64 @@ struct ComparisonGridCard: View {
     }
 
     private var secondaryStatsRow: some View {
-        HStack(spacing: .spacingM) {
-            // Temperature
-            if let temp = conditions?.temperature {
-                HStack(spacing: .spacingXS) {
-                    Image(systemName: SkiIcon.temperature.systemName)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(Color.forTemperature(Int(temp)))
-                    Text("\(Int(temp))°")
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                        .monospacedDigit()
+        ViewThatFits(in: .horizontal) {
+            // Tier 1: compact single row
+            HStack(spacing: .spacingXS) {
+                temperatureStat
+                liftsStat
+                if let crowd = crowdLevel {
+                    CrowdIndicatorPill(level: crowd, compact: true)
                 }
-                .foregroundColor(.secondary)
+                Spacer(minLength: 0)
+                trendIndicator
             }
 
-            // Lifts
-            if let liftStatus = conditions?.liftStatus {
+            // Tier 2: two-line fallback
+            VStack(spacing: .spacingXS) {
                 HStack(spacing: .spacingXS) {
-                    Image(systemName: SkiIcon.chairlift.systemName)
-                        .font(.system(size: 10, weight: .medium))
-                    Text("\(liftStatus.liftsOpen)/\(liftStatus.liftsTotal)")
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                        .monospacedDigit()
+                    temperatureStat
+                    liftsStat
+                    if let crowd = crowdLevel {
+                        CrowdIndicatorPill(level: crowd, compact: true)
+                    }
+                    Spacer(minLength: 0)
                 }
-                .foregroundColor(liftStatus.liftsOpen > 0 ? Color(UIColor.systemGreen) : .secondary)
+                HStack {
+                    Spacer(minLength: 0)
+                    trendIndicator
+                }
             }
+        }
+    }
 
-            // Crowd indicator pill
-            if let crowd = crowdLevel {
-                CrowdIndicatorPill(level: crowd)
+    @ViewBuilder
+    private var temperatureStat: some View {
+        if let temp = conditions?.temperature {
+            HStack(spacing: .spacingXS) {
+                Image(systemName: SkiIcon.temperature.systemName)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(Color.forTemperature(Int(temp)))
+                Text("\(Int(temp))°")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .monospacedDigit()
             }
+            .foregroundColor(.secondary)
+        }
+    }
 
-            Spacer()
-
-            // Trend indicator
-            trendIndicator
+    @ViewBuilder
+    private var liftsStat: some View {
+        if let liftStatus = conditions?.liftStatus {
+            HStack(spacing: .spacingXS) {
+                Image(systemName: SkiIcon.chairlift.systemName)
+                    .font(.system(size: 10, weight: .medium))
+                Text("\(liftStatus.liftsOpen)/\(liftStatus.liftsTotal)")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .monospacedDigit()
+            }
+            .foregroundColor(liftStatus.liftsOpen > 0 ? Color(UIColor.systemGreen) : .secondary)
         }
     }
 
@@ -259,12 +280,13 @@ struct ComparisonGridCard: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(trend.color)
-        .padding(.horizontal, .spacingS)
+        .padding(.horizontal, 6)
         .padding(.vertical, .spacingXS)
         .background(
             Capsule()
                 .fill(trend.color.opacity(0.12))
         )
+        .fixedSize()
     }
 
     private func statColumn(value: String, label: String, highlight: Bool, icon: String?) -> some View {
@@ -380,6 +402,7 @@ enum TrendIndicator {
 
 struct CrowdIndicatorPill: View {
     let level: RiskLevel
+    var compact: Bool = false
 
     private var displayText: String {
         switch level {
@@ -413,14 +436,16 @@ struct CrowdIndicatorPill: View {
     }
 
     var body: some View {
-        HStack(spacing: .spacingXS) {
+        HStack(spacing: compact ? 0 : .spacingXS) {
             Image(systemName: iconName)
                 .font(.system(size: 9, weight: .medium))
-            Text(displayText)
-                .font(.system(size: 9, weight: .bold))
+            if !compact {
+                Text(displayText)
+                    .font(.system(size: 9, weight: .bold))
+            }
         }
         .foregroundColor(textColor)
-        .padding(.horizontal, .spacingS)
+        .padding(.horizontal, compact ? 5 : .spacingS)
         .padding(.vertical, .spacingXS)
         .background(
             Capsule()

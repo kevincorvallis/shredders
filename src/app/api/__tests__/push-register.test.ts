@@ -133,7 +133,7 @@ describe('POST /api/push/register', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('Platform must be');
+    expect(data.error.code).toBe('VALIDATION_ERROR');
   });
 
   it('should update existing device token', async () => {
@@ -233,6 +233,6 @@ describe('DELETE /api/push/register', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Device ID is required');
+    expect(data.error.code).toBe('VALIDATION_ERROR');
   });
 });
