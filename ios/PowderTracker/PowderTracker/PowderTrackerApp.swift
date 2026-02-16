@@ -32,6 +32,12 @@ struct PowderTrackerApp: App {
     /// Home view model – created here so loadInitialData() can pre-fetch
     @State private var homeViewModel = HomeViewModel()
 
+    /// Shared Mountains tab view model – prefetched during loading screen
+    @State private var mountainSelectionViewModel = MountainSelectionViewModel()
+
+    /// Prefetched events for Events tab
+    @State private var prefetchedEvents: [Event]? = nil
+
     /// Show loading screen while initial data loads (skip during UI tests)
     @State private var isLoadingInitialData: Bool = !ProcessInfo.processInfo.arguments.contains("UI_TESTING")
 
@@ -53,6 +59,8 @@ struct PowderTrackerApp: App {
                     deepLinkMountainId: $deepLinkMountainId,
                     deepLinkEventId: $deepLinkEventId,
                     deepLinkInviteToken: $deepLinkInviteToken,
+                    mountainSelectionViewModel: mountainSelectionViewModel,
+                    prefetchedEvents: prefetchedEvents,
                     homeViewModel: homeViewModel
                 )
                     .opacity(isLoadingInitialData ? 0 : 1)
@@ -221,6 +229,17 @@ struct PowderTrackerApp: App {
         }
     }
 
+    /// Prefetch events for the Events tab
+    private func prefetchEvents(isAuthenticated: Bool) async -> [Event]? {
+        guard isAuthenticated else { return nil }
+        let response = try? await EventService.shared.fetchEvents(
+            upcoming: true,
+            limit: 20,
+            offset: 0
+        )
+        return response?.events
+    }
+
     /// Load initial app data and dismiss loading screen when ready
     private func loadInitialData() async {
         // Start timing
@@ -245,14 +264,23 @@ struct PowderTrackerApp: App {
                 await MainActor.run { loadingProgress = 0.4 }
             }
 
-            // Step 3: Pre-fetch mountain data + enhanced data in parallel
+            // Step 3: Pre-fetch ALL tab data in parallel
             let homeSpan = PerformanceLogger.beginHomeRefresh()
             let enhancedSpan = PerformanceLogger.beginEnhancedDataLoad()
             async let mainData: Void = homeViewModel.loadData()
             async let enhancedData: Void = homeViewModel.loadEnhancedData()
+            async let mountainsTab: Void = mountainSelectionViewModel.loadMountains()
+            async let eventsTab: [Event]? = prefetchEvents(isAuthenticated: isAuthenticated)
             await mainData
             homeSpan.end()
-            await MainActor.run { loadingProgress = 0.7 }
+            await MainActor.run { loadingProgress = 0.6 }
+            await mountainsTab
+            await MainActor.run { loadingProgress = 0.75 }
+            let fetchedEvents = await eventsTab
+            if let fetchedEvents {
+                await MainActor.run { prefetchedEvents = fetchedEvents }
+            }
+            await MainActor.run { loadingProgress = 0.85 }
             await enhancedData
             enhancedSpan.end()
             await MainActor.run { loadingProgress = 0.95 }

@@ -12,7 +12,8 @@ struct ContentView: View {
     @State private var selectedTab: Int = 0
     @State private var selectedSection: NavigationSection? = .today
     @State private var columnVisibility = NavigationSplitViewVisibility.all
-    @State private var mountainsViewModel = MountainSelectionViewModel()
+    var mountainSelectionViewModel: MountainSelectionViewModel
+    var prefetchedEvents: [Event]?
     var homeViewModel: HomeViewModel
 
     var body: some View {
@@ -41,10 +42,16 @@ struct ContentView: View {
             }
         }
         .onChange(of: deepLinkMountainId) { oldValue, newValue in
-            if let mountainId = newValue {
-                if let mountain = mountainsViewModel.mountains.first(where: { $0.id == mountainId }) {
-                    selectedMountain = mountain
-                }
+            if let mountainId = newValue,
+               let mountain = mountainSelectionViewModel.mountains.first(where: { $0.id == mountainId }) {
+                selectedMountain = mountain
+                deepLinkMountainId = nil
+            }
+        }
+        .onChange(of: mountainSelectionViewModel.mountains) { _, mountains in
+            if let mountainId = deepLinkMountainId,
+               let mountain = mountains.first(where: { $0.id == mountainId }) {
+                selectedMountain = mountain
                 deepLinkMountainId = nil
             }
         }
@@ -126,7 +133,9 @@ struct ContentView: View {
             }
         }
         .task {
-            await mountainsViewModel.loadMountains()
+            if mountainSelectionViewModel.mountains.isEmpty {
+                await mountainSelectionViewModel.loadMountains()
+            }
         }
     }
 
@@ -146,11 +155,11 @@ struct ContentView: View {
                 case .today:
                     TodayView(viewModel: homeViewModel)
                 case .mountains:
-                    MountainsTabView()
+                    MountainsTabView(viewModel: mountainSelectionViewModel)
                 case .events:
-                    EventsView()
+                    EventsView(prefetchedEvents: prefetchedEvents)
                 case .map:
-                    MountainMapView()
+                    MountainMapView(viewModel: mountainSelectionViewModel)
                 case .profile:
                     ProfileView()
                 case nil:
@@ -175,19 +184,19 @@ struct ContentView: View {
                 }
                 .tag(0)
 
-            MountainsTabView()
+            MountainsTabView(viewModel: mountainSelectionViewModel)
                 .tabItem {
                     Label("Mountains", systemImage: "mountain.2.fill")
                 }
                 .tag(1)
 
-            EventsView()
+            EventsView(prefetchedEvents: prefetchedEvents)
                 .tabItem {
                     Label("Events", systemImage: "calendar")
                 }
                 .tag(2)
 
-            MountainMapView()
+            MountainMapView(viewModel: mountainSelectionViewModel)
                 .tabItem {
                     Label("Map", systemImage: "map.fill")
                 }
@@ -241,6 +250,7 @@ struct InviteSheetToken: Identifiable {
         deepLinkMountainId: .constant(nil),
         deepLinkEventId: .constant(nil),
         deepLinkInviteToken: .constant(nil),
+        mountainSelectionViewModel: MountainSelectionViewModel(),
         homeViewModel: HomeViewModel()
     )
 }

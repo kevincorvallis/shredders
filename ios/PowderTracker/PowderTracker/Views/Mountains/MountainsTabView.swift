@@ -3,10 +3,14 @@ import SwiftUI
 /// Main Mountains tab with purpose-driven sub-views
 /// Each view mode is optimized for a specific user intent
 struct MountainsTabView: View {
-    @State private var viewModel = MountainSelectionViewModel()
+    var viewModel: MountainSelectionViewModel
     private var favoritesManager: FavoritesService { FavoritesService.shared }
     @State private var selectedMode: MountainViewMode = .conditions
     @Namespace private var namespace
+
+    init(viewModel: MountainSelectionViewModel = MountainSelectionViewModel()) {
+        self.viewModel = viewModel
+    }
 
     var body: some View {
         NavigationStack {
@@ -39,7 +43,9 @@ struct MountainsTabView: View {
                 await viewModel.loadMountains()
             }
             .task {
-                await viewModel.loadMountains()
+                if viewModel.mountains.isEmpty {
+                    await viewModel.loadMountains()
+                }
             }
         }
     }

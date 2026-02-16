@@ -42,6 +42,8 @@ enum EventViewMode: String, CaseIterable {
 struct EventsView: View {
     @Environment(AuthService.self) private var authService
 
+    var prefetchedEvents: [Event]?
+
     @State private var events: [Event] = []
     @State private var mountains: [Mountain] = []
     @State private var isLoading = true
@@ -111,7 +113,12 @@ struct EventsView: View {
             if mountains.isEmpty {
                 mountains = MountainService.shared.allMountains
             }
-            await loadEvents()
+            if let prefetchedEvents, !prefetchedEvents.isEmpty, events.isEmpty {
+                events = prefetchedEvents
+                isLoading = false
+            } else {
+                await loadEvents()
+            }
             await checkForPowderDay()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("EventCancelled"))) { _ in
@@ -188,6 +195,7 @@ struct EventsView: View {
         .pickerStyle(.segmented)
         .accessibilityIdentifier("events_filter_picker")
         .onChange(of: filter) { _, _ in
+            events = []
             Task { await loadEvents() }
         }
     }
