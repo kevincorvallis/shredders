@@ -356,6 +356,29 @@
 		WIDGET01DATEFMT001SOURCE1 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF8A1B2C3E4F5A6D7B8C9E0F /* DateFormatters.swift */; };
 
 		WT01WT02WT03WT04WT05WT06 /* WeatherTileOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = WO01WO02WO03WO04WO05WO06 /* WeatherTileOverlay.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F101 /* SpacingTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300001 /* SpacingTokens.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F102 /* ChartTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300002 /* ChartTokens.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F103 /* StatusColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300003 /* StatusColors.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F104 /* GradientPresets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300004 /* GradientPresets.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F105 /* TypographyHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300005 /* TypographyHelpers.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F106 /* CardModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300006 /* CardModifiers.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F107 /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300007 /* ButtonStyles.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F108 /* PowderAlertBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300008 /* PowderAlertBadge.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F109 /* AnimationConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300009 /* AnimationConstants.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F10A /* WeatherIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F607182930000A /* WeatherIcons.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F10B /* ActionAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F607182930000B /* ActionAnimations.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F10C /* AccessibilityAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F607182930000C /* AccessibilityAnimations.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F10D /* SkiIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F607182930000D /* SkiIcons.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F10E /* ScrollEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F607182930000E /* ScrollEffects.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F10F /* ShareableCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F607182930000F /* ShareableCards.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F110 /* PerformanceHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300010 /* PerformanceHelpers.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F111 /* SnowParticleEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300011 /* SnowParticleEffect.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F112 /* HourlyBreakdownSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300012 /* HourlyBreakdownSheet.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F113 /* MountainFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300013 /* MountainFilters.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F114 /* MountainCardViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300014 /* MountainCardViews.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F115 /* RegionDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300015 /* RegionDetailSheet.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F116 /* HomeViewModel+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300016 /* HomeViewModel+Helpers.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F117 /* HomeViewModel+Suggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300017 /* HomeViewModel+Suggestions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -749,6 +772,29 @@
 		USRPROFILECACHE0001REF1 /* UserProfileCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileCacheService.swift; sourceTree = "<group>"; };
 
 		WO01WO02WO03WO04WO05WO06 /* WeatherTileOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTileOverlay.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300001 /* SpacingTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacingTokens.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300002 /* ChartTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartTokens.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300003 /* StatusColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusColors.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300004 /* GradientPresets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientPresets.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300005 /* TypographyHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypographyHelpers.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300006 /* CardModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardModifiers.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300007 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300008 /* PowderAlertBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowderAlertBadge.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300009 /* AnimationConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationConstants.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F607182930000A /* WeatherIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherIcons.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F607182930000B /* ActionAnimations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionAnimations.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F607182930000C /* AccessibilityAnimations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityAnimations.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F607182930000D /* SkiIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkiIcons.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F607182930000E /* ScrollEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollEffects.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F607182930000F /* ShareableCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareableCards.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300010 /* PerformanceHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceHelpers.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300011 /* SnowParticleEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowParticleEffect.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300012 /* HourlyBreakdownSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HourlyBreakdownSheet.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300013 /* MountainFilters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainFilters.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300014 /* MountainCardViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountainCardViews.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300015 /* RegionDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegionDetailSheet.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300016 /* HomeViewModel+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HomeViewModel+Helpers.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300017 /* HomeViewModel+Suggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HomeViewModel+Suggestions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -795,7 +841,7 @@
 		08F3794BEBBF26B2EB0872F6 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				DC3D2F7F114BE8CCD915D75C /* DesignSystem.swift */,
+				C1D2E3F4A5B6C7D8E9F00001 /* DesignSystem */,
 				237FE4847E184243AE698471 /* HapticFeedback.swift */,
 				D52963211F03029DBE76F5F1 /* ChartStyles.swift */,
 				C03E7E1C5695F432CC0B9D03 /* ChartAnnotation.swift */,
@@ -807,6 +853,10 @@
 			isa = PBXGroup;
 			children = (
 				0AE5B6862F27810D001D53AD /* MountainsTabView.swift */,
+				0AE5B6822F2780DC001D53AD /* MountainsView.swift */,
+				C1D2E3F4A5B6C7D8E9F00010 /* Models */,
+				C1D2E3F4A5B6C7D8E9F00011 /* Cards */,
+				C1D2E3F4A5B6C7D8E9F00012 /* Sections */,
 			);
 			path = Mountains;
 			sourceTree = "<group>";
@@ -869,6 +919,7 @@
 		20F488E9831167D296857188 /* Charts */ = {
 			isa = PBXGroup;
 			children = (
+				C1D2E3F4A5B6C7D8E9F00013 /* SnowForecast */,
 				4749A1F4B0C1CB5A6C4F510D /* InteractiveBarChart.swift */,
 				54F9E04D865C46D5BD73457F /* TrendLineChart.swift */,
 				530988821BC89247D57DD083 /* ComparisonChart.swift */,
@@ -994,7 +1045,7 @@
 				F6071829304155667788990D /* EventPhotosViewModel.swift */,
 				04359DE47F38AAA25B08299F /* ForecastViewModel.swift */,
 				0F8D9C0C5125EC8D35965B0C /* HistoryViewModel.swift */,
-				529AE072A26E7446B309D8A9 /* HomeViewModel.swift */,
+				C1D2E3F4A5B6C7D8E9F00014 /* Home */,
 				B15B55B0025870D2B8D9735E /* LocationViewModel.swift */,
 				655660B700EA5371AA209F0D /* MountainSelectionViewModel.swift */,
 				E558ABF80EA303FC196A18C0 /* TripPlanningViewModel.swift */,
@@ -1180,7 +1231,6 @@
 				5DEB120E85B3EEC506AF139B /* SnowComparisonCard.swift */,
 				D09D79F661133B42636813CB /* SnowDepthChart.swift */,
 				DC3F056B936355A99172B5F0 /* SnowfallTableView.swift */,
-				7EC593399532721F9AF032F0 /* SnowForecastChart.swift */,
 				4B6A70E5DA5F85802ACB212B /* SnowSummarySection.swift */,
 				DDA2A6F3230D579774B04EA6 /* SnowTimelineView.swift */,
 				3E9FD81F0B4A96BC26DBF2E9 /* TemperatureElevationMapView.swift */,
@@ -1412,7 +1462,6 @@
 			isa = PBXGroup;
 			children = (
 				0AE5B6872F27810D001D53AD /* Mountains */,
-				0AE5B6822F2780DC001D53AD /* MountainsView.swift */,
 				0AE5B6832F2780DC001D53AD /* OnboardingView.swift */,
 				EVGRP001EVGRP002EVGRP003 /* Events */,
 				013EF204A2C423B3A82322CD /* AlertsView.swift */,
@@ -1441,6 +1490,122 @@
 				2C1944320FDBA32CB0CCBBFB /* Settings */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00001 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				DC3D2F7F114BE8CCD915D75C /* DesignSystem.swift */,
+				C1D2E3F4A5B6C7D8E9F00002 /* Tokens */,
+				C1D2E3F4A5B6C7D8E9F00003 /* Colors */,
+				C1D2E3F4A5B6C7D8E9F00004 /* Typography */,
+				C1D2E3F4A5B6C7D8E9F00005 /* Components */,
+				C1D2E3F4A5B6C7D8E9F00006 /* Animations */,
+				C1D2E3F4A5B6C7D8E9F00007 /* Advanced */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00002 /* Tokens */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300001 /* SpacingTokens.swift */,
+				A1B2C3D4E5F6071829300002 /* ChartTokens.swift */,
+			);
+			path = Tokens;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00003 /* Colors */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300003 /* StatusColors.swift */,
+				A1B2C3D4E5F6071829300004 /* GradientPresets.swift */,
+			);
+			path = Colors;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00004 /* Typography */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300005 /* TypographyHelpers.swift */,
+			);
+			path = Typography;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00005 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300006 /* CardModifiers.swift */,
+				A1B2C3D4E5F6071829300007 /* ButtonStyles.swift */,
+				A1B2C3D4E5F6071829300008 /* PowderAlertBadge.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00006 /* Animations */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300009 /* AnimationConstants.swift */,
+				A1B2C3D4E5F607182930000A /* WeatherIcons.swift */,
+				A1B2C3D4E5F607182930000B /* ActionAnimations.swift */,
+				A1B2C3D4E5F607182930000C /* AccessibilityAnimations.swift */,
+			);
+			path = Animations;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00007 /* Advanced */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F607182930000D /* SkiIcons.swift */,
+				A1B2C3D4E5F607182930000E /* ScrollEffects.swift */,
+				A1B2C3D4E5F607182930000F /* ShareableCards.swift */,
+				A1B2C3D4E5F6071829300010 /* PerformanceHelpers.swift */,
+			);
+			path = Advanced;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00010 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300013 /* MountainFilters.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00011 /* Cards */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300014 /* MountainCardViews.swift */,
+			);
+			path = Cards;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00012 /* Sections */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300015 /* RegionDetailSheet.swift */,
+			);
+			path = Sections;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00013 /* SnowForecast */ = {
+			isa = PBXGroup;
+			children = (
+				7EC593399532721F9AF032F0 /* SnowForecastChart.swift */,
+				A1B2C3D4E5F6071829300011 /* SnowParticleEffect.swift */,
+				A1B2C3D4E5F6071829300012 /* HourlyBreakdownSheet.swift */,
+			);
+			path = SnowForecast;
+			sourceTree = "<group>";
+		};
+		C1D2E3F4A5B6C7D8E9F00014 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				529AE072A26E7446B309D8A9 /* HomeViewModel.swift */,
+				A1B2C3D4E5F6071829300016 /* HomeViewModel+Helpers.swift */,
+				A1B2C3D4E5F6071829300017 /* HomeViewModel+Suggestions.swift */,
+			);
+			path = Home;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1890,6 +2055,29 @@
 				B2C3D4E5F60718192021BBBB /* SnowConditionClassifier.swift in Sources */,
 				D4E5F60718192021A233DDDD /* MountainRecommender.swift in Sources */,
 				F6071819A2B3C4D52021FFFF /* RecommendationScore.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F101 /* SpacingTokens.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F102 /* ChartTokens.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F103 /* StatusColors.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F104 /* GradientPresets.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F105 /* TypographyHelpers.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F106 /* CardModifiers.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F107 /* ButtonStyles.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F108 /* PowderAlertBadge.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F109 /* AnimationConstants.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F10A /* WeatherIcons.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F10B /* ActionAnimations.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F10C /* AccessibilityAnimations.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F10D /* SkiIcons.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F10E /* ScrollEffects.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F10F /* ShareableCards.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F110 /* PerformanceHelpers.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F111 /* SnowParticleEffect.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F112 /* HourlyBreakdownSheet.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F113 /* MountainFilters.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F114 /* MountainCardViews.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F115 /* RegionDetailSheet.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F116 /* HomeViewModel+Helpers.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F117 /* HomeViewModel+Suggestions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

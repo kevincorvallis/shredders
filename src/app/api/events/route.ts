@@ -5,22 +5,23 @@ import { Errors, handleError } from '@/lib/errors';
 import { getMountain } from '@shredders/shared';
 import { randomBytes } from 'crypto';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
+import { getUserProfileId } from '@/lib/auth/get-user-id';
+import { parseEventFilterParams, applyEventFilters } from '@/lib/events/event-query-builder';
+import {
+  validateTitle,
+  validateNotes,
+  validateEventDate,
+  validateSkillLevel,
+  validateCarpoolSeats,
+  validateMaxAttendees,
+  validateDepartureTime,
+} from '@/lib/events/event-validators';
 import type {
   CreateEventRequest,
   Event,
-  EventRow,
   EventsListResponse,
   CreateEventResponse,
-  SkillLevel,
 } from '@/types/event';
-
-/**
- * Sanitize search input to prevent PostgREST filter injection.
- * Strips characters that could manipulate .or() filter syntax.
- */
-function sanitizeSearchInput(input: string): string {
-  return input.replace(/[,.()\[\]]/g, '').trim();
-}
 
 /**
  * GET /api/events
@@ -47,54 +48,24 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
-
-    const mountainId = searchParams.get('mountainId');
-    const statusParam = searchParams.get('status') || 'active';
-    const validStatuses = ['active', 'cancelled', 'completed'];
-    const status = validStatuses.includes(statusParam) ? statusParam : 'active';
-    const upcoming = searchParams.get('upcoming') !== 'false';
-    const createdByMe = searchParams.get('createdByMe') === 'true';
-    const attendingOnly = searchParams.get('attendingOnly') === 'true';
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    // Phase 3: Enhanced Search & Discovery filters
-    const dateFrom = searchParams.get('dateFrom');
-    const dateTo = searchParams.get('dateTo');
-    const skillLevel = searchParams.get('skillLevel');
-    const carpoolAvailable = searchParams.get('carpoolAvailable');
-    const hasAvailableSeats = searchParams.get('hasAvailableSeats') === 'true';
-    const search = searchParams.get('search')?.trim();
-    const sortBy = searchParams.get('sortBy') || 'date';
-    const thisWeekend = searchParams.get('thisWeekend') === 'true';
+    const filters = parseEventFilterParams(searchParams);
 
     // Check auth for user-specific queries
     const authUser = await getDualAuthUser(request);
 
-    if ((createdByMe || attendingOnly) && !authUser) {
+    if ((filters.createdByMe || filters.attendingOnly) && !authUser) {
       return handleError(Errors.unauthorized('Authentication required for this filter'));
     }
 
-    // OPTIMIZATION: Use cached profileId from auth when available
+    // Resolve internal user profile ID when authenticated
     let userProfileId: string | null = null;
     if (authUser) {
-      // profileId is now cached in getDualAuthUser, avoiding repeated lookups
-      userProfileId = authUser.profileId || null;
-
-      // Fallback to database lookup only if profileId not in cache (shouldn't happen for valid users)
-      if (!userProfileId) {
-        const adminClient = createAdminClient();
-        const { data: userProfile } = await adminClient
-          .from('users')
-          .select('id')
-          .eq('auth_user_id', authUser.userId)
-          .single();
-        userProfileId = userProfile?.id || null;
-      }
-
-      // Only require profile for filters that need it
-      if (!userProfileId && (createdByMe || attendingOnly)) {
-        return handleError(Errors.resourceNotFound('User profile'));
+      try {
+        userProfileId = await getUserProfileId(authUser);
+      } catch {
+        if (filters.createdByMe || filters.attendingOnly) {
+          return handleError(Errors.resourceNotFound('User profile'));
+        }
       }
     }
 
@@ -102,120 +73,29 @@ export async function GET(request: NextRequest) {
     let filteredEvents: any[] = [];
     let count: number | null = null;
 
-    if (attendingOnly && userProfileId && !createdByMe) {
-      // OPTIMIZATION: Query events directly with inner join on attendees
-      // This allows database-side filtering instead of fetching all events
-      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
-
-      // Calculate weekend dates if needed
-      let weekendStart = '';
-      let weekendEnd = '';
-      if (thisWeekend) {
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const daysUntilSaturday = (6 - dayOfWeek + 7) % 7 || 7;
-        const saturday = new Date(now);
-        saturday.setDate(now.getDate() + (dayOfWeek === 6 ? 0 : daysUntilSaturday));
-        const sunday = new Date(saturday);
-        sunday.setDate(saturday.getDate() + 1);
-        weekendStart = saturday.toISOString().split('T')[0];
-        weekendEnd = sunday.toISOString().split('T')[0];
-      }
-
-      // Build query with database-side filters
+    if (filters.attendingOnly && userProfileId && !filters.createdByMe) {
+      // Query events via inner join on attendees for database-side filtering
       let attendeeQuery = supabase
         .from('event_attendees')
         .select(`
           status,
           event:event_id!inner (
-            id,
-            user_id,
-            mountain_id,
-            title,
-            notes,
-            event_date,
-            departure_time,
-            departure_location,
-            skill_level,
-            carpool_available,
-            carpool_seats,
-            max_attendees,
-            status,
-            created_at,
-            updated_at,
-            attendee_count,
-            going_count,
-            maybe_count,
-            waitlist_count,
+            id, user_id, mountain_id, title, notes, event_date,
+            departure_time, departure_location, skill_level,
+            carpool_available, carpool_seats, max_attendees, status,
+            created_at, updated_at, attendee_count, going_count,
+            maybe_count, waitlist_count,
             creator:user_id (
-              id,
-              username,
-              display_name,
-              avatar_url,
-              riding_style
+              id, username, display_name, avatar_url, experience_level
             )
           )
         `, { count: 'exact' })
         .eq('user_id', userProfileId)
         .in('status', ['going', 'maybe']);
 
-      // Push filters to the database query using the !inner join
-      // Note: Supabase allows filtering on joined tables with dot notation
-      attendeeQuery = attendeeQuery.eq('event.status', status);
-
-      if (mountainId) {
-        attendeeQuery = attendeeQuery.eq('event.mountain_id', mountainId);
-      }
-
-      if (skillLevel) {
-        attendeeQuery = attendeeQuery.eq('event.skill_level', skillLevel);
-      }
-
-      if (carpoolAvailable === 'true') {
-        attendeeQuery = attendeeQuery.eq('event.carpool_available', true);
-      }
-
-      if (hasAvailableSeats) {
-        attendeeQuery = attendeeQuery
-          .eq('event.carpool_available', true)
-          .gt('event.carpool_seats', 0);
-      }
-
-      // Date filters
-      if (thisWeekend) {
-        attendeeQuery = attendeeQuery
-          .gte('event.event_date', weekendStart)
-          .lte('event.event_date', weekendEnd);
-      } else {
-        if (dateFrom) {
-          attendeeQuery = attendeeQuery.gte('event.event_date', dateFrom);
-        } else if (upcoming) {
-          attendeeQuery = attendeeQuery.gte('event.event_date', today);
-        }
-        if (dateTo) {
-          attendeeQuery = attendeeQuery.lte('event.event_date', dateTo);
-        }
-      }
-
-      // Text search (can be done at DB level with ilike)
-      if (search) {
-        const sanitized = sanitizeSearchInput(search);
-        if (sanitized) {
-          attendeeQuery = attendeeQuery.or(
-            `event.title.ilike.%${sanitized}%,event.notes.ilike.%${sanitized}%`
-          );
-        }
-      }
-
-      // Apply sorting
-      if (sortBy === 'popularity') {
-        attendeeQuery = attendeeQuery.order('event(going_count)', { ascending: false });
-      } else {
-        attendeeQuery = attendeeQuery.order('event(event_date)', { ascending: true });
-      }
-
-      // Apply pagination
-      attendeeQuery = attendeeQuery.range(offset, offset + limit - 1);
+      attendeeQuery = attendeeQuery.eq('event.status', filters.status);
+      attendeeQuery = applyEventFilters(attendeeQuery, filters, 'event.');
+      attendeeQuery = attendeeQuery.range(filters.offset, filters.offset + filters.limit - 1);
 
       const { data: attendeeEvents, error: attendeeError, count: attendeeCount } = await attendeeQuery;
 
@@ -239,81 +119,16 @@ export async function GET(request: NextRequest) {
         .select(`
           *,
           creator:user_id (
-            id,
-            username,
-            display_name,
-            avatar_url,
-            riding_style
+            id, username, display_name, avatar_url, experience_level
           )
         `, { count: 'exact' })
-        .eq('status', status)
-        .range(offset, offset + limit - 1);
+        .eq('status', filters.status)
+        .range(filters.offset, filters.offset + filters.limit - 1);
 
-      // Apply filters
-      if (mountainId) {
-        query = query.eq('mountain_id', mountainId);
-      }
+      query = applyEventFilters(query, filters);
 
-      // Date filters
-      if (thisWeekend) {
-        // Calculate this weekend's date range (Saturday-Sunday)
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const daysUntilSaturday = (6 - dayOfWeek + 7) % 7 || 7; // If today is Saturday, show this weekend
-        const saturday = new Date(now);
-        saturday.setDate(now.getDate() + (dayOfWeek === 6 ? 0 : daysUntilSaturday));
-        const sunday = new Date(saturday);
-        sunday.setDate(saturday.getDate() + 1);
-
-        const saturdayStr = saturday.toISOString().split('T')[0];
-        const sundayStr = sunday.toISOString().split('T')[0];
-        query = query.gte('event_date', saturdayStr).lte('event_date', sundayStr);
-      } else {
-        if (dateFrom) {
-          query = query.gte('event_date', dateFrom);
-        } else if (upcoming) {
-          const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
-          query = query.gte('event_date', today);
-        }
-
-        if (dateTo) {
-          query = query.lte('event_date', dateTo);
-        }
-      }
-
-      // Skill level filter
-      if (skillLevel) {
-        query = query.eq('skill_level', skillLevel);
-      }
-
-      // Carpool filters
-      if (carpoolAvailable === 'true') {
-        query = query.eq('carpool_available', true);
-      }
-
-      if (hasAvailableSeats) {
-        // Filter events with available carpool seats
-        query = query.eq('carpool_available', true).gt('carpool_seats', 0);
-      }
-
-      // Text search on title and notes
-      if (search) {
-        const sanitized = sanitizeSearchInput(search);
-        if (sanitized) {
-          query = query.or(`title.ilike.%${sanitized}%,notes.ilike.%${sanitized}%`);
-        }
-      }
-
-      if (createdByMe && userProfileId) {
+      if (filters.createdByMe && userProfileId) {
         query = query.eq('user_id', userProfileId);
-      }
-
-      // Apply sorting
-      if (sortBy === 'popularity') {
-        query = query.order('going_count', { ascending: false });
-      } else {
-        // Default: sort by date
-        query = query.order('event_date', { ascending: true });
       }
 
       const { data: events, error, count: queryCount } = await query;
@@ -361,9 +176,9 @@ export async function GET(request: NextRequest) {
       events: transformedEvents,
       pagination: {
         total: count || 0,
-        limit,
-        offset,
-        hasMore: (count || 0) > offset + limit,
+        limit: filters.limit,
+        offset: filters.offset,
+        hasMore: (count || 0) > filters.offset + filters.limit,
       },
     };
 
@@ -398,7 +213,6 @@ export async function GET(request: NextRequest) {
  */
 export const POST = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
     const adminClient = createAdminClient();
 
     // Rate limiting: 10 events per hour per user
@@ -432,108 +246,45 @@ export const POST = withDualAuth(async (request, authUser) => {
       maxAttendees,
     } = body;
 
-    // Validate required fields
+    // Validate mountain
     if (!mountainId) {
-      return NextResponse.json(
-        { error: 'Mountain ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Mountain ID is required' }, { status: 400 });
     }
-
-    // Validate mountain exists
     const mountain = getMountain(mountainId);
     if (!mountain) {
       return handleError(Errors.resourceNotFound('Mountain'));
     }
 
-    if (!title || title.trim().length < 3) {
-      return NextResponse.json(
-        { error: 'Title must be at least 3 characters' },
-        { status: 400 }
-      );
-    }
+    // Validate other fields
+    const titleError = validateTitle(title);
+    if (titleError) return titleError;
 
-    if (title.length > 100) {
-      return NextResponse.json(
-        { error: 'Title must be less than 100 characters' },
-        { status: 400 }
-      );
-    }
+    const notesError = validateNotes(notes);
+    if (notesError) return notesError;
 
-    if (notes && notes.length > 2000) {
-      return NextResponse.json(
-        { error: 'Notes must be less than 2000 characters' },
-        { status: 400 }
-      );
-    }
+    const dateError = validateEventDate(eventDate);
+    if (dateError) return dateError;
 
-    if (!eventDate) {
-      return NextResponse.json(
-        { error: 'Event date is required' },
-        { status: 400 }
-      );
-    }
+    const skillError = validateSkillLevel(skillLevel);
+    if (skillError) return skillError;
 
-    // Validate date is not in the past
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
-    if (eventDate < today) {
-      return NextResponse.json(
-        { error: 'Event date cannot be in the past' },
-        { status: 400 }
-      );
-    }
+    const seatsError = validateCarpoolSeats(carpoolSeats);
+    if (seatsError) return seatsError;
 
-    // Validate skill level
-    const validSkillLevels: SkillLevel[] = ['beginner', 'intermediate', 'advanced', 'expert', 'all'];
-    if (skillLevel && !validSkillLevels.includes(skillLevel)) {
-      return NextResponse.json(
-        { error: 'Invalid skill level' },
-        { status: 400 }
-      );
-    }
+    const attendeesError = validateMaxAttendees(maxAttendees);
+    if (attendeesError) return attendeesError;
 
-    // Validate carpool seats
-    if (carpoolSeats !== undefined && (carpoolSeats < 0 || carpoolSeats > 8)) {
-      return NextResponse.json(
-        { error: 'Carpool seats must be between 0 and 8' },
-        { status: 400 }
-      );
-    }
+    const timeError = validateDepartureTime(departureTime);
+    if (timeError) return timeError;
 
-    // Validate max attendees
-    if (maxAttendees !== undefined && maxAttendees !== null && (maxAttendees < 1 || maxAttendees > 1000)) {
-      return NextResponse.json(
-        { error: 'Max attendees must be between 1 and 1000' },
-        { status: 400 }
-      );
-    }
-
-    // Validate departure time format (HH:MM)
-    if (departureTime && !/^\d{2}:\d{2}$/.test(departureTime)) {
-      return NextResponse.json(
-        { error: 'Departure time must be in HH:MM format' },
-        { status: 400 }
-      );
-    }
-
-    // Look up the internal users.id from auth_user_id
-    // The events.user_id foreign key references users.id, not users.auth_user_id
-    const { data: userProfile, error: userError } = await adminClient
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', authUser.userId)
-      .single();
-
-    if (userError || !userProfile) {
-      console.error('Error finding user profile:', userError);
-      return handleError(Errors.resourceNotFound('User profile'));
-    }
+    // Resolve internal users.id (foreign keys reference users.id, not auth_user_id)
+    const userProfileId = await getUserProfileId(authUser);
 
     // Create event using admin client to bypass RLS for initial insert
     const { data: event, error: insertError } = await adminClient
       .from('events')
       .insert({
-        user_id: userProfile.id,  // Use users.id, not auth_user_id
+        user_id: userProfileId,
         mountain_id: mountainId,
         title: title.trim(),
         notes: notes?.trim() || null,
@@ -552,7 +303,7 @@ export const POST = withDualAuth(async (request, authUser) => {
           username,
           display_name,
           avatar_url,
-          riding_style
+          experience_level
         )
       `)
       .single();
@@ -560,7 +311,7 @@ export const POST = withDualAuth(async (request, authUser) => {
     if (insertError) {
       console.error('Error creating event:', JSON.stringify(insertError, null, 2));
       console.error('Insert payload:', JSON.stringify({
-        user_id: userProfile.id,
+        user_id: userProfileId,
         mountain_id: mountainId,
         title: title.trim(),
         event_date: eventDate,
@@ -576,7 +327,7 @@ export const POST = withDualAuth(async (request, authUser) => {
       .insert({
         event_id: event.id,
         token,
-        created_by: userProfile.id,  // Use users.id, not auth_user_id
+        created_by: userProfileId,
         expires_at: null, // No expiration by default
         max_uses: null, // Unlimited uses by default
       });
@@ -591,7 +342,7 @@ export const POST = withDualAuth(async (request, authUser) => {
       .from('event_attendees')
       .insert({
         event_id: event.id,
-        user_id: userProfile.id,
+        user_id: userProfileId,
         status: 'going',
         is_driver: carpoolAvailable,
         needs_ride: false,
