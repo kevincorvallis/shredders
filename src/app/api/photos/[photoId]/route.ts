@@ -8,6 +8,7 @@
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withDualAuth } from '@/lib/auth';
 import { Errors, handleError } from '@/lib/errors';
 
 export async function GET(
@@ -44,29 +45,18 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ photoId: string }> }
-) {
+export const DELETE = withDualAuth(async (request, authUser) => {
   try {
-    const { photoId } = await params;
-    const supabase = await createClient();
-
-    // Check authentication
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return handleError(Errors.unauthorized('Not authenticated'));
-    }
+    const url = new URL(request.url);
+    const segments = url.pathname.split('/');
+    const photoId = segments[segments.length - 1];
+    const adminClient = createAdminClient();
 
     // Look up internal user profile ID
-    const adminClient = createAdminClient();
     const { data: userProfile } = await adminClient
       .from('users')
       .select('id')
-      .eq('auth_user_id', user.id)
+      .eq('auth_user_id', authUser.userId)
       .single();
 
     if (!userProfile) {
@@ -90,6 +80,7 @@ export async function DELETE(
     }
 
     // Delete from storage
+    const supabase = await createClient();
     const { error: storageError } = await supabase.storage
       .from('user-photos')
       .remove([photo.storage_path]);
@@ -100,7 +91,7 @@ export async function DELETE(
     }
 
     // Delete from database
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await adminClient
       .from('user_photos')
       .delete()
       .eq('id', photoId);
@@ -114,4 +105,4 @@ export async function DELETE(
   } catch (error) {
     return handleError(error, { endpoint: 'DELETE /api/photos/[photoId]' });
   }
-}
+});

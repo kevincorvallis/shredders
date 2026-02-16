@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { sendPowderAlert } from '@/lib/push/apns';
 
 /**
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     console.log('Starting powder alerts check...');
 
     // Fetch all mountains with active powder alert subscriptions

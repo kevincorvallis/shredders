@@ -1,5 +1,20 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
+
+/**
+ * Helper: Look up internal user profile ID from auth_user_id
+ */
+async function getProfileId(authUserId: string): Promise<string | null> {
+  const adminClient = createAdminClient();
+  const { data } = await adminClient
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', authUserId)
+    .single();
+  return data?.id ?? null;
+}
 
 /**
  * GET /api/alerts/subscriptions
@@ -8,27 +23,23 @@ import { createClient } from '@/lib/supabase/server';
  * Query params:
  *   - mountainId: Filter by mountain (optional)
  */
-export async function GET(request: Request) {
+export const GET = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
+    const adminClient = createAdminClient();
+    const { searchParams } = new URL(request.url);
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    const profileId = await getProfileId(authUser.userId);
+    if (!profileId) {
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
-    const { searchParams } = new URL(request.url);
     const mountainId = searchParams.get('mountainId');
 
     // Build query
-    let query = supabase
+    let query = adminClient
       .from('alert_subscriptions')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', profileId)
       .order('created_at', { ascending: false });
 
     if (mountainId) {
@@ -39,21 +50,14 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Error fetching subscriptions:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch subscriptions' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ subscriptions: subscriptions || [] });
   } catch (error) {
-    console.error('Error in GET /api/alerts/subscriptions:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/alerts/subscriptions' });
   }
-}
+});
 
 /**
  * POST /api/alerts/subscriptions
@@ -65,17 +69,13 @@ export async function GET(request: Request) {
  *   - powderAlerts: Subscribe to powder alerts (default: true)
  *   - powderThreshold: Minimum inches for powder alert (default: 6)
  */
-export async function POST(request: Request) {
+export const POST = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
+    const adminClient = createAdminClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    const profileId = await getProfileId(authUser.userId);
+    if (!profileId) {
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
     const body = await request.json();
@@ -88,25 +88,19 @@ export async function POST(request: Request) {
 
     // Validate required fields
     if (!mountainId) {
-      return NextResponse.json(
-        { error: 'Mountain ID is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.missingField('mountainId'));
     }
 
     // Validate powder threshold
     if (powderThreshold < 0 || powderThreshold > 100) {
-      return NextResponse.json(
-        { error: 'Powder threshold must be between 0 and 100 inches' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Powder threshold must be between 0 and 100 inches']));
     }
 
     // Check if subscription already exists
-    const { data: existing } = await supabase
+    const { data: existing } = await adminClient
       .from('alert_subscriptions')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('user_id', profileId)
       .eq('mountain_id', mountainId)
       .maybeSingle();
 
@@ -114,7 +108,7 @@ export async function POST(request: Request) {
 
     if (existing) {
       // Update existing subscription
-      const { data: updated, error: updateError } = await supabase
+      const { data: updated, error: updateError } = await adminClient
         .from('alert_subscriptions')
         .update({
           weather_alerts: weatherAlerts,
@@ -128,19 +122,16 @@ export async function POST(request: Request) {
 
       if (updateError) {
         console.error('Error updating subscription:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to update subscription' },
-          { status: 500 }
-        );
+        return handleError(Errors.databaseError());
       }
 
       subscription = updated;
     } else {
       // Create new subscription
-      const { data: created, error: createError } = await supabase
+      const { data: created, error: createError } = await adminClient
         .from('alert_subscriptions')
         .insert({
-          user_id: user.id,
+          user_id: profileId,
           mountain_id: mountainId,
           weather_alerts: weatherAlerts,
           powder_alerts: powderAlerts,
@@ -151,10 +142,7 @@ export async function POST(request: Request) {
 
       if (createError) {
         console.error('Error creating subscription:', createError);
-        return NextResponse.json(
-          { error: 'Failed to create subscription' },
-          { status: 500 }
-        );
+        return handleError(Errors.databaseError());
       }
 
       subscription = created;
@@ -162,13 +150,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ subscription }, { status: existing ? 200 : 201 });
   } catch (error) {
-    console.error('Error in POST /api/alerts/subscriptions:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/alerts/subscriptions' });
   }
-}
+});
 
 /**
  * DELETE /api/alerts/subscriptions
@@ -177,49 +161,35 @@ export async function POST(request: Request) {
  * Query params:
  *   - mountainId: Mountain ID (required)
  */
-export async function DELETE(request: Request) {
+export const DELETE = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
+    const adminClient = createAdminClient();
+    const { searchParams } = new URL(request.url);
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    const profileId = await getProfileId(authUser.userId);
+    if (!profileId) {
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
-    const { searchParams } = new URL(request.url);
     const mountainId = searchParams.get('mountainId');
 
     if (!mountainId) {
-      return NextResponse.json(
-        { error: 'Mountain ID is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.missingField('mountainId'));
     }
 
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await adminClient
       .from('alert_subscriptions')
       .delete()
-      .eq('user_id', user.id)
+      .eq('user_id', profileId)
       .eq('mountain_id', mountainId);
 
     if (deleteError) {
       console.error('Error deleting subscription:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete subscription' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/alerts/subscriptions:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/alerts/subscriptions' });
   }
-}
+});

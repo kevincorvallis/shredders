@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { withDualAuth, getDualAuthUser } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 
 /**
  * GET /api/comments/[commentId]
@@ -30,19 +32,12 @@ export async function GET(
       .single();
 
     if (error || !comment) {
-      return NextResponse.json(
-        { error: 'Comment not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Comment'));
     }
 
     return NextResponse.json({ comment });
   } catch (error) {
-    console.error('Error in GET /api/comments/[commentId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/comments/[commentId]' });
   }
 }
 
@@ -53,51 +48,42 @@ export async function GET(
  * Body:
  *   - content: Updated comment text (required, max 2000 chars)
  */
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ commentId: string }> }
-) {
+export const PATCH = withDualAuth(async (request, authUser) => {
   try {
-    const { commentId } = await params;
-    const supabase = await createClient();
+    const url = new URL(request.url);
+    const commentId = url.pathname.split('/').pop()!;
+    const adminClient = createAdminClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    // Look up internal user profile ID
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (!userProfile) {
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
     // Fetch existing comment
-    const { data: existingComment, error: fetchError } = await supabase
+    const { data: existingComment, error: fetchError } = await adminClient
       .from('comments')
       .select('user_id, is_deleted')
       .eq('id', commentId)
       .single();
 
     if (fetchError || !existingComment) {
-      return NextResponse.json(
-        { error: 'Comment not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Comment'));
     }
 
     // Verify ownership
-    if (existingComment.user_id !== user.id) {
-      return NextResponse.json(
-        { error: 'You can only edit your own comments' },
-        { status: 403 }
-      );
+    if (existingComment.user_id !== userProfile.id) {
+      return handleError(Errors.forbidden('You can only edit your own comments'));
     }
 
     // Cannot edit deleted comments
     if (existingComment.is_deleted) {
-      return NextResponse.json(
-        { error: 'Cannot edit deleted comment' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Cannot edit deleted comment']));
     }
 
     const body = await request.json();
@@ -105,21 +91,15 @@ export async function PATCH(
 
     // Validate content
     if (!content || typeof content !== 'string') {
-      return NextResponse.json(
-        { error: 'Content is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.missingField('content'));
     }
 
     if (content.length > 2000) {
-      return NextResponse.json(
-        { error: 'Content must be less than 2000 characters' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Content must be less than 2000 characters']));
     }
 
     // Update comment
-    const { data: updatedComment, error: updateError } = await supabase
+    const { data: updatedComment, error: updateError } = await adminClient
       .from('comments')
       .update({
         content: content.trim(),
@@ -139,21 +119,14 @@ export async function PATCH(
 
     if (updateError) {
       console.error('Error updating comment:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update comment' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ comment: updatedComment });
   } catch (error) {
-    console.error('Error in PATCH /api/comments/[commentId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'PATCH /api/comments/[commentId]' });
   }
-}
+});
 
 /**
  * DELETE /api/comments/[commentId]
@@ -161,55 +134,46 @@ export async function PATCH(
  * Delete a comment (owner only)
  * This performs a soft delete by setting is_deleted=true
  */
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ commentId: string }> }
-) {
+export const DELETE = withDualAuth(async (request, authUser) => {
   try {
-    const { commentId } = await params;
-    const supabase = await createClient();
+    const url = new URL(request.url);
+    const commentId = url.pathname.split('/').pop()!;
+    const adminClient = createAdminClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    // Look up internal user profile ID
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (!userProfile) {
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
     // Fetch existing comment
-    const { data: existingComment, error: fetchError } = await supabase
+    const { data: existingComment, error: fetchError } = await adminClient
       .from('comments')
       .select('user_id, is_deleted')
       .eq('id', commentId)
       .single();
 
     if (fetchError || !existingComment) {
-      return NextResponse.json(
-        { error: 'Comment not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Comment'));
     }
 
     // Verify ownership
-    if (existingComment.user_id !== user.id) {
-      return NextResponse.json(
-        { error: 'You can only delete your own comments' },
-        { status: 403 }
-      );
+    if (existingComment.user_id !== userProfile.id) {
+      return handleError(Errors.forbidden('You can only delete your own comments'));
     }
 
     // Already deleted
     if (existingComment.is_deleted) {
-      return NextResponse.json(
-        { error: 'Comment already deleted' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Comment already deleted']));
     }
 
     // Soft delete
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await adminClient
       .from('comments')
       .update({
         is_deleted: true,
@@ -220,18 +184,11 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('Error deleting comment:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete comment' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/comments/[commentId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/comments/[commentId]' });
   }
-}
+});

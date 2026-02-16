@@ -7,12 +7,11 @@ import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
 /**
  * GET /api/comments
  *
- * Fetch comments for a specific target (mountain, webcam, photo, or check-in)
+ * Fetch comments for a specific target (mountain, webcam, or photo)
  * Query params:
  *   - mountainId: Filter by mountain
  *   - webcamId: Filter by webcam
  *   - photoId: Filter by photo
- *   - checkInId: Filter by check-in
  *   - parentCommentId: Filter by parent comment (for nested replies)
  *   - limit: Number of results (default: 50, max: 100)
  *   - offset: Pagination offset (default: 0)
@@ -25,7 +24,6 @@ export async function GET(request: Request) {
     const mountainId = searchParams.get('mountainId');
     const webcamId = searchParams.get('webcamId');
     const photoId = searchParams.get('photoId');
-    const checkInId = searchParams.get('checkInId');
     const parentCommentId = searchParams.get('parentCommentId');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const offset = parseInt(searchParams.get('offset') || '0');
@@ -55,9 +53,6 @@ export async function GET(request: Request) {
     }
     if (photoId) {
       query = query.eq('photo_id', photoId);
-    }
-    if (checkInId) {
-      query = query.eq('check_in_id', checkInId);
     }
     if (parentCommentId) {
       query = query.eq('parent_comment_id', parentCommentId);
@@ -91,7 +86,6 @@ export async function GET(request: Request) {
  *   - mountainId: Mountain ID (optional)
  *   - webcamId: Webcam ID (optional)
  *   - photoId: Photo ID (optional)
- *   - checkInId: Check-in ID (optional)
  *   - parentCommentId: Parent comment ID for nested replies (optional)
  */
 export const POST = withDualAuth(async (request, authUser) => {
@@ -120,7 +114,7 @@ export const POST = withDualAuth(async (request, authUser) => {
     }
 
     const body = await request.json();
-    const { content, mountainId, webcamId, photoId, checkInId, parentCommentId } = body;
+    const { content, mountainId, webcamId, photoId, parentCommentId } = body;
 
     // Validate content
     if (!content || typeof content !== 'string') {
@@ -132,8 +126,8 @@ export const POST = withDualAuth(async (request, authUser) => {
     }
 
     // At least one target must be specified
-    if (!mountainId && !webcamId && !photoId && !checkInId) {
-      return handleError(Errors.validationFailed(['At least one target (mountainId, webcamId, photoId, or checkInId) is required']));
+    if (!mountainId && !webcamId && !photoId) {
+      return handleError(Errors.validationFailed(['At least one target (mountainId, webcamId, or photoId) is required']));
     }
 
     // If parent comment specified, verify it exists
@@ -158,7 +152,6 @@ export const POST = withDualAuth(async (request, authUser) => {
         mountain_id: mountainId || null,
         webcam_id: webcamId || null,
         photo_id: photoId || null,
-        check_in_id: checkInId || null,
         parent_comment_id: parentCommentId || null,
       })
       .select(`

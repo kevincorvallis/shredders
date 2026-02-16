@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 
 /**
  * GET /api/check-ins/[checkInId]
@@ -29,28 +31,12 @@ export async function GET(
       .single();
 
     if (error || !checkIn) {
-      return NextResponse.json(
-        { error: 'Check-in not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check if check-in is public or belongs to current user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!checkIn.is_public && (!user || checkIn.user_id !== user.id)) {
-      return NextResponse.json(
-        { error: 'Check-in not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Check-in'));
     }
 
     return NextResponse.json({ checkIn });
   } catch (error) {
-    console.error('Error in GET /api/check-ins/[checkInId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'GET /api/check-ins/[checkInId]' });
   }
 }
 
@@ -67,43 +53,37 @@ export async function GET(
  *   - weatherConditions: Weather object (optional)
  *   - isPublic: Make check-in public (optional)
  */
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ checkInId: string }> }
-) {
+export const PATCH = withDualAuth(async (request, authUser) => {
   try {
-    const { checkInId } = await params;
-    const supabase = await createClient();
+    const url = new URL(request.url);
+    const checkInId = url.pathname.split('/').pop()!;
+    const adminClient = createAdminClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    // Look up internal user profile ID
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (!userProfile) {
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
     // Fetch existing check-in
-    const { data: existingCheckIn, error: fetchError } = await supabase
+    const { data: existingCheckIn, error: fetchError } = await adminClient
       .from('check_ins')
       .select('user_id')
       .eq('id', checkInId)
       .single();
 
     if (fetchError || !existingCheckIn) {
-      return NextResponse.json(
-        { error: 'Check-in not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Check-in'));
     }
 
     // Verify ownership
-    if (existingCheckIn.user_id !== user.id) {
-      return NextResponse.json(
-        { error: 'You can only edit your own check-ins' },
-        { status: 403 }
-      );
+    if (existingCheckIn.user_id !== userProfile.id) {
+      return handleError(Errors.forbidden('You can only edit your own check-ins'));
     }
 
     const body = await request.json();
@@ -119,18 +99,12 @@ export async function PATCH(
 
     // Validate trip report length
     if (tripReport !== undefined && tripReport && tripReport.length > 5000) {
-      return NextResponse.json(
-        { error: 'Trip report must be less than 5000 characters' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Trip report must be less than 5000 characters']));
     }
 
     // Validate rating
     if (rating !== undefined && rating !== null && (rating < 1 || rating > 5)) {
-      return NextResponse.json(
-        { error: 'Rating must be between 1 and 5' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Rating must be between 1 and 5']));
     }
 
     // Build update object (only include provided fields)
@@ -144,7 +118,7 @@ export async function PATCH(
     if (isPublic !== undefined) updates.is_public = isPublic;
 
     // Update check-in
-    const { data: updatedCheckIn, error: updateError } = await supabase
+    const { data: updatedCheckIn, error: updateError } = await adminClient
       .from('check_ins')
       .update(updates)
       .eq('id', checkInId)
@@ -161,86 +135,66 @@ export async function PATCH(
 
     if (updateError) {
       console.error('Error updating check-in:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update check-in' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ checkIn: updatedCheckIn });
   } catch (error) {
-    console.error('Error in PATCH /api/check-ins/[checkInId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'PATCH /api/check-ins/[checkInId]' });
   }
-}
+});
 
 /**
  * DELETE /api/check-ins/[checkInId]
  *
  * Delete a check-in (owner only)
  */
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ checkInId: string }> }
-) {
+export const DELETE = withDualAuth(async (request, authUser) => {
   try {
-    const { checkInId } = await params;
-    const supabase = await createClient();
+    const url = new URL(request.url);
+    const checkInId = url.pathname.split('/').pop()!;
+    const adminClient = createAdminClient();
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    // Look up internal user profile ID
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (!userProfile) {
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
     // Fetch existing check-in
-    const { data: existingCheckIn, error: fetchError } = await supabase
+    const { data: existingCheckIn, error: fetchError } = await adminClient
       .from('check_ins')
       .select('user_id')
       .eq('id', checkInId)
       .single();
 
     if (fetchError || !existingCheckIn) {
-      return NextResponse.json(
-        { error: 'Check-in not found' },
-        { status: 404 }
-      );
+      return handleError(Errors.resourceNotFound('Check-in'));
     }
 
     // Verify ownership
-    if (existingCheckIn.user_id !== user.id) {
-      return NextResponse.json(
-        { error: 'You can only delete your own check-ins' },
-        { status: 403 }
-      );
+    if (existingCheckIn.user_id !== userProfile.id) {
+      return handleError(Errors.forbidden('You can only delete your own check-ins'));
     }
 
-    // Delete check-in (hard delete)
-    const { error: deleteError } = await supabase
+    // Delete check-in
+    const { error: deleteError } = await adminClient
       .from('check_ins')
       .delete()
       .eq('id', checkInId);
 
     if (deleteError) {
       console.error('Error deleting check-in:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete check-in' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/check-ins/[checkInId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/check-ins/[checkInId]' });
   }
-}
+});
