@@ -2,14 +2,13 @@
 //  BrockSkiingLoadingView.swift
 //  PowderTracker
 //
-//  A beautiful animated loading screen featuring Brock skiing through powder.
-//  Reuses the aurora and snowflake effects from PookieBSnowIntroView.
-//  Used as the app's launch loading screen while initial data loads.
+//  Refined loading screen with mountain silhouette, SF Symbol skier,
+//  and gentle snowfall. Progress drives the skier across the ridge.
 //
 
 import SwiftUI
 
-// MARK: - Skiing Snowflake Particle
+// MARK: - Snowflake Particle
 
 struct SkiingSnowflake: Identifiable {
     let id = UUID()
@@ -19,477 +18,390 @@ struct SkiingSnowflake: Identifiable {
     var opacity: Double
     var speed: Double
     var drift: CGFloat
-    var rotationSpeed: Double
-    var rotation: Double = 0
 }
 
 // MARK: - BrockSkiingLoadingView
 
 struct BrockSkiingLoadingView: View {
-    /// Binding to actual loading progress (0.0 – 1.0)
+    /// Target progress from data loading (0.0 – 1.0)
     var progress: Double = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    // Smooth progress
+    @State private var displayedProgress: Double = 0
+
     // Animation states
-    @State private var showBackground = false
-    @State private var brockX: CGFloat = -100
-    @State private var brockY: CGFloat = 0
-    @State private var brockRotation: Double = 0
-    @State private var skiTrailOpacity: Double = 0
+    @State private var contentOpacity: Double = 0
+    @State private var skierBob: CGFloat = 0
     @State private var messageIndex = 0
     @State private var messageOpacity: Double = 0
-
-    // Aurora layers
-    @State private var auroraWave1: CGFloat = 0
-    @State private var auroraWave2: CGFloat = 0
-    @State private var auroraOpacity: Double = 0
 
     // Particles
     @State private var snowflakes: [SkiingSnowflake] = []
     @State private var screenSize: CGSize = .zero
 
-    // 60 FPS timer for smooth particles
-    private let particleTimer = Timer.publish(every: 1.0/60.0, on: .main, in: .common).autoconnect()
+    // 60 FPS timer
+    private let frameTimer = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
-    // Fun loading messages
-    private let loadingMessages = [
-        "Brock is sniffing out fresh powder...",
-        "Checking the slopes...",
-        "Tracking fresh tracks...",
-        "Fetching today's conditions...",
-        "Almost there! *wags tail*"
+    // Tips — alternate between flavor and useful hints
+    private let tips = [
+        "Loading your mountains...",
+        "Star your favorites for quick access",
+        "Pull down on any tab to refresh",
+        "Checking conditions...",
+        "Compare resorts on the Map tab",
+        "Tap a pin to preview conditions",
+        "Create events to rally your crew",
+        "Fetching snow data...",
+        "Scores combine snow, lifts, and weather",
+        "Set alerts for powder day notifications",
+        "Today tab shows your top pick each morning",
+        "Almost ready..."
     ]
 
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Layer 1: Deep winter night gradient
                 backgroundGradient
-
-                // Layer 2: Aurora borealis
-                if !reduceMotion {
-                    auroraLayers
-                }
-
-                // Layer 3: Twinkling stars
-                if !reduceMotion {
-                    starsLayer
-                }
-
-                // Layer 4: Falling snowflakes
-                if !reduceMotion {
-                    snowflakesLayer
-                }
-
-                // Layer 5: Ski trail
-                if !reduceMotion {
-                    skiTrailLayer
-                }
-
-                // Layer 6: Brock skiing
-                brockSkiingLayer
-
-                // Layer 7: Loading message
-                loadingMessageLayer
+                mountainScene
+                if !reduceMotion { snowLayer }
+                skierLayer
+                contentLayer
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
             .onAppear {
                 screenSize = geometry.size
                 if reduceMotion {
-                    showAllContentInstantly()
+                    contentOpacity = 1
+                    displayedProgress = progress
                 } else {
+                    generateSnowflakes()
                     startAnimations()
-                    generateParticles()
                 }
             }
             .onChange(of: geometry.size) { _, newSize in
                 screenSize = newSize
             }
-            .onReceive(particleTimer) { _ in
+            .onReceive(frameTimer) { _ in
+                advanceProgress()
                 guard !reduceMotion else { return }
-                updateParticles()
+                updateSnowflakes()
             }
         }
         .ignoresSafeArea()
     }
 
-    // MARK: - Background Gradient
+    // MARK: - Background
 
     private var backgroundGradient: some View {
         LinearGradient(
             colors: [
-                Color(red: 0.06, green: 0.08, blue: 0.18),
-                Color(red: 0.10, green: 0.14, blue: 0.26),
-                Color(red: 0.14, green: 0.20, blue: 0.34),
-                Color(red: 0.10, green: 0.16, blue: 0.28)
+                Color(red: 0.05, green: 0.06, blue: 0.14),
+                Color(red: 0.08, green: 0.10, blue: 0.22),
+                Color(red: 0.12, green: 0.16, blue: 0.30)
             ],
             startPoint: .top,
             endPoint: .bottom
         )
-        .opacity(showBackground ? 1 : 0)
-    }
-
-    // MARK: - Aurora Layers
-
-    private var auroraLayers: some View {
-        ZStack {
-            // Purple base aurora
+        .overlay {
+            // Subtle ambient glow in upper area
             Ellipse()
                 .fill(
                     RadialGradient(
                         colors: [
-                            Color(red: 0.5, green: 0.2, blue: 0.8).opacity(0.35),
-                            Color(red: 0.3, green: 0.1, blue: 0.6).opacity(0.2),
+                            Color(red: 0.35, green: 0.15, blue: 0.55).opacity(0.25),
                             .clear
                         ],
                         center: .center,
-                        startRadius: 20,
-                        endRadius: 220
+                        startRadius: 40,
+                        endRadius: 300
                     )
                 )
-                .frame(width: 500, height: 280)
-                .blur(radius: 60)
-                .offset(x: auroraWave1, y: -180)
-                .opacity(auroraOpacity)
-
-            // Pink shimmer
-            Ellipse()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 1.0, green: 0.4, blue: 0.7).opacity(0.4),
-                            Color(red: 0.95, green: 0.55, blue: 0.75).opacity(0.25),
-                            .clear
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 420, height: 200)
-                .blur(radius: 45)
-                .offset(x: -auroraWave2 * 0.7, y: -120)
-                .opacity(auroraOpacity * 0.9)
-
-            // Cyan accent
-            Ellipse()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color(red: 0.3, green: 0.85, blue: 1.0).opacity(0.3),
-                            .clear
-                        ],
-                        center: .center,
-                        startRadius: 30,
-                        endRadius: 180
-                    )
-                )
-                .frame(width: 350, height: 180)
-                .blur(radius: 35)
-                .offset(y: 220)
-                .opacity(auroraOpacity * 0.8)
+                .frame(width: 600, height: 400)
+                .offset(y: -screenSize.height * 0.2)
+                .blur(radius: 40)
         }
+        .opacity(contentOpacity)
     }
 
-    // MARK: - Stars Layer
+    // MARK: - Mountain Silhouette
 
-    private var starsLayer: some View {
+    private var mountainScene: some View {
+        ZStack {
+            // Far range (lighter, more distant)
+            mountainPath(
+                peaks: [0.18, 0.30, 0.22, 0.35, 0.25, 0.20],
+                baseY: 0.58,
+                color: Color(red: 0.10, green: 0.12, blue: 0.24)
+            )
+
+            // Near range (darker, foreground)
+            mountainPath(
+                peaks: [0.12, 0.28, 0.15, 0.32, 0.18, 0.10],
+                baseY: 0.65,
+                color: Color(red: 0.07, green: 0.08, blue: 0.18)
+            )
+
+            // Snow line on near range
+            mountainSnowCaps
+        }
+        .opacity(contentOpacity)
+    }
+
+    private func mountainPath(peaks: [CGFloat], baseY: CGFloat, color: Color) -> some View {
+        Path { path in
+            let w = screenSize.width
+            let h = screenSize.height
+            let base = h * baseY
+            let segmentWidth = w / CGFloat(peaks.count - 1)
+
+            path.move(to: CGPoint(x: 0, y: h))
+            path.addLine(to: CGPoint(x: 0, y: base))
+
+            for i in 0..<peaks.count {
+                let x = segmentWidth * CGFloat(i)
+                let peakY = base - (h * peaks[i])
+                if i == 0 {
+                    path.addLine(to: CGPoint(x: x, y: peakY))
+                } else {
+                    let prevX = segmentWidth * CGFloat(i - 1)
+                    let midX = (prevX + x) / 2
+                    path.addQuadCurve(
+                        to: CGPoint(x: x, y: peakY),
+                        control: CGPoint(x: midX, y: peakY + h * 0.04)
+                    )
+                }
+            }
+
+            path.addLine(to: CGPoint(x: w, y: h))
+            path.closeSubpath()
+        }
+        .fill(color)
+    }
+
+    private var mountainSnowCaps: some View {
         Canvas { context, size in
-            for i in 0..<40 {
-                let x = CGFloat((i * 67 + 13) % Int(size.width))
-                let y = CGFloat((i * 43 + 7) % Int(size.height * 0.5))
-                let starSize = CGFloat((i % 4) + 1)
-                let opacity = Double((i % 6) + 2) / 10.0
-
-                let rect = CGRect(x: x, y: y, width: starSize, height: starSize)
-                context.fill(Circle().path(in: rect), with: .color(.white.opacity(opacity)))
+            // Subtle snow highlights on peaks
+            let peaks: [(x: CGFloat, y: CGFloat, width: CGFloat)] = [
+                (0.20, 0.39, 30), (0.40, 0.37, 25), (0.60, 0.36, 35), (0.80, 0.40, 20)
+            ]
+            for peak in peaks {
+                let rect = CGRect(
+                    x: size.width * peak.x - peak.width / 2,
+                    y: size.height * peak.y,
+                    width: peak.width,
+                    height: 4
+                )
+                context.fill(
+                    Capsule().path(in: rect),
+                    with: .color(.white.opacity(0.15))
+                )
             }
         }
-        .opacity(showBackground ? 1 : 0)
     }
 
-    // MARK: - Snowflakes Layer
+    // MARK: - Snow Layer
 
-    private var snowflakesLayer: some View {
+    private var snowLayer: some View {
         Canvas { context, _ in
             for flake in snowflakes {
-                let symbol = context.resolveSymbol(id: "snowflake")!
-                context.opacity = flake.opacity
-                context.translateBy(x: flake.x, y: flake.y)
-                context.rotate(by: .degrees(flake.rotation))
-                context.scaleBy(x: flake.size / 20, y: flake.size / 20)
-                context.draw(symbol, at: .zero)
-                context.transform = .identity
+                let rect = CGRect(
+                    x: flake.x - flake.size / 2,
+                    y: flake.y - flake.size / 2,
+                    width: flake.size,
+                    height: flake.size
+                )
+                context.fill(
+                    Circle().path(in: rect),
+                    with: .color(.white.opacity(flake.opacity))
+                )
             }
-        } symbols: {
-            Image(systemName: "snowflake")
-                .font(.system(size: 20, weight: .light))
-                .foregroundStyle(.white)
-                .tag("snowflake")
         }
     }
 
-    // MARK: - Ski Trail Layer
+    // MARK: - Skier
 
-    private var skiTrailLayer: some View {
-        Path { path in
-            let startY = screenSize.height * 0.55
-            let midX = screenSize.width * 0.5
-
-            // Wavy ski trail
-            path.move(to: CGPoint(x: -50, y: startY + 30))
-            path.addCurve(
-                to: CGPoint(x: midX, y: startY),
-                control1: CGPoint(x: screenSize.width * 0.15, y: startY + 50),
-                control2: CGPoint(x: screenSize.width * 0.35, y: startY - 20)
-            )
-            path.addCurve(
-                to: CGPoint(x: screenSize.width + 50, y: startY + 20),
-                control1: CGPoint(x: screenSize.width * 0.65, y: startY + 30),
-                control2: CGPoint(x: screenSize.width * 0.85, y: startY - 10)
-            )
-        }
-        .stroke(
-            LinearGradient(
-                colors: [.clear, .white.opacity(0.3), .white.opacity(0.5), .white.opacity(0.3), .clear],
-                startPoint: .leading,
-                endPoint: .trailing
-            ),
-            style: StrokeStyle(lineWidth: 3, lineCap: .round)
-        )
-        .opacity(skiTrailOpacity)
+    /// Ridge Y position at a given normalized X (0–1)
+    private func ridgeY(at t: CGFloat) -> CGFloat {
+        let baseY = screenSize.height * 0.58
+        // Gentle wave matching the far mountain range
+        let wave = sin(t * .pi * 2.5) * screenSize.height * 0.025
+        return baseY - wave
     }
 
-    // MARK: - Brock Skiing Layer
-
-    private var brockSkiingLayer: some View {
-        ZStack {
-            // Snow spray effect
-            if !reduceMotion {
-                ForEach(0..<5, id: \.self) { i in
-                    Circle()
-                        .fill(.white.opacity(0.4))
-                        .frame(width: CGFloat.random(in: 4...10), height: CGFloat.random(in: 4...10))
-                        .offset(
-                            x: brockX - CGFloat(15 + i * 8),
-                            y: screenSize.height * 0.55 + CGFloat.random(in: -10...10)
-                        )
-                        .blur(radius: 2)
-                }
-            }
-
-            // Brock on skis
-            VStack(spacing: -8) {
-                Text("🐕")
-                    .font(.system(size: 60))
-
-                // Skis
-                HStack(spacing: 2) {
-                    Text("🎿")
-                        .font(.system(size: 20))
-                        .rotationEffect(.degrees(-15))
-                }
-                .offset(y: -20)
-            }
-            .rotationEffect(.degrees(brockRotation))
-            .offset(x: brockX, y: screenSize.height * 0.55 + brockY)
-            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
-        }
+    /// Skier X position in absolute coordinates
+    private var skierScreenX: CGFloat {
+        let margin: CGFloat = 30
+        return margin + (screenSize.width - margin * 2) * displayedProgress
     }
 
-    // MARK: - Loading Message Layer
+    private var skierLayer: some View {
+        let x = skierScreenX
+        let y = ridgeY(at: displayedProgress) - 24
 
-    private var loadingMessageLayer: some View {
-        VStack {
+        return Image(systemName: "figure.skiing.downhill")
+            .font(.system(size: 32, weight: .medium))
+            .foregroundStyle(.white)
+            .shadow(color: Color(red: 0.4, green: 0.7, blue: 1.0).opacity(0.5), radius: 10, y: 0)
+            .shadow(color: .black.opacity(0.4), radius: 4, y: 3)
+            .offset(y: skierBob)
+            .position(x: x, y: y)
+            .opacity(contentOpacity)
+    }
+
+    // MARK: - Content Layer
+
+    private var contentLayer: some View {
+        VStack(spacing: 0) {
             Spacer()
 
-            VStack(spacing: 16) {
-                // App title
+            // App title
+            VStack(spacing: 6) {
                 HStack(spacing: 0) {
                     Text("PookieB")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [
                                     Color(red: 1.0, green: 0.55, blue: 0.75),
-                                    Color(red: 0.9, green: 0.45, blue: 0.85)
+                                    Color(red: 0.85, green: 0.45, blue: 0.80)
                                 ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                                startPoint: .leading,
+                                endPoint: .trailing
                             )
                         )
-
                     Text("Snow")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [
-                                    Color(red: 0.45, green: 0.85, blue: 1.0),
+                                    Color(red: 0.5, green: 0.85, blue: 1.0),
                                     .white
                                 ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                                startPoint: .leading,
+                                endPoint: .trailing
                             )
                         )
                 }
-                .shadow(color: Color.purple.opacity(0.3), radius: 15, y: 5)
-
-                // Loading message
-                Text(loadingMessages[messageIndex])
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.7))
-                    .multilineTextAlignment(.center)
-                    .opacity(messageOpacity)
-
-                // Progress bar
-                VStack(spacing: 6) {
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            // Track
-                            Capsule()
-                                .fill(.white.opacity(0.15))
-                                .frame(height: 6)
-
-                            // Fill
-                            Capsule()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(red: 0.45, green: 0.85, blue: 1.0),
-                                            Color(red: 1.0, green: 0.55, blue: 0.75)
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .frame(width: max(0, geo.size.width * progress), height: 6)
-                                .animation(.smooth(duration: 0.4), value: progress)
-                        }
-                    }
-                    .frame(height: 6)
-                    .frame(maxWidth: 220)
-
-                    // Percentage text
-                    Text("\(Int(progress * 100))%")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .monospacedDigit()
-                        .animation(.smooth(duration: 0.3), value: progress)
-                }
-                .padding(.top, 8)
+                .font(.system(size: 34, weight: .bold, design: .rounded))
             }
-            .padding(.bottom, 80)
+
+            // Tip
+            Text(tips[messageIndex])
+                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .foregroundStyle(.white.opacity(0.5))
+                .opacity(messageOpacity)
+                .padding(.top, 14)
+                .frame(height: 36)
+
+            // Progress
+            progressBar
+                .padding(.top, 20)
+
+            Spacer()
+                .frame(height: 64)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .opacity(contentOpacity)
     }
 
-    // MARK: - Animation Sequence
+    private var progressBar: some View {
+        VStack(spacing: 8) {
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(.white.opacity(0.08))
+                    .frame(height: 3)
+
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.5, green: 0.85, blue: 1.0),
+                                Color(red: 1.0, green: 0.55, blue: 0.75)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: max(0, 200 * displayedProgress), height: 3)
+            }
+            .frame(width: 200)
+
+            Text("\(Int(displayedProgress * 100))%")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.3))
+                .monospacedDigit()
+        }
+    }
+
+    // MARK: - Animations
 
     private func startAnimations() {
-        // Background fade in
-        withAnimation(.smooth(duration: 0.4)) {
-            showBackground = true
+        withAnimation(.easeOut(duration: 0.6)) {
+            contentOpacity = 1.0
         }
 
-        // Aurora fade in
-        withAnimation(.easeOut(duration: 0.8).delay(0.1)) {
-            auroraOpacity = 1.0
+        // Skier bob
+        if !reduceMotion {
+            withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                skierBob = -4
+            }
         }
 
-        // Start aurora waves
-        withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
-            auroraWave1 = 40
-        }
-        withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) {
-            auroraWave2 = -30
-        }
-
-        // Show ski trail
-        withAnimation(.easeOut(duration: 0.5).delay(0.2)) {
-            skiTrailOpacity = 1.0
-        }
-
-        // Animate Brock skiing across screen
-        startSkiingAnimation()
-
-        // Loading message
-        withAnimation(.easeOut(duration: 0.3).delay(0.3)) {
+        // First tip
+        withAnimation(.easeOut(duration: 0.4).delay(0.3)) {
             messageOpacity = 1.0
         }
 
-        // Cycle loading messages
-        startMessageCycle()
-    }
-
-    private func startSkiingAnimation() {
-        // Position Brock at start
-        brockX = -100
-
-        // Ski across screen with slight bobbing
-        withAnimation(.linear(duration: 3.5).repeatForever(autoreverses: false)) {
-            brockX = screenSize.width + 100
-        }
-
-        // Slight rotation for dynamic feel
-        withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-            brockRotation = 5
-        }
-
-        // Up and down bobbing
-        withAnimation(.easeInOut(duration: 0.4).repeatForever(autoreverses: true)) {
-            brockY = -8
-        }
-    }
-
-    private func startMessageCycle() {
-        // Cycle through messages every 2 seconds
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [self] timer in
+        // Cycle tips
+        Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { _ in
             Task { @MainActor in
-                withAnimation(.easeInOut(duration: 0.3)) {
+                withAnimation(.easeInOut(duration: 0.25)) {
                     messageOpacity = 0
                 }
-
-                try? await Task.sleep(nanoseconds: 300_000_000)
-                messageIndex = (messageIndex + 1) % loadingMessages.count
-                withAnimation(.easeInOut(duration: 0.3)) {
+                try? await Task.sleep(nanoseconds: 280_000_000)
+                messageIndex = (messageIndex + 1) % tips.count
+                withAnimation(.easeInOut(duration: 0.25)) {
                     messageOpacity = 1.0
                 }
             }
         }
     }
 
-    private func showAllContentInstantly() {
-        showBackground = true
-        auroraOpacity = 1.0
-        skiTrailOpacity = 1.0
-        brockX = screenSize.width / 2 - 30
-        messageOpacity = 1.0
+    // MARK: - Smooth Progress
+
+    private func advanceProgress() {
+        let target = progress
+        let current = displayedProgress
+        if current < target - 0.0005 {
+            let delta = (target - current) * 0.025
+            displayedProgress = current + max(delta, 0.0008)
+        } else if current != target {
+            displayedProgress = target
+        }
     }
 
-    // MARK: - Particle System
+    // MARK: - Particles
 
-    private func generateParticles() {
-        snowflakes = (0..<25).map { _ in
+    private func generateSnowflakes() {
+        snowflakes = (0..<15).map { _ in
             SkiingSnowflake(
                 x: CGFloat.random(in: 0...screenSize.width),
-                y: CGFloat.random(in: -100...screenSize.height),
-                size: CGFloat.random(in: 10...18),
-                opacity: Double.random(in: 0.3...0.6),
-                speed: Double.random(in: 0.6...1.5),
-                drift: CGFloat.random(in: -0.2...0.2),
-                rotationSpeed: Double.random(in: -1.5...1.5)
+                y: CGFloat.random(in: -50...screenSize.height),
+                size: CGFloat.random(in: 2...5),
+                opacity: Double.random(in: 0.15...0.4),
+                speed: Double.random(in: 0.3...0.8),
+                drift: CGFloat.random(in: -0.15...0.15)
             )
         }
     }
 
-    private func updateParticles() {
+    private func updateSnowflakes() {
         for i in snowflakes.indices {
             snowflakes[i].y += CGFloat(snowflakes[i].speed)
-            snowflakes[i].x += snowflakes[i].drift + CGFloat(sin(snowflakes[i].y / 80) * 0.2)
-            snowflakes[i].rotation += snowflakes[i].rotationSpeed
+            snowflakes[i].x += snowflakes[i].drift + CGFloat(sin(snowflakes[i].y / 120) * 0.15)
 
-            if snowflakes[i].y > screenSize.height + 50 {
-                snowflakes[i].y = -30
+            if snowflakes[i].y > screenSize.height + 20 {
+                snowflakes[i].y = -10
                 snowflakes[i].x = CGFloat.random(in: 0...screenSize.width)
             }
         }

@@ -247,22 +247,23 @@ struct PowderTrackerApp: App {
         let launchSpan = PerformanceLogger.beginAppLaunch()
         let isAuthenticated = authService.isAuthenticated
 
-        // Step 1: Fetch mountains list
-        loadingProgress = 0.1
+        // Kick off progress — the loading view smoothly interpolates toward this
+        loadingProgress = 0.15
 
         let dataTask = Task {
+            // Step 1: Fetch mountains list
             let mtnsSpan = PerformanceLogger.beginMountainsLoad()
             await MountainService.shared.fetchMountains()
             mtnsSpan.end()
-            await MainActor.run { loadingProgress = 0.25 }
+            await MainActor.run { loadingProgress = 0.30 }
 
             // Step 2: Fetch favorites list (if authenticated)
             if isAuthenticated {
                 let favsSpan = PerformanceLogger.beginFavoritesLoad()
                 await FavoritesService.shared.fetchFromBackend()
                 favsSpan.end()
-                await MainActor.run { loadingProgress = 0.4 }
             }
+            await MainActor.run { loadingProgress = 0.40 }
 
             // Step 3: Pre-fetch ALL tab data in parallel
             let homeSpan = PerformanceLogger.beginHomeRefresh()
@@ -273,17 +274,17 @@ struct PowderTrackerApp: App {
             async let eventsTab: [Event]? = prefetchEvents(isAuthenticated: isAuthenticated)
             await mainData
             homeSpan.end()
-            await MainActor.run { loadingProgress = 0.6 }
+            await MainActor.run { loadingProgress = 0.60 }
             await mountainsTab
-            await MainActor.run { loadingProgress = 0.75 }
+            await MainActor.run { loadingProgress = 0.70 }
             let fetchedEvents = await eventsTab
             if let fetchedEvents {
                 await MainActor.run { prefetchedEvents = fetchedEvents }
             }
-            await MainActor.run { loadingProgress = 0.85 }
+            await MainActor.run { loadingProgress = 0.80 }
             await enhancedData
             enhancedSpan.end()
-            await MainActor.run { loadingProgress = 0.95 }
+            await MainActor.run { loadingProgress = 0.90 }
         }
 
         // 15-second timeout
@@ -294,12 +295,12 @@ struct PowderTrackerApp: App {
         await dataTask.value
         timeoutTask.cancel()
 
-        // Complete
+        // Data is ready — set to 100%
         loadingProgress = 1.0
 
-        // Brief minimum display for smooth transition
+        // Minimum display time so users see a few tips
         let elapsed = Date().timeIntervalSince(startTime)
-        let minimumDisplayTime: TimeInterval = 1.5
+        let minimumDisplayTime: TimeInterval = 4.0
         if elapsed < minimumDisplayTime {
             try? await Task.sleep(nanoseconds: UInt64((minimumDisplayTime - elapsed) * 1_000_000_000))
         }
