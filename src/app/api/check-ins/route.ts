@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { withDualAuth } from '@/lib/auth';
 import { Errors, handleError } from '@/lib/errors';
 
@@ -83,7 +83,18 @@ export async function GET(request: Request) {
  */
 export const POST = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
+    const adminClient = createAdminClient();
+
+    // Look up internal user profile ID
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (!userProfile) {
+      return handleError(Errors.unauthorized('User profile not found'));
+    }
 
     const body = await request.json();
     const {
@@ -114,10 +125,10 @@ export const POST = withDualAuth(async (request, authUser) => {
     }
 
     // Create check-in
-    const { data: checkIn, error: insertError } = await supabase
+    const { data: checkIn, error: insertError } = await adminClient
       .from('check_ins')
       .insert({
-        user_id: authUser.userId,
+        user_id: userProfile.id,
         mountain_id: mountainId,
         check_in_time: checkInTime || new Date().toISOString(),
         check_out_time: checkOutTime || null,

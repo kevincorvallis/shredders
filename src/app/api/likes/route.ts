@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { withDualAuth } from '@/lib/auth';
 import { Errors, handleError } from '@/lib/errors';
+
+/**
+ * Helper: Look up internal user profile ID from auth_user_id
+ */
+async function getProfileId(authUserId: string): Promise<string | null> {
+  const adminClient = createAdminClient();
+  const { data } = await adminClient
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', authUserId)
+    .single();
+  return data?.id ?? null;
+}
 
 /**
  * GET /api/likes
@@ -17,8 +30,13 @@ import { Errors, handleError } from '@/lib/errors';
  */
 export const GET = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
+    const adminClient = createAdminClient();
     const { searchParams } = new URL(request.url);
+
+    const profileId = await getProfileId(authUser.userId);
+    if (!profileId) {
+      return handleError(Errors.unauthorized('User profile not found'));
+    }
 
     const photoId = searchParams.get('photoId');
     const commentId = searchParams.get('commentId');
@@ -31,10 +49,10 @@ export const GET = withDualAuth(async (request, authUser) => {
     }
 
     // Build query
-    let query = supabase
+    let query = adminClient
       .from('likes')
       .select('id')
-      .eq('user_id', authUser.userId);
+      .eq('user_id', profileId);
 
     if (photoId) query = query.eq('photo_id', photoId);
     if (commentId) query = query.eq('comment_id', commentId);
@@ -69,7 +87,12 @@ export const GET = withDualAuth(async (request, authUser) => {
  */
 export const POST = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
+    const adminClient = createAdminClient();
+
+    const profileId = await getProfileId(authUser.userId);
+    if (!profileId) {
+      return handleError(Errors.unauthorized('User profile not found'));
+    }
 
     const body = await request.json();
     const { photoId, commentId, checkInId, webcamId } = body;
@@ -80,10 +103,10 @@ export const POST = withDualAuth(async (request, authUser) => {
     }
 
     // Build query to check existing like
-    let checkQuery = supabase
+    let checkQuery = adminClient
       .from('likes')
       .select('id')
-      .eq('user_id', authUser.userId);
+      .eq('user_id', profileId);
 
     if (photoId) checkQuery = checkQuery.eq('photo_id', photoId);
     if (commentId) checkQuery = checkQuery.eq('comment_id', commentId);
@@ -99,7 +122,7 @@ export const POST = withDualAuth(async (request, authUser) => {
 
     // If like exists, remove it (unlike)
     if (existingLike) {
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await adminClient
         .from('likes')
         .delete()
         .eq('id', existingLike.id);
@@ -116,10 +139,10 @@ export const POST = withDualAuth(async (request, authUser) => {
     }
 
     // Otherwise, create new like
-    const { data: newLike, error: insertError } = await supabase
+    const { data: newLike, error: insertError } = await adminClient
       .from('likes')
       .insert({
-        user_id: authUser.userId,
+        user_id: profileId,
         photo_id: photoId || null,
         comment_id: commentId || null,
         check_in_id: checkInId || null,
@@ -157,8 +180,13 @@ export const POST = withDualAuth(async (request, authUser) => {
  */
 export const DELETE = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
+    const adminClient = createAdminClient();
     const { searchParams } = new URL(request.url);
+
+    const profileId = await getProfileId(authUser.userId);
+    if (!profileId) {
+      return handleError(Errors.unauthorized('User profile not found'));
+    }
 
     const photoId = searchParams.get('photoId');
     const commentId = searchParams.get('commentId');
@@ -171,10 +199,10 @@ export const DELETE = withDualAuth(async (request, authUser) => {
     }
 
     // Build delete query
-    let deleteQuery = supabase
+    let deleteQuery = adminClient
       .from('likes')
       .delete()
-      .eq('user_id', authUser.userId);
+      .eq('user_id', profileId);
 
     if (photoId) deleteQuery = deleteQuery.eq('photo_id', photoId);
     if (commentId) deleteQuery = deleteQuery.eq('comment_id', commentId);

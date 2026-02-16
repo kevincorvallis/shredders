@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { withDualAuth } from '@/lib/auth';
 import { Errors, handleError } from '@/lib/errors';
 import { rateLimitEnhanced, createRateLimitKey } from '@/lib/api-utils';
@@ -97,6 +97,18 @@ export async function GET(request: Request) {
 export const POST = withDualAuth(async (request, authUser) => {
   try {
     const supabase = await createClient();
+    const adminClient = createAdminClient();
+
+    // Look up internal user profile ID
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUser.userId)
+      .single();
+
+    if (!userProfile) {
+      return handleError(Errors.unauthorized('User profile not found'));
+    }
 
     // Rate limit comment creation
     const rateLimitResult = await rateLimitEnhanced(
@@ -138,10 +150,10 @@ export const POST = withDualAuth(async (request, authUser) => {
     }
 
     // Create comment
-    const { data: comment, error: insertError } = await supabase
+    const { data: comment, error: insertError } = await adminClient
       .from('comments')
       .insert({
-        user_id: authUser.userId,
+        user_id: userProfile.id,
         content: content.trim(),
         mountain_id: mountainId || null,
         webcam_id: webcamId || null,

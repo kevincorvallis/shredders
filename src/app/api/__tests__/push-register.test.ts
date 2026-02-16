@@ -1,40 +1,45 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { POST, DELETE } from '../push/register/route';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 // Mock Supabase
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
+  createAdminClient: vi.fn(),
 }));
 
-describe('POST /api/push/register', () => {
-  let mockSupabase: any;
-  let mockRequest: Request;
-
-  beforeEach(() => {
-    // Reset mocks
-    vi.clearAllMocks();
-
-    // Mock Supabase client
-    mockSupabase = {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user123' } },
-          error: null,
-        }),
-      },
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
+// Helper to create a mock admin client that resolves user profile lookup
+function createMockAdminClient() {
+  return {
+    from: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: 'profile-uuid-123' },
+            error: null,
+          }),
           eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({
-                data: null,
-                error: null,
-              }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: null,
+              error: null,
             }),
           }),
         }),
-        insert: vi.fn().mockReturnValue({
+      }),
+      insert: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: {
+              id: 'token123',
+              device_token: 'abc123',
+              platform: 'ios',
+            },
+            error: null,
+          }),
+        }),
+      }),
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
               data: {
@@ -45,25 +50,36 @@ describe('POST /api/push/register', () => {
               error: null,
             }),
           }),
-        }),
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: {
-                  id: 'token123',
-                  device_token: 'abc123',
-                  platform: 'ios',
-                },
-                error: null,
-              }),
-            }),
+          eq: vi.fn().mockResolvedValue({
+            data: null,
+            error: null,
           }),
         }),
       }),
+    }),
+  };
+}
+
+describe('POST /api/push/register', () => {
+  let mockSupabase: any;
+  let mockRequest: Request;
+
+  beforeEach(() => {
+    // Reset mocks
+    vi.clearAllMocks();
+
+    // Mock Supabase client (only used for auth)
+    mockSupabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'user123' } },
+          error: null,
+        }),
+      },
     };
 
     (createClient as any).mockResolvedValue(mockSupabase);
+    (createAdminClient as any).mockReturnValue(createMockAdminClient());
   });
 
   it('should register a new device token', async () => {
@@ -136,37 +152,44 @@ describe('POST /api/push/register', () => {
   });
 
   it('should update existing device token', async () => {
-    // Mock existing token
-    mockSupabase.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
+    // Mock admin client with existing token
+    const mockAdmin = {
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({
-              data: {
-                id: 'existing123',
-                device_token: 'old_token',
-                platform: 'ios',
-              },
-              error: null,
-            }),
-          }),
-        }),
-      }),
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: {
-                id: 'existing123',
-                device_token: 'new_token',
-                platform: 'ios',
-              },
+              data: { id: 'profile-uuid-123' },
               error: null,
+            }),
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: {
+                  id: 'existing123',
+                  device_token: 'old_token',
+                  platform: 'ios',
+                },
+                error: null,
+              }),
+            }),
+          }),
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id: 'existing123',
+                  device_token: 'new_token',
+                  platform: 'ios',
+                },
+                error: null,
+              }),
             }),
           }),
         }),
       }),
-    });
+    };
+    (createAdminClient as any).mockReturnValue(mockAdmin);
 
     const requestBody = {
       deviceToken: 'new_token',
@@ -202,19 +225,10 @@ describe('DELETE /api/push/register', () => {
           error: null,
         }),
       },
-      from: vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({
-              data: null,
-              error: null,
-            }),
-          }),
-        }),
-      }),
     };
 
     (createClient as any).mockResolvedValue(mockSupabase);
+    (createAdminClient as any).mockReturnValue(createMockAdminClient());
   });
 
   it('should unregister a device token', async () => {

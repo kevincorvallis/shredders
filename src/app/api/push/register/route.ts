@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 /**
  * POST /api/push/register
@@ -21,6 +21,21 @@ export async function POST(request: Request) {
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    // Look up internal user profile ID
+    const adminClient = createAdminClient();
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!userProfile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
         { status: 401 }
       );
     }
@@ -51,10 +66,10 @@ export async function POST(request: Request) {
     }
 
     // Check if token already exists for this device
-    const { data: existing } = await supabase
+    const { data: existing } = await adminClient
       .from('push_notification_tokens')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('user_id', userProfile.id)
       .eq('device_id', deviceId)
       .maybeSingle();
 
@@ -62,7 +77,7 @@ export async function POST(request: Request) {
 
     if (existing) {
       // Update existing token
-      const { data: updated, error: updateError } = await supabase
+      const { data: updated, error: updateError } = await adminClient
         .from('push_notification_tokens')
         .update({
           device_token: deviceToken,
@@ -87,10 +102,10 @@ export async function POST(request: Request) {
       token = updated;
     } else {
       // Create new token
-      const { data: created, error: createError } = await supabase
+      const { data: created, error: createError } = await adminClient
         .from('push_notification_tokens')
         .insert({
-          user_id: user.id,
+          user_id: userProfile.id,
           device_token: deviceToken,
           platform,
           device_id: deviceId,
@@ -143,6 +158,21 @@ export async function DELETE(request: Request) {
       );
     }
 
+    // Look up internal user profile ID
+    const adminClient = createAdminClient();
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!userProfile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const deviceId = searchParams.get('deviceId');
 
@@ -154,10 +184,10 @@ export async function DELETE(request: Request) {
     }
 
     // Mark token as inactive instead of deleting
-    const { error: updateError } = await supabase
+    const { error: updateError } = await adminClient
       .from('push_notification_tokens')
       .update({ is_active: false })
-      .eq('user_id', user.id)
+      .eq('user_id', userProfile.id)
       .eq('device_id', deviceId);
 
     if (updateError) {

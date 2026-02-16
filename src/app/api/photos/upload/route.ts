@@ -4,7 +4,7 @@
  * Upload a photo to Supabase Storage and create database record
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { Errors, handleError } from '@/lib/errors';
 
@@ -19,6 +19,18 @@ export async function POST(request: Request) {
 
     if (!user) {
       return handleError(Errors.unauthorized('Not authenticated'));
+    }
+
+    // Look up internal user profile ID
+    const adminClient = createAdminClient();
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!userProfile) {
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
     // Parse multipart form data
@@ -80,15 +92,14 @@ export async function POST(request: Request) {
     } = supabase.storage.from('user-photos').getPublicUrl(fileName);
 
     // Create database record
-    const { data: photoRecord, error: dbError } = await supabase
+    const { data: photoRecord, error: dbError } = await adminClient
       .from('user_photos')
       .insert({
-        user_id: user.id,
+        user_id: userProfile.id,
         mountain_id: mountainId,
         webcam_id: webcamId,
-        s3_key: fileName,
-        s3_bucket: 'user-photos',
-        cloudfront_url: publicUrl,
+        storage_path: fileName,
+        url: publicUrl,
         thumbnail_url: publicUrl, // TODO: Generate thumbnail
         caption: caption || null,
         taken_at: takenAt || new Date().toISOString(),

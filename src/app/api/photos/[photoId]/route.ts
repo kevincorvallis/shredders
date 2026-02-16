@@ -6,7 +6,7 @@
  * Delete a photo (must be owner)
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { Errors, handleError } from '@/lib/errors';
 
@@ -61,10 +61,22 @@ export async function DELETE(
       return handleError(Errors.unauthorized('Not authenticated'));
     }
 
+    // Look up internal user profile ID
+    const adminClient = createAdminClient();
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!userProfile) {
+      return handleError(Errors.unauthorized('User profile not found'));
+    }
+
     // Get photo to verify ownership and get storage path
-    const { data: photo, error: fetchError } = await supabase
+    const { data: photo, error: fetchError } = await adminClient
       .from('user_photos')
-      .select('user_id, s3_key, s3_bucket')
+      .select('user_id, storage_path')
       .eq('id', photoId)
       .single();
 
@@ -73,14 +85,14 @@ export async function DELETE(
     }
 
     // Verify ownership
-    if (photo.user_id !== user.id) {
+    if (photo.user_id !== userProfile.id) {
       return handleError(Errors.forbidden('You can only delete your own photos'));
     }
 
     // Delete from storage
     const { error: storageError } = await supabase.storage
-      .from(photo.s3_bucket)
-      .remove([photo.s3_key]);
+      .from('user-photos')
+      .remove([photo.storage_path]);
 
     if (storageError) {
       console.error('Storage delete error:', storageError);
