@@ -25,7 +25,7 @@ interface Comment {
 }
 
 interface CommentListProps {
-  targetType: 'mountain' | 'webcam' | 'photo' | 'checkIn';
+  targetType: 'mountain' | 'webcam' | 'photo';
   targetId: string;
   limit?: number;
   showReplies?: boolean;

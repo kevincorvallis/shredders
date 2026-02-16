@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     console.log('Starting event reminders check...');
 
     // Call the database function to get events needing reminders
+    // RPC returns rows per attendee: event_id, event_title, mountain_id, event_date, departure_time, user_id, device_tokens
     const { data: eventsNeedingReminders, error: eventsError } = await supabase.rpc(
       'get_events_for_reminder'
     );
@@ -50,109 +51,77 @@ export async function POST(request: Request) {
       });
     }
 
-    console.log(`Found ${eventsNeedingReminders.length} events needing reminders`);
+    console.log(`Found ${eventsNeedingReminders.length} attendee rows needing reminders`);
 
     let totalRemindersSent = 0;
-    const processedEvents: string[] = [];
+    const processedEvents = new Set<string>();
 
-    for (const event of eventsNeedingReminders) {
+    for (const row of eventsNeedingReminders) {
       try {
-        // Skip cancelled events (safety check in case RPC doesn't filter them)
-        if (event.status === 'cancelled') {
-          console.log(`Skipping cancelled event ${event.id}`);
-          continue;
-        }
-
         // Get mountain name
-        const mountain = getMountain(event.mountain_id);
-        const mountainName = mountain?.name || event.mountain_id;
+        const mountain = getMountain(row.mountain_id);
+        const mountainName = mountain?.name || row.mountain_id;
 
         // Get event creator info
         const { data: creator } = await supabase
-          .from('profiles')
+          .from('users')
           .select('display_name, username')
-          .eq('id', event.user_id)
+          .eq('id', row.user_id)
           .single();
 
         const organizerName = creator?.display_name || creator?.username || 'Unknown';
 
-        // Get all attendees who are going or maybe
-        const { data: attendees } = await supabase
-          .from('event_attendees')
-          .select('user_id')
-          .eq('event_id', event.id)
-          .in('status', ['going', 'maybe']);
+        // device_tokens is already provided by the RPC as an array
+        const deviceTokens: string[] = row.device_tokens || [];
 
-        if (!attendees || attendees.length === 0) {
-          console.log(`No attendees for event ${event.id}`);
+        if (deviceTokens.length === 0) {
+          console.log(`No push tokens for attendee in event ${row.event_id}`);
           continue;
         }
 
-        // Get push tokens for all attendees
-        const attendeeIds = attendees.map((a) => a.user_id);
+        // Send reminders to each device token
+        for (const deviceToken of deviceTokens) {
+          // Format departure time if present
+          let formattedTime: string | undefined;
+          if (row.departure_time) {
+            const [hours, minutes] = row.departure_time.split(':');
+            const hour = parseInt(hours, 10);
+            const h12 = hour % 12 === 0 ? 12 : hour % 12;
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            formattedTime = `${h12}:${minutes} ${ampm}`;
+          }
 
-        const { data: tokens } = await supabase
-          .from('push_notification_tokens')
-          .select('device_token, user_id, platform')
-          .in('user_id', attendeeIds)
-          .eq('is_active', true);
+          const result = await sendEventReminder(deviceToken, {
+            eventTitle: row.event_title,
+            eventId: row.event_id,
+            mountainName,
+            eventDate: row.event_date,
+            departureTime: formattedTime,
+            organizerName,
+          });
 
-        if (!tokens || tokens.length === 0) {
-          console.log(`No push tokens for event ${event.id} attendees`);
-          continue;
-        }
-
-        // Send reminders to each attendee
-        for (const token of tokens) {
-          if (token.platform === 'ios') {
-            // Format departure time if present
-            let formattedTime: string | undefined;
-            if (event.departure_time) {
-              const [hours, minutes] = event.departure_time.split(':');
-              const hour = parseInt(hours, 10);
-              const h12 = hour % 12 === 0 ? 12 : hour % 12;
-              const ampm = hour >= 12 ? 'PM' : 'AM';
-              formattedTime = `${h12}:${minutes} ${ampm}`;
-            }
-
-            const result = await sendEventReminder(token.device_token, {
-              eventTitle: event.title,
-              eventId: event.id,
-              mountainName,
-              eventDate: event.event_date,
-              departureTime: formattedTime,
-              organizerName,
-            });
-
-            if (result.success) {
-              totalRemindersSent++;
-            } else {
-              console.error(
-                `Failed to send reminder to ${token.device_token}: ${result.error}`
-              );
-            }
+          if (result.success) {
+            totalRemindersSent++;
+          } else {
+            console.error(
+              `Failed to send reminder to ${deviceToken}: ${result.error}`
+            );
           }
         }
 
-        // Mark event as reminded
-        await supabase
-          .from('events')
-          .update({ reminder_sent: true })
-          .eq('id', event.id);
-
-        processedEvents.push(event.id);
+        processedEvents.add(row.event_id);
       } catch (error) {
-        console.error(`Error processing event ${event.id}:`, error);
+        console.error(`Error processing reminder row for event ${row.event_id}:`, error);
       }
     }
 
     console.log(
-      `Event reminders complete. Sent ${totalRemindersSent} notifications for ${processedEvents.length} events.`
+      `Event reminders complete. Sent ${totalRemindersSent} notifications for ${processedEvents.size} events.`
     );
 
     return NextResponse.json({
       message: 'Event reminders processed',
-      eventsProcessed: processedEvents.length,
+      eventsProcessed: processedEvents.size,
       remindersSent: totalRemindersSent,
     });
   } catch (error) {

@@ -6,27 +6,17 @@
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withDualAuth } from '@/lib/auth';
 import { Errors, handleError } from '@/lib/errors';
 
-export async function POST(request: Request) {
+export const POST = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
-
-    // Check authentication
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return handleError(Errors.unauthorized('Not authenticated'));
-    }
-
     // Look up internal user profile ID
     const adminClient = createAdminClient();
     const { data: userProfile } = await adminClient
       .from('users')
       .select('id')
-      .eq('auth_user_id', user.id)
+      .eq('auth_user_id', authUser.userId)
       .single();
 
     if (!userProfile) {
@@ -70,10 +60,15 @@ export async function POST(request: Request) {
     const fileExt = file.name.split('.').pop();
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(7);
-    const fileName = `${user.id}/${mountainId}/${timestamp}-${randomStr}.${fileExt}`;
+    const fileName = `${authUser.userId}/${mountainId}/${timestamp}-${randomStr}.${fileExt}`;
+
+    // Use user-scoped client for storage (RLS on bucket) if Supabase auth, otherwise admin
+    const storageClient = authUser.authMethod === 'supabase'
+      ? await createClient()
+      : adminClient;
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await storageClient.storage
       .from('user-photos')
       .upload(fileName, file, {
         contentType: file.type,
@@ -89,7 +84,7 @@ export async function POST(request: Request) {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from('user-photos').getPublicUrl(fileName);
+    } = storageClient.storage.from('user-photos').getPublicUrl(fileName);
 
     // Create database record
     const { data: photoRecord, error: dbError } = await adminClient
@@ -112,7 +107,7 @@ export async function POST(request: Request) {
     if (dbError) {
       console.error('Database insert error:', dbError);
       // Clean up uploaded file
-      await supabase.storage.from('user-photos').remove([fileName]);
+      await storageClient.storage.from('user-photos').remove([fileName]);
       return handleError(Errors.databaseError());
     }
 
@@ -123,4 +118,4 @@ export async function POST(request: Request) {
   } catch (error) {
     return handleError(error, { endpoint: 'POST /api/photos/upload' });
   }
-}
+});

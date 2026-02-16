@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface CommentInputProps {
-  targetType: 'mountain' | 'webcam' | 'photo' | 'checkIn';
+  targetType: 'mountain' | 'webcam' | 'photo';
   targetId: string;
   parentCommentId?: string;
   onCommentAdded?: (comment: any) => void;

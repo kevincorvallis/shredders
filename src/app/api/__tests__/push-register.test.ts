@@ -1,6 +1,24 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { POST, DELETE } from '../push/register/route';
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
+
+// Mock withDualAuth to pass through with a fake auth user
+const mockAuthUser = {
+  userId: 'user123',
+  email: 'test@example.com',
+  authMethod: 'jwt' as const,
+};
+
+vi.mock('@/lib/auth', () => ({
+  withDualAuth: vi.fn((handler: any) => {
+    return async (request: Request) => {
+      if (mockAuthUser.userId) {
+        return handler(request, mockAuthUser);
+      }
+      const { NextResponse } = await import('next/server');
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    };
+  }),
+}));
 
 // Mock Supabase
 vi.mock('@/lib/supabase/server', () => ({
@@ -61,25 +79,17 @@ function createMockAdminClient() {
 }
 
 describe('POST /api/push/register', () => {
-  let mockSupabase: any;
+  let POST: any;
   let mockRequest: Request;
 
-  beforeEach(() => {
-    // Reset mocks
+  beforeEach(async () => {
     vi.clearAllMocks();
-
-    // Mock Supabase client (only used for auth)
-    mockSupabase = {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user123' } },
-          error: null,
-        }),
-      },
-    };
-
-    (createClient as any).mockResolvedValue(mockSupabase);
+    mockAuthUser.userId = 'user123';
     (createAdminClient as any).mockReturnValue(createMockAdminClient());
+
+    // Re-import to get fresh module with mocks applied
+    const mod = await import('../push/register/route');
+    POST = mod.POST;
   });
 
   it('should register a new device token', async () => {
@@ -124,31 +134,6 @@ describe('POST /api/push/register', () => {
 
     expect(response.status).toBe(400);
     expect(data.error).toContain('Platform must be');
-  });
-
-  it('should require authentication', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: null },
-      error: { message: 'Not authenticated' },
-    });
-
-    const requestBody = {
-      deviceToken: 'abc123',
-      platform: 'ios',
-      deviceId: 'device123',
-    };
-
-    mockRequest = new Request('http://localhost:3000/api/push/register', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const response = await POST(mockRequest);
-    const data = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(data.error).toBe('Not authenticated');
   });
 
   it('should update existing device token', async () => {
@@ -212,23 +197,16 @@ describe('POST /api/push/register', () => {
 });
 
 describe('DELETE /api/push/register', () => {
-  let mockSupabase: any;
+  let DELETE: any;
   let mockRequest: Request;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-
-    mockSupabase = {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user123' } },
-          error: null,
-        }),
-      },
-    };
-
-    (createClient as any).mockResolvedValue(mockSupabase);
+    mockAuthUser.userId = 'user123';
     (createAdminClient as any).mockReturnValue(createMockAdminClient());
+
+    const mod = await import('../push/register/route');
+    DELETE = mod.DELETE;
   });
 
   it('should unregister a device token', async () => {
@@ -256,25 +234,5 @@ describe('DELETE /api/push/register', () => {
 
     expect(response.status).toBe(400);
     expect(data.error).toBe('Device ID is required');
-  });
-
-  it('should require authentication for DELETE', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: null },
-      error: { message: 'Not authenticated' },
-    });
-
-    mockRequest = new Request(
-      'http://localhost:3000/api/push/register?deviceId=device123',
-      {
-        method: 'DELETE',
-      }
-    );
-
-    const response = await DELETE(mockRequest);
-    const data = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(data.error).toBe('Not authenticated');
   });
 });

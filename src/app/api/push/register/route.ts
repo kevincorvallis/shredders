@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
+import { withDualAuth } from '@/lib/auth';
+import { Errors, handleError } from '@/lib/errors';
 
 /**
  * POST /api/push/register
@@ -12,32 +14,18 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
  *   - appVersion: App version (optional)
  *   - osVersion: OS version (optional)
  */
-export async function POST(request: Request) {
+export const POST = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
-
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
-
     // Look up internal user profile ID
     const adminClient = createAdminClient();
     const { data: userProfile } = await adminClient
       .from('users')
       .select('id')
-      .eq('auth_user_id', user.id)
+      .eq('auth_user_id', authUser.userId)
       .single();
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 401 }
-      );
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
     const body = await request.json();
@@ -51,18 +39,12 @@ export async function POST(request: Request) {
 
     // Validate required fields
     if (!deviceToken || !platform || !deviceId) {
-      return NextResponse.json(
-        { error: 'Device token, platform, and device ID are required' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Device token, platform, and device ID are required']));
     }
 
     // Validate platform
     if (!['ios', 'web'].includes(platform)) {
-      return NextResponse.json(
-        { error: 'Platform must be "ios" or "web"' },
-        { status: 400 }
-      );
+      return handleError(Errors.validationFailed(['Platform must be "ios" or "web"']));
     }
 
     // Check if token already exists for this device
@@ -93,10 +75,7 @@ export async function POST(request: Request) {
 
       if (updateError) {
         console.error('Error updating token:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to update device token' },
-          { status: 500 }
-        );
+        return handleError(Errors.databaseError());
       }
 
       token = updated;
@@ -119,10 +98,7 @@ export async function POST(request: Request) {
 
       if (createError) {
         console.error('Error creating token:', createError);
-        return NextResponse.json(
-          { error: 'Failed to register device token' },
-          { status: 500 }
-        );
+        return handleError(Errors.databaseError());
       }
 
       token = created;
@@ -130,13 +106,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ token }, { status: existing ? 200 : 201 });
   } catch (error) {
-    console.error('Error in POST /api/push/register:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'POST /api/push/register' });
   }
-}
+});
 
 /**
  * DELETE /api/push/register
@@ -145,42 +117,25 @@ export async function POST(request: Request) {
  * Query params:
  *   - deviceId: Device ID (required)
  */
-export async function DELETE(request: Request) {
+export const DELETE = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
-
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
-
     // Look up internal user profile ID
     const adminClient = createAdminClient();
     const { data: userProfile } = await adminClient
       .from('users')
       .select('id')
-      .eq('auth_user_id', user.id)
+      .eq('auth_user_id', authUser.userId)
       .single();
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 401 }
-      );
+      return handleError(Errors.unauthorized('User profile not found'));
     }
 
     const { searchParams } = new URL(request.url);
     const deviceId = searchParams.get('deviceId');
 
     if (!deviceId) {
-      return NextResponse.json(
-        { error: 'Device ID is required' },
-        { status: 400 }
-      );
+      return handleError(Errors.missingField('deviceId'));
     }
 
     // Mark token as inactive instead of deleting
@@ -192,18 +147,11 @@ export async function DELETE(request: Request) {
 
     if (updateError) {
       console.error('Error deactivating token:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to unregister device token' },
-        { status: 500 }
-      );
+      return handleError(Errors.databaseError());
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/push/register:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleError(error, { endpoint: 'DELETE /api/push/register' });
   }
-}
+});

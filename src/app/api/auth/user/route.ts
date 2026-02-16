@@ -6,27 +6,20 @@
  * Update current user's profile
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { withDualAuth } from '@/lib/auth';
 import { Errors, handleError } from '@/lib/errors';
 
-export async function GET(request: Request) {
+export const GET = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
+    const adminClient = createAdminClient();
 
     // Get user profile from database
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = await adminClient
       .from('users')
       .select('*')
-      .eq('auth_user_id', user.id)
+      .eq('auth_user_id', authUser.userId)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -34,31 +27,19 @@ export async function GET(request: Request) {
       console.error('Error fetching user profile:', error);
     }
 
-    return NextResponse.json({
-      user,
-      profile,
-    });
+    return NextResponse.json({ profile });
   } catch (error) {
     return handleError(error, { endpoint: 'GET /api/auth/user' });
   }
-}
+});
 
-export async function PUT(request: Request) {
+export const PUT = withDualAuth(async (request, authUser) => {
   try {
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
+    const adminClient = createAdminClient();
     const updates = await request.json();
 
     // Update user profile
-    const { data, error } = await supabase
+    const { data, error } = await adminClient
       .from('users')
       .update({
         display_name: updates.displayName,
@@ -68,7 +49,7 @@ export async function PUT(request: Request) {
         notification_preferences: updates.notificationPreferences,
         updated_at: new Date().toISOString(),
       })
-      .eq('auth_user_id', user.id)
+      .eq('auth_user_id', authUser.userId)
       .select()
       .single();
 
@@ -84,4 +65,4 @@ export async function PUT(request: Request) {
   } catch (error) {
     return handleError(error, { endpoint: 'PUT /api/auth/user' });
   }
-}
+});
