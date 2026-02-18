@@ -8,8 +8,6 @@ import { getMountain } from '@shredders/shared';
  * Uses Supabase client for database operations
  */
 class PostgresScraperStorage {
-  private runId: string = '';
-
   /**
    * Get Supabase admin client (created fresh each time to avoid stale connections)
    */
@@ -51,20 +49,20 @@ class PostgresScraperStorage {
    * Start a new scraper run (for tracking)
    */
   async startRun(totalMountains: number, triggeredBy = 'manual'): Promise<string> {
-    this.runId = `run-${Date.now()}-${uuidv4().slice(0, 8)}`;
+    const runId = `run-${Date.now()}-${uuidv4().slice(0, 8)}`;
 
     try {
       const supabase = this.getClient();
       const { error } = await supabase.from('scraper_runs').insert({
-        run_id: this.runId,
+        run_id: runId,
         total_mountains: totalMountains,
         triggered_by: triggeredBy,
         status: 'running',
       });
 
       if (error) throw error;
-      console.log(`[Storage] Started scraper run: ${this.runId}`);
-      return this.runId;
+      console.log(`[Storage] Started scraper run: ${runId}`);
+      return runId;
     } catch (error) {
       console.error('[Storage] Failed to start run:', error);
       throw error;
@@ -74,8 +72,8 @@ class PostgresScraperStorage {
   /**
    * Complete a scraper run
    */
-  async completeRun(successful: number, failed: number, durationMs: number): Promise<void> {
-    if (!this.runId) return;
+  async completeRun(runId: string, successful: number, failed: number, durationMs: number): Promise<void> {
+    if (!runId) return;
 
     try {
       const supabase = this.getClient();
@@ -88,10 +86,10 @@ class PostgresScraperStorage {
           status: 'completed',
           completed_at: new Date().toISOString(),
         })
-        .eq('run_id', this.runId);
+        .eq('run_id', runId);
 
       if (error) throw error;
-      console.log(`[Storage] Completed run ${this.runId}: ${successful}/${successful + failed} successful`);
+      console.log(`[Storage] Completed run ${runId}: ${successful}/${successful + failed} successful`);
     } catch (error) {
       console.error('[Storage] Failed to complete run:', error);
     }
@@ -100,8 +98,8 @@ class PostgresScraperStorage {
   /**
    * Mark a scraper run as failed
    */
-  async failRun(errorMessage: string): Promise<void> {
-    if (!this.runId) return;
+  async failRun(runId: string, errorMessage: string): Promise<void> {
+    if (!runId) return;
 
     try {
       const supabase = this.getClient();
@@ -112,10 +110,10 @@ class PostgresScraperStorage {
           error_message: errorMessage,
           completed_at: new Date().toISOString(),
         })
-        .eq('run_id', this.runId);
+        .eq('run_id', runId);
 
       if (error) throw error;
-      console.error(`[Storage] Failed run ${this.runId}: ${errorMessage}`);
+      console.error(`[Storage] Failed run ${runId}: ${errorMessage}`);
     } catch (error) {
       console.error('[Storage] Failed to mark run as failed:', error);
     }
@@ -192,11 +190,11 @@ class PostgresScraperStorage {
    * Save scraper failure details
    * Silently fails if scraper_failures table doesn't exist
    */
-  async saveFail(mountainId: string, error: string, url: string): Promise<void> {
+  async saveFail(runId: string, mountainId: string, error: string, url: string): Promise<void> {
     try {
       const supabase = this.getClient();
       const { error: insertError } = await supabase.from('scraper_failures').insert({
-        run_id: this.runId,
+        run_id: runId,
         mountain_id: mountainId,
         error_message: error,
         source_url: url,

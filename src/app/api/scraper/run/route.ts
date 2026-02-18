@@ -11,6 +11,7 @@ import { sendScraperAlert } from '@/lib/alerts/scraper-alerts';
  * GET /api/scraper/run?batch=2  - Run batch 2 only (5 mountains)
  * GET /api/scraper/run?batch=3  - Run batch 3 only (5 mountains)
  *
+ * Requires CRON_SECRET via Authorization header or query param.
  * Batched scraping is recommended for Vercel to avoid function timeouts.
  * Each batch should complete in under 30 seconds.
  */
@@ -18,7 +19,24 @@ export async function GET(request: Request) {
   let runId: string | undefined;
 
   try {
+    // Verify authorization
     const { searchParams } = new URL(request.url);
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (cronSecret) {
+      const authHeader = request.headers.get('authorization');
+      const querySecret = searchParams.get('secret');
+      const isAuthorized =
+        authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret;
+
+      if (!isAuthorized) {
+        return NextResponse.json(
+          { success: false, error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+    }
+
     const batchParam = searchParams.get('batch');
     const batch = batchParam ? (parseInt(batchParam, 10) as 1 | 2 | 3) : null;
 
@@ -62,7 +80,7 @@ export async function GET(request: Request) {
       if (!result.success && result.error) {
         const config = getScraperConfig(mountainId);
         if (config) {
-          await scraperStorage.saveFail(mountainId, result.error, config.url);
+          await scraperStorage.saveFail(runId, mountainId, result.error, config.url);
         }
       }
     }
@@ -73,7 +91,7 @@ export async function GET(request: Request) {
     const failedCount = totalCount - successCount;
 
     // COMPLETE database tracking
-    await scraperStorage.completeRun(successCount, failedCount, duration);
+    await scraperStorage.completeRun(runId, successCount, failedCount, duration);
 
     // SEND alerts if performance is degraded or failed
     const successRate = totalCount > 0 ? (successCount / totalCount) * 100 : 0;
@@ -111,6 +129,7 @@ export async function GET(request: Request) {
     // FAIL database tracking
     if (runId) {
       await scraperStorage.failRun(
+        runId,
         error instanceof Error ? error.message : 'Unknown error'
       );
     }
