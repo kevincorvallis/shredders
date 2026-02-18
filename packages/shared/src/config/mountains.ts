@@ -646,7 +646,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#0066b3',
     website: 'https://www.whistlerblackcomb.com',
     logo: '/logos/whistler.png',
-    status: { isOpen: true, percentOpen: 90, liftsOpen: '35/37', runsOpen: '190/200', message: 'Excellent conditions!' },
     passType: 'epic',
   },
 
@@ -667,7 +666,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#d946ef',
     website: 'https://www.sunvalley.com',
     logo: '/logos/sunvalley.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'ikon',
   },
 
@@ -685,7 +683,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#fb923c',
     website: 'https://www.revelstokemountainresort.com',
     logo: '/logos/revelstoke.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'ikon',
   },
 
@@ -703,7 +700,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#4ade80',
     website: 'https://www.cypressmountain.com',
     logo: '/logos/cypress.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'ikon',
   },
 
@@ -721,7 +717,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#facc15',
     website: 'https://www.sunpeaksresort.com',
     logo: '/logos/sunpeaks.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'ikon',
   },
 
@@ -739,7 +734,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#c084fc',
     website: 'https://www.bigwhite.com',
     logo: '/logos/bigwhite.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'independent',
   },
 
@@ -760,7 +754,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#fb7185',
     website: 'https://www.brundage.com',
     logo: '/logos/brundage.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'independent',
   },
 
@@ -781,7 +774,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#38bdf8',
     website: 'https://anthonylakes.com',
     logo: '/logos/anthonylakes.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'independent',
   },
 
@@ -799,7 +791,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#fbbf24',
     website: 'https://www.redresort.com',
     logo: '/logos/red.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'ikon',
   },
 
@@ -817,7 +808,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#22d3ee',
     website: 'https://www.panoramaresort.com',
     logo: '/logos/panorama.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'ikon',
   },
 
@@ -835,7 +825,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#a78bfa',
     website: 'https://www.skisilverstar.com',
     logo: '/logos/silverstar.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'independent',
   },
 
@@ -853,7 +842,6 @@ export const mountains: Record<string, MountainConfig> = {
     color: '#34d399',
     website: 'https://www.apexresort.com',
     logo: '/logos/apex.png',
-    status: { isOpen: true, percentOpen: 0, liftsOpen: '0/0', runsOpen: '0/0', message: 'Status unavailable' },
     passType: 'independent',
   },
 };

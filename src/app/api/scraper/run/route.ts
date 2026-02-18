@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { scraperOrchestrator } from '@/lib/scraper/ScraperOrchestrator';
 import { scraperStorage } from '@/lib/scraper/storage-postgres';
-import { getScraperConfig, getConfigsByBatch } from '@/lib/scraper/configs';
+import { getScraperConfig, getConfigsByBatch, getAvailableBatches, getEnabledConfigs } from '@/lib/scraper/configs';
 import { sendScraperAlert } from '@/lib/alerts/scraper-alerts';
 
 /**
@@ -38,12 +38,12 @@ export async function GET(request: Request) {
     }
 
     const batchParam = searchParams.get('batch');
-    const batch = batchParam ? (parseInt(batchParam, 10) as 1 | 2 | 3) : null;
+    const batch = batchParam ? parseInt(batchParam, 10) : null;
 
     // Validate batch parameter
-    if (batch !== null && ![1, 2, 3].includes(batch)) {
+    if (batch !== null && !getAvailableBatches().includes(batch)) {
       return NextResponse.json(
-        { success: false, error: 'Invalid batch parameter. Must be 1, 2, or 3.' },
+        { success: false, error: `Invalid batch parameter. Must be one of: ${getAvailableBatches().join(', ')}` },
         { status: 400 }
       );
     }
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     // Determine how many mountains we're scraping
     const mountainCount = batch
       ? getConfigsByBatch(batch).length
-      : 15; // All mountains
+      : getEnabledConfigs().length;
 
     // START database tracking
     const triggeredBy = batch ? `cron-batch-${batch}` : 'manual';

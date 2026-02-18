@@ -243,6 +243,191 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
       status: '.conditions-header, .status',
     },
   },
+
+  // Idaho - Additional (Batch 4)
+  sunvalley: {
+    id: 'sunvalley',
+    name: 'Sun Valley Resort',
+    url: 'https://www.sunvalley.com',
+    dataUrl: 'https://www.onthesnow.com/idaho/sun-valley-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 4,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  brundage: {
+    id: 'brundage',
+    name: 'Brundage Mountain',
+    url: 'https://www.brundage.com',
+    dataUrl: 'https://www.onthesnow.com/idaho/brundage-mountain/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 4,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  // Oregon - Additional (Batch 4)
+  anthonylakes: {
+    id: 'anthonylakes',
+    name: 'Anthony Lakes Mountain Resort',
+    url: 'https://anthonylakes.com',
+    dataUrl: 'https://www.onthesnow.com/oregon/anthony-lakes/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 4,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  // Canada - BC (Batch 4)
+  whistler: {
+    id: 'whistler',
+    name: 'Whistler Blackcomb',
+    url: 'https://www.whistlerblackcomb.com',
+    dataUrl: 'https://www.onthesnow.com/british-columbia/whistler-blackcomb/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 4,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  revelstoke: {
+    id: 'revelstoke',
+    name: 'Revelstoke Mountain Resort',
+    url: 'https://www.revelstokemountainresort.com',
+    dataUrl: 'https://www.onthesnow.com/british-columbia/revelstoke-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 4,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  // Canada - BC (Batch 5)
+  cypress: {
+    id: 'cypress',
+    name: 'Cypress Mountain',
+    url: 'https://www.cypressmountain.com',
+    dataUrl: 'https://www.onthesnow.com/british-columbia/cypress-mountain/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 5,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  sunpeaks: {
+    id: 'sunpeaks',
+    name: 'Sun Peaks Resort',
+    url: 'https://www.sunpeaksresort.com',
+    dataUrl: 'https://www.onthesnow.com/british-columbia/sun-peaks-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 5,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  bigwhite: {
+    id: 'bigwhite',
+    name: 'Big White Ski Resort',
+    url: 'https://www.bigwhite.com',
+    dataUrl: 'https://www.onthesnow.com/british-columbia/big-white/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 5,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  red: {
+    id: 'red',
+    name: 'RED Mountain Resort',
+    url: 'https://www.redresort.com',
+    dataUrl: 'https://www.onthesnow.com/british-columbia/red-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 5,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  panorama: {
+    id: 'panorama',
+    name: 'Panorama Mountain Resort',
+    url: 'https://www.panoramaresort.com',
+    dataUrl: 'https://www.onthesnow.com/british-columbia/panorama-mountain-village/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 5,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  // Canada - BC (Batch 6)
+  silverstar: {
+    id: 'silverstar',
+    name: 'SilverStar Mountain Resort',
+    url: 'https://www.skisilverstar.com',
+    dataUrl: 'https://www.onthesnow.com/british-columbia/silver-star/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 6,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  apex: {
+    id: 'apex',
+    name: 'Apex Mountain Resort',
+    url: 'https://www.apexresort.com',
+    dataUrl: 'https://www.onthesnow.com/british-columbia/apex-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 6,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
 };
 
 /**
@@ -272,7 +457,7 @@ export function getConfigsByType(type: 'html' | 'api' | 'dynamic'): ScraperConfi
  * Get scraper configs by batch number
  * Used for distributed scraping to avoid Vercel function timeouts
  */
-export function getConfigsByBatch(batch: 1 | 2 | 3): ScraperConfig[] {
+export function getConfigsByBatch(batch: number): ScraperConfig[] {
   return Object.values(scraperConfigs).filter(
     (config) => config.enabled && config.batch === batch
   );
@@ -281,12 +466,12 @@ export function getConfigsByBatch(batch: 1 | 2 | 3): ScraperConfig[] {
 /**
  * Get all batch numbers that have enabled configs
  */
-export function getAvailableBatches(): (1 | 2 | 3)[] {
-  const batches = new Set<1 | 2 | 3>();
+export function getAvailableBatches(): number[] {
+  const batches = new Set<number>();
   for (const config of Object.values(scraperConfigs)) {
     if (config.enabled && config.batch) {
       batches.add(config.batch);
     }
   }
-  return Array.from(batches).sort();
+  return Array.from(batches).sort((a, b) => a - b);
 }

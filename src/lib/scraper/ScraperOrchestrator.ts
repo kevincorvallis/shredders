@@ -142,7 +142,7 @@ export class ScraperOrchestrator {
    * Scrape mountains by batch number
    * Used for distributed scraping to avoid Vercel function timeouts
    */
-  async scrapeBatch(batch: 1 | 2 | 3): Promise<Map<string, ScraperResult>> {
+  async scrapeBatch(batch: number): Promise<Map<string, ScraperResult>> {
     const configs = getConfigsByBatch(batch);
     console.log(`[ScraperOrchestrator] Starting batch ${batch} scrape of ${configs.length} mountains...`);
     const startTime = Date.now();

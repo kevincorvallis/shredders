@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { scraperOrchestrator } from '@/lib/scraper/ScraperOrchestrator';
-import { getConfigsByBatch } from '@/lib/scraper/configs';
+import { getConfigsByBatch, getAvailableBatches } from '@/lib/scraper/configs';
 
 /**
  * Simple scraper endpoint that doesn't require database
@@ -12,12 +12,12 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const batchParam = searchParams.get('batch');
-    const batch = batchParam ? (parseInt(batchParam, 10) as 1 | 2 | 3) : null;
+    const batch = batchParam ? parseInt(batchParam, 10) : null;
 
     // Validate batch parameter
-    if (batch === null || ![1, 2, 3].includes(batch)) {
+    if (batch === null || !getAvailableBatches().includes(batch)) {
       return NextResponse.json(
-        { success: false, error: 'Invalid batch parameter. Must be 1, 2, or 3.' },
+        { success: false, error: `Invalid batch parameter. Must be one of: ${getAvailableBatches().join(', ')}` },
         { status: 400 }
       );
     }
