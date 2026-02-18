@@ -5,6 +5,7 @@ import SwiftUI
 struct MountainsTabView: View {
     var viewModel: MountainSelectionViewModel
     private var favoritesManager: FavoritesService { FavoritesService.shared }
+    @State private var searchText = ""
     @State private var selectedMode: MountainViewMode = .conditions
     @Namespace private var namespace
 
@@ -15,30 +16,35 @@ struct MountainsTabView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Segmented mode picker
-                modePicker
-                    .padding(.horizontal)
-                    .padding(.top, .spacingS)
+                if searchText.isEmpty {
+                    // Segmented mode picker
+                    modePicker
+                        .padding(.horizontal)
+                        .padding(.top, .spacingS)
 
-                // Content based on selected mode
-                TabView(selection: $selectedMode) {
-                    ConditionsView(viewModel: viewModel, favoritesManager: favoritesManager)
-                        .tag(MountainViewMode.conditions)
+                    // Content based on selected mode
+                    TabView(selection: $selectedMode) {
+                        ConditionsView(viewModel: viewModel, favoritesManager: favoritesManager)
+                            .tag(MountainViewMode.conditions)
 
-                    PlannerView(viewModel: viewModel, favoritesManager: favoritesManager)
-                        .tag(MountainViewMode.planner)
+                        PlannerView(viewModel: viewModel, favoritesManager: favoritesManager)
+                            .tag(MountainViewMode.planner)
 
-                    ExploreView(viewModel: viewModel, favoritesManager: favoritesManager)
-                        .tag(MountainViewMode.explore)
+                        ExploreView(viewModel: viewModel, favoritesManager: favoritesManager)
+                            .tag(MountainViewMode.explore)
 
-                    MyPassView(viewModel: viewModel, favoritesManager: favoritesManager)
-                        .tag(MountainViewMode.myPass)
+                        MyPassView(viewModel: viewModel, favoritesManager: favoritesManager)
+                            .tag(MountainViewMode.myPass)
+                    }
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+                } else {
+                    searchResultsView
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Mountains")
             .navigationBarTitleDisplayMode(.large)
+            .searchable(text: $searchText, prompt: "Search mountains...")
             .enhancedRefreshable {
                 await viewModel.loadMountains()
             }
@@ -47,6 +53,67 @@ struct MountainsTabView: View {
                     await viewModel.loadMountains()
                 }
             }
+        }
+    }
+
+    private var searchResults: [Mountain] {
+        viewModel.mountains.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.shortName.localizedCaseInsensitiveContains(searchText) ||
+            $0.region.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    private var searchResultsView: some View {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                if searchResults.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("No mountains found")
+                            .font(.headline)
+                        Text("Try a different search term")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+                } else {
+                    Text("\(searchResults.count) results")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+
+                    ForEach(searchResults) { mountain in
+                        NavigationLink {
+                            MountainDetailView(mountain: mountain)
+                        } label: {
+                            ConditionMountainCard(
+                                mountain: mountain,
+                                conditions: viewModel.getConditions(for: mountain),
+                                score: viewModel.getScore(for: mountain),
+                                distance: viewModel.getDistance(to: mountain),
+                                isFavorite: favoritesManager.isFavorite(mountain.id),
+                                onFavoriteToggle: { toggleSearchFavorite(mountain.id) }
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal)
+                    }
+                }
+            }
+            .padding(.top)
+        }
+    }
+
+    private func toggleSearchFavorite(_ id: String) {
+        if favoritesManager.isFavorite(id) {
+            favoritesManager.remove(id)
+        } else {
+            _ = favoritesManager.add(id)
         }
     }
 
