@@ -16,26 +16,16 @@ const s3Client = new S3Client({
  * Returns GeoJSON data for ski lifts at the specified mountain.
  * Data is sourced from OpenStreetMap via OpenSnowMap and stored in S3.
  *
- * @param mountainId - Mountain identifier (e.g., 'crystal', 'baker', 'stevens', 'snoqualmie')
+ * @param mountainId - Mountain identifier (e.g., 'crystal', 'baker', 'vail')
  * @returns GeoJSON FeatureCollection with lift polylines
  */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ mountainId: string }> }
 ) {
+  const { mountainId } = await params;
+
   try {
-    const { mountainId } = await params;
-
-    // Validate mountain ID
-    const validMountains = ['baker', 'stevens', 'crystal', 'snoqualmie', 'whitepass', 'missionridge', 'fortynine', 'lookout'];
-    if (!validMountains.includes(mountainId)) {
-      return NextResponse.json(
-        { error: `Invalid mountain ID: ${mountainId}` },
-        { status: 400 }
-      );
-    }
-
-    // Fetch from S3 using AWS SDK
     const command = new GetObjectCommand({
       Bucket: 'shredders-lambda-deployments',
       Key: `ski-data/lifts/${mountainId}.geojson`,
@@ -43,7 +33,6 @@ export async function GET(
 
     const response = await s3Client.send(command);
 
-    // Stream the response body to string
     const bodyString = await response.Body?.transformToString();
     if (!bodyString) {
       throw new Error('Empty response from S3');
@@ -51,7 +40,6 @@ export async function GET(
 
     const geojson = JSON.parse(bodyString);
 
-    // Add CORS headers for potential direct access
     return NextResponse.json(geojson, {
       headers: {
         'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
@@ -62,12 +50,11 @@ export async function GET(
   } catch (error: any) {
     console.error('Error fetching lift data:', error);
 
-    // Handle specific S3 errors
     if (error.name === 'NoSuchKey') {
       return NextResponse.json(
         {
           error: 'Lifts not found',
-          message: `No lift data available for ${await (await params).mountainId}. The mountain may not have lift data in OpenStreetMap yet.`
+          message: `No lift data available for ${mountainId}. The mountain may not have lift data in OpenStreetMap yet.`
         },
         { status: 404 }
       );
