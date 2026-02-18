@@ -3,7 +3,7 @@ import { getAllMountains, getMountainsByRegion } from '@shredders/shared';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const region = searchParams.get('region') as 'washington' | 'oregon' | 'idaho' | 'canada' | 'utah' | null;
+  const region = searchParams.get('region') as 'washington' | 'oregon' | 'idaho' | 'canada' | 'utah' | 'colorado' | 'california' | 'wyoming' | 'montana' | 'vermont' | 'newmexico' | null;
 
   const mountains = region ? getMountainsByRegion(region) : getAllMountains();
 

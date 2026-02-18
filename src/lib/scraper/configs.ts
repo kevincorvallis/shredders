@@ -550,6 +550,280 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
       status: '.conditions-header, .status',
     },
   },
+
+  // Colorado - Epic (Batch 9)
+  vail: {
+    id: 'vail',
+    name: 'Vail Mountain',
+    url: 'https://www.vail.com',
+    dataUrl: 'https://www.onthesnow.com/colorado/vail-mountain/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 9,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  breckenridge: {
+    id: 'breckenridge',
+    name: 'Breckenridge Ski Resort',
+    url: 'https://www.breckenridge.com',
+    dataUrl: 'https://www.onthesnow.com/colorado/breckenridge-ski-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 9,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  beavercreek: {
+    id: 'beavercreek',
+    name: 'Beaver Creek Resort',
+    url: 'https://www.beavercreek.com',
+    dataUrl: 'https://www.onthesnow.com/colorado/beaver-creek-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 9,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  keystone: {
+    id: 'keystone',
+    name: 'Keystone Resort',
+    url: 'https://www.keystoneresort.com',
+    dataUrl: 'https://www.onthesnow.com/colorado/keystone-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 9,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  crestedbutte: {
+    id: 'crestedbutte',
+    name: 'Crested Butte Mountain Resort',
+    url: 'https://www.skicb.com',
+    dataUrl: 'https://www.onthesnow.com/colorado/crested-butte-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 9,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  // Colorado - Ikon + California - Epic (Batch 10)
+  aspen: {
+    id: 'aspen',
+    name: 'Aspen Snowmass',
+    url: 'https://www.aspensnowmass.com',
+    dataUrl: 'https://www.onthesnow.com/colorado/aspen-snowmass/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 10,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  steamboat: {
+    id: 'steamboat',
+    name: 'Steamboat Resort',
+    url: 'https://www.steamboat.com',
+    dataUrl: 'https://www.onthesnow.com/colorado/steamboat/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 10,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  winterpark: {
+    id: 'winterpark',
+    name: 'Winter Park Resort',
+    url: 'https://www.winterparkresort.com',
+    dataUrl: 'https://www.onthesnow.com/colorado/winter-park-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 10,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  heavenly: {
+    id: 'heavenly',
+    name: 'Heavenly Mountain Resort',
+    url: 'https://www.skiheavenly.com',
+    dataUrl: 'https://www.onthesnow.com/california/heavenly-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 10,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  northstar: {
+    id: 'northstar',
+    name: 'Northstar California',
+    url: 'https://www.northstarcalifornia.com',
+    dataUrl: 'https://www.onthesnow.com/california/northstar-california/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 10,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  // California - Remaining + WY + MT (Batch 11)
+  kirkwood: {
+    id: 'kirkwood',
+    name: 'Kirkwood Mountain Resort',
+    url: 'https://www.kirkwood.com',
+    dataUrl: 'https://www.onthesnow.com/california/kirkwood-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 11,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  palisades: {
+    id: 'palisades',
+    name: 'Palisades Tahoe',
+    url: 'https://www.palisadestahoe.com',
+    dataUrl: 'https://www.onthesnow.com/california/palisades-tahoe/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 11,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  mammoth: {
+    id: 'mammoth',
+    name: 'Mammoth Mountain',
+    url: 'https://www.mammothmountain.com',
+    dataUrl: 'https://www.onthesnow.com/california/mammoth-mountain/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 11,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  jacksonhole: {
+    id: 'jacksonhole',
+    name: 'Jackson Hole Mountain Resort',
+    url: 'https://www.jacksonhole.com',
+    dataUrl: 'https://www.onthesnow.com/wyoming/jackson-hole-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 11,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  bigsky: {
+    id: 'bigsky',
+    name: 'Big Sky Resort',
+    url: 'https://www.bigskyresort.com',
+    dataUrl: 'https://www.onthesnow.com/montana/big-sky-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 11,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  // Vermont + New Mexico (Batch 12)
+  stowe: {
+    id: 'stowe',
+    name: 'Stowe Mountain Resort',
+    url: 'https://www.stowe.com',
+    dataUrl: 'https://www.onthesnow.com/vermont/stowe-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 12,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  killington: {
+    id: 'killington',
+    name: 'Killington Resort',
+    url: 'https://www.killington.com',
+    dataUrl: 'https://www.onthesnow.com/vermont/killington-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 12,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  taos: {
+    id: 'taos',
+    name: 'Taos Ski Valley',
+    url: 'https://www.skitaos.com',
+    dataUrl: 'https://www.onthesnow.com/new-mexico/taos-ski-valley/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 12,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
 };
 
 /**

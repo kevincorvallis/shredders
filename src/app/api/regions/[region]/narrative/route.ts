@@ -14,6 +14,12 @@ const REGION_NAMES: Record<string, string> = {
   idaho: 'Idaho',
   canada: 'British Columbia',
   utah: 'Utah',
+  colorado: 'Colorado',
+  california: 'California',
+  wyoming: 'Wyoming',
+  montana: 'Montana',
+  vermont: 'Vermont',
+  newmexico: 'New Mexico',
   'pnw-north': 'PNW North',
   'pnw-central': 'PNW Central',
   'pnw-south': 'PNW South',
@@ -26,7 +32,7 @@ const SUBREGIONS: Record<string, string[]> = {
   'pnw-south': ['meadows', 'timberline', 'bachelor', 'hoodoo', 'willamette'],
 };
 
-type ValidRegion = 'washington' | 'oregon' | 'idaho' | 'canada' | 'utah';
+type ValidRegion = 'washington' | 'oregon' | 'idaho' | 'canada' | 'utah' | 'colorado' | 'california' | 'wyoming' | 'montana' | 'vermont' | 'newmexico';
 
 export interface RegionalNarrativeResponse {
   region: string;
@@ -56,7 +62,7 @@ export async function GET(
   const { region } = await params;
 
   // Validate region
-  const isValidRegion = ['washington', 'oregon', 'idaho', 'canada', 'utah'].includes(region);
+  const isValidRegion = ['washington', 'oregon', 'idaho', 'canada', 'utah', 'colorado', 'california', 'wyoming', 'montana', 'vermont', 'newmexico'].includes(region);
   const isValidSubregion = region in SUBREGIONS;
 
   if (!isValidRegion && !isValidSubregion) {
