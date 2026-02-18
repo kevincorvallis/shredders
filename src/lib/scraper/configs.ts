@@ -428,6 +428,128 @@ export const scraperConfigs: Record<string, ScraperConfig> = {
       status: '.conditions-header, .status',
     },
   },
+
+  // Utah - Wasatch (Batch 7)
+  parkcity: {
+    id: 'parkcity',
+    name: 'Park City Mountain',
+    url: 'https://www.parkcitymountain.com',
+    dataUrl: 'https://www.onthesnow.com/utah/park-city-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 7,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  snowbird: {
+    id: 'snowbird',
+    name: 'Snowbird',
+    url: 'https://www.snowbird.com',
+    dataUrl: 'https://www.onthesnow.com/utah/snowbird/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 7,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  alta: {
+    id: 'alta',
+    name: 'Alta Ski Area',
+    url: 'https://www.alta.com',
+    dataUrl: 'https://www.onthesnow.com/utah/alta-ski-area/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 7,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  brighton: {
+    id: 'brighton',
+    name: 'Brighton Resort',
+    url: 'https://brightonresort.com',
+    dataUrl: 'https://www.onthesnow.com/utah/brighton-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 7,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  solitude: {
+    id: 'solitude',
+    name: 'Solitude Mountain Resort',
+    url: 'https://www.solitudemountain.com',
+    dataUrl: 'https://www.onthesnow.com/utah/solitude-mountain-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 7,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  // Utah - Additional (Batch 8)
+  deervalley: {
+    id: 'deervalley',
+    name: 'Deer Valley Resort',
+    url: 'https://www.deervalley.com',
+    dataUrl: 'https://www.onthesnow.com/utah/deer-valley-resort/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 8,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  snowbasin: {
+    id: 'snowbasin',
+    name: 'Snowbasin Resort',
+    url: 'https://www.snowbasin.com',
+    dataUrl: 'https://www.onthesnow.com/utah/snowbasin/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 8,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
+
+  powdermountain: {
+    id: 'powdermountain',
+    name: 'Powder Mountain',
+    url: 'https://www.powdermountain.com',
+    dataUrl: 'https://www.onthesnow.com/utah/powder-mountain/skireport',
+    type: 'html',
+    enabled: true,
+    batch: 8,
+    selectors: {
+      liftsOpen: '[data-testid="lifts-status"], .lift-status',
+      runsOpen: '[data-testid="trails-status"], .trail-status',
+      status: '.conditions-header, .status',
+    },
+  },
 };
 
 /**

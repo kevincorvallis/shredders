@@ -25,6 +25,7 @@ const REPRESENTATIVE_MOUNTAINS = [
   'bachelor', // OR Central
   'schweitzer', // ID
   'whistler', // BC
+  'snowbird', // UT
 ];
 
 export async function GET(request: Request) {
@@ -37,14 +38,14 @@ export async function GET(request: Request) {
 
     if (region) {
       // Filter by region
-      const validRegions = ['washington', 'oregon', 'idaho', 'canada'];
+      const validRegions = ['washington', 'oregon', 'idaho', 'canada', 'utah'];
       if (!validRegions.includes(region)) {
         return NextResponse.json(
           { error: `Invalid region: ${region}. Valid regions: ${validRegions.join(', ')}` },
           { status: 400 }
         );
       }
-      mountainsToAnalyze = getMountainsByRegion(region as 'washington' | 'oregon' | 'idaho' | 'canada');
+      mountainsToAnalyze = getMountainsByRegion(region as 'washington' | 'oregon' | 'idaho' | 'canada' | 'utah');
     } else {
       // All mountains
       mountainsToAnalyze = getAllMountains();

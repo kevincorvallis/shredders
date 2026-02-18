@@ -8,6 +8,7 @@ const REGION_NAMES: Record<string, string> = {
   oregon: 'Oregon',
   idaho: 'Idaho',
   canada: 'British Columbia',
+  utah: 'Utah',
   'pnw-north': 'PNW North (Baker, Stevens, Whistler)',
   'pnw-central': 'PNW Central (Crystal, Snoqualmie, White Pass)',
   'pnw-south': 'PNW South (Hood, Bachelor)',
@@ -20,7 +21,7 @@ const SUBREGIONS: Record<string, string[]> = {
   'pnw-south': ['meadows', 'timberline', 'bachelor', 'hoodoo', 'willamette'],
 };
 
-type ValidRegion = 'washington' | 'oregon' | 'idaho' | 'canada';
+type ValidRegion = 'washington' | 'oregon' | 'idaho' | 'canada' | 'utah';
 
 export async function GET(
   request: Request,
@@ -29,7 +30,7 @@ export async function GET(
   const { region } = await params;
 
   // Check if it's a valid region
-  const isValidRegion = ['washington', 'oregon', 'idaho', 'canada'].includes(region);
+  const isValidRegion = ['washington', 'oregon', 'idaho', 'canada', 'utah'].includes(region);
   const isValidSubregion = region in SUBREGIONS;
 
   if (!isValidRegion && !isValidSubregion) {
@@ -55,6 +56,7 @@ export async function GET(
         ...getMountainsByRegion('oregon'),
         ...getMountainsByRegion('idaho'),
         ...getMountainsByRegion('canada'),
+        ...getMountainsByRegion('utah'),
       ];
       mountains = allMountains.filter(m => SUBREGIONS[region].includes(m.id));
     } else {

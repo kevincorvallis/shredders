@@ -19,7 +19,7 @@ export interface MountainConfig {
     base: number;
     summit: number;
   };
-  region: 'washington' | 'oregon' | 'idaho' | 'canada';
+  region: 'washington' | 'oregon' | 'idaho' | 'canada' | 'utah';
   snotel?: {
     stationId: string;
     stationName: string;
@@ -844,6 +844,167 @@ export const mountains: Record<string, MountainConfig> = {
     logo: '/logos/apex.png',
     passType: 'independent',
   },
+
+  // Utah
+  parkcity: {
+    id: 'parkcity',
+    name: 'Park City Mountain',
+    shortName: 'Park City',
+    location: { lat: 40.6508, lng: -111.5075 },
+    elevation: { base: 6800, summit: 10026 },
+    region: 'utah',
+    snotel: {
+      stationId: '814:UT:SNTL',
+      stationName: 'Thaynes Canyon',
+    },
+    noaa: { gridOffice: 'SLC', gridX: 113, gridY: 169 },
+    webcams: [],
+    webcamPageUrl: 'https://www.parkcitymountain.com/the-mountain/webcams.aspx',
+    color: '#2563eb',
+    website: 'https://www.parkcitymountain.com',
+    logo: '/logos/parkcity.png',
+    passType: 'epic',
+  },
+
+  snowbird: {
+    id: 'snowbird',
+    name: 'Snowbird',
+    shortName: 'Snowbird',
+    location: { lat: 40.5756, lng: -111.6561 },
+    elevation: { base: 7760, summit: 11000 },
+    region: 'utah',
+    snotel: {
+      stationId: '766:UT:SNTL',
+      stationName: 'Snowbird',
+    },
+    noaa: { gridOffice: 'SLC', gridX: 107, gridY: 166 },
+    webcams: [],
+    webcamPageUrl: 'https://www.snowbird.com/mountain-report/',
+    color: '#0891b2',
+    website: 'https://www.snowbird.com',
+    logo: '/logos/snowbird.png',
+    passType: 'ikon',
+  },
+
+  alta: {
+    id: 'alta',
+    name: 'Alta Ski Area',
+    shortName: 'Alta',
+    location: { lat: 40.5808, lng: -111.6372 },
+    elevation: { base: 8530, summit: 11068 },
+    region: 'utah',
+    snotel: {
+      stationId: '766:UT:SNTL',
+      stationName: 'Snowbird',
+    },
+    noaa: { gridOffice: 'SLC', gridX: 108, gridY: 166 },
+    webcams: [],
+    webcamPageUrl: 'https://www.alta.com/conditions',
+    color: '#1d4ed8',
+    website: 'https://www.alta.com',
+    logo: '/logos/alta.png',
+    passType: 'ikon',
+  },
+
+  brighton: {
+    id: 'brighton',
+    name: 'Brighton Resort',
+    shortName: 'Brighton',
+    location: { lat: 40.5987, lng: -111.5833 },
+    elevation: { base: 8755, summit: 10500 },
+    region: 'utah',
+    snotel: {
+      stationId: '366:UT:SNTL',
+      stationName: 'Brighton',
+    },
+    noaa: { gridOffice: 'SLC', gridX: 110, gridY: 167 },
+    webcams: [],
+    webcamPageUrl: 'https://brightonresort.com/conditions',
+    color: '#16a34a',
+    website: 'https://brightonresort.com',
+    logo: '/logos/brighton.png',
+    passType: 'ikon',
+  },
+
+  solitude: {
+    id: 'solitude',
+    name: 'Solitude Mountain Resort',
+    shortName: 'Solitude',
+    location: { lat: 40.6151, lng: -111.5889 },
+    elevation: { base: 7994, summit: 10488 },
+    region: 'utah',
+    snotel: {
+      stationId: '366:UT:SNTL',
+      stationName: 'Brighton',
+    },
+    noaa: { gridOffice: 'SLC', gridX: 110, gridY: 168 },
+    webcams: [],
+    webcamPageUrl: 'https://www.solitudemountain.com/conditions',
+    color: '#7c3aed',
+    website: 'https://www.solitudemountain.com',
+    logo: '/logos/solitude.png',
+    passType: 'ikon',
+  },
+
+  deervalley: {
+    id: 'deervalley',
+    name: 'Deer Valley Resort',
+    shortName: 'Deer Valley',
+    location: { lat: 40.6151, lng: -111.4870 },
+    elevation: { base: 6530, summit: 9570 },
+    region: 'utah',
+    snotel: {
+      stationId: '814:UT:SNTL',
+      stationName: 'Thaynes Canyon',
+    },
+    noaa: { gridOffice: 'SLC', gridX: 113, gridY: 167 },
+    webcams: [],
+    webcamPageUrl: 'https://www.deervalley.com/explore-the-mountain/webcams',
+    color: '#b45309',
+    website: 'https://www.deervalley.com',
+    logo: '/logos/deervalley.png',
+    passType: 'ikon',
+  },
+
+  snowbasin: {
+    id: 'snowbasin',
+    name: 'Snowbasin Resort',
+    shortName: 'Snowbasin',
+    location: { lat: 41.2160, lng: -111.8570 },
+    elevation: { base: 6391, summit: 9350 },
+    region: 'utah',
+    snotel: {
+      stationId: '332:UT:SNTL',
+      stationName: 'Ben Lomond Peak',
+    },
+    noaa: { gridOffice: 'SLC', gridX: 104, gridY: 196 },
+    webcams: [],
+    webcamPageUrl: 'https://www.snowbasin.com/mountain-report',
+    color: '#be123c',
+    website: 'https://www.snowbasin.com',
+    logo: '/logos/snowbasin.png',
+    passType: 'independent',
+  },
+
+  powdermountain: {
+    id: 'powdermountain',
+    name: 'Powder Mountain',
+    shortName: 'Powder Mtn',
+    location: { lat: 41.3800, lng: -111.7803 },
+    elevation: { base: 6900, summit: 9422 },
+    region: 'utah',
+    snotel: {
+      stationId: '1300:UT:SNTL',
+      stationName: 'Powder Mountain',
+    },
+    noaa: { gridOffice: 'SLC', gridX: 108, gridY: 203 },
+    webcams: [],
+    webcamPageUrl: 'https://www.powdermountain.com/mountain-report',
+    color: '#0d9488',
+    website: 'https://www.powdermountain.com',
+    logo: '/logos/powdermountain.png',
+    passType: 'independent',
+  },
 };
 
 export function getMountain(id: string): MountainConfig | undefined {
@@ -854,7 +1015,7 @@ export function getAllMountains(): MountainConfig[] {
   return Object.values(mountains);
 }
 
-export function getMountainsByRegion(region: 'washington' | 'oregon' | 'idaho' | 'canada'): MountainConfig[] {
+export function getMountainsByRegion(region: 'washington' | 'oregon' | 'idaho' | 'canada' | 'utah'): MountainConfig[] {
   return getAllMountains().filter((m) => m.region === region);
 }
 

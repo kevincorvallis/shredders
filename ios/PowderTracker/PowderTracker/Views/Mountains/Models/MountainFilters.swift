@@ -111,6 +111,7 @@ enum MountainRegion: String, CaseIterable, Identifiable {
     case oregon = "oregon"
     case idaho = "idaho"
     case britishColumbia = "british columbia"
+    case utah = "utah"
     case montana = "montana"
     case california = "california"
 
@@ -122,6 +123,7 @@ enum MountainRegion: String, CaseIterable, Identifiable {
         case .oregon: return "Oregon"
         case .idaho: return "Idaho"
         case .britishColumbia: return "British Columbia"
+        case .utah: return "Utah"
         case .montana: return "Montana"
         case .california: return "California"
         }
@@ -133,6 +135,7 @@ enum MountainRegion: String, CaseIterable, Identifiable {
         case .oregon: return "o.square.fill"
         case .idaho: return "i.square.fill"
         case .britishColumbia: return "b.square.fill"
+        case .utah: return "u.square.fill"
         case .montana: return "m.square.fill"
         case .california: return "c.square.fill"
         }
@@ -144,6 +147,7 @@ enum MountainRegion: String, CaseIterable, Identifiable {
         case .oregon: return .green
         case .idaho: return .orange
         case .britishColumbia: return .red
+        case .utah: return .indigo
         case .montana: return .purple
         case .california: return .yellow
         }
