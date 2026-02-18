@@ -159,40 +159,46 @@ struct TodayView: View {
 
     @ViewBuilder
     private var todaysPickSection: some View {
-        let userProfile = AuthService.shared.userProfile
-        let rankings = viewModel.getPersonalizedRanking(userProfile: userProfile)
-
-        if let topRanking = rankings.first,
-           let data = viewModel.data(for: topRanking.mountain.id) {
-            let powderScore = data.powderScore
-            let reasons = topRanking.reasons.isEmpty
-                ? viewModel.getWhyBestReasons(for: topRanking.mountain.id)
-                : topRanking.reasons
-
-            TodaysPickCard(
-                mountain: topRanking.mountain,
-                powderScore: powderScore,
-                data: data,
-                reasons: reasons,
-                onTap: {
-                    selectedMountain = topRanking.mountain
-                }
-            )
-        } else if let bestPick = viewModel.cachedBestPowder {
-            let reasons = viewModel.getWhyBestReasons(for: bestPick.mountain.id)
-
-            TodaysPickCard(
-                mountain: bestPick.mountain,
-                powderScore: bestPick.score,
-                data: bestPick.data,
-                reasons: reasons,
-                onTap: {
-                    selectedMountain = bestPick.mountain
-                }
-            )
-        } else {
+        if favoritesManager.favoriteIds.isEmpty {
+            // No favorites yet — show onboarding prompt
             emptyPickState
+        } else if viewModel.shouldShowTodaysPick() {
+            // Conditions are noteworthy — show the pick
+            let userProfile = AuthService.shared.userProfile
+            let rankings = viewModel.getPersonalizedRanking(userProfile: userProfile)
+
+            if let topRanking = rankings.first,
+               let data = viewModel.data(for: topRanking.mountain.id) {
+                let powderScore = data.powderScore
+                let reasons = topRanking.reasons.isEmpty
+                    ? viewModel.getWhyBestReasons(for: topRanking.mountain.id)
+                    : topRanking.reasons
+
+                TodaysPickCard(
+                    mountain: topRanking.mountain,
+                    powderScore: powderScore,
+                    data: data,
+                    reasons: reasons,
+                    onTap: {
+                        selectedMountain = topRanking.mountain
+                    }
+                )
+            } else if let bestPick = viewModel.cachedBestPowder {
+                let reasons = viewModel.getWhyBestReasons(for: bestPick.mountain.id)
+
+                TodaysPickCard(
+                    mountain: bestPick.mountain,
+                    powderScore: bestPick.score,
+                    data: bestPick.data,
+                    reasons: reasons,
+                    onTap: {
+                        selectedMountain = bestPick.mountain
+                    }
+                )
+            }
+            // else: relevance check passed but data not ready yet — show nothing
         }
+        // else: conditions are unremarkable — section is completely absent
     }
 
     private var emptyPickState: some View {
@@ -219,19 +225,17 @@ struct TodayView: View {
 
     // MARK: - Forecast Chart Section
 
+    @ViewBuilder
     private var forecastChartSection: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            let favoritesWithForecast = viewModel.getFavoritesWithForecast()
+        let favoritesWithForecast = viewModel.getFavoritesWithForecast()
 
-            if !favoritesWithForecast.isEmpty {
-                SnowForecastChart(
-                    favorites: favoritesWithForecast,
-                    showHeader: true
-                )
-                .padding(.spacingM)
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(.cornerRadiusCard)
-            }
+        if !favoritesWithForecast.isEmpty {
+            SnowForecastStackedView(
+                favorites: favoritesWithForecast,
+                onMountainTap: { mountain in
+                    selectedMountain = mountain
+                }
+            )
         }
     }
 

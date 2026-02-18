@@ -45,6 +45,41 @@ extension HomeViewModel {
         return nil
     }
 
+    /// Determines whether the Today's Pick card has earned its screen space.
+    /// Returns true only when conditions are genuinely noteworthy — avoids
+    /// cluttering the home screen on unremarkable days.
+    func shouldShowTodaysPick() -> Bool {
+        guard let best = cachedBestPowder else { return false }
+
+        let data = best.data
+        let score = best.score.score
+
+        // Strong powder score (7.0+ out of 10)
+        if score >= 7.0 { return true }
+
+        // Meaningful fresh snow in last 24h
+        if data.conditions.snowfall24h >= 6 { return true }
+
+        // Active storm alert on any favorite — conditions are interesting
+        if !getActiveStormAlerts().isEmpty { return true }
+
+        // Decent score AND a clear standout among favorites
+        if score >= 5.0 {
+            let favoriteScores = mountainData
+                .filter { favoritesService.favoriteIds.contains($0.key) }
+                .map { $0.value.powderScore.score }
+                .sorted(by: >)
+
+            // #1 is at least 2 points above #2 — there's a real pick to make
+            if favoriteScores.count >= 2,
+               favoriteScores[0] - favoriteScores[1] >= 2.0 {
+                return true
+            }
+        }
+
+        return false
+    }
+
     /// Generate "Why Best?" reasons for the top powder mountain
     func getWhyBestReasons(for mountainId: String) -> [String] {
         guard let data = mountainData[mountainId],
