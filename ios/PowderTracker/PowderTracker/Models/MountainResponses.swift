@@ -288,11 +288,11 @@ struct MountainPowderScore: Codable, Identifiable {
     }
 
     struct ScoreConditions: Codable {
-        let snowfall24h: Int
-        let snowfall48h: Int
-        let temperature: Int
-        let windSpeed: Int
-        let upcomingSnow: Int
+        let snowfall24h: Double
+        let snowfall48h: Double
+        let temperature: Double
+        let windSpeed: Double
+        let upcomingSnow: Double
     }
 
     struct DataAvailability: Codable {

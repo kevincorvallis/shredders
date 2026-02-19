@@ -195,16 +195,16 @@ final class MapIntegrationTests: XCTestCase {
 
     // MARK: - Coordinate Validation Tests
 
-    func testMountainLocation_ShouldBeInPNW() async {
+    func testMountainLocation_ShouldBeInNorthAmerica() async {
         // Given
         let viewModel = MountainSelectionViewModel()
         await viewModel.loadMountains()
 
-        // Pacific Northwest bounds (approximate, including BC mountains)
-        let minLat = 42.0  // Southern Oregon
-        let maxLat = 51.5  // British Columbia
-        let minLng = -125.0 // Pacific coast
-        let maxLng = -114.0 // Idaho/Montana border
+        // North American ski region bounds (US + southern BC)
+        let minLat = 35.0  // New Mexico
+        let maxLat = 52.0  // British Columbia
+        let minLng = -130.0 // Pacific coast
+        let maxLng = -70.0  // Vermont
 
         // Then
         for mountain in viewModel.mountains {
@@ -212,9 +212,9 @@ final class MapIntegrationTests: XCTestCase {
             let lng = mountain.location.lng
 
             XCTAssertTrue(lat >= minLat && lat <= maxLat,
-                "\(mountain.name) latitude \(lat) should be in PNW")
+                "\(mountain.name) latitude \(lat) should be in supported region")
             XCTAssertTrue(lng >= minLng && lng <= maxLng,
-                "\(mountain.name) longitude \(lng) should be in PNW")
+                "\(mountain.name) longitude \(lng) should be in supported region")
         }
     }
 
@@ -266,9 +266,9 @@ final class MapIntegrationTests: XCTestCase {
         // Check distances if location is available
         for mountain in viewModel.mountains {
             if let distance = viewModel.getDistance(to: mountain) {
-                // Distance should be positive and reasonable (< 1000 miles for PNW)
+                // Distance should be positive and reasonable (< 3000 miles across US)
                 XCTAssertGreaterThan(distance, 0, "Distance to \(mountain.name) should be positive")
-                XCTAssertLessThan(distance, 1000, "Distance to \(mountain.name) should be < 1000 miles")
+                XCTAssertLessThan(distance, 3000, "Distance to \(mountain.name) should be < 3000 miles")
             }
         }
     }
