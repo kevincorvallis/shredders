@@ -596,3 +596,271 @@ function calculateModelAgreement(
 
   return agreement;
 }
+
+// ============================================================
+// Ensemble Probability Forecast (ECMWF IFS 0.25°, 51 members)
+// ============================================================
+
+export interface EnsembleForecastDay {
+  date: string;
+  snowfall: {
+    p10: number;  // inches
+    p25: number;
+    p50: number;
+    p75: number;
+    p90: number;
+    mean: number;
+  };
+  probability: {
+    over1in: number;   // 0-100
+    over3in: number;
+    over6in: number;
+    over12in: number;
+  };
+}
+
+export interface EnsembleForecast {
+  days: EnsembleForecastDay[];
+  memberCount: number;
+  model: string;
+  generatedAt: string;
+}
+
+function percentile(sorted: number[], p: number): number {
+  if (sorted.length === 0) return 0;
+  const idx = (p / 100) * (sorted.length - 1);
+  const lower = Math.floor(idx);
+  const upper = Math.ceil(idx);
+  if (lower === upper) return sorted[lower];
+  const value = sorted[lower] + (sorted[upper] - sorted[lower]) * (idx - lower);
+  return Math.round(value * 10) / 10;
+}
+
+function probabilityExceeding(values: number[], threshold: number): number {
+  if (values.length === 0) return 0;
+  const count = values.filter(v => v > threshold).length;
+  return Math.round((count / values.length) * 100);
+}
+
+function feetToMeters(feet: number): number {
+  return Math.round(feet / 3.28084);
+}
+
+interface EnsembleApiResponse {
+  hourly?: {
+    time?: string[];
+    snowfall_member01?: number[];
+    [key: string]: number[] | string[] | undefined;
+  };
+}
+
+/**
+ * Fetch raw hourly snowfall from all 51 ECMWF IFS ensemble members
+ */
+async function fetchEnsembleMembers(
+  lat: number,
+  lng: number,
+  days: number
+): Promise<EnsembleApiResponse> {
+  const url = new URL(ENSEMBLE_URL);
+  url.searchParams.set('latitude', lat.toString());
+  url.searchParams.set('longitude', lng.toString());
+  url.searchParams.set('hourly', 'snowfall');
+  url.searchParams.set('models', 'ecmwf_ifs025');
+  url.searchParams.set('timezone', 'America/Los_Angeles');
+  url.searchParams.set('forecast_days', Math.min(days, 7).toString());
+
+  const response = await fetch(url.toString(), {
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ensemble API error: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Get probabilistic snow forecast from 51 ECMWF IFS ensemble members.
+ * Returns percentiles (p10-p90) and probability of exceeding thresholds.
+ */
+export async function getEnsembleProbabilityForecast(
+  lat: number,
+  lng: number,
+  days: number = 7
+): Promise<EnsembleForecast> {
+  const cappedDays = Math.min(days, 7);
+  const data = await fetchEnsembleMembers(lat, lng, cappedDays);
+
+  if (!data.hourly?.time) {
+    throw new Error('No ensemble data available');
+  }
+
+  const times = data.hourly.time;
+
+  // Collect all member arrays dynamically (ECMWF IFS 0.25° returns 50 members)
+  const memberArrays: number[][] = [];
+  for (let m = 1; m <= 50; m++) {
+    const key = `snowfall_member${String(m).padStart(2, '0')}`;
+    const arr = data.hourly[key] as number[] | undefined;
+    if (arr) memberArrays.push(arr);
+  }
+
+  if (memberArrays.length === 0) {
+    throw new Error('No ensemble member data found');
+  }
+
+  // Group hours into days and sum snowfall per member per day
+  const dayMap = new Map<string, number[]>(); // date -> member totals (cm)
+
+  for (let h = 0; h < times.length; h++) {
+    const date = times[h].split('T')[0];
+    if (!dayMap.has(date)) {
+      dayMap.set(date, new Array(memberArrays.length).fill(0));
+    }
+    const totals = dayMap.get(date)!;
+    for (let m = 0; m < memberArrays.length; m++) {
+      totals[m] += memberArrays[m][h] || 0;
+    }
+  }
+
+  // Build forecast days
+  const forecastDays: EnsembleForecastDay[] = [];
+
+  for (const [date, memberTotals] of dayMap) {
+    // Convert cm to inches for each member
+    const inchValues = memberTotals.map(cm => cmToInches(cm));
+    const sorted = [...inchValues].sort((a, b) => a - b);
+    const mean = inchValues.reduce((s, v) => s + v, 0) / inchValues.length;
+
+    forecastDays.push({
+      date,
+      snowfall: {
+        p10: percentile(sorted, 10),
+        p25: percentile(sorted, 25),
+        p50: percentile(sorted, 50),
+        p75: percentile(sorted, 75),
+        p90: percentile(sorted, 90),
+        mean: Math.round(mean * 10) / 10,
+      },
+      probability: {
+        over1in: probabilityExceeding(inchValues, 1),
+        over3in: probabilityExceeding(inchValues, 3),
+        over6in: probabilityExceeding(inchValues, 6),
+        over12in: probabilityExceeding(inchValues, 12),
+      },
+    });
+  }
+
+  return {
+    days: forecastDays,
+    memberCount: memberArrays.length,
+    model: 'ecmwf_ifs025',
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+// ============================================================
+// Elevation-Band Forecasts (base / mid / summit)
+// ============================================================
+
+export interface ElevationBandDay {
+  date: string;
+  snowfall: number;       // inches
+  precipitation: number;  // inches
+  highTemp: number;       // fahrenheit
+  lowTemp: number;        // fahrenheit
+  precipType: 'snow' | 'rain' | 'mixed';
+}
+
+export interface ElevationBandForecast {
+  elevation: number; // feet
+  days: ElevationBandDay[];
+}
+
+export interface ElevationForecast {
+  base: ElevationBandForecast;
+  mid: ElevationBandForecast;
+  summit: ElevationBandForecast;
+  generatedAt: string;
+}
+
+function determinePrecipType(
+  snowfall: number,
+  precip: number,
+  highTemp: number,
+  lowTemp: number
+): 'snow' | 'rain' | 'mixed' {
+  if (precip <= 0) return 'snow'; // no precip, default
+  const snowRatio = snowfall / Math.max(precip, 0.01);
+  if (snowRatio > 0.7) return 'snow';
+  if (snowRatio < 0.2 || (highTemp > 38 && lowTemp > 32)) return 'rain';
+  return 'mixed';
+}
+
+async function fetchForecastAtElevation(
+  lat: number,
+  lng: number,
+  elevFeet: number,
+  days: number
+): Promise<ElevationBandDay[]> {
+  const elevMeters = feetToMeters(elevFeet);
+
+  const params: Record<string, string> = {
+    latitude: lat.toString(),
+    longitude: lng.toString(),
+    daily: 'snowfall_sum,precipitation_sum,temperature_2m_max,temperature_2m_min',
+    timezone: 'America/Los_Angeles',
+    forecast_days: Math.min(days, 7).toString(),
+    elevation: elevMeters.toString(),
+  };
+
+  const data = await fetchOpenMeteo(params);
+
+  if (!data.daily?.time) return [];
+
+  return data.daily.time.map((date, i) => {
+    const snowfall = cmToInches(data.daily?.snowfall_sum?.[i] || 0);
+    const precipitation = mmToInches(data.daily?.precipitation_sum?.[i] || 0);
+    const highTemp = celsiusToFahrenheit(data.daily?.temperature_2m_max?.[i] || 0);
+    const lowTemp = celsiusToFahrenheit(data.daily?.temperature_2m_min?.[i] || 0);
+
+    return {
+      date,
+      snowfall,
+      precipitation,
+      highTemp,
+      lowTemp,
+      precipType: determinePrecipType(snowfall, precipitation, highTemp, lowTemp),
+    };
+  });
+}
+
+/**
+ * Get forecast at 3 elevation bands: base, mid (avg), summit.
+ * Uses the standard Open-Meteo API with `&elevation=` param.
+ */
+export async function getElevationForecast(
+  lat: number,
+  lng: number,
+  baseFeet: number,
+  summitFeet: number,
+  days: number = 7
+): Promise<ElevationForecast> {
+  const midFeet = Math.round((baseFeet + summitFeet) / 2);
+  const cappedDays = Math.min(days, 7);
+
+  const [baseDays, midDays, summitDays] = await Promise.all([
+    fetchForecastAtElevation(lat, lng, baseFeet, cappedDays),
+    fetchForecastAtElevation(lat, lng, midFeet, cappedDays),
+    fetchForecastAtElevation(lat, lng, summitFeet, cappedDays),
+  ]);
+
+  return {
+    base: { elevation: baseFeet, days: baseDays },
+    mid: { elevation: midFeet, days: midDays },
+    summit: { elevation: summitFeet, days: summitDays },
+    generatedAt: new Date().toISOString(),
+  };
+}
