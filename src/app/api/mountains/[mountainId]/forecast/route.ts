@@ -31,6 +31,10 @@ export async function GET(
           provider: 'Open-Meteo',
           gridOffice: 'N/A',
         },
+      }, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
+        },
       });
     }
 
@@ -50,7 +54,11 @@ export async function GET(
       };
     }, 600);
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
+      },
+    });
   } catch (error) {
     console.error('Error fetching forecast:', error);
     return NextResponse.json(

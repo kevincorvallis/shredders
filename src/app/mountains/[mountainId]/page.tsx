@@ -161,6 +161,9 @@ export default function MountainPage({
   const powderDayPlan = mountainData?.powderDay || null;
   const alerts = mountainData?.alerts || [];
   const weatherGovLinks = mountainData?.weatherGovLinks || null;
+  const extendedForecast = mountainData?.extendedForecast || null;
+  const ensemble = mountainData?.ensemble || null;
+  const elevationForecast = mountainData?.elevationForecast || null;
   const error = dataError ? 'Failed to load mountain data' : null;
 
   if (!mountain) {
@@ -726,11 +729,11 @@ export default function MountainPage({
                     </div>
                   )}
                 </div>
-                <div className="grid grid-cols-7 gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                   {forecast.map((day, i) => (
                     <div
                       key={i}
-                      className="bg-surface-secondary rounded-lg p-3 text-center"
+                      className="bg-surface-secondary rounded-lg p-2 sm:p-3 text-center"
                     >
                       <div className="text-xs text-text-secondary mb-1">{day.dayOfWeek}</div>
                       <div className="text-2xl mb-1">{getWeatherIcon(day.icon)}</div>
@@ -763,6 +766,173 @@ export default function MountainPage({
                     </a>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Elevation Forecast */}
+            {elevationForecast && (
+              <div className="bg-surface-primary rounded-2xl p-6">
+                <h2 className="text-lg font-semibold text-text-primary mb-4">Forecast by Elevation</h2>
+                <div className="grid grid-cols-3 gap-3">
+                  {(['summit', 'mid', 'base'] as const).map((band) => {
+                    const data = elevationForecast[band];
+                    if (!data || !data.days?.length) return null;
+                    const today = data.days[0];
+                    const label = band === 'summit' ? 'Summit' : band === 'mid' ? 'Mid-Mountain' : 'Base';
+                    const precipColor = today.precipType === 'snow' ? 'text-accent' : today.precipType === 'rain' ? 'text-red-400' : 'text-yellow-400';
+                    return (
+                      <div key={band} className="bg-surface-secondary rounded-lg p-3 text-center">
+                        <div className="text-xs text-text-secondary mb-1">{label}</div>
+                        <div className="text-[11px] text-text-tertiary mb-2">{data.elevation.toLocaleString()}&apos;</div>
+                        <div className="text-lg font-semibold text-text-primary">{today.highTemp}°/{today.lowTemp}°</div>
+                        {today.snowfall > 0 && (
+                          <div className={`text-xs mt-1 ${precipColor}`}>
+                            {today.snowfall}&quot; snow
+                          </div>
+                        )}
+                        {today.precipitation > 0 && today.precipType !== 'snow' && (
+                          <div className={`text-xs mt-1 ${precipColor}`}>
+                            {today.precipitation}&quot; {today.precipType}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Multi-day elevation breakdown */}
+                {elevationForecast.summit.days.length > 1 && (
+                  <div className="mt-4 overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-text-tertiary">
+                          <th className="text-left py-1 pr-2 font-medium">Day</th>
+                          <th className="text-center py-1 px-1 font-medium">Summit</th>
+                          <th className="text-center py-1 px-1 font-medium">Mid</th>
+                          <th className="text-center py-1 px-1 font-medium">Base</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {elevationForecast.summit.days.slice(1, 6).map((day: any, i: number) => {
+                          const mid = elevationForecast.mid.days[i + 1];
+                          const base = elevationForecast.base.days[i + 1];
+                          const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
+                          return (
+                            <tr key={day.date} className="border-t border-border-secondary">
+                              <td className="py-1.5 pr-2 text-text-secondary">{dayLabel}</td>
+                              <td className="py-1.5 px-1 text-center text-text-primary">
+                                {day.snowfall > 0 ? <span className="text-accent">{day.snowfall}&quot;</span> : `${day.highTemp}°`}
+                              </td>
+                              <td className="py-1.5 px-1 text-center text-text-primary">
+                                {mid?.snowfall > 0 ? <span className="text-accent">{mid.snowfall}&quot;</span> : `${mid?.highTemp ?? '--'}°`}
+                              </td>
+                              <td className="py-1.5 px-1 text-center text-text-primary">
+                                {base?.snowfall > 0 ? <span className="text-accent">{base.snowfall}&quot;</span> : `${base?.highTemp ?? '--'}°`}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Ensemble Snow Confidence */}
+            {ensemble && ensemble.days?.length > 0 && (
+              <div className="bg-surface-primary rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-text-primary">Snow Confidence</h2>
+                    <p className="text-xs text-text-secondary">{ensemble.memberCount}-member {ensemble.model} ensemble</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {ensemble.days.slice(0, 7).map((day: any) => {
+                    const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    const maxSnow = Math.max(...ensemble.days.slice(0, 7).map((d: any) => d.snowfall.p90), 1);
+                    return (
+                      <div key={day.date} className="flex items-center gap-3">
+                        <div className="w-20 text-xs text-text-secondary flex-shrink-0">{dayLabel}</div>
+                        <div className="flex-1 h-5 bg-surface-secondary rounded-full overflow-hidden relative">
+                          {/* p10-p90 range bar */}
+                          <div
+                            className="absolute inset-y-0 bg-accent/30 rounded-full"
+                            style={{
+                              left: `${(day.snowfall.p10 / maxSnow) * 100}%`,
+                              width: `${((day.snowfall.p90 - day.snowfall.p10) / maxSnow) * 100}%`,
+                            }}
+                          />
+                          {/* p25-p75 range bar */}
+                          <div
+                            className="absolute inset-y-0 bg-accent/60 rounded-full"
+                            style={{
+                              left: `${(day.snowfall.p25 / maxSnow) * 100}%`,
+                              width: `${((day.snowfall.p75 - day.snowfall.p25) / maxSnow) * 100}%`,
+                            }}
+                          />
+                          {/* Median marker */}
+                          <div
+                            className="absolute top-0.5 bottom-0.5 w-0.5 bg-accent rounded-full"
+                            style={{ left: `${(day.snowfall.p50 / maxSnow) * 100}%` }}
+                          />
+                        </div>
+                        <div className="w-16 text-xs text-text-primary text-right flex-shrink-0">
+                          {day.snowfall.p50}&quot;
+                          <span className="text-text-tertiary ml-0.5">({day.snowfall.p10}-{day.snowfall.p90})</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Probability summary for tomorrow */}
+                {ensemble.days[0] && (
+                  <div className="mt-4 pt-4 border-t border-border-primary flex flex-wrap gap-3">
+                    {[
+                      { label: '1"+', value: ensemble.days[0].probability.over1in },
+                      { label: '3"+', value: ensemble.days[0].probability.over3in },
+                      { label: '6"+', value: ensemble.days[0].probability.over6in },
+                      { label: '12"+', value: ensemble.days[0].probability.over12in },
+                    ].filter(p => p.value > 0).map((p) => (
+                      <div key={p.label} className="bg-surface-secondary rounded-lg px-3 py-2 text-center">
+                        <div className="text-xs text-text-secondary">{p.label}</div>
+                        <div className="text-sm font-semibold text-text-primary">{p.value}%</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Extended Forecast (16-day) */}
+            {extendedForecast && extendedForecast.length > 7 && (
+              <div className="bg-surface-primary rounded-2xl p-6">
+                <h2 className="text-lg font-semibold text-text-primary mb-4">Extended Forecast</h2>
+                <div className="overflow-x-auto -mx-2">
+                  <div className="flex gap-2 px-2" style={{ minWidth: `${extendedForecast.slice(7).length * 80}px` }}>
+                    {extendedForecast.slice(7).map((day: any, i: number) => {
+                      const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
+                      const dateLabel = new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      return (
+                        <div key={i} className="bg-surface-secondary rounded-lg p-2.5 text-center flex-shrink-0" style={{ width: '72px' }}>
+                          <div className="text-[10px] text-text-tertiary">{dayLabel}</div>
+                          <div className="text-[10px] text-text-quaternary">{dateLabel}</div>
+                          <div className="text-sm font-medium text-text-primary mt-1">
+                            {day.highTemp}°/{day.lowTemp}°
+                          </div>
+                          {day.snowfallSum > 0 && (
+                            <div className="text-[11px] text-accent mt-0.5">{day.snowfallSum}&quot;</div>
+                          )}
+                          {day.precipProbability > 0 && (
+                            <div className="text-[10px] text-text-tertiary">{day.precipProbability}%</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-3 text-[10px] text-text-quaternary">Days 8-16 via Open-Meteo. Confidence decreases beyond 7 days.</div>
               </div>
             )}
 

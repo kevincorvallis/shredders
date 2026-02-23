@@ -15,11 +15,17 @@ interface MountainData {
   conditions: any;
   powderScore: any;
   forecast: any[];
+  extendedForecast: any[] | null;
+  ensemble: any;
+  elevationForecast: any;
+  openMeteoDaily: any[];
+  sunData: any;
   roads: any;
   tripAdvice: any;
   powderDay: any;
   alerts: any[];
   weatherGovLinks: any;
+  status: any;
   cachedAt: string;
 }
 

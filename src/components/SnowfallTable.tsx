@@ -109,8 +109,8 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
       setTimeout(() => {
         if (scrollContainerRef.current) {
           const todayIndex = daysBack;
-          const cellWidth = 56;
-          scrollContainerRef.current.scrollLeft = todayIndex * cellWidth - 200;
+          const cellWidth = window.innerWidth < 640 ? 40 : 56;
+          scrollContainerRef.current.scrollLeft = todayIndex * cellWidth - 160;
         }
       }, 100);
     }
@@ -216,7 +216,7 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
       {/* Table */}
       <div className="relative">
         {/* Fixed mountain names column */}
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-surface-primary z-10 border-r border-border-secondary">
+        <div className="absolute left-0 top-0 bottom-0 w-24 sm:w-32 bg-surface-primary z-10 border-r border-border-secondary">
           {/* Header spacer */}
           <div className="h-12" />
 
@@ -231,7 +231,7 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
                 className="w-2 h-2 rounded-full flex-shrink-0"
                 style={{ backgroundColor: mountain.color }}
               />
-              <span className="text-xs font-medium text-text-primary truncate">
+              <span className="text-[11px] sm:text-xs font-medium text-text-primary truncate">
                 {mountain.shortName}
               </span>
             </Link>
@@ -241,7 +241,7 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
         {/* Scrollable data area */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto pl-32 scrollbar-thin"
+          className="overflow-x-auto pl-24 sm:pl-32 scrollbar-thin"
         >
           <div className="inline-block min-w-full">
             {/* Date headers */}
@@ -252,12 +252,12 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
                 return (
                   <div
                     key={index}
-                    className={`w-14 h-12 flex flex-col items-center justify-center ${
+                    className={`w-10 sm:w-14 h-12 flex flex-col items-center justify-center ${
                       isDivider ? 'border-r border-dashed border-text-quaternary' : ''
                     }`}
                   >
-                    <div className="text-[10px] text-text-quaternary leading-none">{dayOfWeek}</div>
-                    <div className={`text-sm font-semibold leading-tight ${
+                    <div className="text-[9px] sm:text-[10px] text-text-quaternary leading-none">{dayOfWeek}</div>
+                    <div className={`text-xs sm:text-sm font-semibold leading-tight ${
                       dateInfo.isToday ? 'text-accent' : 'text-text-primary'
                     }`}>
                       {day}
@@ -284,14 +284,14 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
                       return (
                         <div
                           key={index}
-                          className={`w-14 h-10 flex items-center justify-center ${
+                          className={`w-10 sm:w-14 h-10 flex items-center justify-center ${
                             colorClass || 'bg-surface-primary'
                           } ${
                             isDivider ? 'border-r border-dashed border-text-quaternary' : ''
                           }`}
                         >
                           {dateData.snowfall > 0 && (
-                            <span className="text-xs font-semibold text-text-primary">
+                            <span className="text-[11px] sm:text-xs font-semibold text-text-primary">
                               {dateData.snowfall}
                             </span>
                           )}

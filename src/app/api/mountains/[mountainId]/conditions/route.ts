@@ -137,7 +137,11 @@ export async function GET(
     };
     }, 600); // 10min cache
 
-    return NextResponse.json(conditions);
+    return NextResponse.json(conditions, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
+      },
+    });
   } catch (error) {
     console.error('Error fetching conditions:', error);
     return NextResponse.json(

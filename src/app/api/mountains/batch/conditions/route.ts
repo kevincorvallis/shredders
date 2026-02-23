@@ -27,65 +27,60 @@ export async function GET() {
               let wind: { speed: number; direction: string } | undefined;
               let conditions = 'Unknown';
 
-              // Get SNOTEL data if available
-              if (mountain.snotel) {
-                try {
-                  const historyData = await getHistoricalData(mountain.snotel.stationId, 3);
-                  if (historyData && historyData.length > 0) {
-                    const today = historyData.find(h => 
-                      h.date.startsWith(new Date().toISOString().split('T')[0])
-                    );
-                    const yesterday = historyData.find(h => 
-                      h.date.startsWith(new Date(Date.now() - 86400000).toISOString().split('T')[0])
-                    );
-                    const dayBefore = historyData.find(h => 
-                      h.date.startsWith(new Date(Date.now() - 172800000).toISOString().split('T')[0])
-                    );
+              // Fetch SNOTEL and weather data in parallel
+              const [snotelResult, weatherResult] = await Promise.allSettled([
+                // SNOTEL data
+                mountain.snotel
+                  ? getHistoricalData(mountain.snotel.stationId, 3)
+                  : Promise.resolve(null),
+                // Weather data (NOAA or Open-Meteo fallback)
+                mountain.noaa
+                  ? getForecast(mountain.noaa)
+                  : getDailyForecast(mountain.location.lat, mountain.location.lng, 1),
+              ]);
 
-                    if (today) {
-                      snowDepth = today.snowDepth || 0;
-                      snowfall24h = yesterday ? (today.snowDepth - yesterday.snowDepth) : 0;
-                      snowfall48h = dayBefore ? (today.snowDepth - dayBefore.snowDepth) : snowfall24h;
-                    }
-                  }
-                } catch (error) {
-                  console.error(`Error fetching SNOTEL data for ${mountain.id}:`, error);
+              // Process SNOTEL data
+              const historyData = snotelResult.status === 'fulfilled' ? snotelResult.value : null;
+              if (historyData && historyData.length > 0) {
+                const today = historyData.find(h =>
+                  h.date.startsWith(new Date().toISOString().split('T')[0])
+                );
+                const yesterday = historyData.find(h =>
+                  h.date.startsWith(new Date(Date.now() - 86400000).toISOString().split('T')[0])
+                );
+                const dayBefore = historyData.find(h =>
+                  h.date.startsWith(new Date(Date.now() - 172800000).toISOString().split('T')[0])
+                );
+
+                if (today) {
+                  snowDepth = today.snowDepth || 0;
+                  snowfall24h = Math.max(0, yesterday ? (today.snowDepth - yesterday.snowDepth) : 0);
+                  snowfall48h = Math.max(0, dayBefore ? (today.snowDepth - dayBefore.snowDepth) : snowfall24h);
                 }
               }
 
-              // Get weather data from NOAA or Open-Meteo
-              try {
+              // Process weather data
+              const weatherData = weatherResult.status === 'fulfilled' ? weatherResult.value : null;
+              if (weatherData && Array.isArray(weatherData) && weatherData.length > 0) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const current = weatherData[0] as any;
                 if (mountain.noaa) {
-                  const forecastData = await getForecast(mountain.noaa);
-                  if (forecastData && forecastData.length > 0) {
-                    const current = forecastData[0];
-                    // For daily forecast, use average of high/low for current temp
-                    temperature = Math.round((current.high + current.low) / 2);
-                    wind = {
-                      speed: current.wind.speed || 0,
-                      direction: 'N' // NOAA doesn't provide direction in daily forecast
-                    };
-                    conditions = current.conditions || 'Unknown';
-                  }
+                  // NOAA forecast data
+                  temperature = Math.round((current.high + current.low) / 2);
+                  wind = {
+                    speed: current.wind?.speed || 0,
+                    direction: 'N'
+                  };
+                  conditions = current.conditions || 'Unknown';
                 } else {
-                  // Fallback to Open-Meteo
-                  const weatherData = await getDailyForecast(
-                    mountain.location.lat,
-                    mountain.location.lng,
-                    1
-                  );
-                  if (weatherData && weatherData.length > 0) {
-                    const current = weatherData[0];
-                    temperature = Math.round((current.highTemp + current.lowTemp) / 2);
-                    wind = {
-                      speed: 0, // Open-Meteo daily doesn't include wind
-                      direction: 'N'
-                    };
-                    conditions = 'Unknown'; // Open-Meteo doesn't provide conditions in daily
-                  }
+                  // Open-Meteo daily data
+                  temperature = Math.round((current.highTemp + current.lowTemp) / 2);
+                  wind = {
+                    speed: current.windSpeedMax || 0,
+                    direction: 'N'
+                  };
+                  conditions = 'Unknown';
                 }
-              } catch (error) {
-                console.error(`Error fetching weather data for ${mountain.id}:`, error);
               }
 
               return {
