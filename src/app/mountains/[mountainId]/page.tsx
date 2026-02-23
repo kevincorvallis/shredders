@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useLayoutEffect, use } from 'react';
+import { useState, useEffect, useLayoutEffect, use, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { getMountain } from '@shredders/shared';
@@ -165,6 +165,15 @@ export default function MountainPage({
   const ensemble = mountainData?.ensemble || null;
   const elevationForecast = mountainData?.elevationForecast || null;
   const error = dataError ? 'Failed to load mountain data' : null;
+  const [forecastTab, setForecastTab] = useState<'7day' | 'elevation' | 'confidence' | 'extended'>('7day');
+  const forecastTabs = useMemo(() => {
+    const tabs: { id: typeof forecastTab; label: string }[] = [];
+    if (forecast.length > 0) tabs.push({ id: '7day', label: '7-Day' });
+    if (elevationForecast) tabs.push({ id: 'elevation', label: 'Elevation' });
+    if (ensemble?.days?.length > 0) tabs.push({ id: 'confidence', label: 'Confidence' });
+    if (extendedForecast && extendedForecast.length > 7) tabs.push({ id: 'extended', label: 'Extended' });
+    return tabs;
+  }, [forecast, elevationForecast, ensemble, extendedForecast]);
 
   if (!mountain) {
     return (
@@ -204,8 +213,8 @@ export default function MountainPage({
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-[var(--header-bg)] backdrop-blur-xl backdrop-saturate-150 border-b border-border-secondary">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-2">
             <Link
               href="/mountains"
               className="text-text-secondary hover:text-text-primary transition-colors"
@@ -221,8 +230,8 @@ export default function MountainPage({
                 <Image
                   src={mountain.logo}
                   alt={`${mountain.name} logo`}
-                  width={40}
-                  height={40}
+                  width={32}
+                  height={32}
                   className="rounded-lg"
                 />
               </div>
@@ -310,7 +319,7 @@ export default function MountainPage({
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-4xl mx-auto px-4 py-4 space-y-3">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="flex items-center gap-2 text-text-secondary">
@@ -398,11 +407,10 @@ export default function MountainPage({
 
             {/* Powder Score */}
             {powderScore && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-text-primary">Powder Score</h2>
+              <div className="bg-surface-primary rounded-xl p-4">
+                <div className="flex items-center gap-3">
                   <div
-                    className={`text-4xl font-semibold ${
+                    className={`text-3xl font-bold ${
                       powderScore.score >= 7
                         ? 'text-green-400'
                         : powderScore.score >= 5
@@ -411,283 +419,117 @@ export default function MountainPage({
                     }`}
                   >
                     {powderScore.score.toFixed(1)}
-                    <span className="text-lg text-text-tertiary">/10</span>
+                    <span className="text-sm text-text-tertiary">/10</span>
                   </div>
-                </div>
-                <p className="text-text-secondary mb-4">{powderScore.verdict}</p>
-
-                {/* Navigate CTA */}
-                <div className="mb-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-text-primary">{powderScore.verdict}</div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
+                      {powderScore.factors.map((factor: any, i: number) => (
+                        <span key={i} className="text-[11px] text-text-tertiary">{factor.description}</span>
+                      ))}
+                    </div>
+                  </div>
                   <NavigateButton
                     lat={mountain.location.lat}
                     lng={mountain.location.lng}
                     mountainName={mountain.shortName}
                     variant="primary"
-                    size="lg"
-                    className="w-full"
+                    size="sm"
                   />
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {powderScore.factors.map((factor: any, i: number) => (
-                    <div key={i} className="bg-surface-secondary rounded-lg p-3">
-                      <div className="text-xs text-text-secondary mb-1">{factor.name}</div>
-                      <div className="text-sm text-text-primary">{factor.description}</div>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}
 
-            {/* Current Conditions */}
+            {/* Current Conditions - Compact */}
             {conditions && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <h2 className="text-lg font-semibold text-text-primary mb-4">Current Conditions</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-surface-secondary rounded-lg p-4 text-center">
-                    <div className="text-3xl mb-1">❄️</div>
-                    <div className="text-2xl font-semibold text-text-primary">
-                      {conditions.snowDepth ?? '--'}&quot;
+              <div className="bg-surface-primary rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-semibold text-text-primary">Conditions</h2>
+                  {conditions.rainRisk && (
+                    <div
+                      className={`px-2 py-0.5 rounded text-[11px] font-medium ${
+                        conditions.rainRisk.score >= 7
+                          ? 'bg-green-500/20 text-green-400'
+                          : conditions.rainRisk.score >= 4
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-red-500/20 text-red-400'
+                      }`}
+                    >
+                      {conditions.rainRisk.score >= 7
+                        ? 'All Snow'
+                        : conditions.rainRisk.score >= 4
+                          ? 'Mixed'
+                          : 'Rain Risk'}
                     </div>
-                    <div className="text-xs text-text-secondary">Base Depth</div>
+                  )}
+                </div>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div>
+                    <div className="text-lg font-semibold text-text-primary">{conditions.snowDepth ?? '--'}&quot;</div>
+                    <div className="text-[10px] text-text-tertiary">Depth</div>
                   </div>
-                  <div className="bg-surface-secondary rounded-lg p-4 text-center">
-                    <div className="text-3xl mb-1">🌨️</div>
-                    <div className="text-2xl font-semibold text-text-primary">
-                      {conditions.snowfall24h}&quot;
-                    </div>
-                    <div className="text-xs text-text-secondary">24hr Snowfall</div>
+                  <div>
+                    <div className="text-lg font-semibold text-accent">{conditions.snowfall24h}&quot;</div>
+                    <div className="text-[10px] text-text-tertiary">24h Snow</div>
                   </div>
-                  <div className="bg-surface-secondary rounded-lg p-4 text-center">
-                    <div className="text-3xl mb-1">🌡️</div>
-                    <div className="text-2xl font-semibold text-text-primary">
-                      {conditions.temperature ?? '--'}°F
-                    </div>
-                    <div className="text-xs text-text-secondary">Temperature</div>
+                  <div>
+                    <div className="text-lg font-semibold text-text-primary">{conditions.temperature ?? '--'}°</div>
+                    <div className="text-[10px] text-text-tertiary">Temp</div>
                   </div>
-                  <div className="bg-surface-secondary rounded-lg p-4 text-center">
-                    <div className="text-3xl mb-1">💨</div>
-                    <div className="text-2xl font-semibold text-text-primary">
-                      {conditions.wind?.speed ?? '--'} mph
-                    </div>
-                    <div className="text-xs text-text-secondary">
-                      Wind {conditions.wind?.direction ?? ''}
-                    </div>
+                  <div>
+                    <div className="text-lg font-semibold text-text-primary">{conditions.wind?.speed ?? '--'}</div>
+                    <div className="text-[10px] text-text-tertiary">Wind mph</div>
                   </div>
                 </div>
 
-                {/* Freezing Level / Snow Line */}
-                {conditions.freezingLevel !== null && (
-                  <div className="mt-4 bg-surface-secondary/60 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">🏔️</div>
-                        <div>
-                          <div className="text-sm font-medium text-text-primary">
-                            Snow Line: {conditions.freezingLevel.toLocaleString()}&apos;
-                          </div>
-                          <div className="text-xs text-text-secondary">
-                            {conditions.rainRisk?.description ?? 'Freezing level elevation'}
-                          </div>
-                        </div>
-                      </div>
-                      {conditions.rainRisk && (
-                        <div
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            conditions.rainRisk.score >= 7
-                              ? 'bg-green-500/20 text-green-400'
-                              : conditions.rainRisk.score >= 4
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : 'bg-red-500/20 text-red-400'
-                          }`}
-                        >
-                          {conditions.rainRisk.score >= 7
-                            ? 'All Snow'
-                            : conditions.rainRisk.score >= 4
-                              ? 'Mixed'
-                              : 'Rain Risk'}
-                        </div>
-                      )}
+                {/* Snow Line Bar */}
+                {conditions.freezingLevel !== null && conditions.elevation && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-[11px] mb-1">
+                      <span className="text-text-tertiary">Snow line {conditions.freezingLevel.toLocaleString()}&apos;</span>
+                      <span className="text-text-quaternary">{conditions.elevation.base.toLocaleString()}&apos; — {conditions.elevation.summit.toLocaleString()}&apos;</span>
                     </div>
-                    {conditions.elevation && conditions.freezingLevel !== null && (
-                      <div className="mt-3 h-2 bg-surface-tertiary rounded-full overflow-hidden relative">
-                        {/* Base to Summit gradient */}
-                        <div
-                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-sky-400"
-                          style={{
-                            width: `${Math.max(0, Math.min(100, ((conditions.freezingLevel - conditions.elevation.base) / (conditions.elevation.summit - conditions.elevation.base)) * 100))}%`,
-                          }}
-                        />
-                        {/* Freezing level marker */}
-                        <div
-                          className="absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-white rounded-full shadow"
-                          style={{
-                            left: `${Math.max(0, Math.min(100, ((conditions.freezingLevel - conditions.elevation.base) / (conditions.elevation.summit - conditions.elevation.base)) * 100))}%`,
-                          }}
-                        />
-                      </div>
-                    )}
-                    {conditions.elevation && (
-                      <div className="mt-1 flex justify-between text-xs text-text-tertiary">
-                        <span>Base {conditions.elevation.base.toLocaleString()}&apos;</span>
-                        <span>Summit {conditions.elevation.summit.toLocaleString()}&apos;</span>
-                      </div>
-                    )}
+                    <div className="h-1.5 bg-surface-tertiary rounded-full overflow-hidden relative">
+                      <div
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-sky-400"
+                        style={{
+                          width: `${Math.max(0, Math.min(100, ((conditions.freezingLevel - conditions.elevation.base) / (conditions.elevation.summit - conditions.elevation.base)) * 100))}%`,
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
 
                 {!mountain.snotel && (
-                  <p className="mt-4 text-sm text-amber-400/80">
-                    Note: Limited SNOTEL data for this mountain. Some values may be estimated.
-                  </p>
+                  <p className="mt-2 text-[11px] text-amber-400/80">Limited SNOTEL data. Some values may be estimated.</p>
                 )}
               </div>
             )}
 
             {/* Road & Pass Conditions */}
-            {roads && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <h2 className="text-lg font-semibold text-text-primary mb-2">Road &amp; Pass Conditions</h2>
-                <p className="text-sm text-text-secondary mb-4">
-                  Closures and restrictions can change fast. Always verify before you drive.
-                </p>
-
-                {!roads.supported ? (
-                  <div className="text-text-secondary">{roads.message ?? 'Road data not supported for this mountain.'}</div>
-                ) : !roads.configured ? (
-                  <div className="text-text-secondary">{roads.message ?? 'Road data not configured.'}</div>
-                ) : roads.passes.length === 0 ? (
-                  <div className="text-text-secondary">No relevant pass data found.</div>
-                ) : (
-                  <div className="space-y-3">
-                    {roads.passes.slice(0, 2).map((p: any) => (
-                      <div key={p.id} className="bg-surface-secondary rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-text-primary font-medium">{p.name}</div>
-                          <div className="text-xs text-text-secondary">{roads.provider ?? ''}</div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <div>
-                            <div className="text-xs text-text-secondary">Road</div>
-                            <div className="text-sm text-text-primary">{p.roadCondition ?? 'Unknown'}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-text-secondary">Weather</div>
-                            <div className="text-sm text-text-primary">{p.weatherCondition ?? 'Unknown'}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-text-secondary">Pass Temp</div>
-                            <div className="text-sm text-text-primary">
-                              {(p.temperatureF ?? null) !== null ? `${p.temperatureF}°F` : '—'}
-                            </div>
-                          </div>
-                        </div>
-
-                        {p.restrictions?.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-border-primary">
-                            <div className="text-xs text-text-secondary mb-1">Restrictions</div>
-                            <div className="text-sm text-text-primary space-y-1">
-                              {p.restrictions.slice(0, 3).map((r: any, idx: number) => (
-                                <div key={idx}>
-                                  <span className="text-text-secondary">{r.direction ? `${r.direction}: ` : ''}</span>
-                                  <span>{r.text}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
+            {roads && roads.supported && roads.configured && roads.passes?.length > 0 && (
+              <div className="bg-surface-primary rounded-xl p-4">
+                <h2 className="text-sm font-semibold text-text-primary mb-2">Roads</h2>
+                <div className="space-y-2">
+                  {roads.passes.slice(0, 2).map((p: any) => (
+                    <div key={p.id} className="bg-surface-secondary rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-text-primary">{p.name}</span>
                         {p.travelAdvisoryActive && (
-                          <div className="mt-3 text-xs text-amber-300">Travel advisory active</div>
+                          <span className="text-[10px] text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded">Advisory</span>
                         )}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Trip & Traffic */}
-            {tripAdvice && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div>
-                    <h2 className="text-lg font-semibold text-text-primary">Trip &amp; Traffic</h2>
-                    <p className="text-sm text-text-secondary">Heuristic guidance based on weather + powder demand.</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-xs px-2 py-1 rounded border border-border-primary text-text-primary bg-surface-secondary/80">
-                      Traffic: {tripAdvice.trafficRisk}
-                    </span>
-                    <span className="text-xs px-2 py-1 rounded border border-border-primary text-text-primary bg-surface-secondary/80">
-                      Roads: {tripAdvice.roadRisk}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-text-primary text-sm font-medium mb-3">{tripAdvice.headline}</div>
-
-                {tripAdvice.suggestedDepartures?.length > 0 && (
-                  <div className="bg-surface-secondary rounded-lg p-4 mb-3">
-                    <div className="text-xs text-text-secondary mb-2">Suggested timing</div>
-                    <div className="space-y-1 text-sm text-text-primary">
-                      {tripAdvice.suggestedDepartures.slice(0, 2).map((s: any, idx: number) => (
-                        <div key={idx}>
-                          <span className="text-text-secondary">{s.from}: </span>
-                          <span>{s.suggestion}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {tripAdvice.notes?.length > 0 && (
-                  <div className="text-sm text-text-secondary space-y-1">
-                    {tripAdvice.notes.slice(0, 3).map((n: any, idx: number) => (
-                      <div key={idx}>• {n}</div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Powder Day Planner */}
-            {powderDayPlan && powderDayPlan.days?.length > 0 && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <h2 className="text-lg font-semibold text-text-primary mb-2">Powder Day Planner</h2>
-                <p className="text-sm text-text-secondary mb-4">
-                  Prediction-style view combining forecast + travel considerations.
-                </p>
-
-                <div className="grid md:grid-cols-3 gap-3">
-                  {powderDayPlan.days.slice(0, 3).map((d: any, idx: number) => (
-                    <div key={idx} className="bg-surface-secondary rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <div className="text-text-primary font-medium">
-                            {idx === 0 ? 'Today' : d.dayOfWeek}
-                          </div>
-                          <div className="text-xs text-text-secondary">{d.forecastSnapshot.conditions}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-semibold text-text-primary">{d.predictedPowderScore}/10</div>
-                          <div className="text-xs text-text-secondary">Conf {d.confidence}%</div>
-                        </div>
+                      <div className="flex gap-4 text-xs">
+                        <span className="text-text-secondary">Road: <span className="text-text-primary">{p.roadCondition ?? '—'}</span></span>
+                        <span className="text-text-secondary">Weather: <span className="text-text-primary">{p.weatherCondition ?? '—'}</span></span>
+                        {(p.temperatureF ?? null) !== null && (
+                          <span className="text-text-secondary">{p.temperatureF}°F</span>
+                        )}
                       </div>
-
-                      <div className="text-xs text-text-secondary mb-2">
-                        {d.forecastSnapshot.snowfall}&quot; snow • {d.forecastSnapshot.high}°/{d.forecastSnapshot.low}° • {d.forecastSnapshot.windSpeed} mph
-                      </div>
-
-                      <div className="text-sm text-text-primary">
-                        <span className="text-text-secondary">Window: </span>
-                        <span>{d.bestWindow}</span>
-                      </div>
-
-                      {d.travelNotes?.length > 0 && (
-                        <div className="mt-2 text-xs text-text-secondary space-y-1">
-                          {d.travelNotes.slice(0, 2).map((n: any, i: number) => (
-                            <div key={i}>• {n}</div>
+                      {p.restrictions?.length > 0 && (
+                        <div className="mt-1.5 text-[11px] text-text-secondary">
+                          {p.restrictions.slice(0, 2).map((r: any, idx: number) => (
+                            <span key={idx}>{idx > 0 ? ' · ' : ''}{r.direction ? `${r.direction}: ` : ''}{r.text}</span>
                           ))}
                         </div>
                       )}
@@ -697,323 +539,225 @@ export default function MountainPage({
               </div>
             )}
 
-            {/* 7-Day Forecast */}
-            {forecast.length > 0 && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-text-primary">7-Day Forecast</h2>
-                  {weatherGovLinks && (
-                    <div className="flex gap-2">
-                      <a
-                        href={weatherGovLinks.hourly}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-text-primary transition-colors flex items-center gap-1"
-                      >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        Hourly
-                      </a>
-                      <a
-                        href={weatherGovLinks.forecast}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-text-primary transition-colors flex items-center gap-1"
-                      >
-                        Weather.gov
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </a>
-                    </div>
-                  )}
+            {/* Trip Advice (AI) */}
+            {tripAdvice && (
+              <div className="bg-surface-primary rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <h2 className="text-sm font-semibold text-text-primary">Trip Advice</h2>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-secondary text-text-tertiary">Traffic: {tripAdvice.trafficRisk}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-secondary text-text-tertiary">Roads: {tripAdvice.roadRisk}</span>
                 </div>
-                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                  {forecast.map((day, i) => (
-                    <div
-                      key={i}
-                      className="bg-surface-secondary rounded-lg p-2 sm:p-3 text-center"
-                    >
-                      <div className="text-xs text-text-secondary mb-1">{day.dayOfWeek}</div>
-                      <div className="text-2xl mb-1">{getWeatherIcon(day.icon)}</div>
-                      <div className="text-sm text-text-primary font-medium">
-                        {day.high}° / {day.low}°
-                      </div>
-                      {day.snowfall > 0 && (
-                        <div className="text-xs text-accent mt-1">
-                          {day.snowfall}&quot; snow
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 pt-4 border-t border-border-primary flex items-center justify-between text-xs text-text-secondary">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    <span>Powered by NOAA Weather.gov</span>
-                  </div>
-                  {weatherGovLinks && (
-                    <a
-                      href={weatherGovLinks.discussion}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-text-secondary transition-colors underline"
-                    >
-                      Forecast Discussion
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Elevation Forecast */}
-            {elevationForecast && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <h2 className="text-lg font-semibold text-text-primary mb-4">Forecast by Elevation</h2>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['summit', 'mid', 'base'] as const).map((band) => {
-                    const data = elevationForecast[band];
-                    if (!data || !data.days?.length) return null;
-                    const today = data.days[0];
-                    const label = band === 'summit' ? 'Summit' : band === 'mid' ? 'Mid-Mountain' : 'Base';
-                    const precipColor = today.precipType === 'snow' ? 'text-accent' : today.precipType === 'rain' ? 'text-red-400' : 'text-yellow-400';
-                    return (
-                      <div key={band} className="bg-surface-secondary rounded-lg p-3 text-center">
-                        <div className="text-xs text-text-secondary mb-1">{label}</div>
-                        <div className="text-[11px] text-text-tertiary mb-2">{data.elevation.toLocaleString()}&apos;</div>
-                        <div className="text-lg font-semibold text-text-primary">{today.highTemp}°/{today.lowTemp}°</div>
-                        {today.snowfall > 0 && (
-                          <div className={`text-xs mt-1 ${precipColor}`}>
-                            {today.snowfall}&quot; snow
-                          </div>
-                        )}
-                        {today.precipitation > 0 && today.precipType !== 'snow' && (
-                          <div className={`text-xs mt-1 ${precipColor}`}>
-                            {today.precipitation}&quot; {today.precipType}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Multi-day elevation breakdown */}
-                {elevationForecast.summit.days.length > 1 && (
-                  <div className="mt-4 overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="text-text-tertiary">
-                          <th className="text-left py-1 pr-2 font-medium">Day</th>
-                          <th className="text-center py-1 px-1 font-medium">Summit</th>
-                          <th className="text-center py-1 px-1 font-medium">Mid</th>
-                          <th className="text-center py-1 px-1 font-medium">Base</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {elevationForecast.summit.days.slice(1, 6).map((day: any, i: number) => {
-                          const mid = elevationForecast.mid.days[i + 1];
-                          const base = elevationForecast.base.days[i + 1];
-                          const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
-                          return (
-                            <tr key={day.date} className="border-t border-border-secondary">
-                              <td className="py-1.5 pr-2 text-text-secondary">{dayLabel}</td>
-                              <td className="py-1.5 px-1 text-center text-text-primary">
-                                {day.snowfall > 0 ? <span className="text-accent">{day.snowfall}&quot;</span> : `${day.highTemp}°`}
-                              </td>
-                              <td className="py-1.5 px-1 text-center text-text-primary">
-                                {mid?.snowfall > 0 ? <span className="text-accent">{mid.snowfall}&quot;</span> : `${mid?.highTemp ?? '--'}°`}
-                              </td>
-                              <td className="py-1.5 px-1 text-center text-text-primary">
-                                {base?.snowfall > 0 ? <span className="text-accent">{base.snowfall}&quot;</span> : `${base?.highTemp ?? '--'}°`}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Ensemble Snow Confidence */}
-            {ensemble && ensemble.days?.length > 0 && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-text-primary">Snow Confidence</h2>
-                    <p className="text-xs text-text-secondary">{ensemble.memberCount}-member {ensemble.model} ensemble</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {ensemble.days.slice(0, 7).map((day: any) => {
-                    const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                    const maxSnow = Math.max(...ensemble.days.slice(0, 7).map((d: any) => d.snowfall.p90), 1);
-                    return (
-                      <div key={day.date} className="flex items-center gap-3">
-                        <div className="w-20 text-xs text-text-secondary flex-shrink-0">{dayLabel}</div>
-                        <div className="flex-1 h-5 bg-surface-secondary rounded-full overflow-hidden relative">
-                          {/* p10-p90 range bar */}
-                          <div
-                            className="absolute inset-y-0 bg-accent/30 rounded-full"
-                            style={{
-                              left: `${(day.snowfall.p10 / maxSnow) * 100}%`,
-                              width: `${((day.snowfall.p90 - day.snowfall.p10) / maxSnow) * 100}%`,
-                            }}
-                          />
-                          {/* p25-p75 range bar */}
-                          <div
-                            className="absolute inset-y-0 bg-accent/60 rounded-full"
-                            style={{
-                              left: `${(day.snowfall.p25 / maxSnow) * 100}%`,
-                              width: `${((day.snowfall.p75 - day.snowfall.p25) / maxSnow) * 100}%`,
-                            }}
-                          />
-                          {/* Median marker */}
-                          <div
-                            className="absolute top-0.5 bottom-0.5 w-0.5 bg-accent rounded-full"
-                            style={{ left: `${(day.snowfall.p50 / maxSnow) * 100}%` }}
-                          />
-                        </div>
-                        <div className="w-16 text-xs text-text-primary text-right flex-shrink-0">
-                          {day.snowfall.p50}&quot;
-                          <span className="text-text-tertiary ml-0.5">({day.snowfall.p10}-{day.snowfall.p90})</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                {/* Probability summary for tomorrow */}
-                {ensemble.days[0] && (
-                  <div className="mt-4 pt-4 border-t border-border-primary flex flex-wrap gap-3">
-                    {[
-                      { label: '1"+', value: ensemble.days[0].probability.over1in },
-                      { label: '3"+', value: ensemble.days[0].probability.over3in },
-                      { label: '6"+', value: ensemble.days[0].probability.over6in },
-                      { label: '12"+', value: ensemble.days[0].probability.over12in },
-                    ].filter(p => p.value > 0).map((p) => (
-                      <div key={p.label} className="bg-surface-secondary rounded-lg px-3 py-2 text-center">
-                        <div className="text-xs text-text-secondary">{p.label}</div>
-                        <div className="text-sm font-semibold text-text-primary">{p.value}%</div>
-                      </div>
+                <p className="text-sm text-text-primary mb-2">{tripAdvice.headline}</p>
+                {tripAdvice.suggestedDepartures?.length > 0 && (
+                  <div className="text-xs text-text-secondary">
+                    {tripAdvice.suggestedDepartures.slice(0, 2).map((s: any, idx: number) => (
+                      <span key={idx}>{idx > 0 ? ' · ' : ''}{s.from}: {s.suggestion}</span>
                     ))}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Extended Forecast (16-day) */}
-            {extendedForecast && extendedForecast.length > 7 && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <h2 className="text-lg font-semibold text-text-primary mb-4">Extended Forecast</h2>
-                <div className="overflow-x-auto -mx-2">
-                  <div className="flex gap-2 px-2" style={{ minWidth: `${extendedForecast.slice(7).length * 80}px` }}>
-                    {extendedForecast.slice(7).map((day: any, i: number) => {
-                      const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
-                      const dateLabel = new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                      return (
-                        <div key={i} className="bg-surface-secondary rounded-lg p-2.5 text-center flex-shrink-0" style={{ width: '72px' }}>
-                          <div className="text-[10px] text-text-tertiary">{dayLabel}</div>
-                          <div className="text-[10px] text-text-quaternary">{dateLabel}</div>
-                          <div className="text-sm font-medium text-text-primary mt-1">
-                            {day.highTemp}°/{day.lowTemp}°
-                          </div>
-                          {day.snowfallSum > 0 && (
-                            <div className="text-[11px] text-accent mt-0.5">{day.snowfallSum}&quot;</div>
-                          )}
-                          {day.precipProbability > 0 && (
-                            <div className="text-[10px] text-text-tertiary">{day.precipProbability}%</div>
-                          )}
-                        </div>
-                      );
-                    })}
+            {/* Forecast — Tabbed */}
+            {forecastTabs.length > 0 && (
+              <div className="bg-surface-primary rounded-xl p-4">
+                {/* Tab bar */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex gap-1">
+                    {forecastTabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setForecastTab(tab.id)}
+                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                          forecastTab === tab.id
+                            ? 'bg-accent text-text-primary'
+                            : 'text-text-tertiary hover:text-text-primary hover:bg-surface-secondary'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
                   </div>
+                  {forecastTab === '7day' && weatherGovLinks && (
+                    <div className="flex gap-1.5">
+                      <a href={weatherGovLinks.hourly} target="_blank" rel="noopener noreferrer" className="text-[10px] px-2 py-1 rounded bg-surface-secondary text-text-secondary hover:text-text-primary transition-colors">Hourly</a>
+                      <a href={weatherGovLinks.forecast} target="_blank" rel="noopener noreferrer" className="text-[10px] px-2 py-1 rounded bg-surface-secondary text-text-secondary hover:text-text-primary transition-colors">Weather.gov</a>
+                    </div>
+                  )}
                 </div>
-                <div className="mt-3 text-[10px] text-text-quaternary">Days 8-16 via Open-Meteo. Confidence decreases beyond 7 days.</div>
+
+                {/* 7-Day content */}
+                {forecastTab === '7day' && forecast.length > 0 && (
+                  <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
+                    {forecast.map((day, i) => (
+                      <div key={i} className="bg-surface-secondary rounded-lg p-2 text-center">
+                        <div className="text-[10px] text-text-tertiary">{day.dayOfWeek}</div>
+                        <div className="text-lg my-0.5">{getWeatherIcon(day.icon)}</div>
+                        <div className="text-xs font-medium text-text-primary">{day.high}°/{day.low}°</div>
+                        {day.snowfall > 0 && (
+                          <div className="text-[11px] text-accent">{day.snowfall}&quot;</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Elevation content */}
+                {forecastTab === 'elevation' && elevationForecast && (
+                  <>
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {(['summit', 'mid', 'base'] as const).map((band) => {
+                        const data = elevationForecast[band];
+                        if (!data || !data.days?.length) return null;
+                        const today = data.days[0];
+                        const label = band === 'summit' ? 'Summit' : band === 'mid' ? 'Mid' : 'Base';
+                        const precipColor = today.precipType === 'snow' ? 'text-accent' : today.precipType === 'rain' ? 'text-red-400' : 'text-yellow-400';
+                        return (
+                          <div key={band} className="bg-surface-secondary rounded-lg p-2.5 text-center">
+                            <div className="text-[10px] text-text-tertiary">{label} · {data.elevation.toLocaleString()}&apos;</div>
+                            <div className="text-base font-semibold text-text-primary">{today.highTemp}°/{today.lowTemp}°</div>
+                            {today.snowfall > 0 && <div className={`text-[11px] ${precipColor}`}>{today.snowfall}&quot; snow</div>}
+                            {today.precipitation > 0 && today.precipType !== 'snow' && <div className={`text-[11px] ${precipColor}`}>{today.precipitation}&quot; {today.precipType}</div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {elevationForecast.summit.days.length > 1 && (
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="text-text-quaternary text-[10px]">
+                            <th className="text-left py-1 pr-2 font-medium">Day</th>
+                            <th className="text-center py-1 px-1 font-medium">Summit</th>
+                            <th className="text-center py-1 px-1 font-medium">Mid</th>
+                            <th className="text-center py-1 px-1 font-medium">Base</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {elevationForecast.summit.days.slice(1, 6).map((day: any, i: number) => {
+                            const mid = elevationForecast.mid.days[i + 1];
+                            const base = elevationForecast.base.days[i + 1];
+                            const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
+                            return (
+                              <tr key={day.date} className="border-t border-border-secondary">
+                                <td className="py-1 pr-2 text-text-secondary">{dayLabel}</td>
+                                <td className="py-1 px-1 text-center text-text-primary">
+                                  {day.snowfall > 0 ? <span className="text-accent">{day.snowfall}&quot;</span> : `${day.highTemp}°`}
+                                </td>
+                                <td className="py-1 px-1 text-center text-text-primary">
+                                  {mid?.snowfall > 0 ? <span className="text-accent">{mid.snowfall}&quot;</span> : `${mid?.highTemp ?? '--'}°`}
+                                </td>
+                                <td className="py-1 px-1 text-center text-text-primary">
+                                  {base?.snowfall > 0 ? <span className="text-accent">{base.snowfall}&quot;</span> : `${base?.highTemp ?? '--'}°`}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+                  </>
+                )}
+
+                {/* Confidence (ensemble) content */}
+                {forecastTab === 'confidence' && ensemble?.days?.length > 0 && (
+                  <>
+                    <p className="text-[10px] text-text-quaternary mb-2">{ensemble.memberCount}-member {ensemble.model} ensemble</p>
+                    <div className="space-y-1.5">
+                      {ensemble.days.slice(0, 7).map((day: any) => {
+                        const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        const maxSnow = Math.max(...ensemble.days.slice(0, 7).map((d: any) => d.snowfall.p90), 1);
+                        return (
+                          <div key={day.date} className="flex items-center gap-2">
+                            <div className="w-[72px] text-[11px] text-text-secondary flex-shrink-0">{dayLabel}</div>
+                            <div className="flex-1 h-4 bg-surface-secondary rounded-full overflow-hidden relative">
+                              <div className="absolute inset-y-0 bg-accent/30 rounded-full" style={{ left: `${(day.snowfall.p10 / maxSnow) * 100}%`, width: `${((day.snowfall.p90 - day.snowfall.p10) / maxSnow) * 100}%` }} />
+                              <div className="absolute inset-y-0 bg-accent/60 rounded-full" style={{ left: `${(day.snowfall.p25 / maxSnow) * 100}%`, width: `${((day.snowfall.p75 - day.snowfall.p25) / maxSnow) * 100}%` }} />
+                              <div className="absolute top-0.5 bottom-0.5 w-0.5 bg-accent rounded-full" style={{ left: `${(day.snowfall.p50 / maxSnow) * 100}%` }} />
+                            </div>
+                            <div className="w-14 text-[11px] text-text-primary text-right flex-shrink-0">
+                              {day.snowfall.p50}&quot; <span className="text-text-quaternary">({day.snowfall.p10}-{day.snowfall.p90})</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {ensemble.days[0] && (
+                      <div className="mt-3 pt-3 border-t border-border-secondary flex flex-wrap gap-2">
+                        {[
+                          { label: '1"+', value: ensemble.days[0].probability.over1in },
+                          { label: '3"+', value: ensemble.days[0].probability.over3in },
+                          { label: '6"+', value: ensemble.days[0].probability.over6in },
+                          { label: '12"+', value: ensemble.days[0].probability.over12in },
+                        ].filter(p => p.value > 0).map((p) => (
+                          <div key={p.label} className="bg-surface-secondary rounded px-2 py-1 text-center">
+                            <span className="text-[10px] text-text-tertiary">{p.label} </span>
+                            <span className="text-xs font-semibold text-text-primary">{p.value}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Extended content */}
+                {forecastTab === 'extended' && extendedForecast && extendedForecast.length > 7 && (
+                  <>
+                    <div className="overflow-x-auto -mx-1">
+                      <div className="flex gap-1.5 px-1">
+                        {extendedForecast.slice(7).map((day: any, i: number) => {
+                          const dayLabel = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
+                          const dateLabel = new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                          return (
+                            <div key={i} className="bg-surface-secondary rounded-lg p-2 text-center flex-shrink-0 w-16">
+                              <div className="text-[9px] text-text-quaternary">{dayLabel}</div>
+                              <div className="text-[9px] text-text-quaternary">{dateLabel}</div>
+                              <div className="text-xs font-medium text-text-primary mt-0.5">{day.highTemp}°/{day.lowTemp}°</div>
+                              {day.snowfallSum > 0 && <div className="text-[10px] text-accent">{day.snowfallSum}&quot;</div>}
+                              {day.precipProbability > 0 && <div className="text-[9px] text-text-quaternary">{day.precipProbability}%</div>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="mt-2 text-[10px] text-text-quaternary">Days 8-16 via Open-Meteo. Confidence decreases beyond 7 days.</div>
+                  </>
+                )}
               </div>
             )}
 
             {/* Webcams */}
             {mountain.webcams.length > 0 && (
-              <div className="bg-surface-primary rounded-2xl p-6">
-                <h2 className="text-lg font-semibold text-text-primary mb-4">Webcams</h2>
-                <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-surface-primary rounded-xl p-4">
+                <h2 className="text-sm font-semibold text-text-primary mb-3">Webcams</h2>
+                <div className="grid grid-cols-2 gap-2">
                   {mountain.webcams.map((webcam) => (
-                    <div key={webcam.id} className="bg-surface-secondary rounded-lg overflow-hidden">
+                    <a key={webcam.id} href={webcam.refreshUrl || '#'} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden group">
                       <div className="aspect-video bg-surface-secondary relative">
                         <img
                           src={webcam.url}
                           alt={webcam.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                       </div>
-                      <div className="p-3">
-                        <div className="text-sm text-text-primary font-medium">{webcam.name}</div>
-                        {webcam.refreshUrl && (
-                          <a
-                            href={webcam.refreshUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-accent hover:text-accent-hover"
-                          >
-                            View on website ↗
-                          </a>
-                        )}
+                      <div className="py-1.5 px-0.5">
+                        <div className="text-[11px] text-text-secondary group-hover:text-text-primary transition-colors truncate">{webcam.name}</div>
                       </div>
-                    </div>
+                    </a>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Mountain Info */}
-            <div className="bg-surface-primary rounded-2xl p-6">
-              <h2 className="text-lg font-semibold text-text-primary mb-4">Mountain Info</h2>
-              <div className="grid md:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Base Elevation</span>
-                    <span className="text-text-primary">
-                      {mountain.elevation.base.toLocaleString()}ft
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Summit Elevation</span>
-                    <span className="text-text-primary">
-                      {mountain.elevation.summit.toLocaleString()}ft
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Vertical Drop</span>
-                    <span className="text-text-primary">
-                      {(mountain.elevation.summit - mountain.elevation.base).toLocaleString()}ft
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Region</span>
-                    <span className="text-text-primary capitalize">{mountain.region}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">SNOTEL Station</span>
-                    <span className="text-text-primary">
-                      {mountain.snotel?.stationName ?? 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">NOAA Grid</span>
-                    <span className="text-text-primary">
-                      {mountain.noaa ? `${mountain.noaa.gridOffice}/${mountain.noaa.gridX},${mountain.noaa.gridY}` : 'N/A'}
-                    </span>
-                  </div>
-                </div>
+            {/* Mountain Info — Compact */}
+            <div className="bg-surface-primary rounded-xl p-4">
+              <h2 className="text-sm font-semibold text-text-primary mb-2">Info</h2>
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
+                <span className="text-text-secondary">Base <span className="text-text-primary">{mountain.elevation.base.toLocaleString()}&apos;</span></span>
+                <span className="text-text-secondary">Summit <span className="text-text-primary">{mountain.elevation.summit.toLocaleString()}&apos;</span></span>
+                <span className="text-text-secondary">Vert <span className="text-text-primary">{(mountain.elevation.summit - mountain.elevation.base).toLocaleString()}&apos;</span></span>
+                <span className="text-text-secondary">Region <span className="text-text-primary capitalize">{mountain.region}</span></span>
+                {mountain.snotel && <span className="text-text-secondary">SNOTEL <span className="text-text-primary">{mountain.snotel.stationName}</span></span>}
               </div>
             </div>
           </>

@@ -148,67 +148,36 @@ export function SnowfallTable({ daysBack = 7, daysForward = 7 }: SnowfallTablePr
 
   if (isLoading) {
     return (
-      <div className="bg-surface-primary rounded-2xl p-8">
-        <div className="flex items-center justify-center">
-          <div className="flex items-center gap-2 text-text-secondary">
-            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            <span>Loading snowfall data...</span>
-          </div>
+      <div className="bg-surface-primary rounded-xl p-4">
+        <div className="flex items-center justify-center gap-2 text-text-secondary text-sm">
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span>Loading snowfall data...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-surface-primary rounded-2xl overflow-hidden shadow-sm">
-      {/* Header with inline legend */}
-      <div className="px-4 py-3 border-b border-border-secondary flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h2 className="text-base font-semibold text-text-primary tracking-tight">Snowfall</h2>
-          <div className="flex items-center gap-3 text-[10px] text-text-tertiary">
-            <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-snow-1" />
-              <span>1-2</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-snow-2" />
-              <span>2-4</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-snow-3" />
-              <span>4-6</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-snow-4" />
-              <span>6-10</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-sm bg-snow-5" />
-              <span>10+</span>
-            </div>
+    <div className="bg-surface-primary rounded-xl overflow-hidden">
+      {/* Compact header */}
+      <div className="px-3 py-2 border-b border-border-secondary flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold text-text-primary">Snowfall</h2>
+          <div className="hidden sm:flex items-center gap-2 text-[9px] text-text-quaternary">
+            <div className="flex items-center gap-0.5"><div className="w-2 h-2 rounded-sm bg-snow-1" /><span>1-2</span></div>
+            <div className="flex items-center gap-0.5"><div className="w-2 h-2 rounded-sm bg-snow-3" /><span>4-6</span></div>
+            <div className="flex items-center gap-0.5"><div className="w-2 h-2 rounded-sm bg-snow-5" /><span>10+</span></div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={scrollLeft}
-            className="p-1.5 hover:bg-surface-secondary rounded-lg transition-colors"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-4 h-4 text-text-tertiary" />
+        <div className="flex items-center gap-0.5">
+          <button onClick={scrollLeft} className="p-1 hover:bg-surface-secondary rounded transition-colors" aria-label="Scroll left">
+            <ChevronLeft className="w-3.5 h-3.5 text-text-tertiary" />
           </button>
-          <button
-            onClick={scrollRight}
-            className="p-1.5 hover:bg-surface-secondary rounded-lg transition-colors"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-4 h-4 text-text-tertiary" />
+          <button onClick={scrollRight} className="p-1 hover:bg-surface-secondary rounded transition-colors" aria-label="Scroll right">
+            <ChevronRight className="w-3.5 h-3.5 text-text-tertiary" />
           </button>
         </div>
       </div>
