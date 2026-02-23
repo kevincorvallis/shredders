@@ -133,6 +133,19 @@ export async function getCurrentConditions(
   const swe = getLatestValue(data, 'WTEQ');
   const temp = getLatestValue(data, 'TOBS');
 
+  // Calculate precipitation from cumulative PREC values (delta over period)
+  const precElement = data.find(d => d.stationElement.elementCode === 'PREC');
+  let precipitation = 0;
+  if (precElement && precElement.values.length >= 2) {
+    const precValues = [...precElement.values]
+      .filter(v => v.value !== null)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    if (precValues.length >= 2) {
+      // PREC is cumulative — 24h precipitation is the delta between latest two days
+      precipitation = Math.max(0, (precValues[0].value ?? 0) - (precValues[1].value ?? 0));
+    }
+  }
+
   // Calculate snowfall over different periods
   const snowDepthElement = data.find(d => d.stationElement.elementCode === 'SNWD');
   const values = snowDepthElement?.values || [];
@@ -157,7 +170,7 @@ export async function getCurrentConditions(
     snowDepth: snowDepth.value || 0,
     snowWaterEquivalent: swe.value || 0,
     temperature: temp.value || 32, // Default to freezing if no data
-    precipitation: 0, // Would need cumulative calculation
+    precipitation,
     snowfall24h,
     snowfall48h,
     snowfall7d,
@@ -325,6 +338,18 @@ export async function getExtendedConditions(
   const windSpeed = getLatestValue(data, 'WSOD');
   const windDirection = getLatestValue(data, 'WDIR');
 
+  // Calculate precipitation from cumulative PREC values
+  const precElement = data.find(d => d.stationElement.elementCode === 'PREC');
+  let precipitation = 0;
+  if (precElement && precElement.values.length >= 2) {
+    const precValues = [...precElement.values]
+      .filter(v => v.value !== null)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    if (precValues.length >= 2) {
+      precipitation = Math.max(0, (precValues[0].value ?? 0) - (precValues[1].value ?? 0));
+    }
+  }
+
   // Calculate snow density (SWE/Depth * 100 = density percentage)
   let snowDensity: number | null = null;
   if (snowDepth.value && swe.value && snowDepth.value > 0) {
@@ -375,7 +400,7 @@ export async function getExtendedConditions(
     snowDepth: snowDepth.value || 0,
     snowWaterEquivalent: swe.value || 0,
     temperature: temp.value || 32,
-    precipitation: 0,
+    precipitation,
     snowfall24h,
     snowfall48h,
     snowfall7d,

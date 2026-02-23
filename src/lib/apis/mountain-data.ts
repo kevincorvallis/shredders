@@ -2,9 +2,14 @@ import { getMountain } from '@shredders/shared';
 import { withCache } from '@/lib/cache';
 import { getCurrentConditions } from '@/lib/apis/snotel';
 import { getForecast, getCurrentWeather, filterActiveAlerts } from '@/lib/apis/noaa';
-import { getCurrentFreezingLevelFeet, calculateRainRiskScore, getDailyForecast } from '@/lib/apis/open-meteo';
+import { getCurrentFreezingLevelFeet, calculateRainRiskScore, getDailyForecast, getExtendedForecast, getEnsembleProbabilityForecast, getElevationForecast } from '@/lib/apis/open-meteo';
+import type { ExtendedDailyForecast, EnsembleForecast, ElevationForecast } from '@/lib/apis/open-meteo';
 import { getWeatherAlerts } from '@/lib/apis/noaa';
 import { getLatestLiftStatus } from '@/lib/dynamodb';
+import { getWsdotMountainPassConditions, findRelevantWsdotPasses } from '@/lib/apis/wsdot';
+import type { WsdotPassSummary } from '@/lib/apis/wsdot';
+import { generateMountainNarrative } from '@/lib/apis/claude';
+import type { MountainNarrative } from '@/lib/apis/claude';
 import { calculateMountainTemperatures, estimateReferenceElevation } from '@/lib/calculations/temperature-lapse';
 
 /**
@@ -26,6 +31,10 @@ export async function getMountainAllData(mountainId: string) {
         freezingLevel,
         openMeteoDaily,
         liftStatusData,
+        extendedForecastData,
+        ensembleData,
+        elevationForecastData,
+        roadsData,
       ] = await Promise.allSettled([
         mountain.snotel
           ? getCurrentConditions(mountain.snotel.stationId).catch(() => null)
@@ -38,8 +47,23 @@ export async function getMountainAllData(mountainId: string) {
           : Promise.resolve([]),
         getWeatherAlerts(mountain.location.lat, mountain.location.lng).catch(() => []),
         getCurrentFreezingLevelFeet(mountain.location.lat, mountain.location.lng).catch(() => null),
-        getDailyForecast(mountain.location.lat, mountain.location.lng, 1).catch(() => []),
+        getDailyForecast(mountain.location.lat, mountain.location.lng, 7).catch(() => []),
         getLatestLiftStatus(mountainId).catch(() => null),
+        // Extended 16-day forecast from Open-Meteo
+        getExtendedForecast(mountain.location.lat, mountain.location.lng, 16).catch(() => null),
+        // Ensemble probability forecast (ECMWF 50-member)
+        getEnsembleProbabilityForecast(mountain.location.lat, mountain.location.lng, 7).catch(() => null),
+        // Elevation-band forecasts (base/mid/summit)
+        getElevationForecast(
+          mountain.location.lat, mountain.location.lng,
+          mountain.elevation.base, mountain.elevation.summit, 7
+        ).catch(() => null),
+        // WSDOT road conditions (WA mountains only)
+        (process.env.WSDOT_ACCESS_CODE
+          ? getWsdotMountainPassConditions(process.env.WSDOT_ACCESS_CODE)
+              .then(allPasses => findRelevantWsdotPasses(mountainId, allPasses))
+              .catch(() => null)
+          : Promise.resolve(null)),
       ]);
 
       const snotel = snotelData.status === 'fulfilled' ? snotelData.value : null;
@@ -49,6 +73,10 @@ export async function getMountainAllData(mountainId: string) {
       const freezing = freezingLevel.status === 'fulfilled' ? freezingLevel.value : null;
       const dailyForecast = openMeteoDaily.status === 'fulfilled' ? openMeteoDaily.value : [];
       const liftStatus = liftStatusData.status === 'fulfilled' ? liftStatusData.value : null;
+      const extendedForecast: ExtendedDailyForecast[] | null = extendedForecastData.status === 'fulfilled' ? extendedForecastData.value : null;
+      const ensemble: EnsembleForecast | null = ensembleData.status === 'fulfilled' ? ensembleData.value : null;
+      const elevationForecast: ElevationForecast | null = elevationForecastData.status === 'fulfilled' ? elevationForecastData.value : null;
+      const roadPasses: WsdotPassSummary[] | null = roadsData.status === 'fulfilled' ? roadsData.value : null;
 
       const alerts = filterActiveAlerts(rawAlerts);
 
@@ -136,7 +164,7 @@ export async function getMountainAllData(mountainId: string) {
       else if (finalScore >= 4) verdict = 'Good conditions - worth the trip';
       else verdict = 'Fair conditions';
 
-      const upcomingSnow = forecast.slice(0, 2).reduce((sum: number, day: any) => sum + (day.snowfall || 0), 0);
+      const upcomingSnow = forecast.slice(0, 2).reduce((sum: number, day: { snowfall?: number }) => sum + (day.snowfall || 0), 0);
 
       const powderScore = {
         mountain: { id: mountain.id, name: mountain.name, shortName: mountain.shortName },
@@ -162,6 +190,40 @@ export async function getMountainAllData(mountainId: string) {
         dataAvailable: { snotel: !!snotel, noaa: !!weather },
       };
 
+      // Generate AI narrative (non-blocking — uses fallback on failure)
+      let tripAdvice: MountainNarrative | null = null;
+      try {
+        if (process.env.ANTHROPIC_API_KEY) {
+          tripAdvice = await generateMountainNarrative({
+            mountainId: mountain.id,
+            mountainName: mountain.name,
+            conditions: {
+              snowDepth: snotel?.snowDepth ?? 0,
+              snowfall24h,
+              snowfall48h: snotel?.snowfall48h ?? 0,
+              temperature: temperature ?? 32,
+              windSpeed,
+              powderScore: finalScore,
+            },
+            forecast: forecast.slice(0, 7).map(d => ({
+              date: d.date,
+              dayOfWeek: d.dayOfWeek,
+              snowfall: d.snowfall,
+              high: d.high,
+              low: d.low,
+              precipProbability: d.precipProbability,
+              conditions: d.conditions,
+            })),
+            modelConfidence: ensemble ? (
+              ensemble.days[0]?.snowfall.p90 - ensemble.days[0]?.snowfall.p10 > 5 ? 'low' :
+              ensemble.days[0]?.snowfall.p90 - ensemble.days[0]?.snowfall.p10 > 2 ? 'medium' : 'high'
+            ) : undefined,
+          });
+        }
+      } catch {
+        // AI narrative is optional — silently fall back to null
+      }
+
       return {
         mountain: {
           id: mountain.id,
@@ -182,9 +244,13 @@ export async function getMountainAllData(mountainId: string) {
         conditions,
         powderScore,
         forecast: forecast || [],
+        extendedForecast: extendedForecast || null,
+        ensemble: ensemble || null,
+        elevationForecast: elevationForecast || null,
+        openMeteoDaily: dailyForecast || [],
         sunData: todaySunData,
-        roads: null,
-        tripAdvice: null,
+        roads: roadPasses && roadPasses.length > 0 ? roadPasses : null,
+        tripAdvice,
         powderDay: null,
         alerts: alerts || [],
         weatherGovLinks: {

@@ -126,9 +126,42 @@ export async function getGridPointUrls(lat: number, lng: number) {
 export async function getForecast(
   config: NOAAGridConfig = DEFAULT_NOAA_CONFIG
 ): Promise<ProcessedForecastDay[]> {
-  const forecastUrl = `https://api.weather.gov/gridpoints/${config.gridOffice}/${config.gridX},${config.gridY}/forecast`;
-  const response = await fetchWithRetry(forecastUrl);
-  const data: NOAAForecastResponse = await response.json();
+  const baseUrl = `https://api.weather.gov/gridpoints/${config.gridOffice}/${config.gridX},${config.gridY}`;
+
+  // Fetch forecast periods AND grid data in parallel for better snowfall/wind accuracy
+  const [forecastResponse, gridResponse] = await Promise.all([
+    fetchWithRetry(`${baseUrl}/forecast`),
+    fetchWithRetry(baseUrl).catch(() => null),
+  ]);
+
+  const data: NOAAForecastResponse = await forecastResponse.json();
+  const gridData: NOAAGridDataResponse | null = gridResponse
+    ? await gridResponse.json().catch(() => null)
+    : null;
+
+  // Pre-aggregate grid snowfall amounts by date (mm -> inches, summed per day)
+  const gridSnowfallByDate = new Map<string, number>();
+  const gridWindGustByDate = new Map<string, number>();
+
+  if (gridData?.properties?.snowfallAmount?.values) {
+    for (const entry of gridData.properties.snowfallAmount.values) {
+      const [start] = entry.validTime.split('/');
+      const dateKey = new Date(start).toISOString().split('T')[0];
+      const existing = gridSnowfallByDate.get(dateKey) || 0;
+      // NOAA grid snowfall is in mm — convert to inches
+      gridSnowfallByDate.set(dateKey, existing + (entry.value / 25.4));
+    }
+  }
+
+  if (gridData?.properties?.windGust?.values) {
+    for (const entry of gridData.properties.windGust.values) {
+      const [start] = entry.validTime.split('/');
+      const dateKey = new Date(start).toISOString().split('T')[0];
+      const existing = gridWindGustByDate.get(dateKey) || 0;
+      // NOAA grid wind gust is in km/h — convert to mph, keep max per day
+      gridWindGustByDate.set(dateKey, Math.max(existing, Math.round(entry.value * 0.621371)));
+    }
+  }
 
   // Process periods into daily forecasts
   const dailyForecasts: Map<string, ProcessedForecastDay> = new Map();
@@ -148,12 +181,22 @@ export async function getForecast(
     const windMatch = period.windSpeed.match(/(\d+)/g);
     const windSpeed = windMatch ? parseInt(windMatch[windMatch.length - 1]) : 0;
 
-    // Estimate snowfall from forecast text
+    // Use grid snowfall data (quantitative) when available, fall back to text parsing
     let snowfall = 0;
-    const snowMatch = period.detailedForecast.match(/(\d+)\s*(?:to\s*(\d+))?\s*inch/i);
-    if (snowMatch && isSnow) {
-      snowfall = snowMatch[2] ? parseInt(snowMatch[2]) : parseInt(snowMatch[1]);
+    const gridSnowfall = gridSnowfallByDate.get(dateKey);
+    if (gridSnowfall !== undefined && gridSnowfall > 0 && isSnow) {
+      snowfall = Math.round(gridSnowfall * 10) / 10;
+    } else {
+      // Fallback: estimate snowfall from forecast text
+      const snowMatch = period.detailedForecast.match(/(\d+)\s*(?:to\s*(\d+))?\s*inch/i);
+      if (snowMatch && isSnow) {
+        snowfall = snowMatch[2] ? parseInt(snowMatch[2]) : parseInt(snowMatch[1]);
+      }
     }
+
+    // Use grid wind gust data when available, fall back to estimate
+    const gridGust = gridWindGustByDate.get(dateKey);
+    const windGust = gridGust ?? Math.round(windSpeed * 1.5);
 
     // Determine icon
     let icon = 'cloud';
@@ -172,7 +215,7 @@ export async function getForecast(
         snowfall,
         precipProbability: period.probabilityOfPrecipitation?.value || 0,
         precipType: isSnow ? 'snow' : isRain ? 'rain' : 'none',
-        wind: { speed: windSpeed, gust: Math.round(windSpeed * 1.5) },
+        wind: { speed: windSpeed, gust: windGust },
         conditions: period.shortForecast,
         icon,
       });

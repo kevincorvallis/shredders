@@ -25,6 +25,9 @@ interface OpenMeteoResponse {
     precipitation_sum?: number[];
     temperature_2m_max?: number[];
     temperature_2m_min?: number[];
+    wind_speed_10m_max?: number[];
+    wind_gusts_10m_max?: number[];
+    wind_direction_10m_dominant?: number[];
     sunrise?: string[];
     sunset?: string[];
   };
@@ -57,6 +60,9 @@ export interface OpenMeteoDailyForecast {
   precipitationSum: number; // inches
   highTemp: number; // fahrenheit
   lowTemp: number; // fahrenheit
+  windSpeedMax: number; // mph
+  windGustMax: number; // mph
+  windDirection: number; // degrees
   sunrise?: string; // ISO 8601 time
   sunset?: string; // ISO 8601 time
 }
@@ -174,7 +180,7 @@ export async function getDailyForecast(lat: number, lng: number, days: number = 
   const data = await fetchOpenMeteo({
     latitude: lat.toString(),
     longitude: lng.toString(),
-    daily: 'snowfall_sum,precipitation_sum,temperature_2m_max,temperature_2m_min,sunrise,sunset',
+    daily: 'snowfall_sum,precipitation_sum,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,sunrise,sunset',
     timezone: 'America/Los_Angeles',
     forecast_days: days.toString(),
   });
@@ -189,6 +195,9 @@ export async function getDailyForecast(lat: number, lng: number, days: number = 
     precipitationSum: mmToInches(data.daily?.precipitation_sum?.[i] || 0),
     highTemp: celsiusToFahrenheit(data.daily?.temperature_2m_max?.[i] || 0),
     lowTemp: celsiusToFahrenheit(data.daily?.temperature_2m_min?.[i] || 0),
+    windSpeedMax: Math.round((data.daily?.wind_speed_10m_max?.[i] || 0) * 0.621371),
+    windGustMax: Math.round((data.daily?.wind_gusts_10m_max?.[i] || 0) * 0.621371),
+    windDirection: data.daily?.wind_direction_10m_dominant?.[i] || 0,
     sunrise: data.daily?.sunrise?.[i],
     sunset: data.daily?.sunset?.[i],
   }));
@@ -212,7 +221,7 @@ export async function getComprehensiveForecast(
     latitude: lat.toString(),
     longitude: lng.toString(),
     hourly: 'snowfall,snow_depth,temperature_2m,precipitation,precipitation_probability,freezing_level_height',
-    daily: 'snowfall_sum,precipitation_sum,temperature_2m_max,temperature_2m_min,sunrise,sunset',
+    daily: 'snowfall_sum,precipitation_sum,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,sunrise,sunset',
     timezone: 'America/Los_Angeles',
     forecast_days: days.toString(),
   });
@@ -254,6 +263,9 @@ export async function getComprehensiveForecast(
     precipitationSum: mmToInches(data.daily?.precipitation_sum?.[i] || 0),
     highTemp: celsiusToFahrenheit(data.daily?.temperature_2m_max?.[i] || 0),
     lowTemp: celsiusToFahrenheit(data.daily?.temperature_2m_min?.[i] || 0),
+    windSpeedMax: Math.round((data.daily?.wind_speed_10m_max?.[i] || 0) * 0.621371),
+    windGustMax: Math.round((data.daily?.wind_gusts_10m_max?.[i] || 0) * 0.621371),
+    windDirection: data.daily?.wind_direction_10m_dominant?.[i] || 0,
     sunrise: data.daily?.sunrise?.[i],
     sunset: data.daily?.sunset?.[i],
   })) || [];
