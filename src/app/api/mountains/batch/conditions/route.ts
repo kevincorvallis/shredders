@@ -65,19 +65,21 @@ export async function GET() {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const current = weatherData[0] as any;
                 if (mountain.noaa) {
-                  // NOAA forecast data
+                  // NOAA forecast data — ProcessedForecastDay has wind.speed/gust but no direction
                   temperature = Math.round((current.high + current.low) / 2);
                   wind = {
                     speed: current.wind?.speed || 0,
-                    direction: 'N'
+                    direction: current.windDirection || ''
                   };
                   conditions = current.conditions || 'Unknown';
                 } else {
-                  // Open-Meteo daily data
+                  // Open-Meteo daily data — has windDirection in degrees
                   temperature = Math.round((current.highTemp + current.lowTemp) / 2);
+                  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+                  const dirIndex = current.windDirection != null ? Math.round(current.windDirection / 22.5) % 16 : -1;
                   wind = {
                     speed: current.windSpeedMax || 0,
-                    direction: 'N'
+                    direction: dirIndex >= 0 ? dirs[dirIndex] : ''
                   };
                   conditions = 'Unknown';
                 }

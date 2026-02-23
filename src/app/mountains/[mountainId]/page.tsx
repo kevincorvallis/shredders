@@ -50,31 +50,25 @@ interface ForecastDay {
   icon: string;
 }
 
-interface RoadsResponse {
-  supported: boolean;
-  configured: boolean;
-  provider: string | null;
-  passes: Array<{
-    id: number;
-    name: string;
-    dateUpdated?: string | null;
-    roadCondition?: string | null;
-    weatherCondition?: string | null;
-    temperatureF?: number | null;
-    travelAdvisoryActive?: boolean | null;
-    restrictions: Array<{ direction?: string | null; text?: string | null }>;
-  }>;
-  message?: string;
-}
+type RoadsResponse = Array<{
+  id: number;
+  name: string;
+  dateUpdated?: string | null;
+  roadCondition?: string | null;
+  weatherCondition?: string | null;
+  temperatureF?: number | null;
+  travelAdvisoryActive?: boolean | null;
+  restrictions: Array<{ direction?: string | null; text?: string | null }>;
+}>;
 
 interface TripAdviceResponse {
   generated: string;
   headline: string;
-  crowd: 'low' | 'medium' | 'high';
-  trafficRisk: 'low' | 'medium' | 'high';
-  roadRisk: 'low' | 'medium' | 'high';
-  notes: string[];
-  suggestedDepartures: Array<{ from: string; suggestion: string }>;
+  todayOutlook: string;
+  weekAhead: string;
+  uncertainty: string;
+  bestDay: string;
+  recommendation: string;
 }
 
 interface WeatherAlert {
@@ -174,6 +168,13 @@ export default function MountainPage({
     if (extendedForecast && extendedForecast.length > 7) tabs.push({ id: 'extended', label: 'Extended' });
     return tabs;
   }, [forecast, elevationForecast, ensemble, extendedForecast]);
+
+  // Reset forecast tab when switching mountains or when current tab is unavailable
+  useEffect(() => {
+    if (forecastTabs.length > 0 && !forecastTabs.some(t => t.id === forecastTab)) {
+      setForecastTab(forecastTabs[0].id);
+    }
+  }, [forecastTabs, forecastTab]);
 
   if (!mountain) {
     return (
@@ -507,11 +508,11 @@ export default function MountainPage({
             )}
 
             {/* Road & Pass Conditions */}
-            {roads && roads.supported && roads.configured && roads.passes?.length > 0 && (
+            {roads && Array.isArray(roads) && roads.length > 0 && (
               <div className="bg-surface-primary rounded-xl p-4">
                 <h2 className="text-sm font-semibold text-text-primary mb-2">Roads</h2>
                 <div className="space-y-2">
-                  {roads.passes.slice(0, 2).map((p: any) => (
+                  {roads.slice(0, 2).map((p: any) => (
                     <div key={p.id} className="bg-surface-secondary rounded-lg p-3">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-medium text-text-primary">{p.name}</span>
@@ -544,16 +545,19 @@ export default function MountainPage({
               <div className="bg-surface-primary rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <h2 className="text-sm font-semibold text-text-primary">Trip Advice</h2>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-secondary text-text-tertiary">Traffic: {tripAdvice.trafficRisk}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-secondary text-text-tertiary">Roads: {tripAdvice.roadRisk}</span>
+                  {tripAdvice.bestDay && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/10 text-accent">Best: {tripAdvice.bestDay}</span>
+                  )}
                 </div>
-                <p className="text-sm text-text-primary mb-2">{tripAdvice.headline}</p>
-                {tripAdvice.suggestedDepartures?.length > 0 && (
-                  <div className="text-xs text-text-secondary">
-                    {tripAdvice.suggestedDepartures.slice(0, 2).map((s: any, idx: number) => (
-                      <span key={idx}>{idx > 0 ? ' · ' : ''}{s.from}: {s.suggestion}</span>
-                    ))}
-                  </div>
+                <p className="text-sm font-medium text-text-primary">{tripAdvice.headline}</p>
+                {tripAdvice.todayOutlook && (
+                  <p className="text-xs text-text-secondary mt-1">{tripAdvice.todayOutlook}</p>
+                )}
+                {tripAdvice.weekAhead && (
+                  <p className="text-xs text-text-tertiary mt-1">{tripAdvice.weekAhead}</p>
+                )}
+                {tripAdvice.recommendation && (
+                  <p className="text-xs text-accent mt-1.5">{tripAdvice.recommendation}</p>
                 )}
               </div>
             )}
